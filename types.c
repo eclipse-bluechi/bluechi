@@ -9,7 +9,7 @@ const char *job_type_to_string(JobType type) {
 }
 
 static const char* const node_job_type_table[_JOB_TYPE_MAX] = {
-        [JOB_ISOLATE_ALL] = "isolate",
+        [NODE_JOB_ISOLATE] = "isolate",
 };
 
 const char *node_job_type_to_string(NodeJobType type) {
@@ -138,6 +138,9 @@ static int manager_send_job_removed_signal(Manager *manager, Job *job) {
 static void try_start_job (Manager *manager) {
         Job *job;
 
+        assert(manager->job_source == NULL);
+        assert(manager->current_job == NULL);
+
         job = manager->jobs;
         if (job == NULL)
                 return;
@@ -161,10 +164,10 @@ static int finish_job_cb (sd_event_source *s, void *userdata) {
 
         manager_remove_job(manager, job);
 
-        try_start_job(manager);
-
         sd_event_source_unref (manager->job_source);
         manager->job_source = NULL;
+
+        try_start_job(manager);
 
         return 0;
 }
@@ -187,10 +190,10 @@ void manager_finish_job(Manager *manager, Job *job) {
 static int start_job_cb (sd_event_source *s, void *userdata) {
         Manager *manager = userdata;
 
-        try_start_job(manager);
-
         sd_event_source_unref (manager->job_source);
         manager->job_source = NULL;
+
+        try_start_job(manager);
 
         return 0;
 }
@@ -256,7 +259,7 @@ int manager_queue_job(Manager *manager,
         }
 
         if (job_out)
-                *job_out = job_ref (job);
+                *job_out = job_ref(job);
 
         manager_add_job(job->manager, job);
         manager_send_job_new_signal(manager, job);

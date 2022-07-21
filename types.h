@@ -12,7 +12,7 @@ enum JobType {
 };
 
 enum NodeJobType {
-        NODE_JOB_ISOLATE_ALL,
+        NODE_JOB_ISOLATE,
         _NODE_JOB_TYPE_MAX,
         _NODE_JOB_TYPE_INVALID = -1
 };
@@ -67,7 +67,7 @@ struct Job {
 
 struct Manager {
         sd_event *event;
-        sd_bus *bus;
+        sd_bus *bus;           /* system bus for orchestrator, peer bus for node */
         uint32_t next_job_id;
         char *job_path_prefix;
         char *manager_path;

@@ -1,9 +1,37 @@
 #include "orch.h"
+#include "types.h"
+
+typedef struct Node Node;
+
+struct Node {
+        Manager manager;
+        sd_bus *local_bus;
+};
 
 #define DEBUG_DBUS_MESSAGES 0
 
+typedef struct {
+        Job job;
+        const char *target; /* owned by source_message */
+}  IsolateJob;
+
+static int job_isolate(Job *job, void *userdata) {
+        Manager *manager = job->manager;
+        IsolateJob *isolate = (IsolateJob *)job;
+
+        printf ("Running Isolate %s\n", isolate->target);
+
+        manager_finish_job(manager, job);
+
+        return 0;
+}
+
 static int method_node_isolate(sd_bus_message *m, void *userdata, sd_bus_error *ret_error) {
+        Node *node = userdata;
+        Manager *manager = (Manager *)node;
         const char *target;
+        _cleanup_(job_unrefp) Job *job = NULL;
+        IsolateJob *isolate;
         int r;
 
         /* TODO: Make this a job */
@@ -13,31 +41,26 @@ static int method_node_isolate(sd_bus_message *m, void *userdata, sd_bus_error *
                 return r;
         }
 
-        printf("Isolate '%s'\n", target);
+        printf("Got Isolate '%s'\n", target);
+
+        r = manager_queue_job(manager, NODE_JOB_ISOLATE, sizeof(IsolateJob),
+                              job_isolate, NULL, NULL,
+                              NULL, &job);
+        if (r < 0)
+                return sd_bus_reply_method_errnof(m, -r, "Failed to create job: %m");
+
+        isolate = (IsolateJob *)job;
+
+        job->source_message = sd_bus_message_ref(m);
+        isolate->target = target;
 
         return sd_bus_reply_method_return(m, "");
 }
 
-static int method_node_start(sd_bus_message *m, void *userdata, sd_bus_error *ret_error) {
-        const char *target;
-        int r;
-
-        /* TODO: Make this a job */
-        r = sd_bus_message_read(m, "s", &target);
-        if (r < 0) {
-                fprintf(stderr, "Failed to parse parameters: %s\n", strerror(-r));
-                return r;
-        }
-
-        printf("Start '%s'\n", target);
-
-        return sd_bus_reply_method_return(m, "");
-}
 
 static const sd_bus_vtable node_vtable[] = {
         SD_BUS_VTABLE_START(0),
         SD_BUS_METHOD("Isolate", "s", "", method_node_isolate, 0),
-        SD_BUS_METHOD("Start", "s", "", method_node_start, 0),
         SD_BUS_VTABLE_END
 };
 
@@ -63,6 +86,7 @@ int main(int argc, char *argv[]) {
         int orchestrator_port = 1999;
         const char *orchestrator_address;
         const char *node_name;
+        Node node = { };
 
         if (argc < 2) {
                 fprintf(stderr, "No orchestrator address given\n");
@@ -84,6 +108,8 @@ int main(int argc, char *argv[]) {
                 return EXIT_FAILURE;
         }
 
+        node.manager.event = event;
+
         /* Connect to system bus (for talking to systemd) */
 
         r = sd_bus_open_system(&bus);
@@ -91,6 +117,8 @@ int main(int argc, char *argv[]) {
                 fprintf(stderr, "Failed to connect to system bus: %s\n", strerror(-r));
                 return EXIT_FAILURE;
         }
+
+        node.local_bus = bus;
 
         r = sd_bus_attach_event(bus, event, SD_EVENT_PRIORITY_NORMAL);
         if (r < 0) {
@@ -105,6 +133,11 @@ int main(int argc, char *argv[]) {
                 fprintf(stderr, "Failed to create bus: %s\n", strerror(-r));
                 return EXIT_FAILURE;
         }
+
+        node.manager.bus = orch;
+        node.manager.job_path_prefix = NODE_PEER_JOBS_OBJECT_PATH_PREFIX;
+        node.manager.manager_path = NODE_PEER_OBJECT_PATH;
+        node.manager.manager_iface = NODE_IFACE;
 
         (void) sd_bus_set_description(bus, "orchestrator");
         r = sd_bus_set_trusted (orch, true); /* we trust everything from the orchestrator, there is only one peer anyway */
@@ -140,7 +173,7 @@ int main(int argc, char *argv[]) {
                                      NODE_PEER_OBJECT_PATH,
                                      NODE_PEER_IFACE,
                                      node_vtable,
-                                     NULL);
+                                     &node);
         if (r < 0) {
                 fprintf(stderr, "Failed to add peer bus vtable: %s\n", strerror(-r));
                 return EXIT_FAILURE;
