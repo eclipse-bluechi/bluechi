@@ -260,7 +260,6 @@ static inline void freep(void *p) {
 #define BUS_DEFINE_PROPERTY_GET_ENUM(function, name, type)              \
         BUS_DEFINE_PROPERTY_GET_REF(function, "s", type, name##_to_string)
 
-
 static inline const char *enum_to_string(int i, const char * const *table, int table_size) {
         if (i < 0 || i >= table_size)
                 return NULL;
@@ -268,18 +267,18 @@ static inline const char *enum_to_string(int i, const char * const *table, int t
 }
 #define ENUM_TO_STRING(i, table) (enum_to_string((int)(i), table, ELEMENTSOF(table)))
 
-
-
 #define ORCHESTRATOR_BUS_NAME "com.redhat.Orchestrator"
 #define ORCHESTRATOR_OBJECT_PATH "/com/redhat/Orchestrator"
 #define ORCHESTRATOR_NODES_OBJECT_PATH_PREFIX "/com/redhat/Orchestrator/node"
 #define ORCHESTRATOR_JOBS_OBJECT_PATH_PREFIX "/com/redhat/Orchestrator/job"
 #define ORCHESTRATOR_IFACE "com.redhat.Orchestrator"
 #define ORCHESTRATOR_NODE_IFACE "com.redhat.Orchestrator.Node"
-#define ORCHESTRATOR_JOB_IFACE "com.redhat.Orchestrator.Job"
 #define ORCHESTRATOR_PEER_IFACE "com.redhat.Orchestrator.Peer"
+
+#define JOB_IFACE "com.redhat.Orchestrator.Job"
 
 #define NODE_BUS_NAME "com.redhat.Orchestrator.Node"
 #define NODE_PEER_OBJECT_PATH "/com/redhat/Orchestrator/Node"
+#define NODE_PEER_JOBS_OBJECT_PATH_PREFIX "/com/redhat/Orchestrator/Node/job"
 #define NODE_IFACE "com.redhat.Orchestrator.Node"
 #define NODE_PEER_IFACE "com.redhat.Orchestrator.Node.Peer"

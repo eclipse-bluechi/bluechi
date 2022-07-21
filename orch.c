@@ -10,7 +10,6 @@
 
 typedef struct Orchestrator Orchestrator;
 typedef struct Node Node;
-typedef struct Job Job;
 
 struct Node {
         int ref_count;
@@ -22,91 +21,10 @@ struct Node {
         LIST_FIELDS(Node, nodes);
 };
 
-typedef int (*job_start_callback)(Job *job, void *userdata);
-typedef int (*job_cancel_callback)(Job *job, void *userdata);
-typedef int (*job_destroy_callback)(Job *job);
-
-struct Job {
-        int ref_count;
-        int type;
-        JobState state;
-        JobResult result;
-        Orchestrator *orch;
-        sd_bus_slot *bus_slot;
-        uint32_t id;
-        char *object_path;
-
-        job_start_callback start_cb;
-        job_cancel_callback cancel_cb;
-        job_destroy_callback destroy_cb;
-        void *userdata;
-
-        sd_bus_message *source_message;
-
-        LIST_FIELDS(Job, jobs);
-};
-
 struct Orchestrator {
-        sd_event *event;
-        sd_bus *bus;
-        uint32_t next_job_id;
+        Manager manager;
         LIST_HEAD(Node, nodes);
-
-        Job *current_job;
-        sd_event_source *job_source;
-        LIST_HEAD(Job, jobs);
 };
-
-static Job *job_new(Orchestrator *orch, JobType type, size_t job_size) {
-        _cleanup_free_ Job *job = NULL;
-        _cleanup_free_ char *object_path = NULL;
-        uint32_t id;
-        int r;
-
-        job = malloc0(job_size);
-        if (job == NULL)
-                return NULL;
-
-        id = ++orch->next_job_id;
-        r = asprintf(&object_path, "%s/%d", ORCHESTRATOR_JOBS_OBJECT_PATH_PREFIX, id);
-        if (r < 0)
-                return NULL;
-
-        printf ("object_path: %s\n", object_path);
-
-        job->type = type;
-        job->id = id;
-        job->object_path = steal_pointer (&object_path);
-        job->state = JOB_WAITING;
-        job->orch = orch;
-        job->ref_count = 1;
-        LIST_INIT(jobs, job);
-
-        return steal_pointer(&job);
-}
-
-static Job *job_ref(Job *job) {
-        job->ref_count++;
-        return job;
-}
-
-static void job_unref(Job *job) {
-        job->ref_count--;
-
-        if (job->ref_count == 0) {
-                printf ("Freeing job %p\n", job);
-                if (job->destroy_cb)
-                        job->destroy_cb(job);
-
-                if (job->source_message)
-                        sd_bus_message_unref (job->source_message);
-                free(job->object_path);
-                if (job->bus_slot)
-                        sd_bus_slot_unref(job->bus_slot);
-                free(job);
-        }
-}
-_SD_DEFINE_POINTER_CLEANUP_FUNC(Job, job_unref);
 
 static Node *node_new(Orchestrator *orch) {
         Node *node = malloc0(sizeof (Node));
@@ -140,16 +58,6 @@ static void node_unref(Node *node) {
 }
 _SD_DEFINE_POINTER_CLEANUP_FUNC(Node, node_unref);
 
-
-static void orch_add_job(Orchestrator *orch, Job *job) {
-        LIST_APPEND(jobs, orch->jobs, job_ref(job));
-}
-
-static void orch_remove_job(Orchestrator *orch, Job *job) {
-        LIST_REMOVE(jobs, orch->jobs, job);
-        job_unref(job);
-}
-
 static void orch_add_node(Orchestrator *orch, Node *node) {
         LIST_APPEND(nodes, orch->nodes, node_ref(node));
 }
@@ -170,183 +78,6 @@ static Node *orch_find_node(Orchestrator *orch, const char *name) {
         return NULL;
 }
 
-static BUS_DEFINE_PROPERTY_GET_ENUM(property_get_type, job_type, JobType);
-static BUS_DEFINE_PROPERTY_GET_ENUM(property_get_state, job_state, JobState);
-
-static const sd_bus_vtable job_vtable[] = {
-        SD_BUS_VTABLE_START(0),
-        SD_BUS_PROPERTY("JobType", "s", property_get_type, offsetof(Job, type), SD_BUS_VTABLE_PROPERTY_CONST),
-        SD_BUS_PROPERTY("State", "s", property_get_state, offsetof(Job, state), SD_BUS_VTABLE_PROPERTY_EMITS_CHANGE),
-        SD_BUS_VTABLE_END
-};
-
-static int orch_send_job_new_signal(Orchestrator *orch, Job *job) {
-        _cleanup_(sd_bus_message_unrefp) sd_bus_message *m = NULL;
-        int r;
-
-        r = sd_bus_message_new_signal(
-                        orch->bus,
-                        &m,
-                        ORCHESTRATOR_OBJECT_PATH,
-                        ORCHESTRATOR_IFACE,
-                        "JobNew");
-        if (r < 0)
-                return r;
-
-        r = sd_bus_message_append(m, "uo", job->id, job->object_path);
-        if (r < 0)
-                return r;
-
-        return sd_bus_send(orch->bus, m, NULL);
-}
-
-static int orch_send_job_removed_signal(Orchestrator *orch, Job *job) {
-        _cleanup_(sd_bus_message_unrefp) sd_bus_message *m = NULL;
-        _cleanup_free_ char *p = NULL;
-        int r;
-
-        r = sd_bus_message_new_signal(
-                        orch->bus,
-                        &m,
-                        ORCHESTRATOR_OBJECT_PATH,
-                        ORCHESTRATOR_IFACE,
-                        "JobRemoved");
-        if (r < 0)
-                return r;
-
-        r = sd_bus_message_append(m, "uos", job->id, job->object_path, job_result_to_string(job->result));
-        if (r < 0)
-                return r;
-
-        return sd_bus_send(orch->bus, m, NULL);
-}
-
-/* Only called from mainloop */
-static void try_start_job (Orchestrator *orch) {
-        Job *job;
-
-        job = orch->jobs;
-        if (job == NULL)
-                return;
-
-        orch->current_job = job_ref(job);
-
-        job->state = JOB_RUNNING;
-        sd_bus_emit_properties_changed(orch->bus, job->object_path, ORCHESTRATOR_JOB_IFACE, "State", NULL);
-
-        (job->start_cb)(job, job->userdata);
-}
-
-static int finish_job_cb (sd_event_source *s, void *userdata) {
-        Orchestrator *orch = userdata;
-        _cleanup_(job_unrefp) Job *job = NULL;
-
-        job = steal_pointer (&orch->current_job);
-        assert (job != NULL);
-
-        orch_send_job_removed_signal(orch, job);
-
-        orch_remove_job(orch, job);
-
-        try_start_job(orch);
-
-        sd_event_source_unref (orch->job_source);
-        orch->job_source = NULL;
-
-        return 0;
-}
-
-static void finish_job (Job *job) {
-        Orchestrator *orch = job->orch;
-        int r;
-
-        printf("Finish job %p\n", job);
-
-        assert (orch->current_job == job);
-        assert (orch->job_source == NULL);
-
-        /* Kick of finish job in mainloop */
-        r = sd_event_add_defer(orch->event, &orch->job_source, finish_job_cb, orch);
-        if (r < 0) {
-                fprintf(stderr, "No memory to queue job scheduler");
-        }
-}
-
-static int start_job_cb (sd_event_source *s, void *userdata) {
-        Orchestrator *orch = userdata;
-
-        try_start_job(orch);
-
-        sd_event_source_unref (orch->job_source);
-        orch->job_source = NULL;
-
-        return 0;
-}
-
-static void schedule_job(Orchestrator *orch) {
-        int r;
-
-        if (orch->current_job || orch->job_source)
-                return; /* Job already running or scheduled */
-
-        if (orch->jobs == NULL)
-                return; /* No jobs */
-
-        /* Kick of job */
-        r = sd_event_add_defer(orch->event, &orch->job_source, start_job_cb, orch);
-        if (r < 0) {
-                fprintf(stderr, "No memory to queue job scheduler");
-        }
-
-        printf ("Scheduled job start\n");
-}
-
-static int orch_queue_job(Orchestrator *orch,
-                          JobType type,
-                          size_t size,
-                          job_start_callback start_cb,
-                          job_cancel_callback cancel_cb,
-                          job_destroy_callback destroy_cb,
-                          void *userdata,
-                          Job **job_out) {
-        _cleanup_(job_unrefp) Job *job = NULL;
-        int r;
-
-        job = job_new(orch, type, size);
-        if (job == NULL) {
-                return -ENOMEM;
-        }
-
-        job->start_cb = start_cb;
-        job->cancel_cb = cancel_cb;
-        job->destroy_cb = destroy_cb;
-        job->userdata = userdata;
-
-        r = sd_bus_add_object_vtable(orch->bus,
-                                     &job->bus_slot,
-                                     job->object_path,
-                                     ORCHESTRATOR_JOB_IFACE,
-                                     job_vtable,
-                                     job);
-        if (r < 0) {
-                fprintf(stderr, "Failed to add job bus vtable: %s\n", strerror(-r));
-                return EXIT_FAILURE;
-        }
-
-        if (job_out)
-                *job_out = job_ref (job);
-
-        orch_add_job(job->orch, job);
-        orch_send_job_new_signal(orch, job);
-
-        printf ("Queued job %d\n", job->id);
-
-        schedule_job(orch);
-
-        return 0;
-}
-
-
 static const sd_bus_vtable node_vtable[] = {
         SD_BUS_VTABLE_START(0),
         SD_BUS_VTABLE_END
@@ -356,24 +87,26 @@ typedef struct {
         Job job;
 
         const char *target; /* owned by source_message */
-
         int outstanding;
 }  IsolateAllJob;
 
 static int job_isolate_all_cb (sd_bus_message *m, void *userdata, sd_bus_error *ret_error) {
         Job *job = userdata;
+        Manager *manager = job->manager;
         IsolateAllJob *isolate_all = (IsolateAllJob *)job;
+
         printf("job_isolate_all_cb %d, \n", isolate_all->outstanding);
 
         if (--isolate_all->outstanding == 0)
-                finish_job(job);
+                manager_finish_job(manager, job);
 
         return 0;
 }
 
 static int job_isolate_all(Job *job, void *userdata) {
         IsolateAllJob *isolate_all = (IsolateAllJob *)job;
-        Orchestrator *orch = job->orch;
+        Manager *manager = job->manager;
+        Orchestrator *orch = (Orchestrator *)manager;
         Node *node;
         int r;
 
@@ -398,7 +131,7 @@ static int job_isolate_all(Job *job, void *userdata) {
         }
 
         if (isolate_all->outstanding == 0)
-                finish_job(job);
+                manager_finish_job(manager, job);
 
         return 0;
 }
@@ -408,7 +141,7 @@ static int cancel_isolate_all(Job *job, void *userdata) {
 }
 
 static int method_orchestrator_isolate_all(sd_bus_message *m, void *userdata, sd_bus_error *ret_error) {
-        Orchestrator *orch = userdata;
+        Manager *manager = userdata;
         _cleanup_(job_unrefp) Job *job = NULL;
         IsolateAllJob *isolate_all;
         const char *target;
@@ -420,7 +153,7 @@ static int method_orchestrator_isolate_all(sd_bus_message *m, void *userdata, sd
                 return r;
         }
 
-        r = orch_queue_job(orch, JOB_ISOLATE_ALL, sizeof(IsolateAllJob),
+        r = manager_queue_job(manager, JOB_ISOLATE_ALL, sizeof(IsolateAllJob),
                            job_isolate_all, cancel_isolate_all, NULL, NULL, &job);
         if (r < 0)
                 return sd_bus_reply_method_errnof(m, -r, "Failed to create job: %m");
@@ -429,7 +162,6 @@ static int method_orchestrator_isolate_all(sd_bus_message *m, void *userdata, sd
 
         job->source_message = sd_bus_message_ref(m);
         isolate_all->target = target;
-
 
         return sd_bus_reply_method_return(m, "o", job->object_path);
 }
@@ -510,6 +242,7 @@ static int node_disconnected(sd_bus_message *message, void *userdata, sd_bus_err
 static int method_peer_orchestrator_register(sd_bus_message *m, void *userdata, sd_bus_error *ret_error) {
         Node *node = userdata;
         Orchestrator *orch = node->orch;
+        Manager *manager = (Manager *)orch;
         Node *existing;
         int r;
         char *name;
@@ -541,7 +274,7 @@ static int method_peer_orchestrator_register(sd_bus_message *m, void *userdata, 
         strncat(description, name, sizeof(description) - strlen(description) - 1);
         (void) sd_bus_set_description(node->peer, description);
 
-        r = sd_bus_add_object_vtable(orch->bus,
+        r = sd_bus_add_object_vtable(manager->bus,
                                      &node->bus_slot,
                                      node->object_path,
                                      ORCHESTRATOR_NODE_IFACE,
@@ -600,6 +333,7 @@ all_node_messages_handler (sd_bus_message *m, void *userdata, sd_bus_error *ret_
 
 static int accept_handler(sd_event_source *s, int fd, uint32_t revents, void *userdata) {
         Orchestrator *orch = userdata;
+        Manager *manager = (Manager *)orch;
         _cleanup_fd_ int nfd = -1;
         _cleanup_(sd_bus_close_unrefp) sd_bus *bus = NULL;
         _cleanup_(node_unrefp) Node *node = NULL;
@@ -675,7 +409,7 @@ static int accept_handler(sd_event_source *s, int fd, uint32_t revents, void *us
                 return 0;
         }
 
-        r = sd_bus_attach_event(bus, orch->event, SD_EVENT_PRIORITY_NORMAL);
+        r = sd_bus_attach_event(bus, manager->event, SD_EVENT_PRIORITY_NORMAL);
         if (r < 0) {
                 fprintf(stderr, "Failed to attach new connection bus to event loop: %s\n", strerror(-r));
                 return 0;
@@ -763,7 +497,10 @@ int main(int argc, char *argv[]) {
         if (DEBUG_DBUS_MESSAGES)
                 sd_bus_add_filter(bus, NULL, all_bus_messages_handler, NULL);
 
-        orchestrator.bus = bus;
+        orchestrator.manager.bus = bus;
+        orchestrator.manager.job_path_prefix = ORCHESTRATOR_JOBS_OBJECT_PATH_PREFIX;
+        orchestrator.manager.manager_path = ORCHESTRATOR_OBJECT_PATH;
+        orchestrator.manager.manager_iface = ORCHESTRATOR_IFACE;
 
         r = sd_bus_add_object_vtable(bus,
                                      &slot,
@@ -793,7 +530,7 @@ int main(int argc, char *argv[]) {
                 return EXIT_FAILURE;
         }
 
-        orchestrator.event = event;
+        orchestrator.manager.event = event;
 
         r = sd_bus_attach_event(bus, event, SD_EVENT_PRIORITY_NORMAL);
         if (r < 0) {
