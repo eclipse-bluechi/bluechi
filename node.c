@@ -1,6 +1,8 @@
 #include "orch.h"
 #include "types.h"
 
+#include <sys/socket.h>
+
 typedef struct Node Node;
 
 struct Node {
@@ -10,6 +12,83 @@ struct Node {
 };
 
 #define DEBUG_DBUS_MESSAGES 0
+
+static int getpeercred(int fd, struct ucred *ucred) {
+        socklen_t n = sizeof(struct ucred);
+        struct ucred u;
+        int r;
+
+        assert(fd >= 0);
+        assert(ucred);
+
+        r = getsockopt(fd, SOL_SOCKET, SO_PEERCRED, &u, &n);
+        if (r < 0)
+                return -errno;
+
+        if (n != sizeof(struct ucred))
+                return -EIO;
+
+        /* Check if the data is actually useful and not suppressed due to namespacing issues */
+        if (u.pid <= 0)
+                return -ENODATA;
+
+        /* Note that we don't check UID/GID here, as namespace translation works differently there: instead of
+         * receiving in "invalid" user/group we get the overflow UID/GID. */
+
+        *ucred = u;
+        return 0;
+}
+
+
+static int bus_check_peercred(sd_bus *c) {
+        struct ucred ucred = { -1 };
+        int fd, r;
+
+        assert(c);
+
+        fd = sd_bus_get_fd(c);
+        if (fd < 0)
+                return fd;
+
+        r = getpeercred(fd, &ucred);
+        if (r < 0)
+                return r;
+
+        if (ucred.uid != 0 && ucred.uid != geteuid())
+                return -EPERM;
+
+        return 1;
+}
+
+static int connect_system_systemd(sd_bus **_bus) {
+        _cleanup_(sd_bus_close_unrefp) sd_bus *bus = NULL;
+        int r;
+
+        assert(_bus);
+
+        if (geteuid() != 0)
+                return sd_bus_default_system(_bus);
+
+        r = sd_bus_new(&bus);
+        if (r < 0)
+                return r;
+
+        r = sd_bus_set_address(bus, "unix:path=/run/systemd/private");
+        if (r < 0)
+                return r;
+
+        r = sd_bus_start(bus);
+        if (r < 0)
+                return sd_bus_default_system(_bus);
+
+        r = bus_check_peercred(bus);
+        if (r < 0)
+                return r;
+
+        *_bus = steal_pointer(&bus);
+
+        return 0;
+}
 
 static void node_add_job_tracker(Node *node, JobTracker *tracker,
                                  const char *object_path, job_tracker_callback callback,
@@ -170,6 +249,8 @@ static int node_match_job_removed(sd_bus_message *m, void *userdata, sd_bus_erro
         }
         (void)sd_bus_message_rewind(m, true);
 
+        printf("Removed Job %s %s %s\n", job_path, unit, result);
+
         LIST_FOREACH_SAFE(trackers, tracker, next_tracker, node->trackers) {
                 if (strcmp(tracker->object_path, job_path) == 0) {
                         tracker->callback(m, result, tracker->userdata);
@@ -179,6 +260,12 @@ static int node_match_job_removed(sd_bus_message *m, void *userdata, sd_bus_erro
 
         return 0;
 }
+
+static int system_bus_disconnected(sd_bus_message *message, void *userdata, sd_bus_error *error) {
+        printf("System bus disconnected\n");
+        return 0;
+}
+
 
 int main(int argc, char *argv[]) {
         _cleanup_sd_event_ sd_event *event = NULL;
@@ -217,10 +304,23 @@ int main(int argc, char *argv[]) {
 
         /* Connect to system bus (for talking to systemd) */
 
-        r = sd_bus_open_system(&bus);
+        r = connect_system_systemd(&bus);
         if (r < 0) {
                 fprintf(stderr, "Failed to connect to system bus: %s\n", strerror(-r));
                 return EXIT_FAILURE;
+        }
+
+        r = sd_bus_match_signal_async(
+                        bus,
+                        NULL,
+                        "org.freedesktop.DBus.Local",
+                        "/org/freedesktop/DBus/Local",
+                        "org.freedesktop.DBus.Local",
+                        "Disconnected",
+                        system_bus_disconnected, NULL, NULL);
+        if (r < 0) {
+                fprintf(stderr, "Failed to request match for Disconnected message: %s\n", strerror(-r));
+                return 0;
         }
 
         node.local_bus = bus;
