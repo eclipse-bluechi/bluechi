@@ -284,3 +284,7 @@ static inline const char *enum_to_string(int i, const char * const *table, int t
 #define NODE_PEER_IFACE "com.redhat.Orchestrator.Node.Peer"
 
 #define DEFAULT_DBUS_TIMEOUT (USEC_PER_SEC * 30)
+
+#define SYSTEMD_BUS_NAME "org.freedesktop.systemd1"
+#define SYSTEMD_OBJECT_PATH "/org/freedesktop/systemd1"
+#define SYSTEMD_MANAGER_IFACE "org.freedesktop.systemd1.Manager"

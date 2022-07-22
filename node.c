@@ -6,22 +6,106 @@ typedef struct Node Node;
 struct Node {
         Manager manager;
         sd_bus *local_bus;
+        LIST_HEAD(JobTracker, trackers);
 };
 
 #define DEBUG_DBUS_MESSAGES 0
 
+static void node_add_job_tracker(Node *node, JobTracker *tracker,
+                                 const char *object_path, job_tracker_callback callback,
+                                 void *userdata) {
+        tracker->object_path = object_path;
+        tracker->callback = callback;
+        tracker->userdata = userdata;
+        LIST_PREPEND(trackers, node->trackers, tracker);
+}
+
 typedef struct {
         Job job;
         const char *target; /* owned by source_message */
+        const char *job_object_path;
+        sd_bus_message *reply;
+        JobTracker tracker;
 }  IsolateJob;
+
+static void job_isolate_destroy(Job *job) {
+        IsolateJob *isolate = (IsolateJob *)job;
+
+        if (isolate->reply)
+                sd_bus_message_unref(isolate->reply);
+}
+
+static void  job_isolate_request_done(sd_bus_message *m, const char *result, void *userdata) {
+        Job *job = userdata;
+        Manager *manager = job->manager;
+        JobResult res = JOB_DONE;
+
+        printf ("job_isolate_request_done, result: %s\n", result);
+
+        if (strcmp(result, "done") != 0) {
+                fprintf(stderr, "systemd isolate request failed with '%s'\n", result);
+                res = JOB_FAILED;
+        }
+
+        job->result = res;
+        manager_finish_job(manager, job);
+}
+
+static int job_isolate_request_cb (sd_bus_message *m, void *userdata, sd_bus_error *ret_error) {
+        Job *job = userdata;
+        Manager *manager = job->manager;
+        Node *node = (Node *)manager;
+        IsolateJob *isolate = (IsolateJob *)job;
+        int r;
+
+        printf("job_isolate_request_cb\n");
+
+        if (sd_bus_message_is_method_error(m, NULL)) {
+                const sd_bus_error* e = sd_bus_message_get_error(m);
+                fprintf(stderr, "Error isolating: %s %s\n", e->name, e->message);
+
+                job->result = JOB_FAILED;
+                manager_finish_job(manager, job);
+        } else {
+                r = sd_bus_message_read(m, "o", &isolate->job_object_path);
+                if (r < 0) {
+                        fprintf(stderr, "Error paring isolate response\n");
+                        job->result = JOB_FAILED;
+                        manager_finish_job(manager, job);
+                } else {
+                        printf("got job_path %s\n", isolate->job_object_path);
+                        node_add_job_tracker(node, &isolate->tracker,
+                                             isolate->job_object_path,
+                                             job_isolate_request_done,
+                                             job);
+                }
+        }
+
+        return 0;
+}
 
 static int job_isolate(Job *job) {
         Manager *manager = job->manager;
+        Node *node = (Node *)manager;
         IsolateJob *isolate = (IsolateJob *)job;
+        _cleanup_sd_bus_message_ sd_bus_message *m = NULL;
+        int r;
 
         printf ("Running job %d, Isolate %s\n", job->id, isolate->target);
 
-        manager_finish_job(manager, job);
+        r = sd_bus_message_new_method_call(node->local_bus, &m,
+                                           SYSTEMD_BUS_NAME,
+                                           SYSTEMD_OBJECT_PATH,
+                                           SYSTEMD_MANAGER_IFACE,
+                                           "StartUnit");
+        if (r >= 0)
+                r = sd_bus_message_append(m, "ss", isolate->target, "isolate");
+        if (r >= 0)
+                r = sd_bus_call_async(node->local_bus, NULL /*slot*/, m, job_isolate_request_cb, job, DEFAULT_DBUS_TIMEOUT);
+        if (r < 0) {
+                fprintf(stderr, "Failed to send isolate request: %s\n", strerror(-r));
+                return 0;
+        }
 
         return 0;
 }
@@ -41,7 +125,7 @@ static int method_node_isolate(sd_bus_message *m, void *userdata, sd_bus_error *
         printf("Got Isolate '%s'\n", target);
 
         r = manager_queue_job(manager, NODE_JOB_ISOLATE, sizeof(IsolateJob), m,
-                              job_isolate, NULL, NULL,
+                              job_isolate, NULL, job_isolate_destroy,
                               &job);
         if (r < 0)
                 return sd_bus_reply_method_errnof(m, -r, "Failed to create job: %m");
@@ -67,6 +151,32 @@ all_messages_handler (sd_bus_message *m, void *userdata, sd_bus_error *ret_error
                sd_bus_message_get_interface (m),
                sd_bus_message_get_member (m),
                sd_bus_message_get_signature (m, true));
+        return 0;
+}
+
+static int node_match_job_removed(sd_bus_message *m, void *userdata, sd_bus_error *error) {
+        Node *node = userdata;
+        JobTracker *tracker, *next_tracker;
+        const char *job_path;
+        const char *unit;
+        const char *result;
+        uint32_t id;
+        int r;
+
+        r = sd_bus_message_read(m, "uoss", &id, &job_path, &unit, &result);
+        if (r < 0) {
+                fprintf(stderr, "Can't parse job result\n");
+                return 0;
+        }
+        (void)sd_bus_message_rewind(m, true);
+
+        LIST_FOREACH_SAFE(trackers, tracker, next_tracker, node->trackers) {
+                if (strcmp(tracker->object_path, job_path) == 0) {
+                        tracker->callback(m, result, tracker->userdata);
+                        LIST_REMOVE(trackers, node->trackers, tracker);
+                }
+        }
+
         return 0;
 }
 
@@ -119,6 +229,34 @@ int main(int argc, char *argv[]) {
         if (r < 0) {
                 fprintf(stderr, "Failed to attach new connection bus to event loop: %s\n", strerror(-r));
                 return 0;
+        }
+
+
+        r = sd_bus_call_method(bus,
+                               SYSTEMD_BUS_NAME,
+                               SYSTEMD_OBJECT_PATH,
+                               SYSTEMD_MANAGER_IFACE,
+                               "Subscribe",
+                               &error,
+                               &m,
+                               "");
+        if (r < 0) {
+                fprintf(stderr, "Failed to subscribe call: %s\n", error.message);
+                sd_bus_error_free(&error);
+                return EXIT_FAILURE;
+        }
+
+        r = sd_bus_match_signal(
+                        bus,
+                        NULL,
+                        SYSTEMD_BUS_NAME,
+                        SYSTEMD_OBJECT_PATH,
+                        SYSTEMD_MANAGER_IFACE,
+                        "JobRemoved",
+                        node_match_job_removed, &node);
+        if (r < 0) {
+                fprintf(stderr, "Failed to job-removed peer bus match: %s\n", strerror(-r));
+                return EXIT_FAILURE;
         }
 
         /* Connect to orchestrator */
@@ -183,8 +321,7 @@ int main(int argc, char *argv[]) {
                                &error,
                                &m,
                                "s",
-                               node_name,
-                               "replace");
+                               node_name);
         if (r < 0) {
                 fprintf(stderr, "Failed to issue method call: %s\n", error.message);
                 sd_bus_error_free(&error);

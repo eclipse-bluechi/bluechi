@@ -27,7 +27,12 @@ struct Orchestrator {
         LIST_HEAD(Node, nodes);
 };
 
-static void node_add_job_tracker(Node *node, JobTracker *tracker) {
+static void node_add_job_tracker(Node *node, JobTracker *tracker,
+                                 const char *object_path, job_tracker_callback callback,
+                                 void *userdata) {
+        tracker->object_path = object_path;
+        tracker->callback = callback;
+        tracker->userdata = userdata;
         LIST_PREPEND(trackers, node->trackers, tracker);
 }
 
@@ -109,7 +114,7 @@ typedef struct {
         JobTracker tracker;
 }  IsolateRequest;
 
-static void isolate_request_destrory(IsolateRequest *request) {
+static void isolate_request_destroy(IsolateRequest *request) {
         if (request->node)
                 node_unref(request->node);
         if (request->request)
@@ -135,7 +140,7 @@ static void job_isolate_all_destroy(Job *job) {
 
         if (isolate_all->requests) {
                 for (i = 0; i < isolate_all->n_requests; i++)
-                        isolate_request_destrory(&isolate_all->requests[i]);
+                        isolate_request_destroy(&isolate_all->requests[i]);
                 free(isolate_all->requests);
         }
 }
@@ -198,10 +203,10 @@ static int job_isolate_all_request_cb (sd_bus_message *m, void *userdata, sd_bus
                         request->result = JOB_FAILED;
                         isolate_all->n_outstanding_requests--;
                 } else {
-                        request->tracker.object_path = request->job_object_path;
-                        request->tracker.callback = job_isolate_all_request_job_done;
-                        request->tracker.userdata = request;
-                        node_add_job_tracker(node, &request->tracker);
+                        node_add_job_tracker(node, &request->tracker,
+                                             request->job_object_path,
+                                             job_isolate_all_request_job_done,
+                                             request);
                 }
         }
 
