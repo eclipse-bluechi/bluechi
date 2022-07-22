@@ -282,3 +282,5 @@ static inline const char *enum_to_string(int i, const char * const *table, int t
 #define NODE_PEER_JOBS_OBJECT_PATH_PREFIX "/com/redhat/Orchestrator/Node/job"
 #define NODE_IFACE "com.redhat.Orchestrator.Node"
 #define NODE_PEER_IFACE "com.redhat.Orchestrator.Node.Peer"
+
+#define DEFAULT_DBUS_TIMEOUT (USEC_PER_SEC * 30)

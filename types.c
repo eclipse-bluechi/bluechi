@@ -70,7 +70,6 @@ void job_unref(Job *job) {
         job->ref_count--;
 
         if (job->ref_count == 0) {
-                printf ("Freeing job %p\n", job);
                 if (job->destroy_cb)
                         job->destroy_cb(job);
 
@@ -147,10 +146,12 @@ static void try_start_job (Manager *manager) {
 
         manager->current_job = job_ref(job);
 
+        printf ("Started job %d\n", job->id);
+
         job->state = JOB_RUNNING;
         sd_bus_emit_properties_changed(manager->bus, job->object_path, JOB_IFACE, "State", NULL);
 
-        (job->start_cb)(job, job->userdata);
+        (job->start_cb)(job);
 }
 
 static int finish_job_cb (sd_event_source *s, void *userdata) {
@@ -164,6 +165,8 @@ static int finish_job_cb (sd_event_source *s, void *userdata) {
 
         manager_remove_job(manager, job);
 
+        printf("Finished job %d, result: %s\n", job->id, job_result_to_string(job->result));
+
         sd_event_source_unref (manager->job_source);
         manager->job_source = NULL;
 
@@ -174,8 +177,6 @@ static int finish_job_cb (sd_event_source *s, void *userdata) {
 
 void manager_finish_job(Manager *manager, Job *job) {
         int r;
-
-        printf("Finish job %p\n", job);
 
         assert (manager->current_job == job);
         assert (manager->job_source == NULL);
@@ -212,8 +213,6 @@ static void schedule_job(Manager *manager) {
         if (r < 0) {
                 fprintf(stderr, "No memory to queue job scheduler");
         }
-
-        printf ("Scheduled job start\n");
 }
 
 static BUS_DEFINE_PROPERTY_GET_ENUM(property_get_type, job_type, JobType);
@@ -229,10 +228,10 @@ static const sd_bus_vtable job_vtable[] = {
 int manager_queue_job(Manager *manager,
                       int job_type,
                       size_t job_size,
+                      sd_bus_message *source_message,
                       job_start_callback start_cb,
                       job_cancel_callback cancel_cb,
                       job_destroy_callback destroy_cb,
-                      void *userdata,
                       Job **job_out) {
         _cleanup_(job_unrefp) Job *job = NULL;
         int r;
@@ -242,10 +241,12 @@ int manager_queue_job(Manager *manager,
                 return -ENOMEM;
         }
 
+        if (source_message)
+          job->source_message = sd_bus_message_ref(source_message);
+
         job->start_cb = start_cb;
         job->cancel_cb = cancel_cb;
         job->destroy_cb = destroy_cb;
-        job->userdata = userdata;
 
         r = sd_bus_add_object_vtable(manager->bus,
                                      &job->bus_slot,

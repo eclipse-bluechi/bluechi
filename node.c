@@ -15,11 +15,11 @@ typedef struct {
         const char *target; /* owned by source_message */
 }  IsolateJob;
 
-static int job_isolate(Job *job, void *userdata) {
+static int job_isolate(Job *job) {
         Manager *manager = job->manager;
         IsolateJob *isolate = (IsolateJob *)job;
 
-        printf ("Running Isolate %s\n", isolate->target);
+        printf ("Running job %d, Isolate %s\n", job->id, isolate->target);
 
         manager_finish_job(manager, job);
 
@@ -34,33 +34,28 @@ static int method_node_isolate(sd_bus_message *m, void *userdata, sd_bus_error *
         IsolateJob *isolate;
         int r;
 
-        /* TODO: Make this a job */
         r = sd_bus_message_read(m, "s", &target);
-        if (r < 0) {
-                fprintf(stderr, "Failed to parse parameters: %s\n", strerror(-r));
-                return r;
-        }
+        if (r < 0)
+                return sd_bus_reply_method_errnof(m, -r, "Failed to create job: %m");
 
         printf("Got Isolate '%s'\n", target);
 
-        r = manager_queue_job(manager, NODE_JOB_ISOLATE, sizeof(IsolateJob),
+        r = manager_queue_job(manager, NODE_JOB_ISOLATE, sizeof(IsolateJob), m,
                               job_isolate, NULL, NULL,
-                              NULL, &job);
+                              &job);
         if (r < 0)
                 return sd_bus_reply_method_errnof(m, -r, "Failed to create job: %m");
 
         isolate = (IsolateJob *)job;
-
-        job->source_message = sd_bus_message_ref(m);
         isolate->target = target;
 
-        return sd_bus_reply_method_return(m, "");
+        return sd_bus_reply_method_return(m, "o", job->object_path);
 }
 
 
 static const sd_bus_vtable node_vtable[] = {
         SD_BUS_VTABLE_START(0),
-        SD_BUS_METHOD("Isolate", "s", "", method_node_isolate, 0),
+        SD_BUS_METHOD("Isolate", "s", "o", method_node_isolate, 0),
         SD_BUS_VTABLE_END
 };
 

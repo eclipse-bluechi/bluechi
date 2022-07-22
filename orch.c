@@ -19,12 +19,17 @@ struct Node {
         char *name;
         char *object_path;
         LIST_FIELDS(Node, nodes);
+        LIST_HEAD(JobTracker, trackers);
 };
 
 struct Orchestrator {
         Manager manager;
         LIST_HEAD(Node, nodes);
 };
+
+static void node_add_job_tracker(Node *node, JobTracker *tracker) {
+        LIST_PREPEND(trackers, node->trackers, tracker);
+}
 
 static Node *node_new(Orchestrator *orch) {
         Node *node = malloc0(sizeof (Node));
@@ -58,6 +63,16 @@ static void node_unref(Node *node) {
 }
 _SD_DEFINE_POINTER_CLEANUP_FUNC(Node, node_unref);
 
+static int orch_get_n_nodes(Orchestrator *orch) {
+        Node *node;
+        int n_nodes = 0;
+
+        LIST_FOREACH(nodes, node, orch->nodes)
+                n_nodes++;
+
+        return n_nodes;
+}
+
 static void orch_add_node(Orchestrator *orch, Node *node) {
         LIST_APPEND(nodes, orch->nodes, node_ref(node));
 }
@@ -84,59 +99,164 @@ static const sd_bus_vtable node_vtable[] = {
 };
 
 typedef struct {
+        Job *job;
+        Node *node;
+        sd_bus_message *request;
+        sd_bus_slot *request_slot;
+        sd_bus_message *reply;
+        const char *job_object_path;
+        JobResult result;
+        JobTracker tracker;
+}  IsolateRequest;
+
+static void isolate_request_destrory(IsolateRequest *request) {
+        if (request->node)
+                node_unref(request->node);
+        if (request->request)
+                sd_bus_message_unref(request->request);
+        if (request->request_slot)
+                sd_bus_slot_unref(request->request_slot);
+        if (request->reply)
+                sd_bus_message_unref(request->reply);
+}
+
+typedef struct {
         Job job;
 
         const char *target; /* owned by source_message */
-        int outstanding;
+        int n_outstanding_requests;
+        int n_requests;
+        IsolateRequest *requests;
 }  IsolateAllJob;
 
-static int job_isolate_all_cb (sd_bus_message *m, void *userdata, sd_bus_error *ret_error) {
-        Job *job = userdata;
-        Manager *manager = job->manager;
+static void job_isolate_all_destroy(Job *job) {
         IsolateAllJob *isolate_all = (IsolateAllJob *)job;
+        int i;
 
-        printf("job_isolate_all_cb %d, \n", isolate_all->outstanding);
+        if (isolate_all->requests) {
+                for (i = 0; i < isolate_all->n_requests; i++)
+                        isolate_request_destrory(&isolate_all->requests[i]);
+                free(isolate_all->requests);
+        }
+}
 
-        if (--isolate_all->outstanding == 0)
-                manager_finish_job(manager, job);
+static void job_isolate_all_try_finish(Job *job) {
+        IsolateAllJob *isolate_all = (IsolateAllJob *)job;
+        Manager *manager = job->manager;
+        int i;
+        bool one_failed = false;
+
+        if (isolate_all->n_outstanding_requests > 0)
+                return; /* All not done */
+
+        /* All requests done */
+        for (i = 0; i < isolate_all->n_requests; i++) {
+                if (isolate_all->requests[i].result == JOB_FAILED) {
+                        one_failed = true;
+                        break;
+                }
+        }
+        job->result = one_failed ? JOB_FAILED : JOB_DONE;
+        manager_finish_job(manager, job);
+}
+
+static void  job_isolate_all_request_job_done(sd_bus_message *m, const char *result, void *userdata) {
+        IsolateRequest *request = userdata;
+        Node *node = request->node;
+        Job *job = request->job;
+        IsolateAllJob *isolate_all = (IsolateAllJob *)job;
+        JobResult res = JOB_DONE;
+
+        if (strcmp(result, "done") != 0) {
+                fprintf(stderr, "Node '%s' isolate request failed with '%s'\n", node->name, result);
+                res = JOB_FAILED;
+        }
+
+        request->result = res;
+        isolate_all->n_outstanding_requests--;
+
+        job_isolate_all_try_finish(job);
+}
+
+static int job_isolate_all_request_cb (sd_bus_message *m, void *userdata, sd_bus_error *ret_error) {
+        IsolateRequest *request = userdata;
+        Node *node = request->node;
+        Job *job = request->job;
+        IsolateAllJob *isolate_all = (IsolateAllJob *)job;
+        int r;
+
+        if (sd_bus_message_is_method_error(m, NULL)) {
+                fprintf(stderr, "Got failure from isolate request");
+                request->result = JOB_FAILED;
+                isolate_all->n_outstanding_requests--;
+        } else {
+                request->reply = sd_bus_message_ref(m);
+
+                r = sd_bus_message_read(request->reply, "o", &request->job_object_path);
+                if (r < 0) {
+                        fprintf(stderr, "Failed to parse isolate response: %s\n", strerror(-r));
+                        request->result = JOB_FAILED;
+                        isolate_all->n_outstanding_requests--;
+                } else {
+                        request->tracker.object_path = request->job_object_path;
+                        request->tracker.callback = job_isolate_all_request_job_done;
+                        request->tracker.userdata = request;
+                        node_add_job_tracker(node, &request->tracker);
+                }
+        }
+
+        job_isolate_all_try_finish(job);
 
         return 0;
 }
 
-static int job_isolate_all(Job *job, void *userdata) {
+static int job_isolate_all(Job *job) {
         IsolateAllJob *isolate_all = (IsolateAllJob *)job;
         Manager *manager = job->manager;
         Orchestrator *orch = (Orchestrator *)manager;
         Node *node;
-        int r;
+        int n_requests;
+        int r, i;
 
-        printf ("Started job isolate all %p\n", isolate_all);
+        printf ("Running job %d IsolateAll '%s'\n", job->id, isolate_all->target);
 
-        LIST_FOREACH(nodes, node, orch->nodes) {
-                _cleanup_sd_bus_message_ sd_bus_message *m = NULL;
-                _cleanup_(sd_bus_error_free) sd_bus_error error = SD_BUS_ERROR_NULL;
-                _cleanup_sd_bus_message_ sd_bus_message *reply = NULL;
-
-                r = sd_bus_message_new_method_call(node->peer, &m, NODE_BUS_NAME, NODE_PEER_OBJECT_PATH, NODE_PEER_IFACE, "Isolate");
-                assert(r >= 0);
-
-                r = sd_bus_message_append(m, "s", isolate_all->target);
-                assert(r >= 0);
-
-                /* TODO: NULL slot, never freed? */
-                r = sd_bus_call_async(node->peer, NULL, m, job_isolate_all_cb, job, USEC_PER_SEC * 30);
-                assert(r >= 0);
-
-                isolate_all->outstanding++;
+        n_requests = orch_get_n_nodes(orch);
+        isolate_all->n_requests = n_requests;
+        isolate_all->requests = calloc(n_requests, sizeof(IsolateRequest));
+        if (isolate_all->requests == NULL) {
+                job->result = JOB_FAILED;
+                manager_finish_job(manager, job);
+                return 0;
         }
 
-        if (isolate_all->outstanding == 0)
-                manager_finish_job(manager, job);
+        i = 0;
+        LIST_FOREACH(nodes, node, orch->nodes) {
+                IsolateRequest *request = &isolate_all->requests[i++];
+
+                request->job = job;
+                request->node = node;
+                request->result = _JOB_RESULT_INVALID;
+
+                r = sd_bus_message_new_method_call(node->peer, &request->request, NODE_BUS_NAME, NODE_PEER_OBJECT_PATH, NODE_PEER_IFACE, "Isolate");
+                if (r >= 0)
+                        r = sd_bus_message_append(request->request, "s", isolate_all->target);
+                if (r >= 0)
+                        r = sd_bus_call_async(node->peer, &request->request_slot, request->request, job_isolate_all_request_cb, request, DEFAULT_DBUS_TIMEOUT);
+                if (r < 0) {
+                        fprintf(stderr, "Failed to send isolate request: %s\n", strerror(-r));
+                        request->result = JOB_FAILED;
+                        continue;
+                }
+
+                isolate_all->n_outstanding_requests++;
+        }
+
+        job_isolate_all_try_finish(job);
 
         return 0;
 }
 
-static int cancel_isolate_all(Job *job, void *userdata) {
+static int cancel_isolate_all(Job *job) {
         return 0;
 }
 
@@ -148,19 +268,15 @@ static int method_orchestrator_isolate_all(sd_bus_message *m, void *userdata, sd
         int r;
 
         r = sd_bus_message_read(m, "s", &target);
-        if (r < 0) {
-                fprintf(stderr, "Failed to parse parameters: %s\n", strerror(-r));
-                return r;
-        }
+        if (r < 0)
+                return sd_bus_reply_method_errnof(m, -r, "Failed to create job: %m");
 
-        r = manager_queue_job(manager, JOB_ISOLATE_ALL, sizeof(IsolateAllJob),
-                           job_isolate_all, cancel_isolate_all, NULL, NULL, &job);
+        r = manager_queue_job(manager, JOB_ISOLATE_ALL, sizeof(IsolateAllJob), m,
+                              job_isolate_all, cancel_isolate_all, job_isolate_all_destroy, &job);
         if (r < 0)
                 return sd_bus_reply_method_errnof(m, -r, "Failed to create job: %m");
 
         isolate_all = (IsolateAllJob *)job;
-
-        job->source_message = sd_bus_message_ref(m);
         isolate_all->target = target;
 
         return sd_bus_reply_method_return(m, "o", job->object_path);
@@ -331,6 +447,31 @@ all_node_messages_handler (sd_bus_message *m, void *userdata, sd_bus_error *ret_
         return 0;
 }
 
+static int node_match_job_removed(sd_bus_message *m, void *userdata, sd_bus_error *error) {
+        Node *node = userdata;
+        JobTracker *tracker, *next_tracker;
+        const char *job_path;
+        const char *result;
+        uint32_t id;
+        int r;
+
+        r = sd_bus_message_read(m, "uos", &id, &job_path, &result);
+        if (r < 0) {
+                fprintf(stderr, "Can't parse job result\n");
+                return 0;
+        }
+        (void)sd_bus_message_rewind(m, true);
+
+        LIST_FOREACH_SAFE(trackers, tracker, next_tracker, node->trackers) {
+                if (strcmp(tracker->object_path, job_path) == 0) {
+                        tracker->callback(m, result, tracker->userdata);
+                        LIST_REMOVE(trackers, node->trackers, tracker);
+                }
+        }
+
+        return 0;
+}
+
 static int accept_handler(sd_event_source *s, int fd, uint32_t revents, void *userdata) {
         Orchestrator *orch = userdata;
         Manager *manager = (Manager *)orch;
@@ -431,6 +572,19 @@ static int accept_handler(sd_event_source *s, int fd, uint32_t revents, void *us
                                      node);
         if (r < 0) {
                 fprintf(stderr, "Failed to add peer bus vtable: %s\n", strerror(-r));
+                return EXIT_FAILURE;
+        }
+
+        r = sd_bus_match_signal(
+                        node->peer,
+                        NULL,
+                        NULL,
+                        NODE_PEER_OBJECT_PATH,
+                        NODE_IFACE,
+                        "JobRemoved",
+                        node_match_job_removed, node);
+        if (r < 0) {
+                fprintf(stderr, "Failed to job-removed peer bus match: %s\n", strerror(-r));
                 return EXIT_FAILURE;
         }
 

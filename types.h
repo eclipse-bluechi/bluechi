@@ -40,10 +40,20 @@ extern const char *job_result_to_string(JobResult result);
 
 typedef struct Manager Manager;
 typedef struct Job Job;
+typedef struct JobTracker JobTracker;
 
-typedef int (*job_start_callback)(Job *job, void *userdata);
-typedef int (*job_cancel_callback)(Job *job, void *userdata);
-typedef int (*job_destroy_callback)(Job *job);
+typedef void (*job_tracker_callback)(sd_bus_message *m, const char *result, void *userdata);
+
+struct JobTracker {
+        const char *object_path;
+        job_tracker_callback callback;
+        void *userdata;
+        LIST_FIELDS(JobTracker, trackers);
+};
+
+typedef int (*job_start_callback)(Job *job);
+typedef int (*job_cancel_callback)(Job *job);
+typedef void (*job_destroy_callback)(Job *job);
 
 struct Job {
         int ref_count;
@@ -55,12 +65,11 @@ struct Job {
         uint32_t id;
         char *object_path;
 
+        sd_bus_message *source_message;
+
         job_start_callback start_cb;
         job_cancel_callback cancel_cb;
         job_destroy_callback destroy_cb;
-        void *userdata;
-
-        sd_bus_message *source_message;
 
         LIST_FIELDS(Job, jobs);
 };
@@ -88,8 +97,8 @@ void manager_finish_job(Manager *manager, Job *job);
 int manager_queue_job(Manager *manager,
                       int job_type,
                       size_t job_size,
+                      sd_bus_message *source_message,
                       job_start_callback start_cb,
                       job_cancel_callback cancel_cb,
                       job_destroy_callback destroy_cb,
-                      void *userdata,
                       Job **job_out);
