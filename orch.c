@@ -56,7 +56,7 @@ static void node_unref(Node *node) {
 
         if (node->ref_count == 0) {
                 if (node->peer)
-                        sd_bus_close_unref(node->peer);
+                        sd_bus_flush_close_unref(node->peer);
                 if (node->bus_slot)
                         sd_bus_slot_unref(node->bus_slot);
                 if (node->name)
@@ -351,7 +351,7 @@ static int node_disconnected(sd_bus_message *message, void *userdata, sd_bus_err
                 printf("Unregistered node disconnected\n");
 
         if (node->peer) {
-                sd_bus_close_unref(node->peer);
+                sd_bus_flush_close_unref(node->peer);
                 node->peer = NULL;
         }
 
@@ -481,7 +481,7 @@ static int accept_handler(sd_event_source *s, int fd, uint32_t revents, void *us
         Orchestrator *orch = userdata;
         Manager *manager = (Manager *)orch;
         _cleanup_fd_ int nfd = -1;
-        _cleanup_(sd_bus_close_unrefp) sd_bus *bus = NULL;
+        _cleanup_(sd_bus_flush_close_unrefp) sd_bus *bus = NULL;
         _cleanup_(node_unrefp) Node *node = NULL;
         sd_id128_t id;
         int r;
