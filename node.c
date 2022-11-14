@@ -11,7 +11,7 @@ struct Node {
 	LIST_HEAD(JobTracker, trackers);
 };
 
-#define DEBUG_DBUS_MESSAGES 0
+#define DEBUG_DBUS_MESSAGES 1
 
 static int getpeercred(int fd, struct ucred *ucred) {
 	socklen_t n = sizeof(struct ucred);
