@@ -1,0 +1,69 @@
+@startuml manager-activity
+:RPC command> 
+:Check command;
+if (is valid?) is (yes) then
+  group Queue Job
+    :create job;
+    :add job specific 
+    vtable **jt** to user bus;
+    note right
+      **jt** vtable:
+      com.redhat.Orchestrator
+      |- /com/redhat/Orchestrator/job/<job-id>
+        |- com.redhat.Orchestrator.Job
+            |- property: string JobType
+            |- property: string State
+    end note
+    :add job to manager;
+    :send "JobNew"-
+    signal **jn** to user bus;
+    note right
+      **jn** sent to:
+      com.redhat.Orchestrator
+      |- /com/redhat/Orchestrator
+        |- com.redhat.Orchestrator.Job
+    end note
+    :schedule start job process;
+    note right
+      adds job processing to event loop
+    end note
+  end group
+  detach
+
+  start
+  group Process Scheduled Job
+    :iterate over nodes;
+    while (has node n?)
+      :create new DBus message **m**;
+      if (successfully created) is (yes) then
+      :send **m** to peer DBus of **n**;
+      :increment outstanding requests;
+      else (no)
+      :set job status "FAILED";
+      endif
+    endwhile
+    :schedule finish job process;
+    note right
+      adds job processing to event loop
+    end note
+  end group
+  detach
+
+  start
+  group Finalize Scheduled Job
+    :send "JobRemoved"-
+    signal **jr** to user bus;
+    note left
+      **jr** sent to:
+      com.redhat.Orchestrator
+      |- /com/redhat/Orchestrator
+        |- com.redhat.Orchestrator.Job
+    end note
+    :remove job from manager;
+  end group
+
+else (no) 
+  (x)
+endif
+
+@enduml
