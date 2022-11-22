@@ -180,7 +180,7 @@ static int job_isolate(Job *job) {
 					   SYSTEMD_OBJECT_PATH,
 					   SYSTEMD_MANAGER_IFACE, "StartUnit");
 	if (r >= 0)
-		r = sd_bus_message_append(m, "ss", isolate->target, "isolate");
+		r = sd_bus_message_append(m, "ss", isolate->target, "replace");
 	if (r >= 0)
 		r = sd_bus_call_async(node->local_bus, NULL /*slot*/, m,
 				      job_isolate_request_cb, job,
