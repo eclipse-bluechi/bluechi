@@ -2,6 +2,6 @@
 #include <stdlib.h>
 
 int main() {
-	fprintf(stdout, "Hello from client!\n");
-	return EXIT_SUCCESS;
+        fprintf(stdout, "Hello from client!\n");
+        return EXIT_SUCCESS;
 }
