@@ -1,4 +1,5 @@
-#pragma once
+#ifndef _BLUE_CHIHUAHUA_COMMON_DBUS
+#define _BLUE_CHIHUAHUA_COMMON_DBUS
 
 #include "memory.h"
 
@@ -10,3 +11,5 @@
 #define _cleanup_sd_bus_ _cleanup_(sd_bus_unrefp)
 #define _cleanup_sd_bus_slot_ _cleanup_(sd_bus_slot_unrefp)
 #define _cleanup_sd_bus_message_ _cleanup_(sd_bus_message_unrefp)
+
+#endif
