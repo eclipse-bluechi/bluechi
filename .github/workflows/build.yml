@@ -25,11 +25,15 @@ jobs:
     runs-on: ubuntu-latest
     container:
       image: quay.io/centos/centos:stream9
+    env:
+      ARTIFACTS_DIR: /exported-artifacts
 
     steps:
       - name: Install dependencies
         run: |
           dnf install \
+                  autoconf \
+                  automake \
                   gcc \
                   make \
                   systemd-devel \
@@ -44,10 +48,12 @@ jobs:
 
       - name: Build project
         run: |
-          make build
+          autoreconf -ivf
+          ./configure
+          make DESTDIR=$ARTIFACTS_DIR install
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v3
         with:
           name: artifacts
-          path: "**/bin/*"
+          path: ${{ env.ARTIFACTS_DIR }}

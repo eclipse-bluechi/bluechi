@@ -1,0 +1,37 @@
+dnl
+dnl Blue Chihuahua - containers orchestrator
+dnl
+
+AC_PREREQ(2.69)
+
+define([VERSION_MAJOR], [0])
+define([VERSION_MINOR], [0])
+define([VERSION_FIX], [1])
+define([VERSION_NUMBER], VERSION_MAJOR[.]VERSION_MINOR[.]VERSION_FIX)
+define([VERSION_SUFFIX], [_main])
+
+AC_INIT([blue-chihuahua], VERSION_NUMBER[]VERSION_SUFFIX)
+PACKAGE_RPM_VERSION="VERSION_NUMBER"
+PACKAGE_RPM_RELEASE="0.0.$(echo VERSION_SUFFIX | sed 's/^_//')"
+RELEASE_SUFFIX="VERSION_SUFFIX"
+AC_SUBST([PACKAGE_RPM_VERSION])
+AC_SUBST([PACKAGE_RPM_RELEASE])
+AC_SUBST([RELEASE_SUFFIX])
+
+AC_CONFIG_AUX_DIR([.])
+
+AM_INIT_AUTOMAKE([-Wall -Werror foreign])
+
+AC_PROG_CC
+
+PKG_PROG_PKG_CONFIG
+PKG_CHECK_MODULES(SYSTEMD, [libsystemd])
+
+AC_CONFIG_FILES([
+	Makefile
+	src/client/Makefile
+	src/node/Makefile
+	src/orch/Makefile
+])
+
+AC_OUTPUT

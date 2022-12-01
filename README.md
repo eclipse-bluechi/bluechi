@@ -10,9 +10,18 @@ TBD
 
 ## Development
 
+### Introduction
+
+Project is using autotools, so build configuration needs to be generated first:
+
+```bash
+autoreconf -ivf
+./configure
+```
+
 ### Code Style
 
-`clang-format` is used to enforce a unified code style. For setup instructions, please refer to the [official Clang getting started guide](https://clang.llvm.org/get_started.html). 
+`clang-format` is used to enforce a unified code style. For setup instructions, please refer to the [official Clang getting started guide](https://clang.llvm.org/get_started.html).
 
 Once `clang-format` is set up, all source files can be formatted via:
 ```bash
@@ -23,7 +32,7 @@ make fmt
 
 The binaries can be built via
 ```bash
-make build
+make all
 ```
 and are output to `./bin/`.
 
@@ -34,7 +43,7 @@ After building, three binaries are available:
 
 ### Running
 
-At the moment the client and node binary do only print a simple greeting and exit. 
+At the moment the client and node binary do only print a simple greeting and exit.
 
 #### orchestrator
 
@@ -42,7 +51,7 @@ The orchestrator can be run via:
 ```bash
 ./bin/orch <port>
 ```
-It starts a tcp socket and accepts connections, but does not do much more at this point. 
+It starts a tcp socket and accepts connections, but does not do much more at this point.
 This can be tested manually via
 ```bash
 nc <host> <port>
@@ -52,6 +61,6 @@ nc <host> <port>
 
 ## Documentation
 
-For further documentation please refer to the [doc](./doc/) directory. 
+For further documentation please refer to the [doc](./doc/) directory.
 
 The target architecture for this project is described in [doc/arch](./doc/arch/)
