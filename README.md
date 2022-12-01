@@ -40,15 +40,21 @@ At the moment the client and node binary do only print a simple greeting and exi
 
 The orchestrator can be run via:
 ```bash
-./bin/orch <port>
+./bin/orch -p <port>
 ```
 It starts a tcp socket and accepts connections, but does not do much more at this point. 
 This can be tested manually via
 ```bash
 nc <host> <port>
-# e.g.
-# nc localhost 1999
 ```
+
+#### node
+
+Nodes can be run via:
+```bash
+./bin/node -h <host> -p <port>
+```
+It creates a new dbus which tries to connect to the specified host. It does not do much more at this point. 
 
 ## Documentation
 

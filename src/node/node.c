@@ -1,4 +1,5 @@
 #include "../common/dbus.h"
+#include "dbus.h"
 #include "opt.h"
 
 #include <stdio.h>
@@ -24,13 +25,20 @@ int main(int argc, char *argv[]) {
                 return EXIT_FAILURE;
         }
 
+        _cleanup_sd_bus_ sd_bus *orch = NULL;
+        r = setup_peer_dbus(orch, &host);
+        if (r < 0) {
+                return EXIT_FAILURE;
+        }
 
         r = sd_event_loop(event);
         if (r < 0) {
                 fprintf(stderr, "Event loop failed: %s\n", strerror(-r));
                 return EXIT_FAILURE;
         }
-
+        if (r < 0) {
+                return EXIT_FAILURE;
+        }
 
         return EXIT_SUCCESS;
 }
