@@ -22,7 +22,10 @@ build-client:
 
 build-node:
 	mkdir -p bin
-	gcc src/node/node.c src/node/opt.c -g -Wall -o bin/node
+	gcc \
+	src/node/node.c \
+	src/node/opt.c \
+	-g -Wall -o bin/node `pkg-config --cflags --libs libsystemd`
 
 build-orch:
 	mkdir -p bin
