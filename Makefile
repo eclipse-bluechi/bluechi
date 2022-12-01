@@ -18,4 +18,8 @@ build-node:
 
 build-orch:
 	mkdir -p bin
-	gcc -D_GNU_SOURCE src/orch/orch.c src/orch/controller.c -g -Wall -o bin/orch `pkg-config --cflags --libs libsystemd`
+	gcc -D_GNU_SOURCE \
+		src/orch/orch.c \
+		src/orch/opt.c \
+		src/orch/controller.c \
+		-g -Wall -o bin/orch `pkg-config --cflags --libs libsystemd`
