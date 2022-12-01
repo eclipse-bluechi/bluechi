@@ -22,7 +22,7 @@ int main(int argc, char *argv[]) {
         _cleanup_sd_event_source_ sd_event_source *event_source = NULL;
         r = controller_setup(port, event, event_source);
         if (r < 0) {
-                fprintf(stderr, "Failed to setup controller");
+                fprintf(stderr, "Failed to setup controller\n");
                 return EXIT_FAILURE;
         }
 
