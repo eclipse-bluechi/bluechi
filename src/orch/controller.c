@@ -7,7 +7,7 @@
 #include <stdlib.h>
 #include <sys/socket.h>
 
-int create_master_socket(int port) {
+int create_master_socket(const int port) {
         struct sockaddr_in servaddr;
 
         int fd = socket(AF_INET, SOCK_STREAM | SOCK_CLOEXEC | SOCK_NONBLOCK, 0);
