@@ -22,7 +22,7 @@ build-client:
 
 build-node:
 	mkdir -p bin
-	gcc src/node/node.c -g -Wall -o bin/node
+	gcc src/node/node.c src/node/opt.c -g -Wall -o bin/node
 
 build-orch:
 	mkdir -p bin
