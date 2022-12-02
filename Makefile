@@ -4,9 +4,7 @@ fmt:
 	done
 
 check-fmt:
-	# TODO: Replace [client|common|node|orch] with ** after formatting
-	# is fixed under src/ini subdirectory
-	for file in ./src/[client|common|node|orch]/*.[ch] ; do \
+	for file in ./src/**/*.[ch] ; do \
 		clang-format --dry-run -Werror $${file} ; \
 		if [ $$? -ne 0 ] ; then \
 			exit 1 ; \

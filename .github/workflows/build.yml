@@ -10,15 +10,14 @@ jobs:
     name: Check source code formatting
     runs-on: ubuntu-latest
     steps:
-    - name: Checkout sources
-      uses: actions/checkout@v3
+      - name: Checkout sources
+        uses: actions/checkout@v3
 
-    - name: Check source code formatting
-      uses: jidicula/clang-format-action@v4.9.0
-      with:
-        clang-format-version: '15'
-        check-path: 'src'
-        exclude-regex: 'ini' # TODO: remove once we fix formatting in ini subdirectory
+      - name: Check source code formatting
+        uses: jidicula/clang-format-action@v4.9.0
+        with:
+          clang-format-version: "15"
+          check-path: "src"
 
   build:
     name: cs9 x86_64 build
@@ -28,28 +27,27 @@ jobs:
       image: quay.io/centos/centos:stream9
 
     steps:
-    - name: Install dependencies
-      run: |
-        dnf install \
-                gcc \
-                make \
-                systemd-devel \
-            -y
+      - name: Install dependencies
+        run: |
+          dnf install \
+                  gcc \
+                  make \
+                  systemd-devel \
+              -y
 
-    - name: Checkout sources
-      uses: actions/checkout@v3
-      with:
-        fetch-depth: 0
-        # Use githash of a tested commit instead of merge commit
-        ref: ${{ github.event.pull_request.head.sha }}
+      - name: Checkout sources
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          # Use githash of a tested commit instead of merge commit
+          ref: ${{ github.event.pull_request.head.sha }}
 
-    - name: Build project
-      run: |
-        make build
+      - name: Build project
+        run: |
+          make build
 
-    - name: Upload artifacts
-      uses: actions/upload-artifact@v3
-      with:
-        name: artifacts
-        path: "**/bin/*"
-
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: artifacts
+          path: "**/bin/*"
