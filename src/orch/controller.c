@@ -56,12 +56,13 @@ static int accept_handler(sd_event_source *s, int fd, uint32_t revents, void *us
         }
 
         // TODO: setup peer dbus, incl. vtable with services, signals, properties
+        fprintf(stdout, "accepted connection request\n");
 
         return 0;
 }
 
-int controller_setup(int port, sd_event *event, sd_event_source *event_source) {
-        _cleanup_fd_ int accept_fd = create_master_socket(port);
+int controller_setup(int accept_fd, int port, sd_event *event, sd_event_source *event_source) {
+        accept_fd = create_master_socket(port);
         if (accept_fd < 0) {
                 return -1;
         }

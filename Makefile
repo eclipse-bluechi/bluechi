@@ -23,10 +23,10 @@ build-client:
 build-node:
 	mkdir -p bin
 	gcc -D_GNU_SOURCE \
-	src/node/node.c \
-	src/node/opt.c \
-	src/node/dbus.c \
-	-g -Wall -o bin/node `pkg-config --cflags --libs libsystemd`
+		src/node/node.c \
+		src/node/opt.c \
+		src/node/dbus.c \
+		-g -Wall -o bin/node `pkg-config --cflags --libs libsystemd`
 
 build-orch:
 	mkdir -p bin

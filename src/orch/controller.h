@@ -3,6 +3,6 @@
 
 #include "../common/dbus.h"
 
-int controller_setup(int port, sd_event *event, sd_event_source *event_source);
+int controller_setup(int accept_fd, int port, sd_event *event, sd_event_source *event_source);
 
 #endif

@@ -54,7 +54,7 @@ Nodes can be run via:
 ```bash
 ./bin/node -h <host> -p <port>
 ```
-It creates a new dbus which tries to connect to the specified host. It does not do much more at this point. 
+It creates a new dbus which tries to connect to the specified host. The host will print out a message if the request was accepted. It does not do much more at this point. 
 
 ## Documentation
 
