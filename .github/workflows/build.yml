@@ -13,12 +13,28 @@ jobs:
       image: quay.io/centos/centos:stream9
 
     steps:
-    - uses: actions/checkout@v3
+    - name: Install dependencies
+      run: |
+        dnf install \
+                gcc \
+                make \
+                systemd-devel \
+            -y
+
+    - name: Checkout sources
+      uses: actions/checkout@v3
       with:
         fetch-depth: 0
         # Use githash of a tested commit instead of merge commit
         ref: ${{ github.event.pull_request.head.sha }}
 
-    - name: Report success
+    - name: Build project
       run: |
-        echo "Success :-)"
+        make build
+
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: artifacts
+        path: "**/bin/*"
+
