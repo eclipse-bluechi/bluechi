@@ -6,8 +6,23 @@ on:
   workflow_dispatch:
 
 jobs:
+  check-formatting:
+    name: Check source code formatting
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout sources
+      uses: actions/checkout@v3
+
+    - name: Check source code formatting
+      uses: jidicula/clang-format-action@v4.9.0
+      with:
+        clang-format-version: '15'
+        check-path: 'src'
+        exclude-regex: 'ini' # TODO: remove once we fix formatting in ini subdirectory
+
   build:
-    name: cs9-build
+    name: cs9 x86_64 build
+    needs: check-formatting
     runs-on: ubuntu-latest
     container:
       image: quay.io/centos/centos:stream9
