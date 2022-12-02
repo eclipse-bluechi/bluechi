@@ -18,6 +18,7 @@ jobs:
         dnf install \
                 autoconf \
                 automake \
+                clang-tools-extra \
                 gcc \
                 make \
                 systemd-devel \
@@ -29,6 +30,12 @@ jobs:
         fetch-depth: 0
         # Use githash of a tested commit instead of merge commit
         ref: ${{ github.event.pull_request.head.sha }}
+
+    - name: Check source code formatting
+      uses: jidicula/clang-format-action@v4.9.0
+      with:
+        clang-format-version: '15'
+        check-path: 'src'
 
     - name: Build project
       run: |
