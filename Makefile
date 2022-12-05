@@ -11,8 +11,8 @@ check-fmt:
 		fi ; \
 	done
 
-test-all:
-	echo "TBD"
+tests:
+	sh run-tests.sh
 
 build: build-client build-node build-orch
 
