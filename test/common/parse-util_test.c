@@ -8,10 +8,10 @@
 #        define __FUNCTION_NAME__ __func__
 #endif
 
-void test_parse_long(char *input, int expectedReturn, long expectedResult) {
+void test_parse_long(const char *input, int expectedReturn, long expectedResult) {
         char *msg = NULL;
 
-        long res;
+        long res = 0;
         int ret = parse_long(input, &res);
         if ((ret != expectedReturn) || (res != expectedResult)) {
                 asprintf(&msg,
@@ -30,6 +30,7 @@ void test_parse_long(char *input, int expectedReturn, long expectedResult) {
 }
 
 int main() {
+        test_parse_long(NULL, 1, 0);
         test_parse_long("", 0, 0L);
         test_parse_long("foo", 1, 0L);
         test_parse_long("1234", 0, 1234L);
