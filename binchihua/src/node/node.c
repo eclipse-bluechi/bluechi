@@ -1,4 +1,5 @@
 #include "../../../libchihua-msg/include/node.h"
+#include "../ini/config.h"
 #include "opt.h"
 
 #include <stdio.h>
@@ -15,6 +16,13 @@ int main(int argc, char *argv[]) {
         host.sin_port = 0;
 
         get_opts(argc, argv, &host);
+
+        char *ini_file_location = "../../../doc/example.ini";
+        struct hashmap *ini_hashmap = NULL;
+        ini_hashmap = parsing_ini_file(ini_file_location);
+        if (ini_hashmap == NULL) {
+                return EXIT_FAILURE;
+        }
 
         NodeParams node_params = { .orch_addr = &host };
         _cleanup_node_ Node *node = node_new(&node_params);
