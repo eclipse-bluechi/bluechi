@@ -31,6 +31,7 @@ build-node:
 build-orch:
 	mkdir -p bin
 	gcc -D_GNU_SOURCE \
+		src/ini/ini.c \
 		src/orch/orch.c \
 		src/orch/opt.c \
 		src/orch/controller.c \

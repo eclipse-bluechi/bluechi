@@ -4,11 +4,11 @@
 #include <getopt.h>
 #include <stdio.h>
 #include <stdlib.h>
-
-void get_opts(int argc, char *argv[], int *ctrlPort) {
+void get_opts(int argc, char *argv[], int *ctrlPort, char **configPath) {
         int opt;
-        int pflag;
-        while ((opt = getopt(argc, argv, "p:")) != -1) {
+        int pflag = 0;
+
+        while ((opt = getopt(argc, argv, "p:c:")) != -1) {
                 switch (opt) {
                 case 'p':
                         if (parse_long(optarg, (long *) ctrlPort) != 0) {
@@ -17,6 +17,9 @@ void get_opts(int argc, char *argv[], int *ctrlPort) {
                         }
                         pflag = 1;
                         break;
+                case 'c':
+                        asprintf(configPath, "%s", optarg);
+                        break;
                 default:
                         exit(EXIT_FAILURE);
                 }
@@ -24,6 +27,11 @@ void get_opts(int argc, char *argv[], int *ctrlPort) {
 
         if (pflag != 1) {
                 fprintf(stderr, "Missing port option. Usage: %s [-p port]\n", argv[0]);
+                exit(EXIT_FAILURE);
+        }
+
+        if (configPath == NULL) {
+                fprintf(stderr, "Missing INI file path. Usage: %s [-c /path/to/ini-file]\n", argv[0]);
                 exit(EXIT_FAILURE);
         }
 }
