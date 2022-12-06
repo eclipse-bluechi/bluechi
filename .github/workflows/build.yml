@@ -27,11 +27,18 @@ jobs:
       image: quay.io/centos/centos:stream9
 
     steps:
+      - name: Enable additional repositories
+        run: |
+          dnf install -y dnf-plugin-config-manager
+
+          # CRB is required for meson
+          dnf config-manager -y --set-enabled crb
+
       - name: Install dependencies
         run: |
           dnf install \
                   gcc \
-                  make \
+                  meson \
                   systemd-devel \
               -y
 
@@ -42,16 +49,27 @@ jobs:
           # Use githash of a tested commit instead of merge commit
           ref: ${{ github.event.pull_request.head.sha }}
 
-      - name: Run tests
+      - name: Configure the build
         run: |
-          make tests
+          meson setup builddir
 
-      - name: Build project
+      - name: Build the project
         run: |
-          make build
+          cd builddir
+          meson compile
+
+      - name: Execute tests
+        run: |
+          cd builddir
+          meson test
+
+      - name: Install artifacts
+        run: |
+          cd builddir
+          meson install
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v3
         with:
           name: artifacts
-          path: "**/bin/*"
+          path: "/usr/local/bin/*"
