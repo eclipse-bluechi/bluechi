@@ -10,6 +10,13 @@ TBD
 
 ## Development
 
+### Environment Setup
+
+#### Fedora
+```bash
+sudo dnf install clang-tools-extra gcc make systemd-devel
+```
+
 ### Code Style
 
 `clang-format` is used to enforce a unified code style. For setup instructions, please refer to the [official Clang getting started guide](https://clang.llvm.org/get_started.html). 
