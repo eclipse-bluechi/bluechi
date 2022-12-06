@@ -42,6 +42,10 @@ jobs:
           # Use githash of a tested commit instead of merge commit
           ref: ${{ github.event.pull_request.head.sha }}
 
+      - name: Run tests
+        run: |
+          make tests
+
       - name: Build project
         run: |
           make build
