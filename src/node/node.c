@@ -17,7 +17,7 @@ int main(int argc, char *argv[]) {
 
         get_opts(argc, argv, &host);
 
-        int r;
+        int r = 0;
         _cleanup_sd_event_ sd_event *event = NULL;
         r = sd_event_default(&event);
         if (r < 0) {

@@ -5,7 +5,8 @@
 #include <stdio.h>
 
 int setup_peer_dbus(sd_bus *dbus, const struct sockaddr_in *addr) {
-        int r;
+        int r = 0;
+
         r = sd_bus_new(&dbus);
         if (r < 0) {
                 fprintf(stderr, "Failed to create bus: %s\n", strerror(-r));
