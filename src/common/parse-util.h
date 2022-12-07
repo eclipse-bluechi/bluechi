@@ -10,8 +10,9 @@ int parse_long(const char *in, long *val) {
                 return 1;
         }
 
-        char *ptr;
-        *val = strtol(in, &ptr, 10);
+        const int decimalBase = 10;
+        char *ptr = NULL;
+        *val = strtol(in, &ptr, decimalBase);
         if (strcmp(ptr, "") != 0) {
                 return 1;
         }

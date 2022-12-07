@@ -7,8 +7,12 @@
 #include <stdlib.h>
 
 void get_opts(int argc, char *argv[], struct sockaddr_in *orchAddr) {
-        int opt, r, port;
-        int hflag, pflag;
+        int r = 0;
+        int opt = 0;
+        int port = 0;
+        int hflag = 0;
+        int pflag = 0;
+
         while ((opt = getopt(argc, argv, "h:p:")) != -1) {
                 switch (opt) {
                 case 'h':

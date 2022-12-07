@@ -5,7 +5,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 void get_opts(int argc, char *argv[], int *ctrlPort, char **configPath) {
-        int opt;
+        int opt = 0;
         int pflag = 0;
 
         while ((opt = getopt(argc, argv, "p:c:")) != -1) {

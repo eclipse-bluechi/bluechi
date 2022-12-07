@@ -9,6 +9,11 @@ Checks: >
     -bugprone-reserved-identifier,
     -readability-identifier-length,
     -concurrency-mt-unsafe,
+    -google-readability-todo,
+    -clang-analyzer-security.insecureAPI.DeprecatedOrUnsafeBufferHandling,
+    -altera-unroll-loops,
+    -altera-id-dependent-backward-branch,
+    -bugprone-easily-swappable-parameters,
 
 
 # Turn all the warnings from the checks above into errors.,

@@ -43,16 +43,17 @@ int create_master_socket(const int port) {
         return fd;
 }
 
+// NOLINTNEXTLINE
 static int accept_handler(sd_event_source *s, int fd, uint32_t revents, void *userdata) {
         _cleanup_fd_ int nfd = accept4(fd, NULL, NULL, SOCK_NONBLOCK | SOCK_CLOEXEC);
         if (nfd < 0) {
-                if (errno == EAGAIN || errno == EINTR || errno == EWOULDBLOCK)
+                if (errno == EAGAIN || errno == EINTR || errno == EWOULDBLOCK) {
                         return 0;
-                else {
-                        int errsv = errno;
-                        fprintf(stderr, "Failed to accept: %m\n");
-                        return -errsv;
                 }
+
+                int errsv = errno;
+                fprintf(stderr, "Failed to accept: %m\n");
+                return -errsv;
         }
 
         // TODO: setup peer dbus, incl. vtable with services, signals, properties
