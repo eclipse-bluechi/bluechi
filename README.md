@@ -30,9 +30,7 @@ sudo dnf install -y clang-tools-extra gcc make meson systemd-devel
 
 ### Code Style
 
-`clang-format` is used to enforce a unified code style. For setup instructions, please refer to the [official Clang getting started guide](https://clang.llvm.org/get_started.html).
-
-Once `clang-format` is set up, all source files can be formatted via:
+[clang-format](https://clang.llvm.org/docs/ClangFormat.html) is used to enforce a unified code style. All source files can be formatted via:
 ```bash
 make fmt
 ```
@@ -40,6 +38,18 @@ make fmt
 A formatting check of existing files can be executed by:
 ```bash
 make check-fmt
+```
+
+### Linting
+
+[clang-tidy](https://clang.llvm.org/extra/clang-tidy/) is used for static analysis. All source files can be checked via:
+```bash
+make lint
+```
+
+Some errors detected by `clang-tidy` can be fixed automatically via: 
+```bash
+make lint-fix
 ```
 
 ### Build
