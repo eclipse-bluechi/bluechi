@@ -1,0 +1,16 @@
+---
+Checks: >
+    *,
+    -llvm-header-guard,
+    -llvmlibc-restrict-system-libc-headers,
+    -cert-err33-c,
+    -cert-dcl37-c,
+    -cert-dcl51-cpp,
+    -bugprone-reserved-identifier,
+    -readability-identifier-length,
+    -concurrency-mt-unsafe,
+
+
+# Turn all the warnings from the checks above into errors.,
+WarningsAsErrors: "*"
+HeaderFilterRegex: ""
