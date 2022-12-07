@@ -1,0 +1,29 @@
+name: Lint
+
+on:
+  workflow_call:
+
+jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    container:
+      image: quay.io/centos/centos:stream9
+    steps:
+      - name: Install dependencies
+        run: |
+          dnf install \
+                clang-tools-extra \
+                systemd-devel \
+                -y
+
+      - name: Checkout sources
+        uses: actions/checkout@v3
+
+      - name: Running source code format check
+        run: |
+          make check-fmt
+
+      - name: Running static analysis
+        run: |
+          make lint
