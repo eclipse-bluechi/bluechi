@@ -12,7 +12,7 @@ check-fmt:
 	done
 
 lint: 
-	find . -name "*.[ch]" ! -path "./src/ini/*" ! -path "./test/**" -print0 | xargs -0 -n 1 -I {} clang-tidy --quiet {} -- -D_GNU_SOURCE
+	find . -name "*.[ch]" ! -path "./src/ini/*" ! -path "./test/**" -print0 | xargs -0 -I {} clang-tidy --quiet {} -- -D_GNU_SOURCE
 
 lint-fix: 
-	find . -name "*.[ch]" ! -path "./src/ini/*" ! -path "./test/**" -print0 | xargs -0 -n 1 -I {} clang-tidy --quiet {} --fix -- -D_GNU_SOURCE
+	find . -name "*.[ch]" ! -path "./src/ini/*" ! -path "./test/**" -print0 | xargs -0 -I {} clang-tidy --quiet {} --fix -- -D_GNU_SOURCE
