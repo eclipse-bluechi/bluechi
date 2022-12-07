@@ -10,3 +10,9 @@ check-fmt:
 			exit 1 ; \
 		fi ; \
 	done
+
+lint: 
+	find . -name "*.[ch]" ! -path "./src/ini/*" ! -path "./test/**" -print0 | xargs -0 -n 1 -I {} clang-tidy --quiet {} -- -D_GNU_SOURCE
+
+lint-fix: 
+	find . -name "*.[ch]" ! -path "./src/ini/*" ! -path "./test/**" -print0 | xargs -0 -n 1 -I {} clang-tidy --quiet {} --fix -- -D_GNU_SOURCE
