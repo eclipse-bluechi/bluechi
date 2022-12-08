@@ -59,14 +59,17 @@ The project is using [meson](https://mesonbuild.com/) build system.
 The binaries can be built via
 ```bash
 meson setup builddir
-cd builddir
-meson compile
+meson compile -C builddir
 ```
 
-The binaries can be installed into a destination directory (by default `/usr/local/bin`) using:
+After successfully compiling the binaries, they can be installed into a destination directory (by default `/usr/local/bin`) using:
 ```bash
-cd builddir
 meson install
+```
+
+To install it into `builddir/bin` use:
+```bash
+meson install -C builddir --destdir bin
 ```
 
 After building, three binaries are available:
@@ -79,9 +82,8 @@ After building, three binaries are available:
 Unit tests can be executed using following commands
 ```bash
 meson setup builddir
-cd builddir
-meson compile
-meson test
+meson compile -C builddir
+meson test -C builddir
 ```
 
 ### Running
