@@ -30,10 +30,10 @@ void test_parse_long(const char *input, int expectedReturn, long expectedResult)
 }
 
 int main() {
-        test_parse_long(NULL, 1, 0);
+        test_parse_long(NULL, 1, 0L);
         test_parse_long("", 0, 0L);
         test_parse_long("foo", 1, 0L);
         test_parse_long("1234", 0, 1234L);
         test_parse_long("1234abc", 1, 1234L);
-        test_parse_long("abc1234", 1, 0);
+        test_parse_long("abc1234", 1, 0L);
 }
