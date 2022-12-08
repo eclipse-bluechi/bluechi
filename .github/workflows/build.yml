@@ -8,11 +8,8 @@ on:
   workflow_dispatch:
 
 jobs:
-  lint:
-    uses: ./.github/workflows/lint.yml
   build:
     name: cs9 x86_64 build
-    needs: lint
     runs-on: ubuntu-latest
     container:
       image: quay.io/centos/centos:stream9
@@ -31,6 +28,7 @@ jobs:
                   gcc \
                   meson \
                   systemd-devel \
+                  clang-tools-extra \
               -y
 
       - name: Checkout sources
@@ -39,6 +37,14 @@ jobs:
           fetch-depth: 0
           # Use githash of a tested commit instead of merge commit
           ref: ${{ github.event.pull_request.head.sha }}
+
+      - name: Running source code format check
+        run: |
+          make check-fmt
+
+      - name: Running static analysis
+        run: |
+          make lint
 
       - name: Configure the build
         run: |
