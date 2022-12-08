@@ -26,33 +26,38 @@ Check that the primary node is listening on TCP port 1999:
 $ netstat -tlnp | grep 1999
 
 Start orch-node on a remote node:
-$ ./orch-node <orch_ip_addr> <node_name>
+$ sudo ./orch-node <orch_ip_addr> <node_name>
 
 where orch_ip_addr is the IP address of the primary node.
 
-Run orch-client on the primary node to talk to the remote node via the
-orchestrator:
+Run orch-client on the primary node to access systemd services on the remote
+node via the orchestrator:
 $ ./orch-client isolate-all <unit_name>
 
 where unit_name is the name of a systemd service on the remote node.
 
+Example:
+$ ./orch-client isolate-all crond.service
+
 The orch-node session on the remote node will show something like the following:
 
-$ ./orch-node 192.168.1.51 some_node
+$ sudo ./orch-node 192.168.1.51 some_node
 Registered as 'some_node'
-Got Isolate 'systemd_example.service'
+Removed Job /org/freedesktop/systemd1/job/3435 session-7.scope done
+Removed Job /org/freedesktop/systemd1/job/3545 systemd-hostnamed.service done
+Got Isolate 'crond.service'
 Queued job 1
 Started job 1
-Running job 1, Isolate systemd_example.service
+Running job 1, Isolate crond.service
 job_isolate_request_cb
-got job_path /org/freedesktop/systemd1/job/3113
-Removed Job /org/freedesktop/systemd1/job/3113 systemd_example.service done
+got job_path /org/freedesktop/systemd1/job/3652
+Removed Job /org/freedesktop/systemd1/job/3652 crond.service done
 job_isolate_request_done, result: done
 Finished job 1, result: done
 
 NOTE:
-In order to avoid an "Interactive authentication required" error on the remote
-node, add a polkit rule to allow a nonpriviledged user to access services:
+If you want to run orch-node as a non-priviledged user, add a polkit rule to
+allow your user's access to systemd services as follows:
 /etc/polkit-1/rules.d/service-auth.rules
 ----------------------------------------
 polkit.addRule(function(action, subject) {
