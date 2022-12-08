@@ -1,0 +1,62 @@
+The following are some quick notes on how to test the original "orch" project.
+
+Get the project:
+$ git clone https://github.com/alexlarsson/orch
+
+The following code change is required:
+orch/node.c
+-----------
+job_isolate()
+    if (r >= 0)
+        r = sd_bus_message_append(m, "ss", isolate->target, "replace"); // Change "isolate" to "replace"
+
+Build the project:
+$ cd orch
+$ make all
+
+The orchestrator, running on the primary node, listens on TCP port 1999, so
+configure the firewalld to accept traffic on that port:
+$ sudo firewall-cmd --zone=public --add-port=1999/tcp
+$ sudo firewall-cmd --list-all
+
+Run the orchestrator on the primary node:
+$ ./orch
+
+Check that the primary node is listening on TCP port 1999:
+$ netstat -tlnp | grep 1999
+
+Start orch-node on a remote node:
+$ ./orch-node <orch_ip_addr> <node_name>
+
+where orch_ip_addr is the IP address of the primary node.
+
+Run orch-client on the primary node to talk to the remote node via the
+orchestrator:
+$ ./orch-client isolate-all <unit_name>
+
+where unit_name is the name of a systemd service on the remote node.
+
+The orch-node session on the remote node will show something like the following:
+
+$ ./orch-node 192.168.1.51 some_node
+Registered as 'some_node'
+Got Isolate 'systemd_example.service'
+Queued job 1
+Started job 1
+Running job 1, Isolate systemd_example.service
+job_isolate_request_cb
+got job_path /org/freedesktop/systemd1/job/3113
+Removed Job /org/freedesktop/systemd1/job/3113 systemd_example.service done
+job_isolate_request_done, result: done
+Finished job 1, result: done
+
+NOTE:
+In order to avoid an "Interactive authentication required" error on the remote
+node, add a polkit rule to allow a nonpriviledged user to access services:
+/etc/polkit-1/rules.d/service-auth.rules
+----------------------------------------
+polkit.addRule(function(action, subject) {
+    if (action.id == "org.freedesktop.systemd1.manage-units" &&
+        subject.user == "sdunnaga") {
+        return polkit.Result.YES;
+    } });
