@@ -1,4 +1,5 @@
 #include "opt.h"
+#include "../common/opt.h"
 #include "../common/parse-util.h"
 
 #include <arpa/inet.h>
@@ -6,17 +7,25 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-void get_opts(int argc, char *argv[], struct sockaddr_in *orchAddr) {
+const struct option options[] = { { ARG_HOST, required_argument, 0, ARG_HOST_SHORT },
+                                  { ARG_PORT, required_argument, 0, ARG_PORT_SHORT },
+                                  { NULL, 0, 0, '\0' } };
+
+const char *get_optstring() {
+        return "H:P:";
+}
+
+void get_opts(int argc, char *argv[], struct sockaddr_in *orch_addr) {
         int r = 0;
         int opt = 0;
-        int port = 0;
+        uint16_t port = 0;
         int hflag = 0;
         int pflag = 0;
 
-        while ((opt = getopt(argc, argv, "h:p:")) != -1) {
+        while ((opt = getopt_long(argc, argv, get_optstring(), options, NULL)) != -1) {
                 switch (opt) {
-                case 'h':
-                        r = inet_pton(AF_INET, optarg, &(orchAddr->sin_addr));
+                case ARG_HOST_SHORT:
+                        r = inet_pton(AF_INET, optarg, &(orch_addr->sin_addr));
                         if (r < 1) {
                                 fprintf(stderr, "Invalid host option '%s'\n", optarg);
                                 exit(EXIT_FAILURE);
@@ -24,12 +33,12 @@ void get_opts(int argc, char *argv[], struct sockaddr_in *orchAddr) {
 
                         hflag = 1;
                         break;
-                case 'p':
-                        if (parse_long(optarg, (long *) &port) != 0) {
+                case ARG_PORT_SHORT:
+                        if (!parse_port(optarg, &port)) {
                                 fprintf(stderr, "Invalid port option '%s'\n", optarg);
                                 exit(EXIT_FAILURE);
                         }
-                        orchAddr->sin_port = htons(port);
+                        orch_addr->sin_port = htons(port);
 
                         pflag = 1;
                         break;

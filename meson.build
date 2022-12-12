@@ -15,8 +15,8 @@ systemd_dep = dependency('libsystemd')
 
 # internal dependencies
 common_inc = include_directories('src/common')
+common_src = files('src/common/parse-util.c')
 ini_inc = include_directories('src/ini')
-
 ini_src = files('src/ini/ini.c')
 
 

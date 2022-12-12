@@ -6,6 +6,7 @@ orch_src = [
   'controller.c'
 ]
 orch_src += ini_src
+orch_src += common_src
 
 executable(
   'orch',
