@@ -7,7 +7,7 @@
 #include <stdlib.h>
 #include <sys/socket.h>
 
-int create_master_socket(const int port) {
+int create_master_socket(const uint16_t port) {
         struct sockaddr_in servaddr;
 
         int fd = socket(AF_INET, SOCK_STREAM | SOCK_CLOEXEC | SOCK_NONBLOCK, 0);
@@ -62,7 +62,7 @@ static int accept_handler(sd_event_source *s, int fd, uint32_t revents, void *us
         return 0;
 }
 
-int controller_setup(int accept_fd, int port, sd_event *event, sd_event_source *event_source) {
+int controller_setup(int accept_fd, uint16_t port, sd_event *event, sd_event_source *event_source) {
         accept_fd = create_master_socket(port);
         if (accept_fd < 0) {
                 return -1;

@@ -5,6 +5,8 @@ node_src = [
   'node.c',
   'opt.c'
 ]
+node_src += common_src
+
 executable(
   'node',
   node_src,
