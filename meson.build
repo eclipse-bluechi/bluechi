@@ -9,6 +9,9 @@ project(
   ]
 )
 
+# add global arguments for gcc
+add_global_arguments('-D_GNU_SOURCE', language : 'c')
+
 # external dependencies
 systemd_dep = dependency('libsystemd')
 
