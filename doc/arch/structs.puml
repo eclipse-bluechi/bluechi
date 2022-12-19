@@ -1,0 +1,137 @@
+@startuml orch-structs
+struct Orchestrator{
+   Manager manager
+   List<Node*> nodes
+}
+
+struct Node{
+   int ref_count
+   char* name
+   char* object_path
+
+   Orchestrator* orch
+   List<Node*> nodes
+   List<JobTracker*> trackers
+
+   sd_bus* peer
+   sd_bus_slot* bus_slot
+}
+
+struct JobTracker {
+   char* object_path
+   void (sd_bus_message, char*, void*) job_tracker_callback
+   void* userdata
+   List<JobTracker*> trackers
+}
+
+struct Manager {
+   char* manager_path
+   char* manager_iface
+   char* job_path_prefix
+
+   sd_bus* bus
+   ds_event* event
+   sd_event_source* job_source
+
+   uint next_job_it
+   Job* current_job
+   List<Job*> jobs
+}
+
+struct Job {
+   uint id
+   int ref_count
+   int type
+   char* object_path
+
+   JobState state
+   JobResult result
+   
+   Manager* manager
+   
+   sd_bus_slot* bus_slot
+   sd_bus_message* source_message
+
+   List<Job*> jobs
+   
+   int (Job* job) start_callback
+   int (Job* job) cancel_callback
+   void (Job* job) destroy_callback
+}
+
+enum JobState {
+   JOB_WAITING
+   JOB_RUNNING
+}
+
+enum JobResult {
+   JOB_DONE
+   JOB_CANCELLED
+   JOB_FAILED
+}
+
+enum NodeJobType {
+   NODE_JOB_ISOLATE
+}
+
+struct IsolateAllJob {
+   char* target
+   int n_outstanding_requests
+   int n_requests
+   
+   Job job
+   List<IsolateRequest*> requests
+}
+
+struct IsolateRequest {
+   char* job_object_path
+   
+   Job* job
+   Node* node
+   
+   sd_bus_message* request
+   sd_bus_message* reply
+   sd_bus_slot* request_slot
+   
+   JobResult result
+   JobTracker tracker
+}
+
+struct IsolateJob {
+   char* target
+   char* job_object_path
+
+   sd_bus_message* reply
+
+   Job job
+   JobTracker tracker
+}
+
+
+Orchestrator "0..*" *-- Node
+Orchestrator --* "1" Node
+Orchestrator "1" *-- Manager
+
+Node "0..*" o-- Node
+Node "0..*" *-- JobTracker
+
+JobTracker "0..*" o-- JobTracker
+
+Manager "0..*" o-- Job
+
+Job .. JobState
+Job .. JobResult
+Job "0..*" *-- Job
+
+IsolateAllJob "0..*" *-- IsolateRequest
+IsolateAllJob "1" *-- Job
+
+IsolateRequest "1" *-- Job
+IsolateRequest "1" *-- Node
+IsolateRequest "1" *-- JobTracker
+IsolateRequest .. JobResult
+
+IsolateJob "1" *-- Job
+IsolateJob "1" *-- JobTracker
+
+@enduml
