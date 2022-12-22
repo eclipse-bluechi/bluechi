@@ -94,7 +94,7 @@ At the moment the client and node binary do only print a simple greeting and exi
 
 The orchestrator can be run via:
 ```bash
-./bin/orch -p <port>
+./bin/orch -P <port>
 ```
 It starts a tcp socket and accepts connections, but does not do much more at this point.
 This can be tested manually via
@@ -106,7 +106,7 @@ nc <host> <port>
 
 Nodes can be run via:
 ```bash
-./bin/node -h <host> -p <port>
+./bin/node -H <host> -P <port>
 ```
 It creates a new dbus which tries to connect to the specified host. The host will print out a message if the request was accepted. It does not do much more at this point.
 
