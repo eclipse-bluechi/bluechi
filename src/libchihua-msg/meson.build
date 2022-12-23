@@ -23,5 +23,8 @@ libruntime_so_version = '@0@.@1@.@2@'.format((libruntime_lt_c - libruntime_lt_a)
 
 blue_chihuahua_shared = shared_library('-chihua-msg',
                             bluechihuahua_src,
+                            dependencies: [
+                                systemd_dep
+                            ],
                             version : libruntime_so_version,
                             install : true)

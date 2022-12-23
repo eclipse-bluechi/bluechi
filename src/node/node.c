@@ -12,6 +12,7 @@ int main(int argc, char *argv[]) {
         {
                 _cleanup_node_ Node *a = node_new(NULL);
                 _cleanup_node_ Node *o = node_new(NULL);
+                node_start(o);
         }
 
 

@@ -19,6 +19,7 @@ int main(int argc, char *argv[]) {
         {
                 _cleanup_orchestrator_ Orchestrator *a = orch_new(NULL);
                 _cleanup_orchestrator_ Orchestrator *o = orch_new(NULL);
+                orch_start(o);
         }
 
         uint16_t port = 0;
