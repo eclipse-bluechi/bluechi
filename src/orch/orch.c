@@ -1,5 +1,6 @@
 #include "../common/dbus.h"
 #include "../ini/ini.h"
+#include "../libchihua-msg/orchestrator.h"
 #include "controller.h"
 #include "opt.h"
 
@@ -15,6 +16,7 @@ static int ini_handler_func(void *user, const char *section, const char *name, c
 
 int main(int argc, char *argv[]) {
         fprintf(stdout, "Hello from orchestrator!\n");
+        orch_new(NULL);
 
         uint16_t port = 0;
         _cleanup_free_ char *configPath = NULL;
