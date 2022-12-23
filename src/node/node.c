@@ -1,3 +1,4 @@
+#include "../libchihua-msg/node.h"
 #include "../common/dbus.h"
 #include "dbus.h"
 #include "opt.h"
@@ -8,6 +9,11 @@
 
 int main(int argc, char *argv[]) {
         fprintf(stdout, "Hello from node!\n");
+        {
+                _cleanup_node_ Node *a = node_new(NULL);
+                _cleanup_node_ Node *o = node_new(NULL);
+        }
+
 
         struct sockaddr_in host;
         memset(&host, 0, sizeof(host));

@@ -9,6 +9,11 @@ Orchestrator *orch_new(OrchestratorParams *p) {
         return o;
 }
 
+void orch_unrefp(Orchestrator **o) {
+        fprintf(stdout, "Freeing allocated memory of Orchestrator...\n");
+        free(*o);
+}
+
 void orch_start(Orchestrator *o) {
         fprintf(stdout, "Starting Orchestrator...\n");
 }

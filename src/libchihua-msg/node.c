@@ -9,6 +9,11 @@ Node *node_new(NodeParams *p) {
         return n;
 }
 
+void node_unrefp(Node **n) {
+        fprintf(stdout, "Freeing allocated memory of Node...\n");
+        free(*n);
+}
+
 void node_start(Node *o) {
         fprintf(stdout, "Starting Node...\n");
 }

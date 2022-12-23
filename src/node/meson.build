@@ -16,5 +16,6 @@ executable(
   dependencies: [
     systemd_dep
   ],
+  link_with: blue_chihuahua_shared,
   install: true
 )
