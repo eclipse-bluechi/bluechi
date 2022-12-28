@@ -1,8 +1,9 @@
 #include "orchestrator.h"
+#include "orchestrator/controller.h"
 
 #include <stdio.h>
 
-Orchestrator *orch_new(OrchestratorParams *p) {
+Orchestrator *orch_new(const OrchestratorParams *p) {
         fprintf(stdout, "Creating Orchestrator...\n");
 
         int r = 0;
@@ -15,6 +16,7 @@ Orchestrator *orch_new(OrchestratorParams *p) {
 
         Orchestrator *o = malloc0(sizeof(Orchestrator));
         o->event_loop = steal_pointer(&event);
+        o->accept_port = p->port;
 
         return o;
 }
@@ -31,12 +33,15 @@ void orch_unrefp(Orchestrator **o) {
         free(*o);
 }
 
-bool orch_start(Orchestrator *o) {
+bool orch_start(const Orchestrator *o) {
         fprintf(stdout, "Starting Orchestrator...\n");
 
         if (o == NULL) {
                 return false;
         }
+
+        _cleanup_controller_ Controller *c = NULL;
+        c = controller_new(o->accept_port, o->event_loop, default_accept_handler());
 
         int r = 0;
         r = sd_event_loop(o->event_loop);
@@ -48,7 +53,7 @@ bool orch_start(Orchestrator *o) {
         return true;
 }
 
-bool orch_stop(Orchestrator *o) {
+bool orch_stop(const Orchestrator *o) {
         fprintf(stdout, "Stopping Orchestrator...\n");
         return true;
 }

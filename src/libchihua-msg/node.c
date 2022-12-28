@@ -2,7 +2,7 @@
 
 #include <stdio.h>
 
-Node *node_new(NodeParams *p) {
+Node *node_new(const NodeParams *p) {
         fprintf(stdout, "Creating Node...\n");
 
         int r = 0;
@@ -31,7 +31,7 @@ void node_unrefp(Node **n) {
         free(*n);
 }
 
-bool node_start(Node *n) {
+bool node_start(const Node *n) {
         fprintf(stdout, "Starting Node...\n");
 
         if (n == NULL) {
@@ -48,7 +48,7 @@ bool node_start(Node *n) {
         return true;
 }
 
-bool node_stop(Node *n) {
+bool node_stop(const Node *n) {
         fprintf(stdout, "Stopping Node...\n");
         return true;
 }

@@ -13,11 +13,11 @@ typedef struct {
         sd_event *event_loop;
 } Node;
 
-Node *node_new(NodeParams *p);
+Node *node_new(const NodeParams *p);
 void node_unrefp(Node **n);
 
-bool node_start(Node *n);
-bool node_stop(Node *n);
+bool node_start(const Node *n);
+bool node_stop(const Node *n);
 
 #define _cleanup_node_ _cleanup_(node_unrefp)
 

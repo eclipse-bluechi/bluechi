@@ -17,9 +17,9 @@ static int ini_handler_func(void *user, const char *section, const char *name, c
 int main(int argc, char *argv[]) {
         fprintf(stdout, "Hello from orchestrator!\n");
         {
-                _cleanup_orchestrator_ Orchestrator *a = orch_new(NULL);
-                _cleanup_orchestrator_ Orchestrator *o = orch_new(NULL);
-                orch_start(o);
+                OrchestratorParams p = { port : 1999 };
+                _cleanup_orchestrator_ Orchestrator *a = orch_new(&p);
+                orch_start(a);
         }
 
         uint16_t port = 0;

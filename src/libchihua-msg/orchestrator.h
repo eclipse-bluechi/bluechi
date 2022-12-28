@@ -12,14 +12,15 @@ typedef struct {
 } OrchestratorParams;
 
 typedef struct {
+        uint16_t accept_port;
         sd_event *event_loop;
 } Orchestrator;
 
-Orchestrator *orch_new(OrchestratorParams *p);
+Orchestrator *orch_new(const OrchestratorParams *p);
 void orch_unrefp(Orchestrator **o);
 
-bool orch_start(Orchestrator *o);
-bool orch_stop(Orchestrator *o);
+bool orch_start(const Orchestrator *o);
+bool orch_stop(const Orchestrator *o);
 
 #define _cleanup_orchestrator_ _cleanup_(orch_unrefp)
 

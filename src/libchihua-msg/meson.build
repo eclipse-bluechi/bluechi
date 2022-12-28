@@ -3,6 +3,8 @@ bluechihuahua_src = [
     'node.c',
     'orchestrator.h',
     'orchestrator.c',
+    'orchestrator/controller.h',
+    'orchestrator/controller.c',
 ]
 
 # We use libtool-version numbers because it's easier to understand.
