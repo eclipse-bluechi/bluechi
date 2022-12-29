@@ -18,34 +18,10 @@ int main(int argc, char *argv[]) {
 
         get_opts(argc, argv, &host);
 
-        {
-                NodeParams p = { orch_addr : &host };
-                _cleanup_node_ Node *a = node_new(&p);
-                node_start(a);
+        NodeParams p = { orch_addr : &host };
+        _cleanup_node_ Node *node = node_new(&p);
+        if (node_start(node)) {
+                return EXIT_SUCCESS;
         }
-
-        int r = 0;
-        _cleanup_sd_event_ sd_event *event = NULL;
-        r = sd_event_default(&event);
-        if (r < 0) {
-                fprintf(stderr, "Failed to create event: %s\n", strerror(-r));
-                return EXIT_FAILURE;
-        }
-
-        _cleanup_sd_bus_ sd_bus *orch = NULL;
-        r = setup_peer_dbus(orch, &host);
-        if (r < 0) {
-                return EXIT_FAILURE;
-        }
-
-        r = sd_event_loop(event);
-        if (r < 0) {
-                fprintf(stderr, "Event loop failed: %s\n", strerror(-r));
-                return EXIT_FAILURE;
-        }
-        if (r < 0) {
-                return EXIT_FAILURE;
-        }
-
-        return EXIT_SUCCESS;
+        return EXIT_FAILURE;
 }

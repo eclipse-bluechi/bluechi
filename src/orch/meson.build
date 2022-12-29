@@ -3,7 +3,6 @@
 orch_src = [
   'orch.c',
   'opt.c',
-  'controller.c'
 ]
 orch_src += ini_src
 orch_src += common_src

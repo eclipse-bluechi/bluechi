@@ -1,7 +1,6 @@
 # node build configuration
 
 node_src = [
-  'dbus.c',
   'node.c',
   'opt.c'
 ]
