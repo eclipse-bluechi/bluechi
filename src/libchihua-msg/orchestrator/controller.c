@@ -47,7 +47,7 @@ Controller *controller_new(uint16_t port, sd_event *event, sd_event_io_handler_t
         fprintf(stdout, "Creating Controller...\n");
 
         int r = 0;
-        sd_event_source *event_source = NULL;
+        _cleanup_sd_event_source_ sd_event_source *event_source = NULL;
 
         int accept_fd = create_master_socket(port);
         if (accept_fd < 0) {

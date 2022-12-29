@@ -1,8 +1,11 @@
 #ifndef _BLUE_CHIHUAHUA_ORCHESTRATOR_CONTROLLER
 #define _BLUE_CHIHUAHUA_ORCHESTRATOR_CONTROLLER
 
+#include "../../common/dbus.h"
+
 #include <stdbool.h>
-#include <systemd/sd-event.h>
+
+// TODO: include common/dbus and cleanup event_source in _new
 
 typedef struct {
         int accept_fd;
