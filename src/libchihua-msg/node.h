@@ -4,12 +4,15 @@
 #include "../common/dbus.h"
 #include "../common/memory.h"
 
+#include <netinet/in.h>
 #include <stdbool.h>
+#include <sys/socket.h>
 typedef struct {
-
+        struct sockaddr_in *orch_addr;
 } NodeParams;
 
 typedef struct {
+        char *orch_addr;
         sd_event *event_loop;
 } Node;
 

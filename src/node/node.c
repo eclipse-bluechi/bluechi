@@ -9,12 +9,6 @@
 
 int main(int argc, char *argv[]) {
         fprintf(stdout, "Hello from node!\n");
-        {
-                _cleanup_node_ Node *a = node_new(NULL);
-                _cleanup_node_ Node *o = node_new(NULL);
-                node_start(o);
-        }
-
 
         struct sockaddr_in host;
         memset(&host, 0, sizeof(host));
@@ -23,6 +17,12 @@ int main(int argc, char *argv[]) {
         host.sin_port = 0;
 
         get_opts(argc, argv, &host);
+
+        {
+                NodeParams p = { orch_addr : &host };
+                _cleanup_node_ Node *a = node_new(&p);
+                node_start(a);
+        }
 
         int r = 0;
         _cleanup_sd_event_ sd_event *event = NULL;

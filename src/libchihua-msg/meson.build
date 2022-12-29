@@ -5,6 +5,8 @@ bluechihuahua_src = [
     'orchestrator.c',
     'orchestrator/controller.h',
     'orchestrator/controller.c',
+    'node/peer-dbus.h',
+    'node/peer-dbus.c',
 ]
 
 # We use libtool-version numbers because it's easier to understand.
