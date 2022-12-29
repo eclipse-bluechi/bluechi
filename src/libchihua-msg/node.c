@@ -50,7 +50,7 @@ bool node_start(const Node *n) {
                 return false;
         }
 
-        _cleanup_sd_bus_ sd_bus *orch_dbus = peer_dbus_new(n->orch_addr);
+        _cleanup_sd_bus_ sd_bus *orch_dbus = peer_dbus_new(n->orch_addr, n->event_loop);
         if (orch_dbus == NULL) {
                 return false;
         }

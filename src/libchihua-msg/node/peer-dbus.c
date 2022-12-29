@@ -13,7 +13,7 @@ char *assemble_address(const struct sockaddr_in *addr) {
         return dbus_addr;
 }
 
-sd_bus *peer_dbus_new(const char *dbus_addr) {
+sd_bus *peer_dbus_new(const char *dbus_addr, sd_event *event) {
         int r = 0;
         _cleanup_sd_bus_ sd_bus *dbus = NULL;
 
@@ -34,6 +34,12 @@ sd_bus *peer_dbus_new(const char *dbus_addr) {
         r = sd_bus_set_address(dbus, dbus_addr);
         if (r < 0) {
                 fprintf(stderr, "Failed to set address: %s\n", strerror(-r));
+                return NULL;
+        }
+
+        r = sd_bus_attach_event(dbus, event, SD_EVENT_PRIORITY_NORMAL);
+        if (r < 0) {
+                fprintf(stderr, "Failed to attach bus to event: %s\n", strerror(-r));
                 return NULL;
         }
 
