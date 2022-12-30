@@ -1,7 +1,6 @@
 #include "../common/dbus.h"
 #include "../ini/ini.h"
 #include "../libchihua-msg/orchestrator.h"
-#include "controller.h"
 #include "opt.h"
 
 #include <stdio.h>
