@@ -50,7 +50,7 @@ bool node_start(const Node *n) {
                 return false;
         }
 
-        _cleanup_sd_bus_ sd_bus *orch_dbus = peer_dbus_new(n->orch_addr, n->event_loop);
+        _cleanup_peer_dbus_ PeerDBus *orch_dbus = peer_dbus_new(n->orch_addr, n->event_loop);
         if (orch_dbus == NULL) {
                 return false;
         }
@@ -71,5 +71,10 @@ bool node_start(const Node *n) {
 
 bool node_stop(const Node *n) {
         fprintf(stdout, "Stopping Node...\n");
+
+        if (n == NULL) {
+                return false;
+        }
+
         return true;
 }

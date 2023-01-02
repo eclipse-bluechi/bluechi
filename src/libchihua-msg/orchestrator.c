@@ -39,6 +39,9 @@ bool orch_start(const Orchestrator *o) {
         if (o == NULL) {
                 return false;
         }
+        if (o->event_loop == NULL) {
+                return false;
+        }
 
         _cleanup_controller_ Controller *c = NULL;
         c = controller_new(o->accept_port, o->event_loop, default_accept_handler());
@@ -55,5 +58,10 @@ bool orch_start(const Orchestrator *o) {
 
 bool orch_stop(const Orchestrator *o) {
         fprintf(stdout, "Stopping Orchestrator...\n");
+
+        if (o == NULL) {
+                return false;
+        }
+
         return true;
 }

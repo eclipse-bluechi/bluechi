@@ -84,7 +84,9 @@ void controller_unrefp(Controller **c) {
                 fprintf(stdout, "Freeing allocated sd-event-source of Controller...\n");
                 sd_event_source_unrefp(&(*c)->sd_event_source);
         }
-        closep(&(*c)->accept_fd);
+        if ((*c)->accept_fd >= 0) {
+                closep(&(*c)->accept_fd);
+        }
         free(*c);
 }
 

@@ -4,6 +4,11 @@
 #include <stdio.h>
 
 char *assemble_address(const struct sockaddr_in *addr) {
+        if (addr == NULL) {
+                fprintf(stderr, "Can not assemble an empty address\n");
+                return NULL;
+        }
+
         char *dbus_addr = NULL;
         int r = asprintf(&dbus_addr, "tcp:host=%s,port=%d", inet_ntoa(addr->sin_addr), ntohs(addr->sin_port));
         if (r < 0) {
@@ -13,7 +18,16 @@ char *assemble_address(const struct sockaddr_in *addr) {
         return dbus_addr;
 }
 
-sd_bus *peer_dbus_new(const char *dbus_addr, sd_event *event) {
+PeerDBus *peer_dbus_new(const char *peer_addr, sd_event *event) {
+        if (peer_addr == NULL) {
+                fprintf(stderr, "Peer address must be initialized\n");
+                return NULL;
+        }
+        if (event == NULL) {
+                fprintf(stderr, "Event loop must be initialized\n");
+                return NULL;
+        }
+
         int r = 0;
         _cleanup_sd_bus_ sd_bus *dbus = NULL;
 
@@ -31,7 +45,7 @@ sd_bus *peer_dbus_new(const char *dbus_addr, sd_event *event) {
                 return NULL;
         }
 
-        r = sd_bus_set_address(dbus, dbus_addr);
+        r = sd_bus_set_address(dbus, peer_addr);
         if (r < 0) {
                 fprintf(stderr, "Failed to set address: %s\n", strerror(-r));
                 return NULL;
@@ -43,9 +57,39 @@ sd_bus *peer_dbus_new(const char *dbus_addr, sd_event *event) {
                 return NULL;
         }
 
-        return steal_pointer(&dbus);
+        char *dbus_addr = NULL;
+        r = asprintf(&dbus_addr, "%s", peer_addr);
+        if (r < 0) {
+                fprintf(stderr, "Out of memory\n");
+                return NULL;
+        }
+
+        PeerDBus *p = malloc0(sizeof(PeerDBus));
+        p->peer_dbus_addr = dbus_addr;
+        p->internal_dbus = steal_pointer(&dbus);
+
+        return p;
 }
 
-bool peer_dbus_start(sd_bus *dbus) {
-        return sd_bus_start(dbus) >= 0;
+void peer_dbus_unrefp(PeerDBus **p) {
+        fprintf(stdout, "Freeing allocated memory of PeerDBus...\n");
+        if (p == NULL) {
+                return;
+        }
+        if ((*p)->peer_dbus_addr != NULL) {
+                fprintf(stdout, "Freeing allocated sd-event-source of Controller...\n");
+                freep((*p)->peer_dbus_addr);
+        }
+        if ((*p)->internal_dbus != NULL) {
+                fprintf(stdout, "Freeing allocated internal dbus of PeerDBus...\n");
+                sd_bus_unrefp(&(*p)->internal_dbus);
+        }
+        free(*p);
+}
+
+bool peer_dbus_start(PeerDBus *dbus) {
+        if (dbus == NULL) {
+                return false;
+        }
+        return sd_bus_start(dbus->internal_dbus) >= 0;
 }

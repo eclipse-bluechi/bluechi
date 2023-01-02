@@ -7,8 +7,18 @@
 #include <stdbool.h>
 #include <sys/socket.h>
 
+typedef struct {
+        char *peer_dbus_addr;
+        sd_bus *internal_dbus;
+} PeerDBus;
+
 char *assemble_address(const struct sockaddr_in *addr);
-sd_bus *peer_dbus_new(const char *dbus_addr, sd_event *event);
-bool peer_dbus_start(sd_bus *dbus);
+
+PeerDBus *peer_dbus_new(const char *peer_addr, sd_event *event);
+void peer_dbus_unrefp(PeerDBus **p);
+
+bool peer_dbus_start(PeerDBus *dbus);
+
+#define _cleanup_peer_dbus_ _cleanup_(peer_dbus_unrefp)
 
 #endif
