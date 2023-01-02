@@ -20,7 +20,7 @@ int main(int argc, char *argv[]) {
 
         get_opts(argc, argv, &accept_port, &configPath);
 
-        OrchestratorParams p = { port : accept_port };
+        OrchestratorParams p = { .port = accept_port };
         _cleanup_orchestrator_ Orchestrator *a = orch_new(&p);
         if (orch_start(a)) {
                 return EXIT_SUCCESS;
