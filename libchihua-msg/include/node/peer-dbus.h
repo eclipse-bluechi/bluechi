@@ -1,11 +1,13 @@
-#ifndef _BLUE_CHIHUAHUA_NODE_PEER_DBUS
-#define _BLUE_CHIHUAHUA_NODE_PEER_DBUS
+#ifndef _BLUE_CHIHUAHUA_LIB_NODE_PEER_DBUS
+#define _BLUE_CHIHUAHUA_LIB_NODE_PEER_DBUS
 
-#include "../../common/dbus.h"
+#include "../common/memory.h"
 
 #include <netinet/in.h>
 #include <stdbool.h>
 #include <sys/socket.h>
+#include <systemd/sd-bus.h>
+#include <systemd/sd-event.h>
 
 typedef struct {
         char *peer_dbus_addr;

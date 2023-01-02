@@ -1,5 +1,5 @@
-#include "controller.h"
-#include "../../common/memory.h"
+#include "../../include/orchestrator/controller.h"
+#include "../common/dbus.h"
 
 #include <errno.h>
 #include <netinet/in.h>

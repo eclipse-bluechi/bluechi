@@ -1,7 +1,9 @@
-#include "orchestrator.h"
-#include "orchestrator/controller.h"
+#include "../include/orchestrator.h"
+#include "../include/orchestrator/controller.h"
+#include "./common/memory.h"
 
 #include <stdio.h>
+#include <string.h>
 
 Orchestrator *orch_new(const OrchestratorParams *p) {
         fprintf(stdout, "Creating Orchestrator...\n");

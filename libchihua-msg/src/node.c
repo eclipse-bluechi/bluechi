@@ -1,5 +1,6 @@
-#include "node.h"
-#include "node/peer-dbus.h"
+#include "../include/node.h"
+#include "../include/node/peer-dbus.h"
+#include "./common/memory.h"
 
 #include <stdio.h>
 

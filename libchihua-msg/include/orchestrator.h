@@ -1,11 +1,11 @@
 #ifndef _BLUE_CHIHUAHUA_LIB_ORCHESTRATOR
 #define _BLUE_CHIHUAHUA_LIB_ORCHESTRATOR
 
-#include "../common/dbus.h"
-#include "../common/memory.h"
+#include "./common/memory.h"
 
 #include <inttypes.h>
 #include <stdbool.h>
+#include <systemd/sd-event.h>
 
 typedef struct {
         uint16_t port;

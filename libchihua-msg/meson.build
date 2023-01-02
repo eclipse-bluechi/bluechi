@@ -1,12 +1,16 @@
-bluechihuahua_src = [
-    'node.h',
-    'node.c',
-    'orchestrator.h',
-    'orchestrator.c',
-    'orchestrator/controller.h',
-    'orchestrator/controller.c',
-    'node/peer-dbus.h',
-    'node/peer-dbus.c',
+libchihua_src = [
+    'include/common/memory.h',
+    'include/node.h',
+    'include/node/peer-dbus.h',
+    'include/orchestrator.h',
+    'include/orchestrator/controller.h',
+
+    'src/common/memory.h',
+    'src/common/dbus.h',
+    'src/node.c',
+    'src/node/peer-dbus.c',
+    'src/orchestrator.c',
+    'src/orchestrator/controller.c',
 ]
 
 # We use libtool-version numbers because it's easier to understand.
@@ -26,7 +30,7 @@ libruntime_so_version = '@0@.@1@.@2@'.format((libruntime_lt_c - libruntime_lt_a)
                                               libruntime_lt_r)
 
 blue_chihuahua_shared = shared_library('-chihua-msg',
-                            bluechihuahua_src,
+                            libchihua_src,
                             dependencies: [
                                 systemd_dep
                             ],

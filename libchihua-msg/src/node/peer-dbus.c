@@ -1,4 +1,5 @@
-#include "peer-dbus.h"
+#include "../../include/node/peer-dbus.h"
+#include "../common/dbus.h"
 
 #include <arpa/inet.h>
 #include <stdio.h>

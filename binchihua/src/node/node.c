@@ -1,5 +1,4 @@
-#include "../libchihua-msg/node.h"
-#include "../common/dbus.h"
+#include "../../../libchihua-msg/include/node.h"
 #include "opt.h"
 
 #include <stdio.h>

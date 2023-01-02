@@ -1,6 +1,5 @@
-#include "../common/dbus.h"
+#include "../../../libchihua-msg/include/orchestrator.h"
 #include "../ini/ini.h"
-#include "../libchihua-msg/orchestrator.h"
 #include "opt.h"
 
 #include <stdio.h>
@@ -17,7 +16,7 @@ int main(int argc, char *argv[]) {
         fprintf(stdout, "Hello from orchestrator!\n");
 
         uint16_t accept_port = 0;
-        _cleanup_free_ char *configPath = NULL;
+        char *configPath = NULL;
 
         get_opts(argc, argv, &accept_port, &configPath);
 

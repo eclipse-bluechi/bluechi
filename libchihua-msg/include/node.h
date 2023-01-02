@@ -1,12 +1,13 @@
 #ifndef _BLUE_CHIHUAHUA_LIB_NODE
 #define _BLUE_CHIHUAHUA_LIB_NODE
 
-#include "../common/dbus.h"
-#include "../common/memory.h"
+#include "./common/memory.h"
 
 #include <netinet/in.h>
 #include <stdbool.h>
 #include <sys/socket.h>
+#include <systemd/sd-event.h>
+
 typedef struct {
         struct sockaddr_in *orch_addr;
 } NodeParams;
