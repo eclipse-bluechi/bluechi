@@ -9,7 +9,7 @@ Node *node_new(const NodeParams *params) {
 
         int r = 0;
         _cleanup_sd_event_ sd_event *event = NULL;
-        r = sd_event_new(&event);
+        r = sd_event_default(&event);
         if (r < 0) {
                 fprintf(stderr, "Failed to create event loop: %s\n", strerror(-r));
                 return NULL;
