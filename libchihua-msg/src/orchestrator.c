@@ -5,7 +5,7 @@
 #include <stdio.h>
 #include <string.h>
 
-Orchestrator *orch_new(const OrchestratorParams *p) {
+Orchestrator *orch_new(const OrchestratorParams *params) {
         fprintf(stdout, "Creating Orchestrator...\n");
 
         int r = 0;
@@ -18,39 +18,39 @@ Orchestrator *orch_new(const OrchestratorParams *p) {
 
         Orchestrator *o = malloc0(sizeof(Orchestrator));
         o->event_loop = steal_pointer(&event);
-        o->accept_port = p->port;
+        o->accept_port = params->port;
 
         return o;
 }
 
-void orch_unrefp(Orchestrator **o) {
+void orch_unrefp(Orchestrator **orchestrator) {
         fprintf(stdout, "Freeing allocated memory of Orchestrator...\n");
-        if (o == NULL) {
+        if (orchestrator == NULL) {
                 return;
         }
-        if ((*o)->event_loop != NULL) {
+        if ((*orchestrator)->event_loop != NULL) {
                 fprintf(stdout, "Freeing allocated sd-event of Orchestrator...\n");
-                sd_event_unrefp(&(*o)->event_loop);
+                sd_event_unrefp(&(*orchestrator)->event_loop);
         }
-        free(*o);
+        free(*orchestrator);
 }
 
-bool orch_start(const Orchestrator *o) {
+bool orch_start(const Orchestrator *orchestrator) {
         fprintf(stdout, "Starting Orchestrator...\n");
 
-        if (o == NULL) {
+        if (orchestrator == NULL) {
                 return false;
         }
-        if (o->event_loop == NULL) {
+        if (orchestrator->event_loop == NULL) {
                 return false;
         }
 
         _cleanup_controller_ Controller *c = NULL;
         // NOLINTNEXTLINE
-        c = controller_new(o->accept_port, o->event_loop, default_accept_handler());
+        c = controller_new(orchestrator->accept_port, orchestrator->event_loop, default_accept_handler());
 
         int r = 0;
-        r = sd_event_loop(o->event_loop);
+        r = sd_event_loop(orchestrator->event_loop);
         if (r < 0) {
                 fprintf(stderr, "Starting event loop failed: %s\n", strerror(-r));
                 return false;
@@ -59,10 +59,10 @@ bool orch_start(const Orchestrator *o) {
         return true;
 }
 
-bool orch_stop(const Orchestrator *o) {
+bool orch_stop(const Orchestrator *orchestrator) {
         fprintf(stdout, "Stopping Orchestrator...\n");
 
-        if (o == NULL) {
+        if (orchestrator == NULL) {
                 return false;
         }
 

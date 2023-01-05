@@ -17,7 +17,7 @@ typedef struct {
 char *assemble_address(const struct sockaddr_in *addr);
 
 PeerDBus *peer_dbus_new(const char *peer_addr, sd_event *event);
-void peer_dbus_unrefp(PeerDBus **p);
+void peer_dbus_unrefp(PeerDBus **dbus);
 
 bool peer_dbus_start(PeerDBus *dbus);
 

@@ -4,7 +4,7 @@
 
 #include <stdio.h>
 
-Node *node_new(const NodeParams *p) {
+Node *node_new(const NodeParams *params) {
         fprintf(stdout, "Creating Node...\n");
 
         int r = 0;
@@ -15,7 +15,7 @@ Node *node_new(const NodeParams *p) {
                 return NULL;
         }
 
-        char *orch_addr = assemble_address(p->orch_addr);
+        char *orch_addr = assemble_address(params->orch_addr);
         if (orch_addr == NULL) {
                 return NULL;
         }
@@ -27,31 +27,31 @@ Node *node_new(const NodeParams *p) {
         return n;
 }
 
-void node_unrefp(Node **n) {
+void node_unrefp(Node **node) {
         fprintf(stdout, "Freeing allocated memory of Orchestrator...\n");
-        if (n == NULL) {
+        if (node == NULL) {
                 return;
         }
-        if ((*n)->event_loop != NULL) {
+        if ((*node)->event_loop != NULL) {
                 fprintf(stdout, "Freeing allocated sd-event of Orchestrator...\n");
-                sd_event_unrefp(&(*n)->event_loop);
+                sd_event_unrefp(&(*node)->event_loop);
         }
-        if ((*n)->orch_addr != NULL) {
+        if ((*node)->orch_addr != NULL) {
                 fprintf(stdout, "Freeing allocated orch_addr of Orchestrator...\n");
-                freep((*n)->orch_addr);
+                freep((*node)->orch_addr);
         }
 
-        free(*n);
+        free(*node);
 }
 
-bool node_start(const Node *n) {
+bool node_start(const Node *node) {
         fprintf(stdout, "Starting Node...\n");
 
-        if (n == NULL) {
+        if (node == NULL) {
                 return false;
         }
 
-        _cleanup_peer_dbus_ PeerDBus *orch_dbus = peer_dbus_new(n->orch_addr, n->event_loop);
+        _cleanup_peer_dbus_ PeerDBus *orch_dbus = peer_dbus_new(node->orch_addr, node->event_loop);
         if (orch_dbus == NULL) {
                 return false;
         }
@@ -61,7 +61,7 @@ bool node_start(const Node *n) {
         }
 
         int r = 0;
-        r = sd_event_loop(n->event_loop);
+        r = sd_event_loop(node->event_loop);
         if (r < 0) {
                 fprintf(stderr, "Starting event loop failed: %s\n", strerror(-r));
                 return false;
@@ -70,10 +70,10 @@ bool node_start(const Node *n) {
         return true;
 }
 
-bool node_stop(const Node *n) {
+bool node_stop(const Node *node) {
         fprintf(stdout, "Stopping Node...\n");
 
-        if (n == NULL) {
+        if (node == NULL) {
                 return false;
         }
 

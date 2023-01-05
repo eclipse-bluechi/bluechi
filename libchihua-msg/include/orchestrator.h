@@ -16,11 +16,11 @@ typedef struct {
         sd_event *event_loop;
 } Orchestrator;
 
-Orchestrator *orch_new(const OrchestratorParams *p);
-void orch_unrefp(Orchestrator **o);
+Orchestrator *orch_new(const OrchestratorParams *params);
+void orch_unrefp(Orchestrator **orchestrator);
 
-bool orch_start(const Orchestrator *o);
-bool orch_stop(const Orchestrator *o);
+bool orch_start(const Orchestrator *orchestrator);
+bool orch_stop(const Orchestrator *orchestrator);
 
 #define _cleanup_orchestrator_ _cleanup_(orch_unrefp)
 

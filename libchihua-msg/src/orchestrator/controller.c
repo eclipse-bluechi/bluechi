@@ -75,19 +75,19 @@ Controller *controller_new(uint16_t port, sd_event *event, sd_event_io_handler_t
         return c;
 }
 
-void controller_unrefp(Controller **c) {
+void controller_unrefp(Controller **controller) {
         fprintf(stdout, "Freeing allocated memory of Controller...\n");
-        if (c == NULL) {
+        if (controller == NULL) {
                 return;
         }
-        if ((*c)->sd_event_source != NULL) {
+        if ((*controller)->sd_event_source != NULL) {
                 fprintf(stdout, "Freeing allocated sd-event-source of Controller...\n");
-                sd_event_source_unrefp(&(*c)->sd_event_source);
+                sd_event_source_unrefp(&(*controller)->sd_event_source);
         }
-        if ((*c)->accept_fd >= 0) {
-                closep(&(*c)->accept_fd);
+        if ((*controller)->accept_fd >= 0) {
+                closep(&(*controller)->accept_fd);
         }
-        free(*c);
+        free(*controller);
 }
 
 // NOLINTNEXTLINE

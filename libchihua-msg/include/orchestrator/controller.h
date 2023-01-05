@@ -14,7 +14,7 @@ typedef struct {
 } Controller;
 
 Controller *controller_new(uint16_t port, sd_event *event, sd_event_io_handler_t accept_handler);
-void controller_unrefp(Controller **c);
+void controller_unrefp(Controller **controller);
 
 sd_event_io_handler_t default_accept_handler();
 

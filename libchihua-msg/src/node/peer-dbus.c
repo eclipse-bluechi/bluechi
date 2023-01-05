@@ -72,20 +72,20 @@ PeerDBus *peer_dbus_new(const char *peer_addr, sd_event *event) {
         return p;
 }
 
-void peer_dbus_unrefp(PeerDBus **p) {
+void peer_dbus_unrefp(PeerDBus **dbus) {
         fprintf(stdout, "Freeing allocated memory of PeerDBus...\n");
-        if (p == NULL) {
+        if (dbus == NULL) {
                 return;
         }
-        if ((*p)->peer_dbus_addr != NULL) {
+        if ((*dbus)->peer_dbus_addr != NULL) {
                 fprintf(stdout, "Freeing allocated sd-event-source of Controller...\n");
-                freep((*p)->peer_dbus_addr);
+                freep((*dbus)->peer_dbus_addr);
         }
-        if ((*p)->internal_dbus != NULL) {
+        if ((*dbus)->internal_dbus != NULL) {
                 fprintf(stdout, "Freeing allocated internal dbus of PeerDBus...\n");
-                sd_bus_unrefp(&(*p)->internal_dbus);
+                sd_bus_unrefp(&(*dbus)->internal_dbus);
         }
-        free(*p);
+        free(*dbus);
 }
 
 bool peer_dbus_start(PeerDBus *dbus) {
