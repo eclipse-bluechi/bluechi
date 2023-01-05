@@ -1,6 +1,6 @@
 #include "../include/node.h"
 #include "../include/node/peer-dbus.h"
-#include "./common/memory.h"
+#include "./common/dbus.h"
 
 #include <stdio.h>
 
@@ -8,7 +8,7 @@ Node *node_new(const NodeParams *p) {
         fprintf(stdout, "Creating Node...\n");
 
         int r = 0;
-        sd_event *event = NULL;
+        _cleanup_sd_event_ sd_event *event = NULL;
         r = sd_event_new(&event);
         if (r < 0) {
                 fprintf(stderr, "Failed to create event loop: %s\n", strerror(-r));

@@ -1,6 +1,6 @@
 #include "../include/orchestrator.h"
 #include "../include/orchestrator/controller.h"
-#include "./common/memory.h"
+#include "./common/dbus.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -9,7 +9,7 @@ Orchestrator *orch_new(const OrchestratorParams *p) {
         fprintf(stdout, "Creating Orchestrator...\n");
 
         int r = 0;
-        sd_event *event = NULL;
+        _cleanup_sd_event_ sd_event *event = NULL;
         r = sd_event_new(&event);
         if (r < 0) {
                 fprintf(stderr, "Failed to create event loop: %s\n", strerror(-r));
