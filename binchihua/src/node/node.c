@@ -16,8 +16,8 @@ int main(int argc, char *argv[]) {
 
         get_opts(argc, argv, &host);
 
-        NodeParams p = { .orch_addr = &host };
-        _cleanup_node_ Node *node = node_new(&p);
+        NodeParams node_params = { .orch_addr = &host };
+        _cleanup_node_ Node *node = node_new(&node_params);
         if (node_start(node)) {
                 return EXIT_SUCCESS;
         }
