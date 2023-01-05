@@ -14,7 +14,7 @@ Checks: >
     -altera-unroll-loops,
     -altera-id-dependent-backward-branch,
     -bugprone-easily-swappable-parameters,
-
+    -altera-struct-pack-align,
 
 # Turn all the warnings from the checks above into errors.,
 WarningsAsErrors: "*"

@@ -1,9 +1,8 @@
-#include "../../src/common/memory.h"
 #include "../../src/common/parse-util.h"
 
 #include <assert.h>
-#include <stdio.h>
 #include <stdbool.h>
+#include <stdio.h>
 
 #ifndef __FUNCTION_NAME__
 #        define __FUNCTION_NAME__ __func__

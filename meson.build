@@ -16,25 +16,8 @@ add_global_arguments('-D_GNU_SOURCE', language : 'c')
 # external dependencies
 systemd_dep = dependency('libsystemd')
 
+# build shared library
+subdir('libchihua-msg')
 
-# internal dependencies
-common_inc = include_directories('src/common')
-common_src = files('src/common/parse-util.c')
-ini_inc = include_directories('src/ini')
-ini_src = files('src/ini/ini.c')
-
-
-# client
-subdir('src/client')
-
-
-# node
-subdir('src/node')
-
-
-# orch
-subdir('src/orch')
-
-
-# tests
-subdir('test/common')
+# build binaries
+subdir('binchihua')
