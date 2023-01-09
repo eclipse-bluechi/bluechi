@@ -12,6 +12,7 @@ int match(const char *section, const char *check_section, const char *name, cons
         return EXIT_FAILURE;
 }
 
+// NOLINTNEXTLINE
 int key_value_compare_key(const void *a, const void *b, void *udata) {
         const keyValue *kva = a;
         const keyValue *kvb = b;
@@ -26,6 +27,7 @@ uint64_t key_value_hash(const void *item, uint64_t seed0, uint64_t seed1) {
         return hashmap_sip(kv->key, strlen(kv->key), seed0, seed1);
 }
 
+// NOLINTNEXTLINE
 int topic_compare_topic_name(const void *a, const void *b, void *udata) {
         const topic *ta = a;
         const topic *tb = b;
@@ -88,16 +90,16 @@ struct hashmap *parsing_ini_file(const char *file) {
         return temp;
 }
 
-void *print_all_topics(struct hashmap *topics) {
+void print_all_topics(struct hashmap *topics) {
         if (topics != NULL) {
                 return;
         }
         size_t iter = 0;
-        void *item;
+        void *item = NULL;
         while (hashmap_iter(topics, &iter, &item)) {
                 topic *tp = item;
                 size_t iter_kv = 0;
-                void *item_kv;
+                void *item_kv = NULL;
                 printf("[%s]\n", tp->topic);
                 while (hashmap_iter(tp->keys_and_values, &iter_kv, &item_kv)) {
                         keyValue *kv = item_kv;
@@ -109,14 +111,11 @@ void *print_all_topics(struct hashmap *topics) {
 
 void free_topics_hashmap(struct hashmap **topics) {
         size_t iter = 0;
-        void *item;
+        void *item = NULL;
         while (hashmap_iter(*topics, &iter, &item)) {
                 topic *tp = item;
                 size_t iter_kv = 0;
-                void *item_kv;
-                int len = hashmap_count(tp->keys_and_values);
-                keyValue *free_kv[len];
-                int i = 0;
+                void *item_kv = NULL;
                 while (hashmap_iter(tp->keys_and_values, &iter_kv, &item_kv)) {
                         keyValue *kv = (keyValue *) item_kv;
                         free(kv->value);
