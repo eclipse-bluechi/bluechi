@@ -4,20 +4,21 @@ project(
   version: '0.0.1',
   license: 'GPL-2.0-or-later',
   default_options: [
-    'c_std=gnu11',
-    'warning_level=2',
-    'debug=true'
+    'c_std=gnu17',     # Adds "-std=gnu17".  Includes GNU 17 extensions.
+    'warning_level=2', # Adds "-Wextra".  Enables additional warnings. 
+    'debug=true',      # Adds "-g".  Object files include debugging symbols.
+    'werror=true'      # Adds "-Werror".  Treat warnings as errors.
   ]
 )
 
-# add global arguments for gcc
+# Enable GNU extensions.
 add_global_arguments('-D_GNU_SOURCE', language : 'c')
 
-# external dependencies
+# Link with systemd shared library.
 systemd_dep = dependency('libsystemd')
 
-# build shared library
+# Subdirectory for the shared library.
 subdir('libchihua-msg')
 
-# build binaries
+# Subdirectory for applications.
 subdir('binchihua')

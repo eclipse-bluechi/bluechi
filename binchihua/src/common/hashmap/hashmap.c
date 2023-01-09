@@ -2,12 +2,14 @@
 // Use of this source code is governed by an MIT-style
 // license that can be found in the LICENSE file.
 
-#include "hashmap.h"
 #include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+#include "hashmap.h"
+#include "../../../../libchihua-msg/include/common/common.h"
 
 static void *(*_malloc)(size_t) = NULL;
 static void *(*_realloc)(void *, size_t) = NULL;
@@ -86,7 +88,7 @@ struct hashmap *hashmap_new_with_allocator(
         _malloc = _malloc ? _malloc : malloc;
         _realloc = _realloc ? _realloc : realloc;
         _free = _free ? _free : free;
-        int ncap = 16;
+        size_t ncap = 16;
         if (cap < ncap) {
                 cap = ncap;
         } else {
@@ -523,16 +525,22 @@ static uint64_t SIP64(const uint8_t *in, const size_t inlen, uint64_t seed0, uin
         switch (left) {
         case 7:
                 b |= ((uint64_t) in[6]) << 48;
+                [[fallthrough]];
         case 6:
                 b |= ((uint64_t) in[5]) << 40;
+                [[fallthrough]];
         case 5:
                 b |= ((uint64_t) in[4]) << 32;
+                [[fallthrough]];
         case 4:
                 b |= ((uint64_t) in[3]) << 24;
+                [[fallthrough]];
         case 3:
                 b |= ((uint64_t) in[2]) << 16;
+                [[fallthrough]];
         case 2:
                 b |= ((uint64_t) in[1]) << 8;
+                [[fallthrough]];
         case 1:
                 b |= ((uint64_t) in[0]);
                 break;
@@ -621,44 +629,58 @@ static void MM86128(const void *key, const int len, uint32_t seed, void *out) {
         switch (len & 15) {
         case 15:
                 k4 ^= tail[14] << 16;
+                [[fallthrough]];
         case 14:
                 k4 ^= tail[13] << 8;
+                [[fallthrough]];
         case 13:
                 k4 ^= tail[12] << 0;
                 k4 *= c4;
                 k4 = ROTL32(k4, 18);
                 k4 *= c1;
                 h4 ^= k4;
+                [[fallthrough]];
         case 12:
                 k3 ^= tail[11] << 24;
+                [[fallthrough]];
         case 11:
                 k3 ^= tail[10] << 16;
+                [[fallthrough]];
         case 10:
                 k3 ^= tail[9] << 8;
+                [[fallthrough]];
         case 9:
                 k3 ^= tail[8] << 0;
                 k3 *= c3;
                 k3 = ROTL32(k3, 17);
                 k3 *= c4;
                 h3 ^= k3;
+                [[fallthrough]];
         case 8:
                 k2 ^= tail[7] << 24;
+                [[fallthrough]];
         case 7:
                 k2 ^= tail[6] << 16;
+                [[fallthrough]];
         case 6:
                 k2 ^= tail[5] << 8;
+                [[fallthrough]];
         case 5:
                 k2 ^= tail[4] << 0;
                 k2 *= c2;
                 k2 = ROTL32(k2, 16);
                 k2 *= c3;
                 h2 ^= k2;
+                [[fallthrough]];
         case 4:
                 k1 ^= tail[3] << 24;
+                [[fallthrough]];
         case 3:
                 k1 ^= tail[2] << 16;
+                [[fallthrough]];
         case 2:
                 k1 ^= tail[1] << 8;
+                [[fallthrough]];
         case 1:
                 k1 ^= tail[0] << 0;
                 k1 *= c1;
@@ -698,7 +720,7 @@ uint64_t hashmap_sip(const void *data, size_t len, uint64_t seed0, uint64_t seed
 }
 
 // hashmap_murmur returns a hash value for `data` using Murmur3_86_128.
-uint64_t hashmap_murmur(const void *data, size_t len, uint64_t seed0, uint64_t seed1) {
+uint64_t hashmap_murmur(const void *data, size_t len, uint64_t seed0, UNUSED uint64_t seed1) {
         char out[16];
         MM86128(data, len, seed0, &out);
         return *(uint64_t *) out;

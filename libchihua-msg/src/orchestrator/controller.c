@@ -1,11 +1,12 @@
-#include "../../include/orchestrator/controller.h"
-#include "../common/dbus.h"
-
 #include <errno.h>
 #include <netinet/in.h>
 #include <stdio.h>
 #include <string.h>
 #include <sys/socket.h>
+
+#include "../../include/common/common.h"
+#include "../../include/orchestrator/controller.h"
+#include "../common/dbus.h"
 
 static int create_master_socket(uint16_t port) {
         struct sockaddr_in servaddr;
@@ -90,8 +91,7 @@ void controller_unrefp(Controller **controller) {
         free(*controller);
 }
 
-// NOLINTNEXTLINE
-static int accept_handler(sd_event_source *s, int fd, uint32_t revents, void *userdata) {
+static int accept_handler(UNUSED sd_event_source *source, int fd, UNUSED uint32_t revents, UNUSED void *userdata) {
         _cleanup_fd_ int nfd = accept4(fd, NULL, NULL, SOCK_NONBLOCK | SOCK_CLOEXEC);
         if (nfd < 0) {
                 if (errno == EAGAIN || errno == EINTR || errno == EWOULDBLOCK) {

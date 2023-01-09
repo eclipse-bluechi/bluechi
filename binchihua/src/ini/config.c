@@ -1,9 +1,10 @@
-#include "config.h"
-#include "../common/strings.h"
-#include "assert.h"
-#include "ini.h"
 #include <stdlib.h>
 
+#include "../../../libchihua-msg/include/common/common.h"
+#include "../common/strings.h"
+#include "assert.h"
+#include "config.h"
+#include "ini.h"
 
 int match(const char *section, const char *check_section, const char *name, const char *check_name) {
         if (streq(section, check_section) == 0 && streq(name, check_name) == 0) {
@@ -13,7 +14,7 @@ int match(const char *section, const char *check_section, const char *name, cons
 }
 
 // NOLINTNEXTLINE
-int key_value_compare_key(const void *a, const void *b, void *udata) {
+int key_value_compare_key(const void *a, const void *b, UNUSED void *udata) {
         const keyValue *kva = a;
         const keyValue *kvb = b;
         if (kva->value == NULL || kvb->value == NULL) {
@@ -28,7 +29,7 @@ uint64_t key_value_hash(const void *item, uint64_t seed0, uint64_t seed1) {
 }
 
 // NOLINTNEXTLINE
-int topic_compare_topic_name(const void *a, const void *b, void *udata) {
+int topic_compare_topic_name(const void *a, const void *b, UNUSED void *udata) {
         const topic *ta = a;
         const topic *tb = b;
         return streq(ta->topic, tb->topic);
