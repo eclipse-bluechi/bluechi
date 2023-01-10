@@ -2,6 +2,7 @@
 #include <stdio.h>
 
 #define VOID_0 ((void) 0)
+
 #define ELEMENTSOF(x)                                                            \
         (__builtin_choose_expr(                                                  \
                         !__builtin_types_compatible_p(typeof(x), typeof(&*(x))), \
@@ -15,7 +16,7 @@
                 }                \
         } while (false)
 
-int main(int argc, const char *argv[]) {
+int main() {
         size_t i;
         typedef struct list_item {
                 LIST_FIELDS(struct list_item, item_list);

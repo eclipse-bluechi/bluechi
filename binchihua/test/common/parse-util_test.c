@@ -3,12 +3,13 @@
 #include <assert.h>
 #include <stdbool.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 #ifndef __FUNCTION_NAME__
 #        define __FUNCTION_NAME__ __func__
 #endif
 
-void test_parse_long(const char *input, bool expectedReturn, long expectedResult) {
+bool test_parse_long(const char *input, bool expectedReturn, long expectedResult) {
         char *msg = NULL;
 
         long res = 0;
@@ -26,10 +27,12 @@ void test_parse_long(const char *input, bool expectedReturn, long expectedResult
 
         if (msg != NULL) {
                 fprintf(stderr, "%s", msg);
+                return false;
         }
+        return true;
 }
 
-void test_parse_port(const char *input, bool expected_return, uint16_t expected_result) {
+bool test_parse_port(const char *input, bool expected_return, uint16_t expected_result) {
         char *msg = NULL;
 
         uint16_t res = 0;
@@ -47,23 +50,31 @@ void test_parse_port(const char *input, bool expected_return, uint16_t expected_
 
         if (msg != NULL) {
                 fprintf(stderr, "%s", msg);
+                return false;
         }
+        return true;
 }
 
 int main() {
-        test_parse_long(NULL, false, 0L);
-        test_parse_long("", false, 0L);
-        test_parse_long("foo", false, 0L);
-        test_parse_long("1234", true, 1234L);
-        test_parse_long("1234abc", false, 1234L);
-        test_parse_long("abc1234", false, 0L);
+        bool result = true;
+        result = result && test_parse_long(NULL, false, 0L);
+        result = result && test_parse_long("", false, 0L);
+        result = result && test_parse_long("foo", false, 0L);
+        result = result && test_parse_long("1234", true, 1234L);
+        result = result && test_parse_long("1234abc", false, 1234L);
+        result = result && test_parse_long("abc1234", false, 0L);
 
-        test_parse_port(NULL, false, 0);
-        test_parse_port("", false, 0);
-        test_parse_port("foo", false, 0);
-        test_parse_port("0", true, 0);
-        test_parse_port("8888", true, 8888);
-        test_parse_port("65535", true, 65535);
-        test_parse_port("65536", false, 0);
-        test_parse_port("-2", false, 0);
+        result = result && test_parse_port(NULL, false, 0);
+        result = result && test_parse_port("", false, 0);
+        result = result && test_parse_port("foo", false, 0);
+        result = result && test_parse_port("0", true, 0);
+        result = result && test_parse_port("8888", true, 8888);
+        result = result && test_parse_port("65535", true, 65535);
+        result = result && test_parse_port("65536", false, 0);
+        result = result && test_parse_port("-2", false, 0);
+
+        if (!result) {
+                return EXIT_FAILURE;
+        }
+        return EXIT_SUCCESS;
 }
