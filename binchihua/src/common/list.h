@@ -203,3 +203,25 @@
         } while (false)
 
 #endif
+
+/* Iterate through all the members of the list p is included in, but skip over p */
+#define LIST_FOREACH_OTHERS(name,i,p)                                   \
+        for (typeof(*(p)) *_p = (p), *i = ({                            \
+                                typeof(*_p) *_j = _p;                   \
+                                while (_j && _j->name##_prev)           \
+                                        _j = _j->name##_prev;           \
+                                if (_j == _p)                           \
+                                        _j = _p->name##_next;           \
+                                _j;                                     \
+                        });                                             \
+             i;                                                         \
+             i = i->name##_next == _p ? _p->name##_next : i->name##_next)
+
+#define LIST_POP(name, a)                                               \
+        ({                                                              \
+                typeof(a)* _a = &(a);                                   \
+                typeof(a) _p = *_a;                                     \
+                if (_p)                                                 \
+                        LIST_REMOVE(name, *_a, _p);                     \
+                _p;                                                     \
+        })
