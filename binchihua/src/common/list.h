@@ -168,16 +168,17 @@
 #define LIST_FOREACH_AFTER(name, i, p) for ((i) = (p)->name##_next; (i); (i) = (i)->name##_next)
 
 /* Iterate through all the members of the list p is included in, but skip over p */
-#define LIST_FOREACH_OTHERS(name, i, p)              \
-        for (({                                      \
-                     (i) = (p);                      \
-                     while ((i) && (i)->name##_prev) \
-                             (i) = (i)->name##_prev; \
-                     if ((i) == (p))                 \
-                             (i) = (p)->name##_next; \
-             });                                     \
-             (i);                                    \
-             (i) = (i)->name##_next == (p) ? (p)->name##_next : (i)->name##_next)
+#define LIST_FOREACH_OTHERS(name, i, p)            \
+        for (typeof(*(p)) *_p = (p), *(i) = ({     \
+                     typeof(*_p) *_j = _p;         \
+                     while (_j && _j->name##_prev) \
+                             _j = _j->name##_prev; \
+                     if (_j == _p)                 \
+                             _j = _p->name##_next; \
+                     _j;                           \
+             });                                   \
+             i;                                    \
+             (i) = (i)->name##_next == _p ? _p->name##_next : (i)->name##_next)
 
 /* Loop starting from p->next until p->prev.
    p can be adjusted meanwhile. */
@@ -201,5 +202,14 @@
                 }                                          \
                 (b) = NULL;                                \
         } while (false)
+
+#define LIST_POP(name, a)                           \
+        ({                                          \
+                typeof(a) *_a = &(a);               \
+                typeof(a) _p = *_a;                 \
+                if (_p)                             \
+                        LIST_REMOVE(name, *_a, _p); \
+                _p;                                 \
+        })
 
 #endif
