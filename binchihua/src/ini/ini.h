@@ -1,7 +1,6 @@
 /* SPDX-License-Identifier: BSD-3-Clause */
 
-#ifndef INI_H
-#define INI_H
+#pragma once
 
 /* Make this header file easier to include in C++ code */
 #ifdef __cplusplus
@@ -157,5 +156,3 @@ INI_API int ini_parse_string(const char *string, ini_handler handler, void *user
 #ifdef __cplusplus
 }
 #endif
-
-#endif /* INI_H */

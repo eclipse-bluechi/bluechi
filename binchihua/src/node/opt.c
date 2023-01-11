@@ -1,11 +1,11 @@
-#include "opt.h"
-#include "../common/opt.h"
-#include "../common/parse-util.h"
-
 #include <arpa/inet.h>
 #include <getopt.h>
 #include <stdio.h>
 #include <stdlib.h>
+
+#include "../common/opt.h"
+#include "../common/parse-util.h"
+#include "opt.h"
 
 const struct option options[] = { { ARG_HOST, required_argument, 0, ARG_HOST_SHORT },
                                   { ARG_PORT, required_argument, 0, ARG_PORT_SHORT },

@@ -1,12 +1,12 @@
+#include "../../include/orchestrator/controller.h"
+#include "../../include/common/common.h"
+#include "../common/dbus.h"
+
 #include <errno.h>
 #include <netinet/in.h>
 #include <stdio.h>
 #include <string.h>
 #include <sys/socket.h>
-
-#include "../../include/common/common.h"
-#include "../../include/orchestrator/controller.h"
-#include "../common/dbus.h"
 
 static int create_master_socket(uint16_t port) {
         struct sockaddr_in servaddr;

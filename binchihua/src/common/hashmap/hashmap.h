@@ -2,8 +2,7 @@
 // Use of this source code is governed by an MIT-style
 // license that can be found in the LICENSE file.
 
-#ifndef HASHMAP_H
-#define HASHMAP_H
+#pragma once
 
 #include <stdbool.h>
 #include <stddef.h>
@@ -49,5 +48,3 @@ uint64_t hashmap_murmur(const void *data, size_t len, uint64_t seed0, uint64_t s
 
 // DEPRECATED: use `hashmap_new_with_allocator`
 void hashmap_set_allocator(void *(*malloc)(size_t), void (*free)(void *));
-
-#endif

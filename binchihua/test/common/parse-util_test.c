@@ -1,9 +1,10 @@
-#include "../../src/common/parse-util.h"
-
 #include <assert.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
+
+#include "../../src/common/parse-util.h"
+
 
 #ifndef __FUNCTION_NAME__
 #        define __FUNCTION_NAME__ __func__

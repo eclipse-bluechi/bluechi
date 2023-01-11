@@ -1,8 +1,8 @@
-#include "../../include/node/peer-dbus.h"
-#include "../common/dbus.h"
-
 #include <arpa/inet.h>
 #include <stdio.h>
+
+#include "../../include/node/peer-dbus.h"
+#include "../common/dbus.h"
 
 char *assemble_address(const struct sockaddr_in *addr) {
         if (addr == NULL) {

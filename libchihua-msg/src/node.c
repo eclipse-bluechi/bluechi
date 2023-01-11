@@ -1,8 +1,8 @@
+#include <stdio.h>
+
 #include "../include/node.h"
 #include "../include/node/peer-dbus.h"
 #include "./common/dbus.h"
-
-#include <stdio.h>
 
 Node *node_new(const NodeParams *params) {
         fprintf(stdout, "Creating Node...\n");

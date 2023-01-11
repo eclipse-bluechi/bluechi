@@ -21,8 +21,7 @@
   and was formatted to follow this project's formatting style.)
 ***/
 
-#ifndef _BLUE_CHIHUAHUA_COMMON_LIST
-#define _BLUE_CHIHUAHUA_COMMON_LIST
+#pragma once
 
 #include <assert.h>
 #include <stdbool.h>
@@ -211,5 +210,3 @@
                         LIST_REMOVE(name, *_a, _p); \
                 _p;                                 \
         })
-
-#endif

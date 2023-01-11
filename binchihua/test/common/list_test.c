@@ -1,5 +1,6 @@
-#include "../../src/common/list.h"
 #include <stdio.h>
+
+#include "../../src/common/list.h"
 
 #define VOID_0 ((void) 0)
 

@@ -1,10 +1,9 @@
-#ifndef _BLUE_CHIHUAHUA_COMMON_MEMORY
-#define _BLUE_CHIHUAHUA_COMMON_MEMORY
-
-#include "../../include/common/memory.h"
+#pragma once
 
 #include <stdlib.h>
 #include <unistd.h>
+
+#include "../../include/common/memory.h"
 
 static inline void *steal_pointer(void *ptr) {
         void **ptrp = (void **) ptr;
@@ -27,5 +26,3 @@ static inline void freep(void *p) {
 
 #define _cleanup_free_ _cleanup_(freep)
 #define _cleanup_fd_ _cleanup_(closep)
-
-#endif

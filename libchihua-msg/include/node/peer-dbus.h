@@ -1,13 +1,12 @@
-#ifndef _BLUE_CHIHUAHUA_LIB_NODE_PEER_DBUS
-#define _BLUE_CHIHUAHUA_LIB_NODE_PEER_DBUS
-
-#include "../common/memory.h"
+#pragma once
 
 #include <netinet/in.h>
 #include <stdbool.h>
 #include <sys/socket.h>
 #include <systemd/sd-bus.h>
 #include <systemd/sd-event.h>
+
+#include "../common/memory.h"
 
 typedef struct {
         char *peer_dbus_addr;
@@ -22,5 +21,3 @@ void peer_dbus_unrefp(PeerDBus **dbus);
 bool peer_dbus_start(PeerDBus *dbus);
 
 #define _cleanup_peer_dbus_ _cleanup_(peer_dbus_unrefp)
-
-#endif
