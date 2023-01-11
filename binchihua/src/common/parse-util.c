@@ -1,9 +1,10 @@
-#include "parse-util.h"
 #include <errno.h>
 #include <limits.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+#include "parse-util.h"
 
 bool parse_long(const char *in, long *ret) {
         const int base = 10;

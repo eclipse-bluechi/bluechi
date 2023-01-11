@@ -1,9 +1,9 @@
+#include <stdio.h>
+#include <string.h>
+
 #include "../include/orchestrator.h"
 #include "../include/orchestrator/controller.h"
 #include "./common/dbus.h"
-
-#include <stdio.h>
-#include <string.h>
 
 Orchestrator *orch_new(const OrchestratorParams *params) {
         fprintf(stdout, "Creating Orchestrator...\n");

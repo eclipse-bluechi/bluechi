@@ -1,10 +1,11 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
 #include "../../../libchihua-msg/include/node.h"
 #include "../ini/config.h"
 #include "opt.h"
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 
 int main(int argc, char *argv[]) {
         fprintf(stdout, "Hello from node!\n");
