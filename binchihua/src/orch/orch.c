@@ -1,10 +1,10 @@
+#include <stdio.h>
+#include <stdlib.h>
+
 #include "../../../libchihua-msg/include/common/common.h"
 #include "../../../libchihua-msg/include/orchestrator.h"
 #include "../ini/config.h"
 #include "opt.h"
-
-#include <stdio.h>
-#include <stdlib.h>
 
 int main(int argc, char *argv[]) {
         fprintf(stdout, "Hello from orchestrator!\n");
