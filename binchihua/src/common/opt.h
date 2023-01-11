@@ -1,6 +1,5 @@
 #pragma once
 
-// TODO: refactor
 // NOLINTBEGIN(modernize-macro-to-enum)
 #define ARG_PORT "port"
 #define ARG_PORT_SHORT 'P'
