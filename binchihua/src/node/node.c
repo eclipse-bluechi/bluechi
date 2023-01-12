@@ -18,7 +18,7 @@ int main(int argc, char *argv[]) {
 
         get_opts(argc, argv, &host);
 
-        char *ini_file_location = "../../../doc/example.ini";
+        char *ini_file_location = NULL;
         struct hashmap *ini_hashmap = NULL;
         ini_hashmap = parsing_ini_file(ini_file_location);
         if (ini_hashmap == NULL) {

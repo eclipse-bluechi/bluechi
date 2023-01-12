@@ -15,6 +15,13 @@ Checks: >
     -altera-id-dependent-backward-branch,
     -bugprone-easily-swappable-parameters,
     -altera-struct-pack-align,
+    -readability-isolate-declaration,
+    -bugprone-assignment-in-if-condition,
+
+CheckOptions:
+    - key: readability-function-cognitive-complexity.Threshold
+      value: 40
+    
 
 # Turn all the warnings from the checks above into errors.,
 WarningsAsErrors: "*"

@@ -2,7 +2,7 @@
 #include <string.h>
 
 #include "../include/orchestrator.h"
-#include "../include/orchestrator/controller.h"
+#include "../include/orchestrator/connection-server.h"
 #include "./common/dbus.h"
 
 Orchestrator *orch_new(const OrchestratorParams *params) {
@@ -25,7 +25,7 @@ Orchestrator *orch_new(const OrchestratorParams *params) {
 
 void orch_unrefp(Orchestrator **orchestrator) {
         fprintf(stdout, "Freeing allocated memory of Orchestrator...\n");
-        if (orchestrator == NULL) {
+        if (orchestrator == NULL || (*orchestrator) == NULL) {
                 return;
         }
         if ((*orchestrator)->event_loop != NULL) {
@@ -45,9 +45,15 @@ bool orch_start(const Orchestrator *orchestrator) {
                 return false;
         }
 
-        _cleanup_controller_ Controller *c = NULL;
+        _cleanup_peer_manager_ PeerManager *mgr = NULL;
+        _cleanup_connection_server_ ConnectionServer *c = NULL;
+
+        mgr = peer_manager_new(orchestrator->event_loop);
+        if (mgr == NULL) {
+                return false;
+        }
         // NOLINTNEXTLINE
-        c = controller_new(orchestrator->accept_port, orchestrator->event_loop, default_accept_handler());
+        c = connection_server_new(orchestrator->accept_port, orchestrator->event_loop, mgr);
 
         int r = 0;
         r = sd_event_loop(orchestrator->event_loop);

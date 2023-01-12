@@ -1,16 +1,18 @@
 libchihua_src = [
     'include/common/memory.h',
     'include/node.h',
-    'include/node/peer-dbus.h',
     'include/orchestrator.h',
-    'include/orchestrator/controller.h',
+    'include/orchestrator/connection-server.h',
+    'include/orchestrator/peer-manager.h',
+    'include/peer-bus.h',
 
     'src/common/memory.h',
     'src/common/dbus.h',
     'src/node.c',
-    'src/node/peer-dbus.c',
     'src/orchestrator.c',
-    'src/orchestrator/controller.c',
+    'src/orchestrator/connection-server.c',
+    'src/orchestrator/peer-manager.c',
+    'src/peer-bus.c',
 ]
 
 # We use libtool-version numbers because it's easier to understand.
@@ -36,3 +38,7 @@ blue_chihuahua_shared = shared_library('-chihua-msg',
                             ],
                             version : libruntime_so_version,
                             install : true)
+
+
+# build test binaries
+subdir('test')
