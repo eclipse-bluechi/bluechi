@@ -18,4 +18,6 @@ void free_topics_hashmap(struct hashmap **topics);
 
 void print_all_topics(struct hashmap *topics);
 
+bool validate_hashmap(struct hashmap *hm);
+
 #define _cleanup_hashmap_ __attribute__((__cleanup__(free_topics_hashmap)))

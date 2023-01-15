@@ -7,7 +7,7 @@
 #include "ini.h"
 
 int match(const char *section, const char *check_section, const char *name, const char *check_name) {
-        if (streq(section, check_section) == 0 && streq(name, check_name) == 0) {
+        if (streq(section, check_section) && streq(name, check_name)) {
                 return EXIT_SUCCESS;
         }
         return EXIT_FAILURE;
@@ -18,9 +18,9 @@ int key_value_compare_key(const void *a, const void *b, UNUSED void *udata) {
         const keyValue *kva = a;
         const keyValue *kvb = b;
         if (kva->value == NULL || kvb->value == NULL) {
-                return streq(kva->key, kvb->key);
+                return !streq(kva->key, kvb->key);
         }
-        return streq(kva->key, kvb->key) && streq(kva->value, kvb->value);
+        return !streq(kva->key, kvb->key) && !streq(kva->value, kvb->value);
 }
 
 uint64_t key_value_hash(const void *item, uint64_t seed0, uint64_t seed1) {
@@ -32,7 +32,7 @@ uint64_t key_value_hash(const void *item, uint64_t seed0, uint64_t seed1) {
 int topic_compare_topic_name(const void *a, const void *b, UNUSED void *udata) {
         const topic *ta = a;
         const topic *tb = b;
-        return streq(ta->topic, tb->topic);
+        return !streq(ta->topic, tb->topic);
 }
 
 uint64_t topic_hash(const void *item, uint64_t seed0, uint64_t seed1) {
@@ -85,14 +85,14 @@ struct hashmap *parsing_ini_file(const char *file) {
                 return temp;
         }
         if (ini_parse(file, handler, temp) < 0) {
-                printf("Can't load the file %s\n", file);
+                printf(" _cleanup_hashmap_Can't load the file %s\n", file);
                 return temp;
         }
         return temp;
 }
 
 void print_all_topics(struct hashmap *topics) {
-        if (topics != NULL) {
+        if (topics == NULL) {
                 return;
         }
         size_t iter = 0;
@@ -127,3 +127,11 @@ void free_topics_hashmap(struct hashmap **topics) {
         }
         hashmap_free(*topics);
 }
+
+
+/*void main() {
+    char * config_file = "../../test/ini/example.ini";
+    struct hashmap * test_hm = parsing_ini_file(config_file);
+    print_all_topics(test_hm);
+    printf("%d\n", validate_hashmap(test_hm));
+}*/
