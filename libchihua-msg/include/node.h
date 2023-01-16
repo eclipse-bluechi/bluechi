@@ -24,7 +24,7 @@ typedef struct {
 Node *node_new(const NodeParams *params);
 void node_unrefp(Node **node);
 
-bool node_start(const Node *node);
+bool node_start(Node *node);
 bool node_stop(const Node *node);
 
 #define _cleanup_node_ _cleanup_(node_unrefp)
