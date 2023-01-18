@@ -1,7 +1,7 @@
 #include <stdio.h>
 
 #include "../include/node.h"
-#include "../include/node/peer-dbus.h"
+#include "../include/peer-bus.h"
 #include "./common/dbus.h"
 
 Node *node_new(const NodeParams *params) {
@@ -15,48 +15,58 @@ Node *node_new(const NodeParams *params) {
                 return NULL;
         }
 
-        char *orch_addr = assemble_address(params->orch_addr);
+        char *orch_addr = assemble_tcp_address(params->orch_addr);
         if (orch_addr == NULL) {
                 return NULL;
+        }
+
+        _cleanup_sd_bus_ sd_bus *peer_dbus = peer_bus_open(event, "peer-bus-to-orchestrator", orch_addr);
+        if (peer_dbus == NULL) {
+                fprintf(stderr, "Failed to open peer dbus\n");
+                return false;
         }
 
         Node *n = malloc0(sizeof(Node));
         n->event_loop = steal_pointer(&event);
         n->orch_addr = orch_addr;
+        n->peer_dbus = steal_pointer(&peer_dbus);
 
         return n;
 }
 
 void node_unrefp(Node **node) {
-        fprintf(stdout, "Freeing allocated memory of Orchestrator...\n");
-        if (node == NULL) {
+        fprintf(stdout, "Freeing allocated memory of Node...\n");
+        if (node == NULL || (*node) == NULL) {
                 return;
         }
         if ((*node)->event_loop != NULL) {
-                fprintf(stdout, "Freeing allocated sd-event of Orchestrator...\n");
+                fprintf(stdout, "Freeing allocated sd-event of Node...\n");
                 sd_event_unrefp(&(*node)->event_loop);
         }
         if ((*node)->orch_addr != NULL) {
-                fprintf(stdout, "Freeing allocated orch_addr of Orchestrator...\n");
-                freep((*node)->orch_addr);
+                fprintf(stdout, "Freeing allocated orch_addr of Node...\n");
+                free((*node)->orch_addr);
+        }
+        if ((*node)->peer_dbus != NULL) {
+                fprintf(stdout, "Freeing allocated peer dbus to Orchestrator...\n");
+                sd_bus_unrefp(&(*node)->peer_dbus);
+        }
+        if ((*node)->user_dbus != NULL) {
+                fprintf(stdout, "Freeing allocated dbus to local user dbus...\n");
+                sd_bus_unrefp(&(*node)->user_dbus);
+        }
+        if ((*node)->systemd_dbus != NULL) {
+                fprintf(stdout, "Freeing allocated dbus to local systemd dbus...\n");
+                sd_bus_unrefp(&(*node)->systemd_dbus);
         }
 
         free(*node);
 }
 
-bool node_start(const Node *node) {
+bool node_start(Node *node) {
         fprintf(stdout, "Starting Node...\n");
 
         if (node == NULL) {
-                return false;
-        }
-
-        _cleanup_peer_dbus_ PeerDBus *orch_dbus = peer_dbus_new(node->orch_addr, node->event_loop);
-        if (orch_dbus == NULL) {
-                return false;
-        }
-        bool started_successful = peer_dbus_start(orch_dbus);
-        if (!started_successful) {
                 return false;
         }
 

@@ -5,6 +5,7 @@
 #include <systemd/sd-event.h>
 
 #include "./common/memory.h"
+#include "./orchestrator/peer-manager.h"
 
 typedef struct {
         uint16_t port;
@@ -12,7 +13,11 @@ typedef struct {
 
 typedef struct {
         uint16_t accept_port;
+
         sd_event *event_loop;
+        sd_event_source *peer_connection_source;
+
+        PeerManager *peer_manager;
 } Orchestrator;
 
 Orchestrator *orch_new(const OrchestratorParams *params);
