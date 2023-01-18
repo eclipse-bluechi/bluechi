@@ -1,12 +1,8 @@
 <p align="center">
-  <h2 align="center">Project Name - TBD</h3>
+  <h2 align="center">Hirte</h3>
 </p>
 
 ---
-
-## Usage
-
-TBD
 
 ## Development
 

@@ -1,8 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "../../../libchihua-msg/include/common/common.h"
-#include "../../../libchihua-msg/include/orchestrator.h"
+#include "../../../libhirte/include/common/common.h"
+#include "../../../libhirte/include/orchestrator.h"
 #include "../ini/config.h"
 #include "opt.h"
 
