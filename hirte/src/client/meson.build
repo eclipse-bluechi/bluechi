@@ -5,7 +5,7 @@ client_src = [
 ]
 
 executable(
-  'client',
+  'hirte-client',
   client_src,
   install: true
 )
