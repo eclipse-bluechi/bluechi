@@ -1,7 +1,7 @@
 #include <assert.h>
 #include <stdlib.h>
 
-#include "../../../libchihua-msg/include/common/common.h"
+#include "../../../libhirte/include/common/common.h"
 #include "../common/strings.h"
 #include "config.h"
 #include "ini.h"

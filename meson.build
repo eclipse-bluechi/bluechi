@@ -1,5 +1,5 @@
 project(
-  'blue-chihuahua',
+  'hirte',
   'c',
   version: '0.0.1',
   license: 'GPL-2.0-or-later',
@@ -18,7 +18,7 @@ add_global_arguments('-D_GNU_SOURCE', language : 'c')
 systemd_dep = dependency('libsystemd')
 
 # Subdirectory for the shared library.
-subdir('libchihua-msg')
+subdir('libhirte')
 
 # Subdirectory for applications.
-subdir('binchihua')
+subdir('hirte')

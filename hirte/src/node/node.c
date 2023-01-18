@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "../../../libchihua-msg/include/node.h"
+#include "../../../libhirte/include/node.h"
 #include "../ini/config.h"
 #include "opt.h"
 

@@ -16,6 +16,6 @@ executable(
   dependencies: [
     systemd_dep
   ],
-  link_with: blue_chihuahua_shared,
+  link_with: hirte_lib,
   install: true
 )

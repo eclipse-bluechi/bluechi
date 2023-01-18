@@ -1,4 +1,4 @@
-libchihua_src = [
+libhirte_src = [
     'include/node.h',
     'include/orchestrator.h',
     'include/peer-bus.h',
@@ -31,8 +31,8 @@ libruntime_so_version = '@0@.@1@.@2@'.format((libruntime_lt_c - libruntime_lt_a)
                                               libruntime_lt_a,
                                               libruntime_lt_r)
 
-blue_chihuahua_shared = shared_library('-chihua-msg',
-                            libchihua_src,
+hirte_lib = shared_library('hirte',
+                            libhirte_src,
                             dependencies: [
                                 systemd_dep
                             ],
