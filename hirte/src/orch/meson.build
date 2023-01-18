@@ -8,7 +8,7 @@ orch_src += ini_src
 orch_src += common_src
 
 executable(
-  'orch',
+  'hirte',
   orch_src,
   include_directories: [
     common_inc,

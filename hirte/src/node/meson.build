@@ -8,7 +8,7 @@ node_src += common_src
 node_src += ini_src
 
 executable(
-  'node',
+  'hirte-node',
   node_src,
   include_directories: [
     common_inc
