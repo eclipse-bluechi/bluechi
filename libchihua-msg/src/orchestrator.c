@@ -68,19 +68,20 @@ Orchestrator *orch_new(const OrchestratorParams *params) {
                 return NULL;
         }
 
-        _cleanup_orchestrator_ Orchestrator *o = malloc0(sizeof(Orchestrator));
-        o->event_loop = steal_pointer(&event);
-        o->accept_port = params->port;
-        o->peer_manager = peer_manager_new(o->event_loop);
-        o->peer_connection_source = NULL;
+        Orchestrator *orch = malloc0(sizeof(Orchestrator));
+        orch->event_loop = steal_pointer(&event);
+        orch->accept_port = params->port;
+        orch->peer_manager = peer_manager_new(orch->event_loop);
+        orch->peer_connection_source = NULL;
 
         bool successful = orch_setup_connection_handler(
-                        o, o->accept_port, &peer_manager_accept_connection_request);
+                        orch, orch->accept_port, &peer_manager_accept_connection_request);
         if (!successful) {
+                orch_unrefp(&orch);
                 return NULL;
         }
 
-        return steal_pointer(&o);
+        return orch;
 }
 
 void orch_unrefp(Orchestrator **orchestrator) {
@@ -96,6 +97,11 @@ void orch_unrefp(Orchestrator **orchestrator) {
                 fprintf(stdout, "Freeing allocated sd-event-source for connections of Orchestrator...\n");
                 sd_event_source_unrefp(&(*orchestrator)->peer_connection_source);
         }
+        if ((*orchestrator)->peer_manager != NULL) {
+                fprintf(stdout, "Freeing allocated peer manager of Orchestrator...\n");
+                peer_manager_unrefp(&(*orchestrator)->peer_manager);
+        }
+
         free(*orchestrator);
 }
 
