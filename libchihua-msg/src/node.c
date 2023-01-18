@@ -29,7 +29,7 @@ Node *node_new(const NodeParams *params) {
         Node *n = malloc0(sizeof(Node));
         n->event_loop = steal_pointer(&event);
         n->orch_addr = orch_addr;
-        n->peer_dbus = steal_pointer(peer_dbus);
+        n->peer_dbus = steal_pointer(&peer_dbus);
 
         return n;
 }

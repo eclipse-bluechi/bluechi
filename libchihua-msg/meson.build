@@ -1,18 +1,18 @@
 libchihua_src = [
-    'include/common/memory.h',
     'include/node.h',
     'include/orchestrator.h',
-    'include/orchestrator/connection-server.h',
-    'include/orchestrator/peer-manager.h',
     'include/peer-bus.h',
+    'include/socket.h',
+    'include/common/memory.h',
+    'include/orchestrator/peer-manager.h',
 
     'src/common/memory.h',
     'src/common/dbus.h',
     'src/node.c',
     'src/orchestrator.c',
-    'src/orchestrator/connection-server.c',
-    'src/orchestrator/peer-manager.c',
     'src/peer-bus.c',
+    'src/socket.c',
+    'src/orchestrator/peer-manager.c',
 ]
 
 # We use libtool-version numbers because it's easier to understand.
