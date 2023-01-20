@@ -5,6 +5,52 @@
 #include "../include/bus/user-bus.h"
 #include "../include/node.h"
 #include "./common/dbus.h"
+#include "../include/common/common.h"
+
+static int node_signal_handler(sd_event_source *event_source,
+                               UNUSED const struct signalfd_siginfo *si,
+                               UNUSED void *userdata)
+{
+        // Do whatever cleanup is needed here.
+
+        sd_event *event = sd_event_source_get_event(event_source);
+        sd_event_exit(event, 0);
+
+        return 0;
+}
+
+static int node_setup_signal_handler(sd_event *event)
+{
+        sigset_t sigset;
+        int r = 0;
+
+        // Block this thread from handling SIGTERM so it can be handled by the
+        // the event loop instead.
+        r = sigemptyset(&sigset);
+        if (r < 0) {
+                fprintf(stderr, "sigemptyset() failed: %m\n");
+                return -1;
+        }
+        r = sigaddset(&sigset, SIGTERM);
+        if (r < 0) {
+                fprintf(stderr, "sigaddset() failed: %m\n");
+                return -1;
+        }
+        r = sigprocmask(SIG_BLOCK, &sigset, NULL);
+        if (r < 0) {
+                fprintf(stderr, "sigprocmask() failed: %m\n");
+                return -1;
+        }
+
+        // Add SIGTERM as an event source in the event loop.
+        r = sd_event_add_signal(event, NULL, SIGTERM, node_signal_handler, NULL);
+        if (r < 0) {
+                fprintf(stderr, "sd_event_add_signal() failed: %m\n");
+                return -1;
+        }
+
+        return 0;
+}
 
 Node *node_new(const NodeParams *params) {
         fprintf(stdout, "Creating Node...\n");
@@ -13,8 +59,14 @@ Node *node_new(const NodeParams *params) {
         _cleanup_sd_event_ sd_event *event = NULL;
         r = sd_event_default(&event);
         if (r < 0) {
-                fprintf(stderr, "Failed to create event loop: %s\n", strerror(-r));
+                fprintf(stderr, "Failed to create event loop: %m\n");
                 return NULL;
+        }
+
+        r = node_setup_signal_handler(event);
+        if (r < 0) {
+                fprintf(stderr, "node_setup_signal_handler() failed\n");
+                return false;
         }
 
         char *orch_addr = assemble_tcp_address(params->orch_addr);
@@ -87,9 +139,11 @@ bool node_start(Node *node) {
         int r = 0;
         r = sd_event_loop(node->event_loop);
         if (r < 0) {
-                fprintf(stderr, "Starting event loop failed: %s\n", strerror(-r));
-                return false;
+                fprintf(stderr, "Starting node event loop failed: %m\n");
+                return false; 
         }
+
+        fprintf(stdout, "Exited node event loop()\n");
 
         return true;
 }

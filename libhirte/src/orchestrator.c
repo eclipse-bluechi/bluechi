@@ -7,6 +7,52 @@
 #include "../include/orchestrator/peer-manager.h"
 #include "../include/socket.h"
 #include "./common/dbus.h"
+#include "../include/common/common.h"
+
+static int orch_signal_handler(sd_event_source *event_source,
+                               UNUSED const struct signalfd_siginfo *si,
+                               UNUSED void *userdata)
+{
+        // Do whatever cleanup is needed here.
+
+        sd_event *event = sd_event_source_get_event(event_source);
+        sd_event_exit(event, 0);
+
+        return 0;
+}
+
+static int orch_setup_signal_handler(sd_event *event)
+{
+        sigset_t sigset;
+        int r = 0;
+
+        // Block this thread from handling SIGTERM so it can be handled by the
+        // the event loop instead.
+        r = sigemptyset(&sigset);
+        if (r < 0) {
+                fprintf(stderr, "sigemptyset() failed: %m\n");
+                return -1;
+        }
+        r = sigaddset(&sigset, SIGTERM);
+        if (r < 0) {
+                fprintf(stderr, "sigaddset() failed: %m\n");
+                return -1;
+        }
+        r = sigprocmask(SIG_BLOCK, &sigset, NULL);
+        if (r < 0) {
+                fprintf(stderr, "sigprocmask() failed: %m\n");
+                return -1;
+        }
+
+        // Add SIGTERM as an event source in the event loop.
+        r = sd_event_add_signal(event, NULL, SIGTERM, orch_signal_handler, NULL);
+        if (r < 0) {
+                fprintf(stderr, "sd_event_add_signal() failed: %m\n");
+                return -1;
+        }
+
+        return 0;
+}
 
 static bool orch_setup_connection_handler(
                 Orchestrator *orch, uint16_t listen_port, sd_event_io_handler_t connection_callback) {
@@ -39,7 +85,7 @@ static bool orch_setup_connection_handler(
                         connection_callback,
                         orch->peer_manager);
         if (r < 0) {
-                fprintf(stderr, "Failed to add io event: %s\n", strerror(-r));
+                fprintf(stderr, "Failed to add io event: %m\n");
                 return false;
         }
         // sd_event_add_io takes care of closing accept_fd, setting it to -1 avoids closing it multiple times
@@ -48,7 +94,7 @@ static bool orch_setup_connection_handler(
 
         r = sd_event_source_set_io_fd_own(event_source, true);
         if (r < 0) {
-                fprintf(stderr, "Failed to set io fd own: %s\n", strerror(-r));
+                fprintf(stderr, "Failed to set io fd own: %m\n");
                 return false;
         }
         (void) sd_event_source_set_description(event_source, "master-socket");
@@ -65,8 +111,14 @@ Orchestrator *orch_new(const OrchestratorParams *params) {
         _cleanup_sd_event_ sd_event *event = NULL;
         r = sd_event_default(&event);
         if (r < 0) {
-                fprintf(stderr, "Failed to create event loop: %s\n", strerror(-r));
+                fprintf(stderr, "Failed to create event loop: %m\n");
                 return NULL;
+        }
+
+        r = orch_setup_signal_handler(event);
+        if (r < 0) {
+                fprintf(stderr, "orch_setup_signal_handler() failed\n");
+                return false;
         }
 
         _cleanup_sd_bus_ sd_bus *user_dbus = user_bus_open(event);
@@ -130,12 +182,15 @@ bool orch_start(const Orchestrator *orchestrator) {
         int r = 0;
         r = sd_event_loop(orchestrator->event_loop);
         if (r < 0) {
-                fprintf(stderr, "Starting event loop failed: %s\n", strerror(-r));
+                fprintf(stderr, "Starting orch event loop failed: %m\n");
                 return false;
-        }
+        } 
+
+        fprintf(stdout, "Exited orch event loop()\n");
 
         return true;
 }
+
 
 bool orch_stop(const Orchestrator *orchestrator) {
         fprintf(stdout, "Stopping Orchestrator...\n");
