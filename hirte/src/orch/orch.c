@@ -1,8 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "../../../libhirte/include/common/common.h"
 #include "../../../libhirte/include/orchestrator.h"
+#include "../../../libhirte/include/service/shutdown.h"
 #include "../ini/config.h"
 #include "opt.h"
 
@@ -20,8 +20,17 @@ int main(int argc, char *argv[]) {
                 return EXIT_FAILURE;
         }
 
-        OrchestratorParams orch_params = { .port = accept_port };
-        _cleanup_orchestrator_ Orchestrator *orchestrator = orch_new(&orch_params);
+        _cleanup_orchestrator_ Orchestrator *orchestrator = orch_new(
+                        accept_port, ORCHESTRATOR_SERVICE_DEFAULT_NAME);
+        if (orchestrator == NULL) {
+                return EXIT_FAILURE;
+        }
+
+        if (!service_register_shutdown(orchestrator->user_dbus, orchestrator->event_loop)) {
+                fprintf(stderr, "Failed to register shutdown service\n");
+                return EXIT_FAILURE;
+        }
+
         if (orch_start(orchestrator)) {
                 return EXIT_SUCCESS;
         }

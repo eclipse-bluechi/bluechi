@@ -58,7 +58,7 @@ static bool orch_setup_connection_handler(
         return true;
 }
 
-Orchestrator *orch_new(const OrchestratorParams *params) {
+Orchestrator *orch_new(uint16_t port, const char *bus_service_name) {
         fprintf(stdout, "Creating Orchestrator...\n");
 
         int r = 0;
@@ -69,14 +69,27 @@ Orchestrator *orch_new(const OrchestratorParams *params) {
                 return NULL;
         }
 
+        _cleanup_free_ char *service_name = NULL;
+        r = asprintf(&service_name, "%s", bus_service_name);
+        if (r < 0) {
+                fprintf(stderr, "Out of memory\n");
+                return NULL;
+        }
+
         _cleanup_sd_bus_ sd_bus *user_dbus = user_bus_open(event);
         if (user_dbus == NULL) {
                 fprintf(stderr, "Failed to open user dbus\n");
-                return false;
+                return NULL;
+        }
+        r = sd_bus_request_name(user_dbus, service_name, SD_BUS_NAME_REPLACE_EXISTING);
+        if (r < 0) {
+                fprintf(stderr, "Failed to acquire service name on user dbus: %s\n", strerror(-r));
+                return NULL;
         }
 
         Orchestrator *orch = malloc0(sizeof(Orchestrator));
-        orch->accept_port = params->port;
+        orch->accept_port = port;
+        orch->user_bus_service_name = steal_pointer(&service_name);
         orch->event_loop = steal_pointer(&event);
         orch->user_dbus = steal_pointer(&user_dbus);
         orch->peer_manager = peer_manager_new(orch->event_loop);
@@ -100,6 +113,10 @@ void orch_unrefp(Orchestrator **orchestrator) {
         if ((*orchestrator)->event_loop != NULL) {
                 fprintf(stdout, "Freeing allocated sd-event of Orchestrator...\n");
                 sd_event_unrefp(&(*orchestrator)->event_loop);
+        }
+        if ((*orchestrator)->user_bus_service_name != NULL) {
+                fprintf(stdout, "Freeing allocated user_bus_service_name of Orchestrator...\n");
+                free((*orchestrator)->user_bus_service_name);
         }
         if ((*orchestrator)->peer_connection_source != NULL) {
                 fprintf(stdout, "Freeing allocated sd-event-source for connections of Orchestrator...\n");
