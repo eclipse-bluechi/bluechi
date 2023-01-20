@@ -13,7 +13,6 @@ static int node_signal_handler(
 
         sd_event *event = sd_event_source_get_event(event_source);
         sd_event_exit(event, 0);
-
         return 0;
 }
 
