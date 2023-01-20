@@ -1,8 +1,9 @@
 #include <arpa/inet.h>
+#include <errno.h>
 #include <stdio.h>
 
-#include "../include/peer-bus.h"
-#include "common/dbus.h"
+#include "../../include/bus/peer-bus.h"
+#include "../common/dbus.h"
 
 char *assemble_tcp_address(const struct sockaddr_in *addr) {
         if (addr == NULL) {

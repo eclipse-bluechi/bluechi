@@ -2,6 +2,7 @@
 #include <netinet/in.h>
 #include <stdio.h>
 #include <sys/socket.h>
+#include <unistd.h>
 
 #include "../include/socket.h"
 
@@ -53,4 +54,32 @@ int accept_tcp_connection_request(int fd) {
                 return -errsv;
         }
         return nfd;
+}
+
+int fd_check_peercred(int fd) {
+        int r = 0;
+        struct ucred ucred = { .pid = -1, .uid = -1, .gid = -1 };
+        socklen_t n = sizeof(struct ucred);
+
+        r = getsockopt(fd, SOL_SOCKET, SO_PEERCRED, &ucred, &n);
+        if (r < 0) {
+                return -errno;
+        }
+        if (n != sizeof(struct ucred)) {
+                return -EIO;
+        }
+        // Check if the data is actually useful and not suppressed due to namespacing issues
+        if (ucred.pid <= 0) {
+                return -ENODATA;
+        }
+        if (ucred.uid != 0 && ucred.uid != geteuid()) {
+                return -EPERM;
+        }
+
+        /* Note:
+           We don't check UID/GID here as namespace translation works differently in this case.
+           Instead of receiving an "invalid" user/group we get the overflow UID/GID.
+        */
+
+        return 1;
 }

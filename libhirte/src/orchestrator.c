@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "../include/bus/user-bus.h"
 #include "../include/common/common.h"
 #include "../include/orchestrator.h"
 #include "../include/orchestrator/peer-manager.h"
@@ -68,9 +69,16 @@ Orchestrator *orch_new(const OrchestratorParams *params) {
                 return NULL;
         }
 
+        _cleanup_sd_bus_ sd_bus *user_dbus = user_bus_open(event);
+        if (user_dbus == NULL) {
+                fprintf(stderr, "Failed to open user dbus\n");
+                return false;
+        }
+
         Orchestrator *orch = malloc0(sizeof(Orchestrator));
-        orch->event_loop = steal_pointer(&event);
         orch->accept_port = params->port;
+        orch->event_loop = steal_pointer(&event);
+        orch->user_dbus = steal_pointer(&user_dbus);
         orch->peer_manager = peer_manager_new(orch->event_loop);
         orch->peer_connection_source = NULL;
 
@@ -100,6 +108,10 @@ void orch_unrefp(Orchestrator **orchestrator) {
         if ((*orchestrator)->peer_manager != NULL) {
                 fprintf(stdout, "Freeing allocated peer manager of Orchestrator...\n");
                 peer_manager_unrefp(&(*orchestrator)->peer_manager);
+        }
+        if ((*orchestrator)->user_dbus != NULL) {
+                fprintf(stdout, "Freeing allocated dbus to local user dbus...\n");
+                sd_bus_unrefp(&(*orchestrator)->user_dbus);
         }
 
         free(*orchestrator);

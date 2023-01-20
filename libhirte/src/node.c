@@ -1,7 +1,9 @@
 #include <stdio.h>
 
+#include "../include/bus/peer-bus.h"
+#include "../include/bus/systemd-bus.h"
+#include "../include/bus/user-bus.h"
 #include "../include/node.h"
-#include "../include/peer-bus.h"
 #include "./common/dbus.h"
 
 Node *node_new(const NodeParams *params) {
@@ -20,6 +22,16 @@ Node *node_new(const NodeParams *params) {
                 return NULL;
         }
 
+        _cleanup_sd_bus_ sd_bus *user_dbus = user_bus_open(event);
+        if (user_dbus == NULL) {
+                fprintf(stderr, "Failed to open user dbus\n");
+                return false;
+        }
+        _cleanup_sd_bus_ sd_bus *systemd_dbus = systemd_bus_open(event);
+        if (systemd_dbus == NULL) {
+                fprintf(stderr, "Failed to open systemd dbus\n");
+                return false;
+        }
         _cleanup_sd_bus_ sd_bus *peer_dbus = peer_bus_open(event, "peer-bus-to-orchestrator", orch_addr);
         if (peer_dbus == NULL) {
                 fprintf(stderr, "Failed to open peer dbus\n");
@@ -27,8 +39,10 @@ Node *node_new(const NodeParams *params) {
         }
 
         Node *n = malloc0(sizeof(Node));
-        n->event_loop = steal_pointer(&event);
         n->orch_addr = orch_addr;
+        n->event_loop = steal_pointer(&event);
+        n->user_dbus = steal_pointer(&user_dbus);
+        n->systemd_dbus = steal_pointer(&systemd_dbus);
         n->peer_dbus = steal_pointer(&peer_dbus);
 
         return n;
