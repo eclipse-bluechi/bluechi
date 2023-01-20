@@ -17,6 +17,8 @@ typedef struct {
         sd_event *event_loop;
         sd_event_source *peer_connection_source;
 
+        sd_bus *user_dbus;
+
         PeerManager *peer_manager;
 } Orchestrator;
 

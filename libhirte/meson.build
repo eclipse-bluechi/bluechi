@@ -1,7 +1,9 @@
 libhirte_src = [
     'include/node.h',
     'include/orchestrator.h',
-    'include/peer-bus.h',
+    'include/bus/peer-bus.h',
+    'include/bus/user-bus.h',
+    'include/bus/systemd-bus.h',
     'include/socket.h',
     'include/common/memory.h',
     'include/orchestrator/peer-manager.h',
@@ -10,7 +12,9 @@ libhirte_src = [
     'src/common/dbus.h',
     'src/node.c',
     'src/orchestrator.c',
-    'src/peer-bus.c',
+    'src/bus/peer-bus.c',
+    'src/bus/user-bus.c',
+    'src/bus/systemd-bus.c',
     'src/socket.c',
     'src/orchestrator/peer-manager.c',
 ]

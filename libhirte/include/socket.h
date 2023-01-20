@@ -4,3 +4,5 @@
 
 int create_tcp_socket(uint16_t port);
 int accept_tcp_connection_request(int fd);
+
+int fd_check_peercred(int fd);
