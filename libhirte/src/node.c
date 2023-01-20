@@ -3,14 +3,12 @@
 #include "../include/bus/peer-bus.h"
 #include "../include/bus/systemd-bus.h"
 #include "../include/bus/user-bus.h"
+#include "../include/common/common.h"
 #include "../include/node.h"
 #include "./common/dbus.h"
-#include "../include/common/common.h"
 
-static int node_signal_handler(sd_event_source *event_source,
-                               UNUSED const struct signalfd_siginfo *si,
-                               UNUSED void *userdata)
-{
+static int node_signal_handler(
+                sd_event_source *event_source, UNUSED const struct signalfd_siginfo *si, UNUSED void *userdata) {
         // Do whatever cleanup is needed here.
 
         sd_event *event = sd_event_source_get_event(event_source);
@@ -19,8 +17,7 @@ static int node_signal_handler(sd_event_source *event_source,
         return 0;
 }
 
-static int node_setup_signal_handler(sd_event *event)
-{
+static int node_setup_signal_handler(sd_event *event) {
         sigset_t sigset;
         int r = 0;
 
@@ -140,7 +137,7 @@ bool node_start(Node *node) {
         r = sd_event_loop(node->event_loop);
         if (r < 0) {
                 fprintf(stderr, "Starting node event loop failed: %m\n");
-                return false; 
+                return false;
         }
 
         fprintf(stdout, "Exited node event loop()\n");

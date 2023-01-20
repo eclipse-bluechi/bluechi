@@ -7,12 +7,9 @@
 #include "../include/orchestrator/peer-manager.h"
 #include "../include/socket.h"
 #include "./common/dbus.h"
-#include "../include/common/common.h"
 
-static int orch_signal_handler(sd_event_source *event_source,
-                               UNUSED const struct signalfd_siginfo *si,
-                               UNUSED void *userdata)
-{
+static int orch_signal_handler(
+                sd_event_source *event_source, UNUSED const struct signalfd_siginfo *si, UNUSED void *userdata) {
         // Do whatever cleanup is needed here.
 
         sd_event *event = sd_event_source_get_event(event_source);
@@ -21,8 +18,7 @@ static int orch_signal_handler(sd_event_source *event_source,
         return 0;
 }
 
-static int orch_setup_signal_handler(sd_event *event)
-{
+static int orch_setup_signal_handler(sd_event *event) {
         sigset_t sigset;
         int r = 0;
 
@@ -184,7 +180,7 @@ bool orch_start(const Orchestrator *orchestrator) {
         if (r < 0) {
                 fprintf(stderr, "Starting orch event loop failed: %m\n");
                 return false;
-        } 
+        }
 
         fprintf(stdout, "Exited orch event loop()\n");
 
