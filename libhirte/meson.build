@@ -7,6 +7,7 @@ libhirte_src = [
     'include/socket.h',
     'include/common/memory.h',
     'include/orchestrator/peer-manager.h',
+    'include/service/service.h',
     'include/service/shutdown.h',
 
     'src/common/memory.h',
@@ -18,7 +19,6 @@ libhirte_src = [
     'src/bus/systemd-bus.c',
     'src/socket.c',
     'src/orchestrator/peer-manager.c',
-    'src/service/service.h',
     'src/service/service.c',
     'src/service/shutdown.c',
 ]

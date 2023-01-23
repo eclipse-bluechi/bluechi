@@ -1,7 +1,7 @@
 #include <errno.h>
 #include <stdio.h>
 
-#include "service.h"
+#include "../../include/service/service.h"
 
 char *assemble_interface_name(char *name_postfix) {
         char *interface_name = NULL;
