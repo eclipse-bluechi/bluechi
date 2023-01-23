@@ -5,6 +5,7 @@
 #include "../../include/common/common.h"
 #include "../../include/service/service.h"
 #include "../../include/service/shutdown.h"
+#include "../common/dbus.h"
 #include "../common/memory.h"
 
 int shutdown_event_loop(sd_event *event) {
@@ -29,17 +30,49 @@ static int method_shutdown(sd_bus_message *m, void *userdata, UNUSED sd_bus_erro
         return sd_bus_reply_method_return(m, "");
 }
 
+#define method_name_shutdown "Shutdown"
+
 // NOLINTNEXTLINE(cppcoreguidelines-interfaces-global-init)
-static const sd_bus_vtable vtable_shutdown[] = { SD_BUS_VTABLE_START(0),
-                                                 SD_BUS_METHOD("Shutdown", "", "", method_shutdown, 0),
-                                                 SD_BUS_VTABLE_END };
+static const sd_bus_vtable vtable_shutdown[] = {
+        SD_BUS_VTABLE_START(0), SD_BUS_METHOD(method_name_shutdown, "", "", method_shutdown, 0), SD_BUS_VTABLE_END
+};
 
 bool shutdown_service_register(sd_bus *target_bus, sd_event *event) {
-        _cleanup_free_ char *interface_name = assemble_interface_name("Shutdown");
+        _cleanup_free_ char *interface_name = assemble_interface_name(method_name_shutdown);
         int r = sd_bus_add_object_vtable(
                         target_bus, NULL, HIRTE_OBJECT_PATH, interface_name, vtable_shutdown, event);
         if (r < 0) {
                 fprintf(stderr, "Failed to register shutdown service: %m\n");
+                return false;
+        }
+        return true;
+}
+
+
+bool service_call_shutdown(sd_bus *target_bus, const char *service_name) {
+        _cleanup_free_ char *interface_name = assemble_interface_name(method_name_shutdown);
+        if (interface_name == NULL) {
+                return false;
+        }
+
+        _cleanup_sd_bus_error_ sd_bus_error error = SD_BUS_ERROR_NULL;
+        _cleanup_sd_bus_message_ sd_bus_message *reply = NULL;
+
+        int r = sd_bus_call_method(
+                        target_bus,
+                        service_name,
+                        HIRTE_OBJECT_PATH,
+                        interface_name,
+                        method_name_shutdown,
+                        &error,
+                        &reply,
+                        "");
+        if (r < 0) {
+                fprintf(stderr,
+                        "Failed to call '%s': %s: %s\n",
+                        method_name_shutdown,
+                        strerror(-r),
+                        error.message);
                 return false;
         }
         return true;
