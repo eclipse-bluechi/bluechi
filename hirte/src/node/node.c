@@ -3,6 +3,7 @@
 #include <string.h>
 
 #include "../../../libhirte/include/node.h"
+#include "../../../libhirte/include/service/shutdown.h"
 #include "../ini/config.h"
 #include "opt.h"
 
@@ -25,8 +26,16 @@ int main(int argc, char *argv[]) {
                 return EXIT_FAILURE;
         }
 
-        NodeParams node_params = { .orch_addr = &host };
-        _cleanup_node_ Node *node = node_new(&node_params);
+        _cleanup_node_ Node *node = node_new(&host, NODE_SERVICE_DEFAULT_NAME);
+        if (node == NULL) {
+                return EXIT_FAILURE;
+        }
+
+        if (!service_register_shutdown(node->user_dbus, node->event_loop)) {
+                fprintf(stderr, "Failed to register shutdown service\n");
+                return EXIT_FAILURE;
+        }
+
         if (node_start(node)) {
                 return EXIT_SUCCESS;
         }

@@ -6,7 +6,7 @@
 #include "../include/node.h"
 #include "./common/dbus.h"
 
-Node *node_new(const NodeParams *params) {
+Node *node_new(const struct sockaddr_in *peer_addr, const char *bus_service_name) {
         fprintf(stdout, "Creating Node...\n");
 
         int r = 0;
@@ -17,29 +17,43 @@ Node *node_new(const NodeParams *params) {
                 return NULL;
         }
 
-        char *orch_addr = assemble_tcp_address(params->orch_addr);
+        _cleanup_free_ char *orch_addr = assemble_tcp_address(peer_addr);
         if (orch_addr == NULL) {
+                return NULL;
+        }
+        _cleanup_free_ char *service_name = NULL;
+        r = asprintf(&service_name, "%s", bus_service_name);
+        if (r < 0) {
+                fprintf(stderr, "Out of memory\n");
                 return NULL;
         }
 
         _cleanup_sd_bus_ sd_bus *user_dbus = user_bus_open(event);
         if (user_dbus == NULL) {
                 fprintf(stderr, "Failed to open user dbus\n");
-                return false;
+                return NULL;
         }
+        r = sd_bus_request_name(user_dbus, service_name, SD_BUS_NAME_REPLACE_EXISTING);
+        if (r < 0) {
+                fprintf(stderr, "Failed to acquire service name on user dbus: %s\n", strerror(-r));
+                return NULL;
+        }
+
         _cleanup_sd_bus_ sd_bus *systemd_dbus = systemd_bus_open(event);
         if (systemd_dbus == NULL) {
                 fprintf(stderr, "Failed to open systemd dbus\n");
-                return false;
+                return NULL;
         }
+
         _cleanup_sd_bus_ sd_bus *peer_dbus = peer_bus_open(event, "peer-bus-to-orchestrator", orch_addr);
         if (peer_dbus == NULL) {
                 fprintf(stderr, "Failed to open peer dbus\n");
-                return false;
+                return NULL;
         }
 
         Node *n = malloc0(sizeof(Node));
-        n->orch_addr = orch_addr;
+        n->orch_addr = steal_pointer(&orch_addr);
+        n->user_bus_service_name = steal_pointer(&service_name);
         n->event_loop = steal_pointer(&event);
         n->user_dbus = steal_pointer(&user_dbus);
         n->systemd_dbus = steal_pointer(&systemd_dbus);
@@ -60,6 +74,10 @@ void node_unrefp(Node **node) {
         if ((*node)->orch_addr != NULL) {
                 fprintf(stdout, "Freeing allocated orch_addr of Node...\n");
                 free((*node)->orch_addr);
+        }
+        if ((*node)->user_bus_service_name != NULL) {
+                fprintf(stdout, "Freeing allocated user_bus_service_name of Node...\n");
+                free((*node)->user_bus_service_name);
         }
         if ((*node)->peer_dbus != NULL) {
                 fprintf(stdout, "Freeing allocated peer dbus to Orchestrator...\n");

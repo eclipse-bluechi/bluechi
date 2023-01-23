@@ -7,12 +7,11 @@
 #include "./common/memory.h"
 #include "./orchestrator/peer-manager.h"
 
-typedef struct {
-        uint16_t port;
-} OrchestratorParams;
+#define ORCHESTRATOR_SERVICE_DEFAULT_NAME "org.containers.hirte.Orchestrator"
 
 typedef struct {
         uint16_t accept_port;
+        char *user_bus_service_name;
 
         sd_event *event_loop;
         sd_event_source *peer_connection_source;
@@ -22,7 +21,7 @@ typedef struct {
         PeerManager *peer_manager;
 } Orchestrator;
 
-Orchestrator *orch_new(const OrchestratorParams *params);
+Orchestrator *orch_new(uint16_t port, const char *bus_service_name);
 void orch_unrefp(Orchestrator **orchestrator);
 
 bool orch_start(const Orchestrator *orchestrator);

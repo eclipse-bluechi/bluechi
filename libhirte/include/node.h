@@ -7,12 +7,11 @@
 #include <systemd/sd-event.h>
 
 #include "common/memory.h"
-typedef struct {
-        struct sockaddr_in *orch_addr;
-} NodeParams;
 
+#define NODE_SERVICE_DEFAULT_NAME "org.containers.hirte.Node"
 typedef struct {
         char *orch_addr;
+        char *user_bus_service_name;
 
         sd_event *event_loop;
 
@@ -21,7 +20,7 @@ typedef struct {
         sd_bus *peer_dbus;
 } Node;
 
-Node *node_new(const NodeParams *params);
+Node *node_new(const struct sockaddr_in *peer_addr, const char *bus_service_name);
 void node_unrefp(Node **node);
 
 bool node_start(Node *node);
