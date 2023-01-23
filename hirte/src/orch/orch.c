@@ -2,6 +2,7 @@
 #include <stdlib.h>
 
 #include "../../../libhirte/include/orchestrator.h"
+#include "../../../libhirte/include/service/isolate.h"
 #include "../../../libhirte/include/service/shutdown.h"
 #include "../ini/config.h"
 #include "opt.h"
@@ -28,6 +29,11 @@ int main(int argc, char *argv[]) {
 
         if (!service_register_shutdown(orchestrator->user_dbus, orchestrator->event_loop)) {
                 fprintf(stderr, "Failed to register shutdown service\n");
+                return EXIT_FAILURE;
+        }
+
+        if (!service_register_isolate_all(orchestrator->user_dbus, orchestrator)) {
+                fprintf(stderr, "Failed to register IsolateAll service\n");
                 return EXIT_FAILURE;
         }
 

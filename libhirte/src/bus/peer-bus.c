@@ -73,7 +73,7 @@ sd_bus *peer_bus_open(sd_event *event, char *dbus_description, char *dbus_server
                 fprintf(stderr, "Failed to start peer bus: %s", strerror(-r));
                 return NULL;
         }
-
+        printf("Peer bus opened\n");
         return steal_pointer(&dbus);
 }
 
@@ -104,7 +104,7 @@ sd_bus *peer_bus_open_server(sd_event *event, char *dbus_description, int fd) {
                 fprintf(stderr, "Failed to start peer bus server: %s", strerror(-r));
                 return NULL;
         }
-
+        printf("Peer bus server started\n");
         return steal_pointer(&dbus);
 }
 

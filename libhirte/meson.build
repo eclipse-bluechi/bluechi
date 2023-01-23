@@ -9,6 +9,7 @@ libhirte_src = [
     'include/orchestrator/peer-manager.h',
     'include/service/service.h',
     'include/service/shutdown.h',
+    'include/service/isolate.h',
 
     'src/common/memory.h',
     'src/common/dbus.h',
@@ -21,6 +22,7 @@ libhirte_src = [
     'src/orchestrator/peer-manager.c',
     'src/service/service.c',
     'src/service/shutdown.c',
+    'src/service/isolate.c',
 ]
 
 # We use libtool-version numbers because it's easier to understand.
