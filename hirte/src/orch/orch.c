@@ -12,7 +12,7 @@ int main(int argc, char *argv[]) {
         uint16_t accept_port = 0;
         char *config_path = NULL;
 
-        get_opts(argc, argv, &accept_port, &config_path);
+        get_opts(argc, argv, &config_path);
 
         struct hashmap *ini_hashmap = NULL;
         ini_hashmap = parsing_ini_file(config_path);
@@ -20,7 +20,8 @@ int main(int argc, char *argv[]) {
                 return EXIT_FAILURE;
         }
 
-        OrchestratorParams orch_params = { .port = accept_port };
+        struct hashmap *kv = hashmap_get(ini_hashmap, &(topic){ .topic = "Orchestrator" });
+        OrchestratorParams orch_params = { .port = (char *) hashmap_get(kv, &(keyValue){ .key = "Port" }) };
         _cleanup_orchestrator_ Orchestrator *orchestrator = orch_new(&orch_params);
         if (orch_start(orchestrator)) {
                 return EXIT_SUCCESS;
