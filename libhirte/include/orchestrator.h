@@ -13,7 +13,7 @@ typedef struct {
         uint16_t accept_port;
         char *user_bus_service_name;
 
-        sd_event *event_loop;
+        sd_event *event;
         sd_event_source *peer_connection_source;
 
         sd_bus *user_dbus;

@@ -14,7 +14,7 @@ static bool orch_setup_connection_handler(
                 fprintf(stderr, "Orchestrator is NULL\n");
                 return false;
         }
-        if (orch->event_loop == NULL) {
+        if (orch->event == NULL) {
                 fprintf(stderr, "event loop of Orchestrator is NULL\n");
                 return false;
         }
@@ -32,12 +32,7 @@ static bool orch_setup_connection_handler(
         }
 
         r = sd_event_add_io(
-                        orch->event_loop,
-                        &event_source,
-                        accept_fd,
-                        EPOLLIN,
-                        connection_callback,
-                        orch->peer_manager);
+                        orch->event, &event_source, accept_fd, EPOLLIN, connection_callback, orch->peer_manager);
         if (r < 0) {
                 fprintf(stderr, "Failed to add io event: %s\n", strerror(-r));
                 return false;
@@ -90,9 +85,9 @@ Orchestrator *orch_new(uint16_t port, const char *bus_service_name) {
         Orchestrator *orch = malloc0(sizeof(Orchestrator));
         orch->accept_port = port;
         orch->user_bus_service_name = steal_pointer(&service_name);
-        orch->event_loop = steal_pointer(&event);
+        orch->event = steal_pointer(&event);
         orch->user_dbus = steal_pointer(&user_dbus);
-        orch->peer_manager = peer_manager_new(orch->event_loop);
+        orch->peer_manager = peer_manager_new(orch->event);
         orch->peer_connection_source = NULL;
 
         bool successful = orch_setup_connection_handler(
@@ -110,9 +105,9 @@ void orch_unrefp(Orchestrator **orchestrator) {
         if (orchestrator == NULL || (*orchestrator) == NULL) {
                 return;
         }
-        if ((*orchestrator)->event_loop != NULL) {
+        if ((*orchestrator)->event != NULL) {
                 fprintf(stdout, "Freeing allocated sd-event of Orchestrator...\n");
-                sd_event_unrefp(&(*orchestrator)->event_loop);
+                sd_event_unrefp(&(*orchestrator)->event);
         }
         if ((*orchestrator)->user_bus_service_name != NULL) {
                 fprintf(stdout, "Freeing allocated user_bus_service_name of Orchestrator...\n");
@@ -140,12 +135,12 @@ bool orch_start(const Orchestrator *orchestrator) {
         if (orchestrator == NULL) {
                 return false;
         }
-        if (orchestrator->event_loop == NULL) {
+        if (orchestrator->event == NULL) {
                 return false;
         }
 
         int r = 0;
-        r = sd_event_loop(orchestrator->event_loop);
+        r = sd_event_loop(orchestrator->event);
         if (r < 0) {
                 fprintf(stderr, "Starting event loop failed: %s\n", strerror(-r));
                 return false;

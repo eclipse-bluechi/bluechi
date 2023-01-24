@@ -31,6 +31,9 @@ sudo dnf install -y clang-tools-extra gcc make meson systemd-devel
 make fmt
 ```
 
+For the most part, this project follows systemd coding style: [systemd-coding-style](https://github.com/systemd/systemd/blob/main/docs/CODING_STYLE.md).
+Also, this project borrows some of the coding conventions from systemd.  For example, function names pertaining to D-Bus services look like <code>bus_service_set_property()</code>.
+
 A formatting check of existing files can be executed by:
 ```bash
 make check-fmt

@@ -13,7 +13,7 @@ typedef struct {
         char *orch_addr;
         char *user_bus_service_name;
 
-        sd_event *event_loop;
+        sd_event *event;
 
         sd_bus *user_dbus;
         sd_bus *systemd_dbus;

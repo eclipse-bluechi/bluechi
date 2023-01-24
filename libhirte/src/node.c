@@ -54,7 +54,7 @@ Node *node_new(const struct sockaddr_in *peer_addr, const char *bus_service_name
         Node *n = malloc0(sizeof(Node));
         n->orch_addr = steal_pointer(&orch_addr);
         n->user_bus_service_name = steal_pointer(&service_name);
-        n->event_loop = steal_pointer(&event);
+        n->event = steal_pointer(&event);
         n->user_dbus = steal_pointer(&user_dbus);
         n->systemd_dbus = steal_pointer(&systemd_dbus);
         n->peer_dbus = steal_pointer(&peer_dbus);
@@ -67,9 +67,9 @@ void node_unrefp(Node **node) {
         if (node == NULL || (*node) == NULL) {
                 return;
         }
-        if ((*node)->event_loop != NULL) {
+        if ((*node)->event != NULL) {
                 fprintf(stdout, "Freeing allocated sd-event of Node...\n");
-                sd_event_unrefp(&(*node)->event_loop);
+                sd_event_unrefp(&(*node)->event);
         }
         if ((*node)->orch_addr != NULL) {
                 fprintf(stdout, "Freeing allocated orch_addr of Node...\n");
@@ -103,7 +103,7 @@ bool node_start(Node *node) {
         }
 
         int r = 0;
-        r = sd_event_loop(node->event_loop);
+        r = sd_event_loop(node->event);
         if (r < 0) {
                 fprintf(stderr, "Starting event loop failed: %s\n", strerror(-r));
                 return false;
