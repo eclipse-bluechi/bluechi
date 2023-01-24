@@ -7,6 +7,8 @@
 #include "opt.h"
 
 int main(int argc, char *argv[]) {
+        int r = -1;
+
         fprintf(stdout, "Hello from orchestrator!\n");
 
         uint16_t accept_port = 0;
@@ -26,13 +28,22 @@ int main(int argc, char *argv[]) {
                 return EXIT_FAILURE;
         }
 
-        if (!service_register_shutdown(orchestrator->user_dbus, orchestrator->event_loop)) {
+        if (!shutdown_service_register(orchestrator->user_dbus, orchestrator->event)) {
                 fprintf(stderr, "Failed to register shutdown service\n");
+                return EXIT_FAILURE;
+        }
+
+        r = event_loop_add_shutdown_signals(orchestrator->event);
+        if (r < 0) {
+                fprintf(stderr, "Failed to add signals to orchestrator event loop\n");
                 return EXIT_FAILURE;
         }
 
         if (orch_start(orchestrator)) {
                 return EXIT_SUCCESS;
         }
+
+        fprintf(stdout, "Orchestrator exited\n");
+
         return EXIT_FAILURE;
 }

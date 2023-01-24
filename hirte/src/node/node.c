@@ -9,6 +9,8 @@
 
 
 int main(int argc, char *argv[]) {
+        int r = -1;
+
         fprintf(stdout, "Hello from node!\n");
 
         struct sockaddr_in host;
@@ -31,13 +33,22 @@ int main(int argc, char *argv[]) {
                 return EXIT_FAILURE;
         }
 
-        if (!service_register_shutdown(node->user_dbus, node->event_loop)) {
+        if (!shutdown_service_register(node->user_dbus, node->event)) {
                 fprintf(stderr, "Failed to register shutdown service\n");
+                return EXIT_FAILURE;
+        }
+
+        r = event_loop_add_shutdown_signals(node->event);
+        if (r < 0) {
+                fprintf(stderr, "Failed to add signals to node event loop\n");
                 return EXIT_FAILURE;
         }
 
         if (node_start(node)) {
                 return EXIT_SUCCESS;
         }
+
+        fprintf(stdout, "Node exited\n");
+
         return EXIT_FAILURE;
 }
