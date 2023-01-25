@@ -33,7 +33,8 @@ int main(int argc, char *argv[]) {
                 return EXIT_FAILURE;
         }
 
-        if (!shutdown_service_register(node->user_dbus, node->event)) {
+        r = shutdown_service_register(node->user_dbus, node->event);
+        if (r < 0) {
                 fprintf(stderr, "Failed to register shutdown service\n");
                 return EXIT_FAILURE;
         }
