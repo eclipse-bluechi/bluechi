@@ -1,8 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "../../../libhirte/include/orchestrator.h"
-#include "../../../libhirte/include/service/shutdown.h"
+#include "../../../libhirte/src/orchestrator.h"
+#include "../../../libhirte/src/service/shutdown.h"
 #include "../ini/config.h"
 #include "opt.h"
 

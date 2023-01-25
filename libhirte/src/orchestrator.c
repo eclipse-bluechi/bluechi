@@ -1,12 +1,12 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "../include/bus/user-bus.h"
-#include "../include/common/common.h"
-#include "../include/orchestrator.h"
-#include "../include/orchestrator/peer-manager.h"
-#include "../include/socket.h"
+#include "./bus/user-bus.h"
+#include "./common/common.h"
 #include "./common/dbus.h"
+#include "./orchestrator/peer-manager.h"
+#include "orchestrator.h"
+#include "socket.h"
 
 static bool orch_setup_connection_handler(
                 Orchestrator *orch, uint16_t listen_port, sd_event_io_handler_t connection_callback) {

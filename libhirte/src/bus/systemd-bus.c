@@ -1,9 +1,9 @@
 #include <errno.h>
 #include <stdio.h>
 
-#include "../../include/bus/systemd-bus.h"
-#include "../../include/socket.h"
 #include "../common/dbus.h"
+#include "../socket.h"
+#include "systemd-bus.h"
 
 static int systemd_bus_new(sd_bus **ret) {
         if (ret == NULL) {

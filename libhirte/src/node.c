@@ -1,10 +1,10 @@
 #include <stdio.h>
 
-#include "../include/bus/peer-bus.h"
-#include "../include/bus/systemd-bus.h"
-#include "../include/bus/user-bus.h"
-#include "../include/node.h"
+#include "./bus/peer-bus.h"
+#include "./bus/systemd-bus.h"
+#include "./bus/user-bus.h"
 #include "./common/dbus.h"
+#include "node.h"
 
 Node *node_new(const struct sockaddr_in *peer_addr, const char *bus_service_name) {
         fprintf(stdout, "Creating Node...\n");

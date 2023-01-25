@@ -2,8 +2,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "../../../libhirte/include/node.h"
-#include "../../../libhirte/include/service/shutdown.h"
+#include "../../../libhirte/src/node.h"
+#include "../../../libhirte/src/service/shutdown.h"
 #include "../ini/config.h"
 #include "opt.h"
 
