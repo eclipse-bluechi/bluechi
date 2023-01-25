@@ -6,7 +6,7 @@
 #include <systemd/sd-bus.h>
 #include <systemd/sd-event.h>
 
-#include "common/memory.h"
+#include "./common/memory.h"
 
 #define NODE_SERVICE_DEFAULT_NAME "org.containers.hirte.Node"
 typedef struct {

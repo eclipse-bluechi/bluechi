@@ -1,6 +1,5 @@
 #pragma once
 
-
 #include <netinet/in.h>
 #include <systemd/sd-bus.h>
 

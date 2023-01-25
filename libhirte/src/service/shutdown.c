@@ -2,11 +2,11 @@
 #include <stdio.h>
 #include <systemd/sd-bus-vtable.h>
 
-#include "../../include/common/common.h"
-#include "../../include/service/service.h"
-#include "../../include/service/shutdown.h"
+#include "../common/common.h"
 #include "../common/dbus.h"
 #include "../common/memory.h"
+#include "service.h"
+#include "shutdown.h"
 
 int shutdown_event_loop(sd_event *event) {
         if (event == NULL) {

@@ -4,7 +4,7 @@
 #include <sys/socket.h>
 #include <unistd.h>
 
-#include "../include/socket.h"
+#include "socket.h"
 
 int create_tcp_socket(uint16_t port) {
         struct sockaddr_in servaddr;

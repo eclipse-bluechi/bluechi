@@ -1,7 +1,7 @@
 #include <stdio.h>
 
-#include "../../include/bus/user-bus.h"
 #include "../common/dbus.h"
+#include "user-bus.h"
 
 sd_bus *user_bus_open(sd_event *event) {
         int r = 0;

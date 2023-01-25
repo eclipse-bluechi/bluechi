@@ -1,10 +1,10 @@
 #include <errno.h>
 #include <stdio.h>
 
-#include "../../include/orchestrator/peer-manager.h"
-#include "../../include/socket.h"
-#include "../../src/common/dbus.h"
-#include "../../src/common/memory.h"
+#include "../common/dbus.h"
+#include "../common/memory.h"
+#include "../socket.h"
+#include "peer-manager.h"
 
 PeerManager *peer_manager_new(sd_event *event_loop) {
         fprintf(stdout, "Creating Peer Manager...\n");

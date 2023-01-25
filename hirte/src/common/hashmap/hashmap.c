@@ -8,7 +8,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "../../../../libhirte/include/common/common.h"
+#include "../../../../libhirte/src/common/common.h"
 #include "hashmap.h"
 
 static void *(*_malloc)(size_t) = NULL;
