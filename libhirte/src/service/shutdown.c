@@ -37,22 +37,25 @@ static const sd_bus_vtable vtable_shutdown[] = {
         SD_BUS_VTABLE_START(0), SD_BUS_METHOD(method_name_shutdown, "", "", method_shutdown, 0), SD_BUS_VTABLE_END
 };
 
-bool shutdown_service_register(sd_bus *target_bus, sd_event *event) {
-        _cleanup_free_ char *interface_name = assemble_interface_name(method_name_shutdown);
-        int r = sd_bus_add_object_vtable(
-                        target_bus, NULL, HIRTE_OBJECT_PATH, interface_name, vtable_shutdown, event);
-        if (r < 0) {
-                fprintf(stderr, "Failed to register shutdown service: %m\n");
-                return false;
+int shutdown_service_register(sd_bus *target_bus, sd_event *event) {
+        if (target_bus == NULL || event == NULL) {
+                return -EINVAL;
         }
-        return true;
+
+        _cleanup_free_ char *interface_name = assemble_interface_name(method_name_shutdown);
+        return sd_bus_add_object_vtable(
+                        target_bus, NULL, HIRTE_OBJECT_PATH, interface_name, vtable_shutdown, event);
 }
 
 
-bool service_call_shutdown(sd_bus *target_bus, const char *service_name) {
+int service_call_shutdown(sd_bus *target_bus, const char *service_name) {
+        if (target_bus == NULL || service_name == NULL) {
+                return -EINVAL;
+        }
+
         _cleanup_free_ char *interface_name = assemble_interface_name(method_name_shutdown);
         if (interface_name == NULL) {
-                return false;
+                return -1;
         }
 
         _cleanup_sd_bus_error_ sd_bus_error error = SD_BUS_ERROR_NULL;
@@ -68,14 +71,10 @@ bool service_call_shutdown(sd_bus *target_bus, const char *service_name) {
                         &reply,
                         "");
         if (r < 0) {
-                fprintf(stderr,
-                        "Failed to call '%s': %s: %s\n",
-                        method_name_shutdown,
-                        strerror(-r),
-                        error.message);
-                return false;
+                fprintf(stderr, "Failed to call '%s': %s\n", method_name_shutdown, error.message);
+                return r;
         }
-        return true;
+        return 0;
 }
 
 static int event_loop_signal_handler(
