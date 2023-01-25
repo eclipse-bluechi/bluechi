@@ -3,6 +3,7 @@
 #include <string.h>
 
 #include "../../../libhirte/include/node.h"
+#include "../../../libhirte/include/service/node.h"
 #include "../../../libhirte/include/service/shutdown.h"
 #include "../ini/config.h"
 #include "opt.h"
@@ -35,6 +36,12 @@ int main(int argc, char *argv[]) {
 
         if (!shutdown_service_register(node->user_dbus, node->event)) {
                 fprintf(stderr, "Failed to register shutdown service\n");
+                return EXIT_FAILURE;
+        }
+
+        r = node_systemd_service_register(node->peer_dbus);
+        if (r < 0) {
+                fprintf(stderr, "Failed to register node systemd service: %m\n");
                 return EXIT_FAILURE;
         }
 
