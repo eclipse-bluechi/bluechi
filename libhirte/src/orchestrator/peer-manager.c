@@ -41,5 +41,7 @@ int peer_manager_accept_connection_request(
         PeerBusListItem *item = peer_bus_list_item_new(dbus_server);
         LIST_APPEND(peers, mgr->peers_head, item);
 
+        printf("Peer connection accepted...\n");
+
         return 0;
 }
