@@ -6,10 +6,6 @@
 
 #include "libhirte/common/common.h"
 
-// NOLINTNEXTLINE
-#define NODE_DEFAULT_PORT 808 /* TODO: Pick a better default */
-
-#define NODE_SERVICE_DEFAULT_NAME "org.containers.hirte.Node"
 typedef struct {
         int ref_count;
 

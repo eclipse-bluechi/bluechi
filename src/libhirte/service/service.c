@@ -1,6 +1,7 @@
 #include <errno.h>
 #include <stdio.h>
 
+#include "libhirte/common/common.h"
 #include "service.h"
 
 char *assemble_interface_name(char *name_postfix) {

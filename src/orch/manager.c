@@ -23,7 +23,7 @@ Manager *manager_new(void) {
                 return NULL;
         }
 
-        _cleanup_free_ char *service_name = strdup(MANAGER_SERVICE_DEFAULT_NAME);
+        _cleanup_free_ char *service_name = strdup(HIRTE_DBUS_NAME);
         if (service_name == NULL) {
                 fprintf(stderr, "Out of memory\n");
                 return NULL;
@@ -31,7 +31,7 @@ Manager *manager_new(void) {
 
         Manager *manager = malloc0(sizeof(Manager));
         if (manager != NULL) {
-                manager->port = MANAGER_DEFAULT_PORT;
+                manager->port = HIRTE_DEFAULT_PORT;
                 manager->user_bus_service_name = steal_pointer(&service_name);
                 manager->event = steal_pointer(&event);
                 LIST_HEAD_INIT(manager->nodes);

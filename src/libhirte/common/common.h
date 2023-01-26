@@ -8,6 +8,7 @@
 #include <systemd/sd-event.h>
 
 #include "list.h"
+#include "protocol.h"
 
 #define streq(a, b) (strcmp((a), (b)) == 0)
 #define strneq(a, b, n) (strncmp((a), (b), (n)) == 0)
