@@ -7,11 +7,6 @@
 
 #include "libhirte/common/common.h"
 
-// NOLINTNEXTLINE
-#define MANAGER_DEFAULT_PORT 808 /* TODO: Pick a better default, also make this a libherta file */
-
-#define MANAGER_SERVICE_DEFAULT_NAME "org.containers.hirte.Orchestrator"
-
 struct Manager {
         int ref_count;
 

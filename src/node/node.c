@@ -23,7 +23,7 @@ Node *node_new(void) {
                 return NULL;
         }
 
-        _cleanup_free_ char *service_name = strdup(NODE_SERVICE_DEFAULT_NAME);
+        _cleanup_free_ char *service_name = strdup(HIRTE_NODE_DBUS_NAME);
         if (service_name == NULL) {
                 fprintf(stderr, "Out of memory\n");
                 return NULL;
@@ -33,7 +33,7 @@ Node *node_new(void) {
         n->ref_count = 1;
         n->event = steal_pointer(&event);
         n->user_bus_service_name = steal_pointer(&service_name);
-        n->port = NODE_DEFAULT_PORT;
+        n->port = HIRTE_DEFAULT_PORT;
 
         return n;
 }
