@@ -144,14 +144,13 @@ bool node_parse_config(Node *node, const char *configfile) {
 
         port = hashmap_get(node_hashmap, "Port");
         if (port) {
-                if (!node_set_host(node, port)) {
+                if (!node_set_port(node, port)) {
                         return false;
                 }
         }
 
         return true;
 }
-
 
 bool node_start(Node *node) {
         struct sockaddr_in host;
@@ -233,7 +232,7 @@ bool node_start(Node *node) {
         return true;
 }
 
-bool node_stop(const Node *node) {
+bool node_stop(Node *node) {
         fprintf(stdout, "Stopping Node...\n");
 
         if (node == NULL) {

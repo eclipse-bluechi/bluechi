@@ -40,6 +40,6 @@ bool node_set_name(Node *node, const char *name);
 bool node_parse_config(Node *node, const char *configfile);
 
 bool node_start(Node *node);
-bool node_stop(const Node *node);
+bool node_stop(Node *node);
 
 #define _cleanup_node_ _cleanup_(node_unrefp)

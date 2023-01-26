@@ -2,8 +2,8 @@
 
 // NOLINTBEGIN(modernize-macro-to-enum)
 #define ARG_PORT "port"
-#define ARG_PORT_SHORT 'P'
-#define ARG_PORT_SHORT_S "P:"
+#define ARG_PORT_SHORT 'p'
+#define ARG_PORT_SHORT_S "p:"
 
 #define ARG_HOST "host"
 #define ARG_HOST_SHORT 'H'

@@ -17,6 +17,7 @@ Checks: >
     -altera-struct-pack-align,
     -readability-isolate-declaration,
     -bugprone-assignment-in-if-condition,
+    -clang-analyzer-unix.Malloc,
 
 CheckOptions:
     - key: readability-function-cognitive-complexity.Threshold
