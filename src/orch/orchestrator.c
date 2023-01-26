@@ -5,8 +5,8 @@
 #include "libhirte/common/common.h"
 #include "libhirte/common/dbus.h"
 #include "libhirte/socket.h"
-#include "peer-manager.h"
 #include "orchestrator.h"
+#include "peer-manager.h"
 
 static bool orch_setup_connection_handler(
                 Orchestrator *orch, uint16_t listen_port, sd_event_io_handler_t connection_callback) {
