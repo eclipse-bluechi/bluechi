@@ -2,7 +2,7 @@
 #include <errno.h>
 #include <stdio.h>
 
-#include "libhirte/common/dbus.h"
+#include "libhirte/common/common.h"
 #include "peer-bus.h"
 
 char *assemble_tcp_address(const struct sockaddr_in *addr) {

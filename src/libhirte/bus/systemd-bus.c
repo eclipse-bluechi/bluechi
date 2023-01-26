@@ -1,7 +1,7 @@
 #include <errno.h>
 #include <stdio.h>
 
-#include "libhirte/common/dbus.h"
+#include "libhirte/common/common.h"
 #include "libhirte/socket.h"
 #include "systemd-bus.h"
 

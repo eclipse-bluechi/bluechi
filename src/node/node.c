@@ -4,7 +4,7 @@
 #include "libhirte/bus/peer-bus.h"
 #include "libhirte/bus/systemd-bus.h"
 #include "libhirte/bus/user-bus.h"
-#include "libhirte/common/dbus.h"
+#include "libhirte/common/common.h"
 #include "libhirte/common/opt.h"
 #include "libhirte/common/parse-util.h"
 #include "libhirte/ini/config.h"

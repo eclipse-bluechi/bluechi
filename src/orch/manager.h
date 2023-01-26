@@ -3,13 +3,9 @@
 #include <inttypes.h>
 #include <stdbool.h>
 
-#include <systemd/sd-bus.h>
-#include <systemd/sd-event.h>
-
 #include "types.h"
 
-#include "libhirte/common/list.h"
-#include "libhirte/common/memory.h"
+#include "libhirte/common/common.h"
 
 // NOLINTNEXTLINE
 #define MANAGER_DEFAULT_PORT 808 /* TODO: Pick a better default, also make this a libherta file */

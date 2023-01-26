@@ -1,6 +1,6 @@
 #include <stdio.h>
 
-#include "libhirte/common/list.h"
+#include "libhirte/common/common.h"
 
 #define VOID_0 ((void) 0)
 
