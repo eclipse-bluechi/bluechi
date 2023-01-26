@@ -78,18 +78,15 @@ int main(int argc, char *argv[]) {
 
         /* Then override individual options */
 
-        if (opt_port &&
-            !node_set_port(node, opt_port)) {
+        if (opt_port && !node_set_port(node, opt_port)) {
                 return EXIT_FAILURE;
         }
 
-        if (opt_host &&
-            !node_set_host(node, opt_host)) {
+        if (opt_host && !node_set_host(node, opt_host)) {
                 return EXIT_FAILURE;
         }
 
-        if (opt_name &&
-            !node_set_name(node, opt_name)) {
+        if (opt_name && !node_set_name(node, opt_name)) {
                 return EXIT_FAILURE;
         }
 

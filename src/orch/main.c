@@ -1,10 +1,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "orchestrator.h"
-#include "libhirte/service/shutdown.h"
 #include "libhirte/ini/config.h"
+#include "libhirte/service/shutdown.h"
 #include "opt.h"
+#include "orchestrator.h"
 
 int main(int argc, char *argv[]) {
         int r = -1;
