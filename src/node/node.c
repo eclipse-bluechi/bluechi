@@ -13,8 +13,6 @@
 #include "node.h"
 
 Node *node_new(void) {
-        fprintf(stdout, "Creating Node...\n");
-
         int r = 0;
         _cleanup_sd_event_ sd_event *event = NULL;
         r = sd_event_default(&event);
@@ -155,6 +153,8 @@ bool node_parse_config(Node *node, const char *configfile) {
 bool node_start(Node *node) {
         struct sockaddr_in host;
         int r = 0;
+        sd_bus_error error = SD_BUS_ERROR_NULL;
+        _cleanup_sd_bus_message_ sd_bus_message *m = NULL;
 
         fprintf(stdout, "Starting Node...\n");
 
@@ -210,6 +210,30 @@ bool node_start(Node *node) {
                 fprintf(stderr, "Failed to open peer dbus\n");
                 return false;
         }
+
+        r = sd_bus_call_method(
+                        node->peer_dbus,
+                        HIRTE_DBUS_NAME,
+                        HIRTE_INTERNAL_MANAGER_OBJECT_PATH,
+                        INTERNAL_MANAGER_INTERFACE,
+                        "Register",
+                        &error,
+                        &m,
+                        "s",
+                        node->name);
+        if (r < 0) {
+                fprintf(stderr, "Failed to issue method call: %s\n", error.message);
+                sd_bus_error_free(&error);
+                return false;
+        }
+
+        r = sd_bus_message_read(m, "");
+        if (r < 0) {
+                fprintf(stderr, "Failed to parse response message: %s\n", strerror(-r));
+                return false;
+        }
+
+        printf("Registered as '%s'\n", node->name);
 
         r = shutdown_service_register(node->user_dbus, node->event);
         if (r < 0) {

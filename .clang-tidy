@@ -18,6 +18,7 @@ Checks: >
     -readability-isolate-declaration,
     -bugprone-assignment-in-if-condition,
     -clang-analyzer-unix.Malloc,
+    -cppcoreguidelines-interfaces-global-init
 
 CheckOptions:
     - key: readability-function-cognitive-complexity.Threshold

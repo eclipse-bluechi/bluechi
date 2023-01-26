@@ -20,7 +20,7 @@ char *assemble_tcp_address(const struct sockaddr_in *addr) {
         return dbus_addr;
 }
 
-static sd_bus *peer_bus_new(sd_event *event, char *dbus_description) {
+static sd_bus *peer_bus_new(sd_event *event, const char *dbus_description) {
         if (event == NULL) {
                 fprintf(stderr, "Event loop must be initialized\n");
                 return NULL;
@@ -36,16 +36,17 @@ static sd_bus *peer_bus_new(sd_event *event, char *dbus_description) {
         }
         (void) sd_bus_set_description(dbus, dbus_description);
 
-        r = sd_bus_attach_event(dbus, event, SD_EVENT_PRIORITY_NORMAL);
+        // trust everything to/from the orchestrator
+        r = sd_bus_set_trusted(dbus, true);
         if (r < 0) {
-                fprintf(stderr, "Failed to attach bus to event: %s\n", strerror(-r));
+                fprintf(stderr, "Failed to trust orchestrator: %s\n", strerror(-r));
                 return NULL;
         }
 
         return steal_pointer(&dbus);
 }
 
-sd_bus *peer_bus_open(sd_event *event, char *dbus_description, char *dbus_server_addr) {
+sd_bus *peer_bus_open(sd_event *event, const char *dbus_description, const char *dbus_server_addr) {
         if (dbus_server_addr == NULL) {
                 fprintf(stderr, "Peer address to connect to must be initialized\n");
                 return NULL;
@@ -54,12 +55,6 @@ sd_bus *peer_bus_open(sd_event *event, char *dbus_description, char *dbus_server
         int r = 0;
         _cleanup_sd_bus_ sd_bus *dbus = peer_bus_new(event, dbus_description);
         if (dbus == NULL) {
-                return NULL;
-        }
-        // trust everything from the orchestrator
-        r = sd_bus_set_trusted(dbus, true);
-        if (r < 0) {
-                fprintf(stderr, "Failed to trust orchestrator: %s\n", strerror(-r));
                 return NULL;
         }
         r = sd_bus_set_address(dbus, dbus_server_addr);
@@ -74,17 +69,37 @@ sd_bus *peer_bus_open(sd_event *event, char *dbus_description, char *dbus_server
                 return NULL;
         }
 
+        r = sd_bus_attach_event(dbus, event, SD_EVENT_PRIORITY_NORMAL);
+        if (r < 0) {
+                fprintf(stderr, "Failed to attach bus to event: %s\n", strerror(-r));
+                return NULL;
+        }
+
         return steal_pointer(&dbus);
 }
 
+/* This is just some helper to make the peer connections look like a bus for e.g busctl */
+
+static int method_peer_hello(sd_bus_message *m, UNUSED void *userdata, UNUSED sd_bus_error *ret_error) {
+        /* Reply with the response */
+        return sd_bus_reply_method_return(m, "s", ":1.0");
+}
+
+static const sd_bus_vtable peer_bus_vtable[] = {
+        SD_BUS_VTABLE_START(0),
+        SD_BUS_METHOD("Hello", "", "s", method_peer_hello, SD_BUS_VTABLE_UNPRIVILEGED),
+        SD_BUS_VTABLE_END
+};
+
 /* Takes ownership of fd */
-sd_bus *peer_bus_open_server(sd_event *event, char *dbus_description, int fd) {
+sd_bus *peer_bus_open_server(sd_event *event, const char *dbus_description, const char *sender, int fd) {
         int r = 0;
         _cleanup_sd_bus_ sd_bus *dbus = peer_bus_new(event, dbus_description);
         if (dbus == NULL) {
                 close(fd);
                 return NULL;
         }
+
         r = sd_bus_set_fd(dbus, fd, fd);
         if (r < 0) {
                 fprintf(stderr, "Failed to set fd on new connection bus: %s\n", strerror(-r));
@@ -98,12 +113,47 @@ sd_bus *peer_bus_open_server(sd_event *event, char *dbus_description, int fd) {
         r = sd_bus_set_server(dbus, 1, server_id);
         if (r < 0) {
                 fprintf(stderr, "Failed to enable server support for new connection bus: %s\n", strerror(-r));
-                return 0;
+                return NULL;
+        }
+        r = sd_bus_negotiate_creds(
+                        dbus,
+                        1,
+                        // NOLINTNEXTLINE
+                        SD_BUS_CREDS_PID | SD_BUS_CREDS_UID | SD_BUS_CREDS_EUID |
+                                        SD_BUS_CREDS_EFFECTIVE_CAPS | SD_BUS_CREDS_SELINUX_CONTEXT);
+        if (r < 0) {
+                fprintf(stderr, "Failed to enable credentials for new connection: %s\n", strerror(-r));
+                return NULL;
+        }
+
+        r = sd_bus_set_anonymous(dbus, true);
+        if (r < 0) {
+                fprintf(stderr, "Failed to set bus to anonymous: %s\n", strerror(-r));
+                return NULL;
+        }
+
+        r = sd_bus_set_sender(dbus, sender);
+        if (r < 0) {
+                fprintf(stderr, "Failed to set sender for new connection bus: %s\n", strerror(-r));
+                return NULL;
         }
 
         r = sd_bus_start(dbus);
         if (r < 0) {
                 fprintf(stderr, "Failed to start peer bus server: %s", strerror(-r));
+                return NULL;
+        }
+
+        r = sd_bus_add_object_vtable(
+                        dbus, NULL, "/org/freedesktop/DBus", "org.freedesktop.DBus", peer_bus_vtable, NULL);
+        if (r < 0) {
+                fprintf(stderr, "Failed to add peer bus vtable: %s\n", strerror(-r));
+                return NULL;
+        }
+
+        r = sd_bus_attach_event(dbus, event, SD_EVENT_PRIORITY_NORMAL);
+        if (r < 0) {
+                fprintf(stderr, "Failed to attach bus to event: %s\n", strerror(-r));
                 return NULL;
         }
 
