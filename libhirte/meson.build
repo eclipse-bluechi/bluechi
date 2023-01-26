@@ -1,6 +1,4 @@
 libhirte_src = [
-    'src/node.h',
-    'src/node.c',
     'src/orchestrator.h',
     'src/orchestrator.c',
     'src/socket.h',

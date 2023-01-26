@@ -1,8 +1,8 @@
 # node build configuration
 
 node_src = [
-  'node.c',
-  'opt.c'
+  'main.c',
+  'node.c'
 ]
 node_src += common_src
 node_src += ini_src
