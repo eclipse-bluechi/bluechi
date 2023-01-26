@@ -4,8 +4,8 @@
 #include <stdbool.h>
 #include <systemd/sd-event.h>
 
-#include "./common/memory.h"
-#include "./orchestrator/peer-manager.h"
+#include "../../../libhirte/src/common/memory.h"
+#include "peer-manager.h"
 
 #define ORCHESTRATOR_SERVICE_DEFAULT_NAME "org.containers.hirte.Orchestrator"
 

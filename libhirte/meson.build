@@ -1,6 +1,4 @@
 libhirte_src = [
-    'src/orchestrator.h',
-    'src/orchestrator.c',
     'src/socket.h',
     'src/socket.c',
     'src/bus/peer-bus.h',
@@ -12,8 +10,6 @@ libhirte_src = [
     'src/common/memory.h',
     'src/common/dbus.h',
     'src/common/list.h',
-    'src/orchestrator/peer-manager.h',
-    'src/orchestrator/peer-manager.c',
     'src/service/service.h',
     'src/service/service.c',
     'src/service/shutdown.h',
