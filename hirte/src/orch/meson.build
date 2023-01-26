@@ -1,8 +1,12 @@
 # orch build configuration
 
 orch_src = [
-  'orch.c',
-  'opt.c',
+    'orchestrator.h',
+    'orchestrator.c',
+    'peer-manager.h',
+    'peer-manager.c',
+    'main.c',
+    'opt.c',
 ]
 orch_src += ini_src
 orch_src += common_src

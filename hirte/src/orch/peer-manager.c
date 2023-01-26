@@ -1,9 +1,9 @@
 #include <errno.h>
 #include <stdio.h>
 
-#include "../common/dbus.h"
-#include "../common/memory.h"
-#include "../socket.h"
+#include "../../../libhirte/src/common/dbus.h"
+#include "../../../libhirte/src/common/memory.h"
+#include "../../../libhirte/src/socket.h"
 #include "peer-manager.h"
 
 PeerManager *peer_manager_new(sd_event *event_loop) {

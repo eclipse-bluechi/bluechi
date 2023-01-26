@@ -1,8 +1,8 @@
 #pragma once
 
-#include "../bus/peer-bus.h"
-#include "../common/common.h"
-#include "../common/list.h"
+#include "../../../libhirte/src/bus/peer-bus.h"
+#include "../../../libhirte/src/common/common.h"
+#include "../../../libhirte/src/common/list.h"
 
 typedef struct {
         sd_event *event_loop;
