@@ -10,6 +10,12 @@ static inline void *steal_pointer(void *ptr) {
         return p;
 }
 
+static inline int steal_fd(int *fdp) {
+        int fd = *fdp;
+        *fdp = -1;
+        return fd;
+}
+
 static inline void closep(const int *fd) {
         if (*fd >= 0) {
                 close(*fd);

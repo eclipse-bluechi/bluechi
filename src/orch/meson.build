@@ -1,12 +1,11 @@
 # orch build configuration
 
 orch_src = [
-    'orchestrator.h',
-    'orchestrator.c',
-    'peer-manager.h',
-    'peer-manager.c',
+    'manager.h',
+    'manager.c',
+    'managednode.h',
+    'managednode.c',
     'main.c',
-    'opt.c',
 ]
 
 executable(

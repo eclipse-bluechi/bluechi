@@ -77,16 +77,18 @@ sd_bus *peer_bus_open(sd_event *event, char *dbus_description, char *dbus_server
         return steal_pointer(&dbus);
 }
 
+/* Takes ownership of fd */
 sd_bus *peer_bus_open_server(sd_event *event, char *dbus_description, int fd) {
         int r = 0;
         _cleanup_sd_bus_ sd_bus *dbus = peer_bus_new(event, dbus_description);
         if (dbus == NULL) {
+                close(fd);
                 return NULL;
         }
         r = sd_bus_set_fd(dbus, fd, fd);
         if (r < 0) {
                 fprintf(stderr, "Failed to set fd on new connection bus: %s\n", strerror(-r));
-                return 0;
+                return NULL;
         }
         sd_id128_t server_id;
         r = sd_id128_randomize(&server_id);
@@ -106,10 +108,4 @@ sd_bus *peer_bus_open_server(sd_event *event, char *dbus_description, int fd) {
         }
 
         return steal_pointer(&dbus);
-}
-
-PeerBusListItem *peer_bus_list_item_new(sd_bus *bus) {
-        PeerBusListItem *item = malloc0(sizeof(PeerBusListItem));
-        item->bus = steal_pointer(&bus);
-        return item;
 }

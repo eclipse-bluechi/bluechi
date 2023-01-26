@@ -1,50 +1,84 @@
+#include <getopt.h>
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "libhirte/common/opt.h"
+#include "libhirte/common/parse-util.h"
 #include "libhirte/ini/config.h"
 #include "libhirte/service/shutdown.h"
-#include "opt.h"
-#include "orchestrator.h"
+#include "manager.h"
+
+const struct option options[] = { { ARG_PORT, required_argument, 0, ARG_PORT_SHORT },
+                                  { ARG_CONFIG, required_argument, 0, ARG_CONFIG_SHORT },
+                                  { ARG_HELP, no_argument, 0, ARG_HELP_SHORT },
+                                  { NULL, 0, 0, '\0' } };
+
+#define OPTIONS_STR ARG_PORT_SHORT_S ARG_HELP_SHORT_S ARG_CONFIG_SHORT_S
+
+// NOLINTBEGIN(cppcoreguidelines-avoid-non-const-global-variables)
+static const char *opt_port = 0;
+static const char *opt_config = NULL;
+// NOLINTEND(cppcoreguidelines-avoid-non-const-global-variables)
+
+static void usage(char *argv[]) {
+        fprintf(stderr, "Usage: %s [-p port] [-c config]\n", argv[0]);
+}
+
+static void get_opts(int argc, char *argv[]) {
+        int opt = 0;
+
+        while ((opt = getopt_long(argc, argv, OPTIONS_STR, options, NULL)) != -1) {
+                switch (opt) {
+                case ARG_HELP_SHORT:
+                        usage(argv);
+                        exit(EXIT_SUCCESS);
+                        break;
+
+                case ARG_PORT_SHORT:
+                        opt_port = optarg;
+                        break;
+
+                case ARG_CONFIG_SHORT:
+                        opt_config = optarg;
+                        break;
+
+                default:
+                        fprintf(stderr, "Unsupported option %c\n", opt);
+                        usage(argv);
+                        exit(EXIT_FAILURE);
+                }
+        }
+}
+
 
 int main(int argc, char *argv[]) {
-        int r = -1;
-
         fprintf(stdout, "Hello from orchestrator!\n");
 
-        uint16_t accept_port = 0;
-        char *config_path = NULL;
+        get_opts(argc, argv);
 
-        get_opts(argc, argv, &accept_port, &config_path);
-
-        struct hashmap *ini_hashmap = NULL;
-        ini_hashmap = parsing_ini_file(config_path);
-        if (ini_hashmap == NULL) {
+        _cleanup_manager_ Manager *manager = manager_new();
+        if (manager == NULL) {
                 return EXIT_FAILURE;
         }
 
-        _cleanup_orchestrator_ Orchestrator *orchestrator = orch_new(
-                        accept_port, ORCHESTRATOR_SERVICE_DEFAULT_NAME);
-        if (orchestrator == NULL) {
+        /* First load config */
+        if (opt_config) {
+                if (!manager_parse_config(manager, opt_config)) {
+                        return EXIT_FAILURE;
+                }
+        }
+
+        /* Then override individual options */
+
+        if (opt_port && !manager_set_port(manager, opt_port)) {
                 return EXIT_FAILURE;
         }
 
-        r = shutdown_service_register(orchestrator->user_dbus, orchestrator->event);
-        if (r < 0) {
-                fprintf(stderr, "Failed to register shutdown service\n");
-                return EXIT_FAILURE;
-        }
-
-        r = event_loop_add_shutdown_signals(orchestrator->event);
-        if (r < 0) {
-                fprintf(stderr, "Failed to add signals to orchestrator event loop\n");
-                return EXIT_FAILURE;
-        }
-
-        if (orch_start(orchestrator)) {
+        if (manager_start(manager)) {
                 return EXIT_SUCCESS;
         }
 
-        fprintf(stdout, "Orchestrator exited\n");
+        fprintf(stdout, "Manager exited\n");
 
         return EXIT_FAILURE;
 }
