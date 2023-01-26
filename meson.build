@@ -18,7 +18,9 @@ add_global_arguments('-D_GNU_SOURCE', language : 'c')
 systemd_dep = dependency('libsystemd')
 
 # Subdirectory for the shared library.
-subdir('libhirte')
+subdir('src/libhirte')
 
-# Subdirectory for applications.
-subdir('hirte')
+# build each binary
+subdir('src/orch')
+subdir('src/node')
+subdir('src/client')
