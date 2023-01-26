@@ -32,4 +32,7 @@ bool manager_parse_config(Manager *manager, const char *configfile);
 bool manager_start(Manager *manager);
 bool manager_stop(Manager *manager);
 
+ManagedNode *manager_find_node(Manager *manager, const char *name);
+void manager_remove_node(Manager *manager, ManagedNode *node);
+
 #define _cleanup_manager_ _cleanup_(manager_unrefp)

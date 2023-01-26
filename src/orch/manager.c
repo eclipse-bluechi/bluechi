@@ -74,6 +74,23 @@ void manager_unrefp(Manager **managerp) {
         }
 }
 
+ManagedNode *manager_find_node(Manager *manager, const char *name) {
+        ManagedNode *node = NULL;
+
+        LIST_FOREACH(nodes, node, manager->nodes) {
+                if (node->name != NULL && strcmp(node->name, name) == 0) {
+                        return node;
+                }
+        }
+
+        return NULL;
+}
+
+void manager_remove_node(Manager *manager, ManagedNode *node) {
+        LIST_REMOVE(nodes, manager->nodes, node);
+        managed_node_unref(node);
+}
+
 bool manager_set_port(Manager *manager, const char *port_s) {
         uint16_t port = 0;
 
@@ -121,7 +138,7 @@ static int manager_accept_node_connection(
         }
 
         _cleanup_sd_bus_ sd_bus *dbus_server = peer_bus_open_server(
-                        manager->event, "managed-node", steal_fd(&nfd));
+                        manager->event, "managed-node", HIRTE_DBUS_NAME, steal_fd(&nfd));
         if (dbus_server == NULL) {
                 return -1;
         }
@@ -132,8 +149,6 @@ static int manager_accept_node_connection(
         }
 
         LIST_APPEND(nodes, manager->nodes, node);
-
-        printf(" connection accepted...\n");
 
         return 0;
 }
