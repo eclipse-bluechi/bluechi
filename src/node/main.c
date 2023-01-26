@@ -16,10 +16,12 @@ const struct option options[] = { { ARG_HOST, required_argument, 0, ARG_HOST_SHO
 
 #define OPTIONS_STR ARG_PORT_SHORT_S ARG_HOST_SHORT_S ARG_HELP_SHORT_S ARG_CONFIG_SHORT_S ARG_NAME_SHORT_S
 
+// NOLINTBEGIN(cppcoreguidelines-avoid-non-const-global-variables)
 static const char *opt_port = 0;
 static const char *opt_host = NULL;
 static const char *opt_name = NULL;
 static const char *opt_config = NULL;
+// NOLINTEND(cppcoreguidelines-avoid-non-const-global-variables)
 
 static void usage(char *argv[]) {
         fprintf(stderr, "Usage: %s [-H host] [-p port] [-c config] [-n name]\n", argv[0]);
