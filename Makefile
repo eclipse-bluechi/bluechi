@@ -11,4 +11,4 @@ lint:
 	eval $(ALL_SRC_FILES) | xargs -0 -I {} clang-tidy --quiet {} -- -I src/ -D_GNU_SOURCE
 
 lint-fix: 
-	eval $(ALL_SRC_FILES) | xargs -0 -I {} clang-tidy --quiet {} --fix -- -D_GNU_SOURCE
+	eval $(ALL_SRC_FILES) | xargs -0 -I {} clang-tidy --quiet {} --fix -- -I src/ -D_GNU_SOURCE

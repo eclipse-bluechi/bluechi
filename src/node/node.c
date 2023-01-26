@@ -115,7 +115,7 @@ bool node_set_name(Node *node, const char *name) {
 bool node_parse_config(Node *node, const char *configfile) {
         _cleanup_hashmap_ struct hashmap *ini_hashmap = NULL;
         struct hashmap *node_hashmap = NULL;
-        const char *name, *host, *port;
+        const char *name = NULL, *host = NULL, *port = NULL;
 
         ini_hashmap = parsing_ini_file(configfile);
         if (ini_hashmap == NULL) {
@@ -155,7 +155,7 @@ bool node_parse_config(Node *node, const char *configfile) {
 
 bool node_start(Node *node) {
         struct sockaddr_in host;
-        int r;
+        int r = 0;
 
         fprintf(stdout, "Starting Node...\n");
 
