@@ -3,10 +3,8 @@
 #include <netinet/in.h>
 #include <stdbool.h>
 #include <sys/socket.h>
-#include <systemd/sd-bus.h>
-#include <systemd/sd-event.h>
 
-#include "libhirte/common/memory.h"
+#include "libhirte/common/common.h"
 
 // NOLINTNEXTLINE
 #define NODE_DEFAULT_PORT 808 /* TODO: Pick a better default */

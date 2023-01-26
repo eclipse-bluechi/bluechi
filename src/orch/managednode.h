@@ -1,8 +1,6 @@
 #pragma once
 
-#include <systemd/sd-bus.h>
-
-#include "libhirte/common/list.h"
+#include "libhirte/common/common.h"
 
 #include "types.h"
 

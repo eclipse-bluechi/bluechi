@@ -1,6 +1,6 @@
 #include <stdio.h>
 
-#include "libhirte/common/dbus.h"
+#include "libhirte/common/common.h"
 #include "user-bus.h"
 
 sd_bus *user_bus_open(sd_event *event) {

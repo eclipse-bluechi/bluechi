@@ -4,7 +4,6 @@
 #include "config.h"
 #include "ini.h"
 #include "libhirte/common/common.h"
-#include "libhirte/common/strings.h"
 
 int match(const char *section, const char *check_section, const char *name, const char *check_name) {
         if (streq(section, check_section) == 0 && streq(name, check_name) == 0) {

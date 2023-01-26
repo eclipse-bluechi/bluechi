@@ -3,8 +3,6 @@
 #include <systemd/sd-bus-vtable.h>
 
 #include "libhirte/common/common.h"
-#include "libhirte/common/dbus.h"
-#include "libhirte/common/memory.h"
 #include "service.h"
 #include "shutdown.h"
 
