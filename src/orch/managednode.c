@@ -91,24 +91,26 @@ bool managed_node_export(ManagedNode *node) {
         return true;
 }
 
-static int debug_messages_handler (sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error)
-{
+static int debug_messages_handler(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error) {
         ManagedNode *node = userdata;
-        if (node->name)
-                fprintf(stderr, "Incomming message from node '%s' (fd %d): path: %s, iface: %s, member: %s, signature: '%s'\n",
-                       node->name,
-                       sd_bus_get_fd (node->agent_bus),
-                       sd_bus_message_get_path (m),
-                       sd_bus_message_get_interface (m),
-                       sd_bus_message_get_member (m),
-                       sd_bus_message_get_signature (m, true));
-        else
-                fprintf(stderr,"Incomming message from node fd %d: path: %s, iface: %s, member: %s, signature: '%s'\n",
-                       sd_bus_get_fd (node->agent_bus),
-                       sd_bus_message_get_path (m),
-                       sd_bus_message_get_interface (m),
-                       sd_bus_message_get_member (m),
-                       sd_bus_message_get_signature (m, true));
+        if (node->name) {
+                fprintf(stderr,
+                        "Incomming message from node '%s' (fd %d): path: %s, iface: %s, member: %s, signature: '%s'\n",
+                        node->name,
+                        sd_bus_get_fd(node->agent_bus),
+                        sd_bus_message_get_path(m),
+                        sd_bus_message_get_interface(m),
+                        sd_bus_message_get_member(m),
+                        sd_bus_message_get_signature(m, true));
+        } else {
+                fprintf(stderr,
+                        "Incomming message from node fd %d: path: %s, iface: %s, member: %s, signature: '%s'\n",
+                        sd_bus_get_fd(node->agent_bus),
+                        sd_bus_message_get_path(m),
+                        sd_bus_message_get_interface(m),
+                        sd_bus_message_get_member(m),
+                        sd_bus_message_get_signature(m, true));
+        }
         return 0;
 }
 
@@ -159,8 +161,9 @@ bool managed_node_set_agent_bus(ManagedNode *node, sd_bus *bus) {
                 return false;
         }
 
-        if (DEBUG_AGENT_MESSAGES)
+        if (DEBUG_AGENT_MESSAGES) {
                 sd_bus_add_filter(bus, NULL, debug_messages_handler, node);
+        }
 
         return true;
 }
@@ -286,23 +289,27 @@ void managed_request_unrefp(ManagedRequest **reqp) {
         }
 }
 
-static ManagedRequest *managed_node_create_request(ManagedNode *node,
-                                                   sd_bus_message *request_message,
-                                                   const char *method) {
+static ManagedRequest *managed_node_create_request(
+                ManagedNode *node, sd_bus_message *request_message, const char *method) {
         _cleanup_managed_request_ ManagedRequest *req = malloc0(sizeof(ManagedRequest));
         if (req == NULL) {
                 return NULL;
         }
 
         req->ref_count = 1;
-        req->node = managed_node_ref (node);
+        req->node = managed_node_ref(node);
         LIST_INIT(outstanding_requests, req);
-        req->request_message = sd_bus_message_ref (request_message);
+        req->request_message = sd_bus_message_ref(request_message);
 
         LIST_APPEND(outstanding_requests, node->outstanding_requests, req);
 
-        int r = sd_bus_message_new_method_call(node->agent_bus, &req->message, HIRTE_NODE_DBUS_NAME,
-                                           INTERNAL_NODE_OBJECT_PATH, INTERNAL_NODE_INTERFACE, method);
+        int r = sd_bus_message_new_method_call(
+                        node->agent_bus,
+                        &req->message,
+                        HIRTE_NODE_DBUS_NAME,
+                        INTERNAL_NODE_OBJECT_PATH,
+                        INTERNAL_NODE_INTERFACE,
+                        method);
         if (r < 0) {
                 return NULL;
         }
@@ -311,12 +318,11 @@ static ManagedRequest *managed_node_create_request(ManagedNode *node,
         return steal_pointer(&req);
 }
 
-static bool managed_request_start(ManagedRequest *req,
-                                  sd_bus_message_handler_t callback) {
+static bool managed_request_start(ManagedRequest *req, sd_bus_message_handler_t callback) {
         ManagedNode *node = req->node;
 
-        int r = sd_bus_call_async(node->agent_bus, &req->slot, req->message, callback,
-                              req, HIRTE_DEFAULT_DBUS_TIMEOUT);
+        int r = sd_bus_call_async(
+                        node->agent_bus, &req->slot, req->message, callback, req, HIRTE_DEFAULT_DBUS_TIMEOUT);
         if (r < 0) {
                 fprintf(stderr, "Failed to call async: %s\n", strerror(-r));
                 return false;
@@ -326,29 +332,27 @@ static bool managed_request_start(ManagedRequest *req,
         return true;
 }
 
-static int  list_units_callback (sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error) {
-        _cleanup_managed_request_  ManagedRequest *req = userdata;
+static int list_units_callback(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error) {
+        _cleanup_managed_request_ ManagedRequest *req = userdata;
 
         if (sd_bus_message_is_method_error(m, NULL)) {
                 /* Forward error */
                 return sd_bus_reply_method_error(req->request_message, sd_bus_message_get_error(m));
-        } else {
-                sd_bus_message *reply = NULL;
-
-                int r = sd_bus_message_new_method_return(req->request_message, &reply);
-                if (r < 0) {
-                        return r;
-                }
-
-                r = sd_bus_message_copy(reply, m, true);
-                if (r < 0) {
-                        return r;
-                }
-
-                return sd_bus_message_send(reply);
         }
 
-        return 0;
+        sd_bus_message *reply = NULL;
+
+        int r = sd_bus_message_new_method_return(req->request_message, &reply);
+        if (r < 0) {
+                return r;
+        }
+
+        r = sd_bus_message_copy(reply, m, true);
+        if (r < 0) {
+                return r;
+        }
+
+        return sd_bus_message_send(reply);
 }
 
 static int managed_node_method_list_units(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error) {
