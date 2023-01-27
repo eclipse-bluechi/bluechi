@@ -187,6 +187,10 @@ static bool manager_setup_node_connection_handler(Manager *manager) {
 bool manager_start(Manager *manager) {
         fprintf(stdout, "Starting Manager...\n");
 
+        if (manager == NULL) {
+                return false;
+        }
+
         manager->user_dbus = user_bus_open(manager->event);
         if (manager->user_dbus == NULL) {
                 fprintf(stderr, "Failed to open user dbus\n");
@@ -227,6 +231,10 @@ bool manager_start(Manager *manager) {
 
 bool manager_stop(UNUSED Manager *manager) {
         fprintf(stdout, "Stopping Manager...\n");
+
+        if (manager == NULL) {
+                return false;
+        }
 
         return true;
 }
