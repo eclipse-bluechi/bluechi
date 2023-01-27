@@ -19,9 +19,11 @@ struct ManagedNode {
 };
 
 
-ManagedNode *managed_node_new(Manager *manager, sd_bus *bus);
+ManagedNode *managed_node_new(Manager *manager);
 ManagedNode *managed_node_ref(ManagedNode *node);
 void managed_node_unref(ManagedNode *node);
 void managed_node_unrefp(ManagedNode **nodep);
+
+bool managed_node_set_agent_bus(ManagedNode *node, sd_bus *bus);
 
 #define _cleanup_managed_node_ _cleanup_(managed_node_unrefp)
