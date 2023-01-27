@@ -1,8 +1,4 @@
-<p align="center">
-  <h2 align="center">Hirte</h3>
-</p>
-
----
+# Hirte
 
 ## Development
 
@@ -46,7 +42,7 @@ make check-fmt
 make lint
 ```
 
-Some errors detected by `clang-tidy` can be fixed automatically via: 
+Some errors detected by `clang-tidy` can be fixed automatically via:
 ```bash
 make lint-fix
 ```
