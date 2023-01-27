@@ -23,6 +23,7 @@ ManagedNode *managed_node_new(Manager *manager, const char *name) {
                 return NULL;
         }
 
+        node->ref_count = 1;
         node->manager = manager;
         LIST_INIT(nodes, node);
 

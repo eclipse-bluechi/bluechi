@@ -182,7 +182,7 @@ bool manager_parse_config(Manager *manager, const char *configfile) {
 static int manager_accept_node_connection(
                 UNUSED sd_event_source *source, int fd, UNUSED uint32_t revents, void *userdata) {
         Manager *manager = userdata;
-        _cleanup_managed_node_ ManagedNode *node = NULL;
+        ManagedNode *node = NULL;
         _cleanup_fd_ int nfd = accept_tcp_connection_request(fd);
 
         if (nfd < 0) {
