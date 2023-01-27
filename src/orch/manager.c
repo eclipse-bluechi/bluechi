@@ -64,6 +64,15 @@ void manager_unref(Manager *manager) {
                 sd_bus_unrefp(&manager->user_dbus);
         }
 
+        ManagedNode *node = NULL;
+        LIST_FOREACH(nodes, node, manager->nodes) {
+                managed_node_unref(node);
+        }
+        LIST_FOREACH(nodes, node, manager->anonymous_nodes) {
+                managed_node_unref(node);
+        }
+
+
         free(manager);
 }
 
@@ -78,7 +87,7 @@ ManagedNode *manager_find_node(Manager *manager, const char *name) {
         ManagedNode *node = NULL;
 
         LIST_FOREACH(nodes, node, manager->nodes) {
-                if (node->name != NULL && strcmp(node->name, name) == 0) {
+                if (strcmp(node->name, name) == 0) {
                         return node;
                 }
         }
@@ -87,8 +96,27 @@ ManagedNode *manager_find_node(Manager *manager, const char *name) {
 }
 
 void manager_remove_node(Manager *manager, ManagedNode *node) {
-        LIST_REMOVE(nodes, manager->nodes, node);
+        if (node->name) {
+                LIST_REMOVE(nodes, manager->nodes, node);
+        } else {
+                LIST_REMOVE(nodes, manager->anonymous_nodes, node);
+        }
         managed_node_unref(node);
+}
+
+ManagedNode *manager_add_node(Manager *manager, const char *name) {
+        _cleanup_managed_node_ ManagedNode *node = managed_node_new(manager, name);
+        if (node == NULL) {
+                return NULL;
+        }
+
+        if (name) {
+                LIST_APPEND(nodes, manager->nodes, node);
+        } else {
+                LIST_APPEND(nodes, manager->anonymous_nodes, node);
+        }
+
+        return steal_pointer(&node);
 }
 
 bool manager_set_port(Manager *manager, const char *port_s) {
@@ -120,10 +148,22 @@ bool manager_parse_config(Manager *manager, const char *configfile) {
         }
 
         port = topic_lookup(topic, "Port");
-        printf("Port: %s\n", port);
         if (port) {
                 if (!manager_set_port(manager, port)) {
                         return false;
+                }
+        }
+
+        const char *expected_nodes = topic_lookup(topic, "Nodes");
+        if (expected_nodes) {
+                char *saveptr = NULL;
+                char *name = strtok_r((char *) expected_nodes, ",", &saveptr);
+                while (name != NULL) {
+                        if (manager_find_node(manager, name) == NULL) {
+                                manager_add_node(manager, name);
+                        }
+
+                        name = strtok_r(NULL, ",", &saveptr);
                 }
         }
 
@@ -142,22 +182,22 @@ static int manager_accept_node_connection(
                 return -1;
         }
 
-        node = managed_node_new(manager);
-        if (node == NULL) {
-                return -1;
-        }
-
         _cleanup_sd_bus_ sd_bus *dbus_server = peer_bus_open_server(
                         manager->event, "managed-node", HIRTE_DBUS_NAME, steal_fd(&nfd));
         if (dbus_server == NULL) {
                 return -1;
         }
 
-        if (!managed_node_set_agent_bus(node, dbus_server)) {
+        /* Add anonymous node */
+        node = manager_add_node(manager, NULL);
+        if (node == NULL) {
                 return -1;
         }
 
-        LIST_APPEND(nodes, manager->nodes, steal_pointer(&node));
+        if (!managed_node_set_agent_bus(node, dbus_server)) {
+                manager_remove_node(manager, steal_pointer(&node));
+                return -1;
+        }
 
         return 0;
 }
@@ -204,6 +244,14 @@ bool manager_start(Manager *manager) {
         if (manager->user_dbus == NULL) {
                 fprintf(stderr, "Failed to open user dbus\n");
                 return false;
+        }
+
+        /* Export all known nodes */
+        ManagedNode *node = NULL;
+        LIST_FOREACH(nodes, node, manager->nodes) {
+                if (!managed_node_export(node)) {
+                        return false;
+                }
         }
 
         int r = sd_bus_request_name(

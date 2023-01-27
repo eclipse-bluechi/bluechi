@@ -19,6 +19,7 @@ struct Manager {
         sd_bus *user_dbus;
 
         LIST_HEAD(ManagedNode, nodes);
+        LIST_HEAD(ManagedNode, anonymous_nodes);
 };
 
 Manager *manager_new(void);
@@ -34,5 +35,7 @@ bool manager_stop(Manager *manager);
 
 ManagedNode *manager_find_node(Manager *manager, const char *name);
 void manager_remove_node(Manager *manager, ManagedNode *node);
+
+ManagedNode *manager_add_node(Manager *manager, const char *name);
 
 #define _cleanup_manager_ _cleanup_(manager_unrefp)
