@@ -29,4 +29,4 @@
 #define HIRTE_BUS_ERROR_OFFLINE "org.containers.hirte.Offline"
 
 #define USEC_PER_SEC 1000000
-#define HIRTE_DEFAULT_DBUS_TIMEOUT (USEC_PER_SEC * 30)
+#define HIRTE_DEFAULT_DBUS_TIMEOUT ((uint64_t) (USEC_PER_SEC * 30))

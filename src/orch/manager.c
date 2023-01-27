@@ -242,7 +242,7 @@ static bool manager_setup_node_connection_handler(Manager *manager) {
 
 /* This is a test method for now, it just returns what you passed */
 static int manager_method_ping(sd_bus_message *m, UNUSED void *userdata, UNUSED sd_bus_error *ret_error) {
-        const char *arg;
+        const char *arg = NULL;
 
         int r = sd_bus_message_read(m, "s", &arg);
         if (r < 0) {
@@ -252,20 +252,17 @@ static int manager_method_ping(sd_bus_message *m, UNUSED void *userdata, UNUSED 
         return sd_bus_reply_method_return(m, "s", arg);
 }
 
-static const sd_bus_vtable manager_vtable[] = {
-        SD_BUS_VTABLE_START(0),
-        SD_BUS_METHOD("Ping", "s", "s", manager_method_ping, 0),
-        SD_BUS_VTABLE_END
-};
+static const sd_bus_vtable manager_vtable[] = { SD_BUS_VTABLE_START(0),
+                                                SD_BUS_METHOD("Ping", "s", "s", manager_method_ping, 0),
+                                                SD_BUS_VTABLE_END };
 
-static int debug_messages_handler (sd_bus_message *m, UNUSED void *userdata, UNUSED sd_bus_error *ret_error)
-{
+static int debug_messages_handler(sd_bus_message *m, UNUSED void *userdata, UNUSED sd_bus_error *ret_error) {
         fprintf(stderr,
                 "Incomming public message: path: %s, iface: %s, member: %s, signature: '%s'\n",
-               sd_bus_message_get_path (m),
-               sd_bus_message_get_interface (m),
-               sd_bus_message_get_member (m),
-               sd_bus_message_get_signature (m, true));
+                sd_bus_message_get_path(m),
+                sd_bus_message_get_interface(m),
+                sd_bus_message_get_member(m),
+                sd_bus_message_get_signature(m, true));
         return 0;
 }
 
@@ -297,16 +294,17 @@ bool manager_start(Manager *manager) {
                 return false;
         }
 
-        if (DEBUG_MESSAGES)
+        if (DEBUG_MESSAGES) {
                 sd_bus_add_filter(manager->user_dbus, NULL, debug_messages_handler, NULL);
+        }
 
         r = sd_bus_add_object_vtable(
-                                     manager->user_dbus,
-                                     &manager->manager_slot,
-                                     HIRTE_MANAGER_OBJECT_PATH,
-                                     MANAGER_INTERFACE,
-                                     manager_vtable,
-                                     manager);
+                        manager->user_dbus,
+                        &manager->manager_slot,
+                        HIRTE_MANAGER_OBJECT_PATH,
+                        MANAGER_INTERFACE,
+                        manager_vtable,
+                        manager);
         if (r < 0) {
                 fprintf(stderr, "Failed to add node vtable: %s\n", strerror(-r));
                 return false;
