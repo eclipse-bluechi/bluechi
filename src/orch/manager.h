@@ -17,6 +17,7 @@ struct Manager {
         sd_event_source *node_connection_source;
 
         sd_bus *user_dbus;
+        sd_bus_slot *manager_slot;
 
         LIST_HEAD(ManagedNode, nodes);
         LIST_HEAD(ManagedNode, anonymous_nodes);

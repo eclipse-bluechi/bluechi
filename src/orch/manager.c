@@ -12,6 +12,8 @@
 #include "managednode.h"
 #include "manager.h"
 
+#define DEBUG_MESSAGES 0
+
 Manager *manager_new(void) {
         fprintf(stdout, "Creating Manager...\n");
 
@@ -60,6 +62,11 @@ void manager_unref(Manager *manager) {
         if (manager->node_connection_source != NULL) {
                 sd_event_source_unrefp(&manager->node_connection_source);
         }
+
+        if (manager->manager_slot != NULL) {
+                sd_bus_slot_unref(manager->manager_slot);
+        }
+
         if (manager->user_dbus != NULL) {
                 sd_bus_unrefp(&manager->user_dbus);
         }
@@ -233,6 +240,35 @@ static bool manager_setup_node_connection_handler(Manager *manager) {
         return true;
 }
 
+/* This is a test method for now, it just returns what you passed */
+static int manager_method_ping(sd_bus_message *m, UNUSED void *userdata, UNUSED sd_bus_error *ret_error) {
+        const char *arg;
+
+        int r = sd_bus_message_read(m, "s", &arg);
+        if (r < 0) {
+                return r;
+        }
+
+        return sd_bus_reply_method_return(m, "s", arg);
+}
+
+static const sd_bus_vtable manager_vtable[] = {
+        SD_BUS_VTABLE_START(0),
+        SD_BUS_METHOD("Ping", "s", "s", manager_method_ping, 0),
+        SD_BUS_VTABLE_END
+};
+
+static int debug_messages_handler (sd_bus_message *m, UNUSED void *userdata, UNUSED sd_bus_error *ret_error)
+{
+        fprintf(stderr,
+                "Incomming public message: path: %s, iface: %s, member: %s, signature: '%s'\n",
+               sd_bus_message_get_path (m),
+               sd_bus_message_get_interface (m),
+               sd_bus_message_get_member (m),
+               sd_bus_message_get_signature (m, true));
+        return 0;
+}
+
 bool manager_start(Manager *manager) {
         fprintf(stdout, "Starting Manager...\n");
 
@@ -258,6 +294,21 @@ bool manager_start(Manager *manager) {
                         manager->user_dbus, manager->user_bus_service_name, SD_BUS_NAME_REPLACE_EXISTING);
         if (r < 0) {
                 fprintf(stderr, "Failed to acquire service name on user dbus: %s\n", strerror(-r));
+                return false;
+        }
+
+        if (DEBUG_MESSAGES)
+                sd_bus_add_filter(manager->user_dbus, NULL, debug_messages_handler, NULL);
+
+        r = sd_bus_add_object_vtable(
+                                     manager->user_dbus,
+                                     &manager->manager_slot,
+                                     HIRTE_MANAGER_OBJECT_PATH,
+                                     MANAGER_INTERFACE,
+                                     manager_vtable,
+                                     manager);
+        if (r < 0) {
+                fprintf(stderr, "Failed to add node vtable: %s\n", strerror(-r));
                 return false;
         }
 

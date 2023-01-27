@@ -149,6 +149,17 @@ bool node_parse_config(Node *node, const char *configfile) {
         return true;
 }
 
+static int node_method_list_units(UNUSED sd_bus_message *m, UNUSED void *userdata, UNUSED sd_bus_error *ret_error) {
+        return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "ListUnit is not implemented yet");
+}
+
+static const sd_bus_vtable internal_node_vtable[] = {
+        SD_BUS_VTABLE_START(0),
+        SD_BUS_METHOD("ListUnits", "", "a(ssssssouso)", node_method_list_units, 0),
+        SD_BUS_VTABLE_END
+};
+
+
 bool node_start(Node *node) {
         struct sockaddr_in host;
         int r = 0;
@@ -210,10 +221,22 @@ bool node_start(Node *node) {
                 return false;
         }
 
+        r = sd_bus_add_object_vtable(
+                                     node->peer_dbus,
+                                     NULL,
+                                     INTERNAL_NODE_OBJECT_PATH,
+                                     INTERNAL_NODE_INTERFACE,
+                                     internal_node_vtable,
+                                     node);
+        if (r < 0) {
+                fprintf(stderr, "Failed to add manager vtable: %s\n", strerror(-r));
+                return false;
+        }
+
         r = sd_bus_call_method(
                         node->peer_dbus,
                         HIRTE_DBUS_NAME,
-                        HIRTE_INTERNAL_MANAGER_OBJECT_PATH,
+                        INTERNAL_MANAGER_OBJECT_PATH,
                         INTERNAL_MANAGER_INTERFACE,
                         "Register",
                         &error,
