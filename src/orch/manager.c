@@ -103,26 +103,31 @@ bool manager_set_port(Manager *manager, const char *port_s) {
 }
 
 bool manager_parse_config(Manager *manager, const char *configfile) {
-        _cleanup_hashmap_ struct hashmap *ini_hashmap = NULL;
-        struct hashmap *manager_hashmap = NULL;
+        _cleanup_config_ config *config = NULL;
+        topic *topic = NULL;
         const char *port = NULL;
 
-        ini_hashmap = parsing_ini_file(configfile);
-        if (ini_hashmap == NULL) {
+        config = parsing_ini_file(configfile);
+        if (config == NULL) {
                 return false;
         }
 
-        manager_hashmap = hashmap_get(ini_hashmap, "Manager");
-        if (manager_hashmap == NULL) {
+        print_all_topics(config);
+
+        topic = config_lookup_topic(config, "Manager");
+        if (topic == NULL) {
                 return true;
         }
 
-        port = hashmap_get(manager_hashmap, "Port");
+        port = topic_lookup(topic, "Port");
+        printf("Port: %s\n", port);
         if (port) {
                 if (!manager_set_port(manager, port)) {
                         return false;
                 }
         }
+
+        /* TODO: Handle per-node-name option section */
 
         return true;
 }

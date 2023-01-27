@@ -111,36 +111,35 @@ bool node_set_name(Node *node, const char *name) {
 }
 
 bool node_parse_config(Node *node, const char *configfile) {
-        _cleanup_hashmap_ struct hashmap *ini_hashmap = NULL;
-        struct hashmap *node_hashmap = NULL;
+        _cleanup_config_ config *config = NULL;
+        topic *topic = NULL;
         const char *name = NULL, *host = NULL, *port = NULL;
 
-        ini_hashmap = parsing_ini_file(configfile);
-        if (ini_hashmap == NULL) {
+        config = parsing_ini_file(configfile);
+        if (config == NULL) {
                 return false;
         }
 
-        node_hashmap = hashmap_get(ini_hashmap, "Node");
-
-        if (node_hashmap == NULL) {
+        topic = config_lookup_topic(config, "Node");
+        if (topic == NULL) {
                 return true;
         }
 
-        name = hashmap_get(node_hashmap, "Name");
+        name = topic_lookup(topic, "Name");
         if (name) {
                 if (!node_set_name(node, name)) {
                         return false;
                 }
         }
 
-        host = hashmap_get(node_hashmap, "Host");
+        host = topic_lookup(topic, "Host");
         if (host) {
                 if (!node_set_host(node, host)) {
                         return false;
                 }
         }
 
-        port = hashmap_get(node_hashmap, "Port");
+        port = topic_lookup(topic, "Port");
         if (port) {
                 if (!node_set_port(node, port)) {
                         return false;
