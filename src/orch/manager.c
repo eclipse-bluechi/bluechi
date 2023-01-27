@@ -130,10 +130,15 @@ bool manager_parse_config(Manager *manager, const char *configfile) {
 static int manager_accept_node_connection(
                 UNUSED sd_event_source *source, int fd, UNUSED uint32_t revents, void *userdata) {
         Manager *manager = userdata;
-        ManagedNode *node = NULL;
+        _cleanup_managed_node_ ManagedNode *node = NULL;
         _cleanup_fd_ int nfd = accept_tcp_connection_request(fd);
 
         if (nfd < 0) {
+                return -1;
+        }
+
+        node = managed_node_new(manager);
+        if (node == NULL) {
                 return -1;
         }
 
@@ -143,12 +148,11 @@ static int manager_accept_node_connection(
                 return -1;
         }
 
-        node = managed_node_new(manager, dbus_server);
-        if (dbus_server == NULL) {
+        if (!managed_node_set_agent_bus(node, dbus_server)) {
                 return -1;
         }
 
-        LIST_APPEND(nodes, manager->nodes, node);
+        LIST_APPEND(nodes, manager->nodes, steal_pointer(&node));
 
         return 0;
 }

@@ -10,7 +10,7 @@ static const sd_bus_vtable internal_manager_orchestrator_vtable[] = {
 
 static const sd_bus_vtable node_vtable[] = { SD_BUS_VTABLE_START(0), SD_BUS_VTABLE_END };
 
-ManagedNode *managed_node_new(Manager *manager, sd_bus *bus) {
+ManagedNode *managed_node_new(Manager *manager) {
         _cleanup_managed_node_ ManagedNode *node = malloc0(sizeof(ManagedNode));
 
         if (node == NULL) {
@@ -18,9 +18,19 @@ ManagedNode *managed_node_new(Manager *manager, sd_bus *bus) {
         }
 
         node->manager = manager;
-        node->bus = sd_bus_ref(bus);
         LIST_INIT(nodes, node);
 
+        return steal_pointer(&node);
+}
+
+bool managed_node_set_agent_bus(ManagedNode *node, sd_bus *bus) {
+
+        if (node->bus != NULL) {
+                fprintf(stderr, "Error: Trying to add two agents for a node\n");
+                return false;
+        }
+
+        node->bus = sd_bus_ref(bus);
         int r = sd_bus_add_object_vtable(
                         bus,
                         NULL,
@@ -30,7 +40,7 @@ ManagedNode *managed_node_new(Manager *manager, sd_bus *bus) {
                         node);
         if (r < 0) {
                 fprintf(stderr, "Failed to add peer bus vtable: %s\n", strerror(-r));
-                return NULL;
+                return false;
         }
 
         r = sd_bus_match_signal_async(
@@ -45,10 +55,10 @@ ManagedNode *managed_node_new(Manager *manager, sd_bus *bus) {
                         node);
         if (r < 0) {
                 fprintf(stderr, "Failed to request match for Disconnected message: %s\n", strerror(-r));
-                return NULL;
+                return false;
         }
 
-        return steal_pointer(&node);
+        return true;
 }
 
 ManagedNode *managed_node_ref(ManagedNode *node) {
