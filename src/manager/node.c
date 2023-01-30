@@ -268,8 +268,8 @@ void agent_request_unref(AgentRequest *req) {
                 return;
         }
 
-        if (req->request_message) {
-                sd_bus_message_unref(req->request_message);
+        if (req->userdata && req->free_userdata) {
+                req->free_userdata(req->userdata);
         }
         if (req->slot) {
                 sd_bus_slot_unref(req->slot);
@@ -289,7 +289,12 @@ void agent_request_unrefp(AgentRequest **reqp) {
         }
 }
 
-static AgentRequest *node_create_request(Node *node, sd_bus_message *request_message, const char *method) {
+static AgentRequest *node_create_request(
+                Node *node,
+                const char *method,
+                agent_request_response_t cb,
+                void *userdata,
+                free_func_t free_userdata) {
         _cleanup_agent_request_ AgentRequest *req = malloc0(sizeof(AgentRequest));
         if (req == NULL) {
                 return NULL;
@@ -298,7 +303,9 @@ static AgentRequest *node_create_request(Node *node, sd_bus_message *request_mes
         req->ref_count = 1;
         req->node = node_ref(node);
         LIST_INIT(outstanding_requests, req);
-        req->request_message = sd_bus_message_ref(request_message);
+        req->userdata = userdata;
+        req->cb = cb;
+        req->free_userdata = free_userdata;
 
         LIST_APPEND(outstanding_requests, node->outstanding_requests, req);
 
@@ -313,42 +320,70 @@ static AgentRequest *node_create_request(Node *node, sd_bus_message *request_mes
                 return NULL;
         }
 
-
         return steal_pointer(&req);
 }
 
-static bool agent_request_start(AgentRequest *req, sd_bus_message_handler_t callback) {
+static int agent_request_callback(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error) {
+        _cleanup_agent_request_ AgentRequest *req = userdata;
+
+        return req->cb(req, m, ret_error);
+}
+
+static bool agent_request_start(AgentRequest *req) {
         Node *node = req->node;
 
         int r = sd_bus_call_async(
-                        node->agent_bus, &req->slot, req->message, callback, req, HIRTE_DEFAULT_DBUS_TIMEOUT);
+                        node->agent_bus,
+                        &req->slot,
+                        req->message,
+                        agent_request_callback,
+                        req,
+                        HIRTE_DEFAULT_DBUS_TIMEOUT);
         if (r < 0) {
                 fprintf(stderr, "Failed to call async: %s\n", strerror(-r));
                 return false;
         }
 
-        agent_request_ref(req);
+        agent_request_ref(req); /* Keep alive while operation is outstanding */
         return true;
 }
 
-static int list_units_callback(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error) {
-        _cleanup_agent_request_ AgentRequest *req = userdata;
+AgentRequest *node_request_list_units(
+                Node *node, agent_request_response_t cb, void *userdata, free_func_t free_userdata) {
+        if (!node_has_agent(node)) {
+                return false;
+        }
+
+        _cleanup_agent_request_ AgentRequest *req = node_create_request(
+                        node, "ListUnits", cb, userdata, free_userdata);
+        if (req == NULL) {
+                return false;
+        }
+
+        if (!agent_request_start(req)) {
+                return false;
+        }
+
+        return steal_pointer(&req);
+}
+
+static int method_list_units_callback(AgentRequest *req, sd_bus_message *m, UNUSED sd_bus_error *ret_error) {
+        sd_bus_message *request_message = req->userdata;
 
         if (sd_bus_message_is_method_error(m, NULL)) {
                 /* Forward error */
-                return sd_bus_reply_method_error(req->request_message, sd_bus_message_get_error(m));
+                return sd_bus_reply_method_error(request_message, sd_bus_message_get_error(m));
         }
 
-        sd_bus_message *reply = NULL;
-
-        int r = sd_bus_message_new_method_return(req->request_message, &reply);
+        _cleanup_sd_bus_message_ sd_bus_message *reply = NULL;
+        int r = sd_bus_message_new_method_return(request_message, &reply);
         if (r < 0) {
-                return r;
+                return sd_bus_reply_method_errorf(request_message, SD_BUS_ERROR_FAILED, "Internal error");
         }
 
         r = sd_bus_message_copy(reply, m, true);
         if (r < 0) {
-                return r;
+                return sd_bus_reply_method_errorf(request_message, SD_BUS_ERROR_FAILED, "Internal error");
         }
 
         return sd_bus_message_send(reply);
@@ -361,12 +396,12 @@ static int node_method_list_units(sd_bus_message *m, void *userdata, UNUSED sd_b
                 return sd_bus_reply_method_errorf(m, HIRTE_BUS_ERROR_OFFLINE, "Node is offline");
         }
 
-        _cleanup_agent_request_ AgentRequest *req = node_create_request(node, m, "ListUnits");
-        if (req == NULL) {
-                return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "Internal error");
-        }
-
-        if (!agent_request_start(req, list_units_callback)) {
+        _cleanup_agent_request_ AgentRequest *agent_req = node_request_list_units(
+                        node,
+                        method_list_units_callback,
+                        sd_bus_message_ref(m),
+                        (free_func_t) sd_bus_message_unref);
+        if (agent_req == NULL) {
                 return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "Internal error");
         }
 

@@ -104,6 +104,7 @@ Node *manager_find_node(Manager *manager, const char *name) {
 
 void manager_remove_node(Manager *manager, Node *node) {
         if (node->name) {
+                manager->n_nodes--;
                 LIST_REMOVE(nodes, manager->nodes, node);
         } else {
                 LIST_REMOVE(nodes, manager->anonymous_nodes, node);
@@ -118,6 +119,7 @@ Node *manager_add_node(Manager *manager, const char *name) {
         }
 
         if (name) {
+                manager->n_nodes++;
                 LIST_APPEND(nodes, manager->nodes, node);
         } else {
                 LIST_APPEND(nodes, manager->anonymous_nodes, node);
@@ -252,9 +254,191 @@ static int manager_method_ping(sd_bus_message *m, UNUSED void *userdata, UNUSED 
         return sd_bus_reply_method_return(m, "s", arg);
 }
 
-static const sd_bus_vtable manager_vtable[] = { SD_BUS_VTABLE_START(0),
-                                                SD_BUS_METHOD("Ping", "s", "s", manager_method_ping, 0),
-                                                SD_BUS_VTABLE_END };
+typedef struct ListUnitsRequest {
+        sd_bus_message *request_message;
+
+        int n_done;
+        int n_sub_req;
+        struct {
+                Node *node;
+                sd_bus_message *m;
+                AgentRequest *agent_req;
+        } sub_req[0];
+} ListUnitsRequest;
+
+static void list_unit_request_free(ListUnitsRequest *req) {
+        sd_bus_message_unref(req->request_message);
+
+        for (int i = 0; i < req->n_sub_req; i++) {
+                if (req->sub_req[i].node) {
+                        node_unref(req->sub_req[i].node);
+                }
+                if (req->sub_req[i].m) {
+                        sd_bus_message_unref(req->sub_req[i].m);
+                }
+                if (req->sub_req[i].agent_req) {
+                        agent_request_unref(req->sub_req[i].agent_req);
+                }
+        }
+
+        free(req);
+}
+
+void list_unit_request_freep(ListUnitsRequest **reqp) {
+        if (reqp && *reqp) {
+                list_unit_request_free(*reqp);
+                *reqp = NULL;
+        }
+}
+
+#define _cleanup_list_unit_request_ _cleanup_(list_unit_request_freep)
+
+
+static int manager_method_list_units_encode_reply(ListUnitsRequest *req, sd_bus_message *reply) {
+        int r = sd_bus_message_open_container(reply, SD_BUS_TYPE_ARRAY, "(sssssssouso)");
+        if (r < 0) {
+                return r;
+        }
+
+        for (int i = 0; i < req->n_sub_req; i++) {
+                const char *node_name = req->sub_req[i].node->name;
+                sd_bus_message *m = req->sub_req[i].m;
+                if (m == NULL) {
+                        continue;
+                }
+
+                r = sd_bus_message_enter_container(m, SD_BUS_TYPE_ARRAY, "(ssssssouso)");
+                if (r < 0) {
+                        return r;
+                }
+
+                while (sd_bus_message_at_end(m, false) == 0) {
+                        r = sd_bus_message_open_container(reply, SD_BUS_TYPE_STRUCT, "sssssssouso");
+                        if (r < 0) {
+                                return r;
+                        }
+                        r = sd_bus_message_enter_container(m, SD_BUS_TYPE_STRUCT, "ssssssouso");
+                        if (r < 0) {
+                                return r;
+                        }
+
+                        r = sd_bus_message_append(reply, "s", node_name);
+                        if (r < 0) {
+                                return r;
+                        }
+                        r = sd_bus_message_copy(reply, m, true);
+                        if (r < 0) {
+                                return r;
+                        }
+
+                        r = sd_bus_message_close_container(reply);
+                        if (r < 0) {
+                                return r;
+                        }
+                        r = sd_bus_message_exit_container(m);
+                        if (r < 0) {
+                                return r;
+                        }
+                }
+
+                r = sd_bus_message_exit_container(m);
+                if (r < 0) {
+                        return r;
+                }
+        }
+
+        r = sd_bus_message_close_container(reply);
+        if (r < 0) {
+                return r;
+        }
+
+        return 0;
+}
+
+
+static void manager_method_list_units_done(ListUnitsRequest *req) {
+        /* All sub_req-requests are done, collect results and free when done */
+        _cleanup_list_unit_request_ ListUnitsRequest *free_me = req;
+
+        _cleanup_sd_bus_message_ sd_bus_message *reply = NULL;
+        int r = sd_bus_message_new_method_return(req->request_message, &reply);
+        if (r >= 0) {
+                r = manager_method_list_units_encode_reply(req, reply);
+        }
+        if (r < 0) {
+                sd_bus_reply_method_errorf(req->request_message, SD_BUS_ERROR_FAILED, "Internal error");
+                return;
+        }
+
+        r = sd_bus_message_send(reply);
+        if (r < 0) {
+                fprintf(stderr, "Failed to send reply: %s\n", strerror(-r));
+                return;
+        }
+}
+
+static void manager_method_list_units_maybe_done(ListUnitsRequest *req) {
+        if (req->n_done == req->n_sub_req) {
+                manager_method_list_units_done(req);
+        }
+}
+
+
+static int manager_list_units_callback(
+                AgentRequest *agent_req, UNUSED sd_bus_message *m, UNUSED sd_bus_error *ret_error) {
+        ListUnitsRequest *req = agent_req->userdata;
+        int i = 0;
+
+        for (int i = 0; i < req->n_sub_req; i++) {
+                if (req->sub_req[i].agent_req == agent_req) {
+                        break;
+                }
+        }
+
+        assert(i != req->n_sub_req); /* we should have found the sub_req request */
+
+        req->sub_req[i].m = sd_bus_message_ref(m);
+        req->n_done++;
+
+        manager_method_list_units_maybe_done(req);
+
+        return 0;
+}
+
+static int manager_method_list_units(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error) {
+        Manager *manager = userdata;
+        ListUnitsRequest *req = NULL;
+        Node *node = NULL;
+
+        req = malloc0_array(sizeof(*req), sizeof(req->sub_req[0]), manager->n_nodes);
+        if (req == NULL) {
+                return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "Internal error");
+        }
+        req->request_message = sd_bus_message_ref(m);
+
+        int i = 0;
+        LIST_FOREACH(nodes, node, manager->nodes) {
+                _cleanup_agent_request_ AgentRequest *agent_req = node_request_list_units(
+                                node, manager_list_units_callback, req, NULL);
+                if (agent_req) {
+                        req->sub_req[i].agent_req = steal_pointer(&agent_req);
+                        req->sub_req[i].node = node_ref(node);
+                        req->n_sub_req++;
+                        i++;
+                }
+        }
+
+        manager_method_list_units_maybe_done(req);
+
+        return 1;
+}
+
+static const sd_bus_vtable manager_vtable[] = {
+        SD_BUS_VTABLE_START(0),
+        SD_BUS_METHOD("Ping", "s", "s", manager_method_ping, 0),
+        SD_BUS_METHOD("ListUnits", "", "a(sssssssouso)", manager_method_list_units, 0),
+        SD_BUS_VTABLE_END
+};
 
 static int debug_messages_handler(sd_bus_message *m, UNUSED void *userdata, UNUSED sd_bus_error *ret_error) {
         fprintf(stderr,

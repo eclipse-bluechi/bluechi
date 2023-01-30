@@ -19,6 +19,7 @@ struct Manager {
         sd_bus *user_dbus;
         sd_bus_slot *manager_slot;
 
+        int n_nodes;
         LIST_HEAD(Node, nodes);
         LIST_HEAD(Node, anonymous_nodes);
 };

@@ -233,7 +233,7 @@ static int list_units_callback(sd_bus_message *m, void *userdata, UNUSED sd_bus_
                 return sd_bus_reply_method_error(req->request_message, sd_bus_message_get_error(m));
         }
 
-        sd_bus_message *reply = NULL;
+        _cleanup_sd_bus_message_ sd_bus_message *reply = NULL;
 
         int r = sd_bus_message_new_method_return(req->request_message, &reply);
         if (r < 0) {

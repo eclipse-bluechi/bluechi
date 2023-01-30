@@ -38,6 +38,8 @@ static inline void freep(void *p) {
         free(*(void **) p);
 }
 
+typedef void (*free_func_t)(void *ptr);
+
 #define malloc0(n) (calloc(1, (n) ?: 1))
 
 static inline void *malloc0_array(size_t base_size, size_t element_size, size_t n_elements) {

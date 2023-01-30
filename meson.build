@@ -14,6 +14,11 @@ project(
 # Enable GNU extensions.
 add_global_arguments('-D_GNU_SOURCE', language : 'c')
 
+test_cflags = [ '-Wno-cast-function-type' ]
+
+cc = meson.get_compiler('c')
+common_cflags = cc.get_supported_arguments(test_cflags)
+
 # Link with systemd shared library.
 systemd_dep = dependency('libsystemd')
 
