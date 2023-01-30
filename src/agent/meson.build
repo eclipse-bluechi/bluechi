@@ -2,11 +2,11 @@
 
 node_src = [
   'main.c',
-  'node.c'
+  'agent.c'
 ]
 
 executable(
-  'hirte-node',
+  'hirte-agent',
   node_src,
   dependencies: [
     systemd_dep,

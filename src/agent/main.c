@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "node.h"
+#include "agent.h"
 
 #include "libhirte/common/opt.h"
 
@@ -62,41 +62,41 @@ static void get_opts(int argc, char *argv[]) {
 }
 
 int main(int argc, char *argv[]) {
-        fprintf(stdout, "Hello from node!\n");
+        fprintf(stdout, "Hello from agent!\n");
 
         get_opts(argc, argv);
 
-        _cleanup_node_ Node *node = node_new();
-        if (node == NULL) {
+        _cleanup_agent_ Agent *agent = agent_new();
+        if (agent == NULL) {
                 return EXIT_FAILURE;
         }
 
         /* First load config */
         if (opt_config) {
-                if (!node_parse_config(node, opt_config)) {
+                if (!agent_parse_config(agent, opt_config)) {
                         return EXIT_FAILURE;
                 }
         }
 
         /* Then override individual options */
 
-        if (opt_port && !node_set_port(node, opt_port)) {
+        if (opt_port && !agent_set_port(agent, opt_port)) {
                 return EXIT_FAILURE;
         }
 
-        if (opt_host && !node_set_host(node, opt_host)) {
+        if (opt_host && !agent_set_host(agent, opt_host)) {
                 return EXIT_FAILURE;
         }
 
-        if (opt_name && !node_set_name(node, opt_name)) {
+        if (opt_name && !agent_set_name(agent, opt_name)) {
                 return EXIT_FAILURE;
         }
 
-        if (node_start(node)) {
+        if (agent_start(agent)) {
                 return EXIT_SUCCESS;
         }
 
-        fprintf(stdout, "Node exited\n");
+        fprintf(stdout, "Agent exited\n");
 
         return EXIT_FAILURE;
 }

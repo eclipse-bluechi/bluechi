@@ -306,9 +306,9 @@ static ManagedRequest *managed_node_create_request(
         int r = sd_bus_message_new_method_call(
                         node->agent_bus,
                         &req->message,
-                        HIRTE_NODE_DBUS_NAME,
-                        INTERNAL_NODE_OBJECT_PATH,
-                        INTERNAL_NODE_INTERFACE,
+                        HIRTE_AGENT_DBUS_NAME,
+                        INTERNAL_AGENT_OBJECT_PATH,
+                        INTERNAL_AGENT_INTERFACE,
                         method);
         if (r < 0) {
                 return NULL;

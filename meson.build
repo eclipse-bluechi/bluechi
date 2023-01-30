@@ -22,5 +22,5 @@ subdir('src/libhirte')
 
 # build each binary
 subdir('src/orch')
-subdir('src/node')
+subdir('src/agent')
 subdir('src/client')
