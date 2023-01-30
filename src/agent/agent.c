@@ -12,6 +12,82 @@
 
 #include "agent.h"
 
+SystemdRequest *systemd_request_ref(SystemdRequest *req) {
+        req->ref_count++;
+        return req;
+}
+
+void systemd_request_unref(SystemdRequest *req) {
+        Agent *agent = req->agent;
+
+        req->ref_count--;
+        if (req->ref_count != 0) {
+                return;
+        }
+
+        if (req->request_message) {
+                sd_bus_message_unref(req->request_message);
+        }
+        if (req->slot) {
+                sd_bus_slot_unref(req->slot);
+        }
+        if (req->message) {
+                sd_bus_message_unref(req->message);
+        }
+
+        LIST_REMOVE(outstanding_requests, agent->outstanding_requests, req);
+        agent_unref(req->agent);
+        free(req);
+}
+
+void systemd_request_unrefp(SystemdRequest **reqp) {
+        if (reqp && *reqp) {
+                systemd_request_unref(*reqp);
+        }
+}
+
+static SystemdRequest *agent_create_request(Agent *agent, sd_bus_message *request_message, const char *method) {
+        _cleanup_systemd_request_ SystemdRequest *req = malloc0(sizeof(SystemdRequest));
+        if (req == NULL) {
+                return NULL;
+        }
+
+        req->ref_count = 1;
+        req->agent = agent_ref(agent);
+        LIST_INIT(outstanding_requests, req);
+        req->request_message = sd_bus_message_ref(request_message);
+
+        LIST_APPEND(outstanding_requests, agent->outstanding_requests, req);
+
+        int r = sd_bus_message_new_method_call(
+                        agent->systemd_dbus,
+                        &req->message,
+                        SYSTEMD_BUS_NAME,
+                        SYSTEMD_OBJECT_PATH,
+                        SYSTEMD_MANAGER_IFACE,
+                        method);
+        if (r < 0) {
+                return NULL;
+        }
+
+        return steal_pointer(&req);
+}
+
+static bool systemd_request_start(SystemdRequest *req, sd_bus_message_handler_t callback) {
+        Agent *agent = req->agent;
+
+        int r = sd_bus_call_async(
+                        agent->systemd_dbus, &req->slot, req->message, callback, req, HIRTE_DEFAULT_DBUS_TIMEOUT);
+        if (r < 0) {
+                fprintf(stderr, "Failed to call async: %s\n", strerror(-r));
+                return false;
+        }
+
+        systemd_request_ref(req); /* outstanding callback owns this ref */
+        return true;
+}
+
+
 Agent *agent_new(void) {
         int r = 0;
         _cleanup_sd_event_ sd_event *event = NULL;
@@ -149,9 +225,42 @@ bool agent_parse_config(Agent *agent, const char *configfile) {
         return true;
 }
 
-static int agent_method_list_units(
-                UNUSED sd_bus_message *m, UNUSED void *userdata, UNUSED sd_bus_error *ret_error) {
-        return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "ListUnit is not implemented yet");
+static int list_units_callback(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error) {
+        _cleanup_systemd_request_ SystemdRequest *req = userdata;
+
+        if (sd_bus_message_is_method_error(m, NULL)) {
+                /* Forward error */
+                return sd_bus_reply_method_error(req->request_message, sd_bus_message_get_error(m));
+        }
+
+        sd_bus_message *reply = NULL;
+
+        int r = sd_bus_message_new_method_return(req->request_message, &reply);
+        if (r < 0) {
+                return r;
+        }
+
+        r = sd_bus_message_copy(reply, m, true);
+        if (r < 0) {
+                return r;
+        }
+
+        return sd_bus_message_send(reply);
+}
+
+static int agent_method_list_units(UNUSED sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error) {
+        Agent *agent = userdata;
+
+        _cleanup_systemd_request_ SystemdRequest *req = agent_create_request(agent, m, "ListUnits");
+        if (req == NULL) {
+                return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "Internal error");
+        }
+
+        if (!systemd_request_start(req, list_units_callback)) {
+                return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "Internal error");
+        }
+
+        return 1;
 }
 
 static const sd_bus_vtable internal_agent_vtable[] = {
