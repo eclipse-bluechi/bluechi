@@ -6,7 +6,27 @@
 
 #include "libhirte/common/common.h"
 
-typedef struct {
+typedef struct Agent Agent;
+typedef struct SystemdRequest SystemdRequest;
+
+struct SystemdRequest {
+        int ref_count;
+        Agent *agent;
+
+        sd_bus_message *request_message;
+
+        sd_bus_slot *slot;
+
+        sd_bus_message *message;
+
+        LIST_FIELDS(SystemdRequest, outstanding_requests);
+};
+
+SystemdRequest *systemd_request_ref(SystemdRequest *req);
+void systemd_request_unref(SystemdRequest *req);
+void systemd_request_unrefp(SystemdRequest **req);
+
+struct Agent {
         int ref_count;
 
         char *name;
@@ -21,7 +41,9 @@ typedef struct {
         sd_bus *user_dbus;
         sd_bus *systemd_dbus;
         sd_bus *peer_dbus;
-} Agent;
+
+        LIST_HEAD(SystemdRequest, outstanding_requests);
+};
 
 Agent *agent_new(void);
 Agent *agent_ref(Agent *agent);
@@ -37,3 +59,4 @@ bool agent_start(Agent *agent);
 bool agent_stop(Agent *agent);
 
 #define _cleanup_agent_ _cleanup_(agent_unrefp)
+#define _cleanup_systemd_request_ _cleanup_(systemd_request_unrefp)
