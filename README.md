@@ -72,9 +72,9 @@ meson install -C builddir --destdir bin
 ```
 
 After building, three binaries are available:
-- __hirte__: orchestrator, the central unit which is run on the main machine, sending commands to the nodes and monitoring the progress
-- __hirte-node__: the executing unit which connects with the orchestrator and executes commands on the node machine
-- __hirte-client__: a helper program to send an initial command to the orchestrator
+- __hirte__: manager, the central unit which is run on the main machine, sending commands to the nodes and monitoring the progress
+- __hirte-agent__: the executing unit which connects with the manager and executes commands on the node machine
+- __hirtectl__: a helper program to send an commands to the manager
 
 ### Unit tests
 
@@ -87,7 +87,7 @@ meson test -C builddir
 
 ### Running
 
-At the moment the hirte-client and hirte-node binary do only print a simple greeting and exit.
+At the moment the hirtectl binary do only print a simple greeting and exit.
 
 #### hirte
 
@@ -105,7 +105,7 @@ nc <host> <port>
 
 Nodes can be run via:
 ```bash
-./bin/hirte-node -H <host> -P <port>
+./bin/hirte-agent -H <host> -P <port>
 ```
 It creates a new dbus which tries to connect to the specified host. The host will print out a message if the request was accepted. It does not do much more at this point.
 
