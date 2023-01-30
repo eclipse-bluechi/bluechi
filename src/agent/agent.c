@@ -120,7 +120,7 @@ bool agent_parse_config(Agent *agent, const char *configfile) {
                 return false;
         }
 
-        topic = config_lookup_topic(config, "Agent");
+        topic = config_lookup_topic(config, "Node");
         if (topic == NULL) {
                 return true;
         }
