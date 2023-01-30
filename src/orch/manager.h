@@ -19,8 +19,8 @@ struct Manager {
         sd_bus *user_dbus;
         sd_bus_slot *manager_slot;
 
-        LIST_HEAD(ManagedNode, nodes);
-        LIST_HEAD(ManagedNode, anonymous_nodes);
+        LIST_HEAD(Node, nodes);
+        LIST_HEAD(Node, anonymous_nodes);
 };
 
 Manager *manager_new(void);
@@ -34,9 +34,9 @@ bool manager_parse_config(Manager *manager, const char *configfile);
 bool manager_start(Manager *manager);
 bool manager_stop(Manager *manager);
 
-ManagedNode *manager_find_node(Manager *manager, const char *name);
-void manager_remove_node(Manager *manager, ManagedNode *node);
+Node *manager_find_node(Manager *manager, const char *name);
+void manager_remove_node(Manager *manager, Node *node);
 
-ManagedNode *manager_add_node(Manager *manager, const char *name);
+Node *manager_add_node(Manager *manager, const char *name);
 
 #define _cleanup_manager_ _cleanup_(manager_unrefp)

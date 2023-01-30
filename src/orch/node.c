@@ -1,24 +1,24 @@
-#include "managednode.h"
+#include "node.h"
 #include "manager.h"
 
 #define DEBUG_AGENT_MESSAGES 0
 
-static int managed_node_method_register(sd_bus_message *m, void *userdata, sd_bus_error *ret_error);
+static int node_method_register(sd_bus_message *m, void *userdata, sd_bus_error *ret_error);
 static int node_disconnected(sd_bus_message *message, void *userdata, sd_bus_error *error);
-static int managed_node_method_list_units(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error);
+static int node_method_list_units(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error);
 
 static const sd_bus_vtable internal_manager_orchestrator_vtable[] = {
-        SD_BUS_VTABLE_START(0), SD_BUS_METHOD("Register", "s", "", managed_node_method_register, 0), SD_BUS_VTABLE_END
+        SD_BUS_VTABLE_START(0), SD_BUS_METHOD("Register", "s", "", node_method_register, 0), SD_BUS_VTABLE_END
 };
 
 static const sd_bus_vtable node_vtable[] = {
         SD_BUS_VTABLE_START(0),
-        SD_BUS_METHOD("ListUnits", "", "a(ssssssouso)", managed_node_method_list_units, 0),
+        SD_BUS_METHOD("ListUnits", "", "a(ssssssouso)", node_method_list_units, 0),
         SD_BUS_VTABLE_END
 };
 
-ManagedNode *managed_node_new(Manager *manager, const char *name) {
-        _cleanup_managed_node_ ManagedNode *node = malloc0(sizeof(ManagedNode));
+Node *node_new(Manager *manager, const char *name) {
+        _cleanup_node_ Node *node = malloc0(sizeof(Node));
         if (node == NULL) {
                 return NULL;
         }
@@ -43,12 +43,12 @@ ManagedNode *managed_node_new(Manager *manager, const char *name) {
         return steal_pointer(&node);
 }
 
-ManagedNode *managed_node_ref(ManagedNode *node) {
+Node *node_ref(Node *node) {
         node->ref_count++;
         return node;
 }
 
-void managed_node_unref(ManagedNode *node) {
+void node_unref(Node *node) {
         node->ref_count--;
         if (node->ref_count != 0) {
                 return;
@@ -57,21 +57,21 @@ void managed_node_unref(ManagedNode *node) {
                 sd_bus_slot_unref(node->export_slot);
         }
 
-        managed_node_unset_agent_bus(node);
+        node_unset_agent_bus(node);
 
         free(node->name);
         free(node->object_path);
         free(node);
 }
 
-void managed_node_unrefp(ManagedNode **nodep) {
+void node_unrefp(Node **nodep) {
         if (nodep && *nodep) {
-                managed_node_unref(*nodep);
+                node_unref(*nodep);
                 *nodep = NULL;
         }
 }
 
-bool managed_node_export(ManagedNode *node) {
+bool node_export(Node *node) {
         Manager *manager = node->manager;
 
         assert(node->name != NULL);
@@ -92,7 +92,7 @@ bool managed_node_export(ManagedNode *node) {
 }
 
 static int debug_messages_handler(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error) {
-        ManagedNode *node = userdata;
+        Node *node = userdata;
         if (node->name) {
                 fprintf(stderr,
                         "Incomming message from node '%s' (fd %d): path: %s, iface: %s, member: %s, signature: '%s'\n",
@@ -115,11 +115,11 @@ static int debug_messages_handler(sd_bus_message *m, void *userdata, UNUSED sd_b
 }
 
 
-bool managed_node_has_agent(ManagedNode *node) {
+bool node_has_agent(Node *node) {
         return node->agent_bus != NULL;
 }
 
-bool managed_node_set_agent_bus(ManagedNode *node, sd_bus *bus) {
+bool node_set_agent_bus(Node *node, sd_bus *bus) {
         int r = 0;
 
         if (node->agent_bus != NULL) {
@@ -139,7 +139,7 @@ bool managed_node_set_agent_bus(ManagedNode *node, sd_bus *bus) {
                                 internal_manager_orchestrator_vtable,
                                 node);
                 if (r < 0) {
-                        managed_node_unset_agent_bus(node);
+                        node_unset_agent_bus(node);
                         fprintf(stderr, "Failed to add peer bus vtable: %s\n", strerror(-r));
                         return false;
                 }
@@ -156,7 +156,7 @@ bool managed_node_set_agent_bus(ManagedNode *node, sd_bus *bus) {
                         NULL,
                         node);
         if (r < 0) {
-                managed_node_unset_agent_bus(node);
+                node_unset_agent_bus(node);
                 fprintf(stderr, "Failed to request match for Disconnected message: %s\n", strerror(-r));
                 return false;
         }
@@ -168,7 +168,7 @@ bool managed_node_set_agent_bus(ManagedNode *node, sd_bus *bus) {
         return true;
 }
 
-void managed_node_unset_agent_bus(ManagedNode *node) {
+void node_unset_agent_bus(Node *node) {
         if (node->disconnect_slot) {
                 sd_bus_slot_unref(node->disconnect_slot);
                 node->disconnect_slot = NULL;
@@ -187,8 +187,8 @@ void managed_node_unset_agent_bus(ManagedNode *node) {
 
 
 /* org.containers.hirte.internal.Manager.Register(in s name)) */
-static int managed_node_method_register(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error) {
-        ManagedNode *node = userdata;
+static int node_method_register(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error) {
+        Node *node = userdata;
         Manager *manager = node->manager;
         char *name = NULL;
         _cleanup_free_ char *description = NULL;
@@ -205,12 +205,12 @@ static int managed_node_method_register(sd_bus_message *m, void *userdata, UNUSE
                 return r;
         }
 
-        ManagedNode *named_node = manager_find_node(manager, name);
+        Node *named_node = manager_find_node(manager, name);
         if (named_node == NULL) {
                 return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_SERVICE_UNKNOWN, "Unexpected node name");
         }
 
-        if (managed_node_has_agent(named_node)) {
+        if (node_has_agent(named_node)) {
                 return sd_bus_reply_method_errorf(
                                 m, SD_BUS_ERROR_ADDRESS_IN_USE, "The node is already connected");
         }
@@ -222,12 +222,12 @@ static int managed_node_method_register(sd_bus_message *m, void *userdata, UNUSE
 
         /* Migrate the agent connection to the named node */
         _cleanup_sd_bus_ sd_bus *agent_bus = sd_bus_ref(node->agent_bus);
-        if (!managed_node_set_agent_bus(named_node, agent_bus)) {
+        if (!node_set_agent_bus(named_node, agent_bus)) {
                 return sd_bus_reply_method_errorf(
                                 m, SD_BUS_ERROR_FAILED, "Internal error: Couldn't set agent bus");
         }
 
-        managed_node_unset_agent_bus(node);
+        node_unset_agent_bus(node);
 
         printf("Registered managed node from fd %d as '%s'\n", sd_bus_get_fd(agent_bus), name);
 
@@ -235,7 +235,7 @@ static int managed_node_method_register(sd_bus_message *m, void *userdata, UNUSE
 }
 
 static int node_disconnected(UNUSED sd_bus_message *message, void *userdata, UNUSED sd_bus_error *error) {
-        ManagedNode *node = userdata;
+        Node *node = userdata;
         Manager *manager = node->manager;
 
         if (node->name) {
@@ -244,7 +244,7 @@ static int node_disconnected(UNUSED sd_bus_message *message, void *userdata, UNU
                 fprintf(stderr, "Anonymous node disconnected\n");
         }
 
-        managed_node_unset_agent_bus(node);
+        node_unset_agent_bus(node);
 
         /* Remove anoymous nodes when they disconnect */
         if (node->name == NULL) {
@@ -255,13 +255,13 @@ static int node_disconnected(UNUSED sd_bus_message *message, void *userdata, UNU
 }
 
 
-ManagedRequest *managed_request_ref(ManagedRequest *req) {
+AgentRequest *agent_request_ref(AgentRequest *req) {
         req->ref_count++;
         return req;
 }
 
-void managed_request_unref(ManagedRequest *req) {
-        ManagedNode *node = req->node;
+void agent_request_unref(AgentRequest *req) {
+        Node *node = req->node;
 
         req->ref_count--;
         if (req->ref_count != 0) {
@@ -279,25 +279,24 @@ void managed_request_unref(ManagedRequest *req) {
         }
 
         LIST_REMOVE(outstanding_requests, node->outstanding_requests, req);
-        managed_node_unref(req->node);
+        node_unref(req->node);
         free(req);
 }
 
-void managed_request_unrefp(ManagedRequest **reqp) {
+void agent_request_unrefp(AgentRequest **reqp) {
         if (reqp && *reqp) {
-                managed_request_unref(*reqp);
+                agent_request_unref(*reqp);
         }
 }
 
-static ManagedRequest *managed_node_create_request(
-                ManagedNode *node, sd_bus_message *request_message, const char *method) {
-        _cleanup_managed_request_ ManagedRequest *req = malloc0(sizeof(ManagedRequest));
+static AgentRequest *node_create_request(Node *node, sd_bus_message *request_message, const char *method) {
+        _cleanup_agent_request_ AgentRequest *req = malloc0(sizeof(AgentRequest));
         if (req == NULL) {
                 return NULL;
         }
 
         req->ref_count = 1;
-        req->node = managed_node_ref(node);
+        req->node = node_ref(node);
         LIST_INIT(outstanding_requests, req);
         req->request_message = sd_bus_message_ref(request_message);
 
@@ -318,8 +317,8 @@ static ManagedRequest *managed_node_create_request(
         return steal_pointer(&req);
 }
 
-static bool managed_request_start(ManagedRequest *req, sd_bus_message_handler_t callback) {
-        ManagedNode *node = req->node;
+static bool agent_request_start(AgentRequest *req, sd_bus_message_handler_t callback) {
+        Node *node = req->node;
 
         int r = sd_bus_call_async(
                         node->agent_bus, &req->slot, req->message, callback, req, HIRTE_DEFAULT_DBUS_TIMEOUT);
@@ -328,12 +327,12 @@ static bool managed_request_start(ManagedRequest *req, sd_bus_message_handler_t 
                 return false;
         }
 
-        managed_request_ref(req);
+        agent_request_ref(req);
         return true;
 }
 
 static int list_units_callback(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error) {
-        _cleanup_managed_request_ ManagedRequest *req = userdata;
+        _cleanup_agent_request_ AgentRequest *req = userdata;
 
         if (sd_bus_message_is_method_error(m, NULL)) {
                 /* Forward error */
@@ -355,19 +354,19 @@ static int list_units_callback(sd_bus_message *m, void *userdata, UNUSED sd_bus_
         return sd_bus_message_send(reply);
 }
 
-static int managed_node_method_list_units(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error) {
-        ManagedNode *node = userdata;
+static int node_method_list_units(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error) {
+        Node *node = userdata;
 
-        if (!managed_node_has_agent(node)) {
+        if (!node_has_agent(node)) {
                 return sd_bus_reply_method_errorf(m, HIRTE_BUS_ERROR_OFFLINE, "Node is offline");
         }
 
-        _cleanup_managed_request_ ManagedRequest *req = managed_node_create_request(node, m, "ListUnits");
+        _cleanup_agent_request_ AgentRequest *req = node_create_request(node, m, "ListUnits");
         if (req == NULL) {
                 return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "Internal error");
         }
 
-        if (!managed_request_start(req, list_units_callback)) {
+        if (!agent_request_start(req, list_units_callback)) {
                 return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "Internal error");
         }
 

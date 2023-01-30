@@ -1,5 +1,5 @@
 #pragma once
 
 typedef struct Manager Manager;
-typedef struct ManagedNode ManagedNode;
-typedef struct ManagedRequest ManagedRequest;
+typedef struct Node Node;
+typedef struct AgentRequest AgentRequest;

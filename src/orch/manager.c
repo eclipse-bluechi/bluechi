@@ -9,8 +9,8 @@
 #include "libhirte/service/shutdown.h"
 #include "libhirte/socket.h"
 
-#include "managednode.h"
 #include "manager.h"
+#include "node.h"
 
 #define DEBUG_MESSAGES 0
 
@@ -71,12 +71,12 @@ void manager_unref(Manager *manager) {
                 sd_bus_unrefp(&manager->user_dbus);
         }
 
-        ManagedNode *node = NULL;
+        Node *node = NULL;
         LIST_FOREACH(nodes, node, manager->nodes) {
-                managed_node_unref(node);
+                node_unref(node);
         }
         LIST_FOREACH(nodes, node, manager->anonymous_nodes) {
-                managed_node_unref(node);
+                node_unref(node);
         }
 
 
@@ -90,8 +90,8 @@ void manager_unrefp(Manager **managerp) {
         }
 }
 
-ManagedNode *manager_find_node(Manager *manager, const char *name) {
-        ManagedNode *node = NULL;
+Node *manager_find_node(Manager *manager, const char *name) {
+        Node *node = NULL;
 
         LIST_FOREACH(nodes, node, manager->nodes) {
                 if (strcmp(node->name, name) == 0) {
@@ -102,17 +102,17 @@ ManagedNode *manager_find_node(Manager *manager, const char *name) {
         return NULL;
 }
 
-void manager_remove_node(Manager *manager, ManagedNode *node) {
+void manager_remove_node(Manager *manager, Node *node) {
         if (node->name) {
                 LIST_REMOVE(nodes, manager->nodes, node);
         } else {
                 LIST_REMOVE(nodes, manager->anonymous_nodes, node);
         }
-        managed_node_unref(node);
+        node_unref(node);
 }
 
-ManagedNode *manager_add_node(Manager *manager, const char *name) {
-        _cleanup_managed_node_ ManagedNode *node = managed_node_new(manager, name);
+Node *manager_add_node(Manager *manager, const char *name) {
+        _cleanup_node_ Node *node = node_new(manager, name);
         if (node == NULL) {
                 return NULL;
         }
@@ -182,7 +182,7 @@ bool manager_parse_config(Manager *manager, const char *configfile) {
 static int manager_accept_node_connection(
                 UNUSED sd_event_source *source, int fd, UNUSED uint32_t revents, void *userdata) {
         Manager *manager = userdata;
-        ManagedNode *node = NULL;
+        Node *node = NULL;
         _cleanup_fd_ int nfd = accept_tcp_connection_request(fd);
 
         if (nfd < 0) {
@@ -201,7 +201,7 @@ static int manager_accept_node_connection(
                 return -1;
         }
 
-        if (!managed_node_set_agent_bus(node, dbus_server)) {
+        if (!node_set_agent_bus(node, dbus_server)) {
                 manager_remove_node(manager, steal_pointer(&node));
                 return -1;
         }
@@ -280,9 +280,9 @@ bool manager_start(Manager *manager) {
         }
 
         /* Export all known nodes */
-        ManagedNode *node = NULL;
+        Node *node = NULL;
         LIST_FOREACH(nodes, node, manager->nodes) {
-                if (!managed_node_export(node)) {
+                if (!node_export(node)) {
                         return false;
                 }
         }
