@@ -3,8 +3,8 @@
 orch_src = [
     'manager.h',
     'manager.c',
-    'managednode.h',
-    'managednode.c',
+    'node.h',
+    'node.c',
     'main.c',
 ]
 

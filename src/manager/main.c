@@ -52,7 +52,7 @@ static void get_opts(int argc, char *argv[]) {
 
 
 int main(int argc, char *argv[]) {
-        fprintf(stdout, "Hello from orchestrator!\n");
+        fprintf(stdout, "Hello from manager!\n");
 
         get_opts(argc, argv);
 

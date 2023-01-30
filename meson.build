@@ -21,6 +21,6 @@ systemd_dep = dependency('libsystemd')
 subdir('src/libhirte')
 
 # build each binary
-subdir('src/orch')
-subdir('src/node')
+subdir('src/manager')
+subdir('src/agent')
 subdir('src/client')

@@ -5,7 +5,7 @@ client_src = [
 ]
 
 executable(
-  'hirte-client',
+  'hirtectl',
   client_src,
   dependencies: [
     systemd_dep,
