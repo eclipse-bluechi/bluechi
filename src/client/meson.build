@@ -13,5 +13,6 @@ executable(
   link_with: [
     hirte_lib,
   ],
+  c_args: common_cflags,
   install: true
 )

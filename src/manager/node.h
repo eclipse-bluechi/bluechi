@@ -4,15 +4,19 @@
 
 #include "types.h"
 
+typedef int (*agent_request_response_t)(AgentRequest *req, sd_bus_message *m, sd_bus_error *ret_error);
+
 struct AgentRequest {
         int ref_count;
         Node *node;
 
-        sd_bus_message *request_message;
-
         sd_bus_slot *slot;
 
         sd_bus_message *message;
+
+        void *userdata;
+        free_func_t free_userdata;
+        agent_request_response_t cb;
 
         LIST_FIELDS(AgentRequest, outstanding_requests);
 };
@@ -43,6 +47,7 @@ struct Node {
         LIST_HEAD(AgentRequest, outstanding_requests);
 };
 
+
 Node *node_new(Manager *manager, const char *name);
 Node *node_ref(Node *node);
 void node_unref(Node *node);
@@ -52,6 +57,9 @@ bool node_export(Node *node);
 bool node_has_agent(Node *node);
 bool node_set_agent_bus(Node *node, sd_bus *bus);
 void node_unset_agent_bus(Node *node);
+
+AgentRequest *node_request_list_units(
+                Node *node, agent_request_response_t cb, void *userdata, free_func_t free_userdata);
 
 #define _cleanup_node_ _cleanup_(node_unrefp)
 #define _cleanup_agent_request_ _cleanup_(agent_request_unrefp)
