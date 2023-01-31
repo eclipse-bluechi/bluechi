@@ -8,8 +8,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  build:
-    name: cs9 x86_64 build
+  lint:
     runs-on: ubuntu-latest
     container:
       image: quay.io/centos/centos:stream9
@@ -25,10 +24,8 @@ jobs:
       - name: Install dependencies
         run: |
           dnf install \
-                  gcc \
-                  meson \
-                  systemd-devel \
                   clang-tools-extra \
+                  systemd-devel \
               -y
 
       - name: Checkout sources
@@ -46,27 +43,52 @@ jobs:
         run: |
           make lint
 
-      - name: Configure the build
-        run: |
-          meson setup builddir
 
-      - name: Build the project
-        run: |
-          cd builddir
-          meson compile
+  rpmbuild:
+    needs: lint
+    runs-on: ubuntu-latest
+    container:
+      image: quay.io/centos/centos:stream9
+    env:
+      ARTIFACTS_DIR: exported-artifacts
 
-      - name: Execute tests
+    steps:
+      - name: Enable additional repositories
         run: |
-          cd builddir
-          meson test
+          dnf install -y dnf-plugin-config-manager
 
-      - name: Install artifacts
+          # CRB is required for meson
+          dnf config-manager -y --set-enabled crb
+
+      - name: Install dependencies
         run: |
-          cd builddir
-          meson install
+          dnf install \
+                  createrepo_c \
+                  dnf-utils \
+                  git \
+                  gzip \
+                  rpm-build \
+                  sed \
+                  tar \
+              -y
+
+      - name: Checkout sources
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          # Use githash of a tested commit instead of merge commit
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      - name: Perform build
+        run: |
+          .automation/build-rpm.sh $ARTIFACTS_DIR
+
+      - name: Create DNF repository
+        run: |
+          createrepo_c $ARTIFACTS_DIR
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v3
         with:
-          name: artifacts
-          path: "/usr/local/bin/*"
+          name: rpm-artifacts
+          path: ${{ env.ARTIFACTS_DIR}}
