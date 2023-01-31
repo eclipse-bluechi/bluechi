@@ -10,14 +10,14 @@ In order to develop the project you need to install following dependencies.
 
 To build the project on CentOS Stream 9 you need to enable CodeReady Build repository:
 ```bash
-sudo dnf install -y dnf-plugin-config-manager
-sudo dnf config-manager -y --set-enabled crb
+sudo dnf install dnf-plugin-config-manager
+sudo dnf config-manager --set-enabled crb
 ```
 
 #### Dependencies installation
 
 ```bash
-sudo dnf install -y clang-tools-extra gcc make meson systemd-devel
+sudo dnf install clang-tools-extra gcc make meson systemd-devel
 ```
 
 ### Code Style
@@ -59,7 +59,7 @@ meson compile -C builddir
 
 After successfully compiling the binaries, they can be installed into a destination directory (by default `/usr/local/bin`) using:
 ```bash
-meson install
+meson install -C builddir
 ```
 
 To install it into `builddir/bin` use:
@@ -68,9 +68,9 @@ meson install -C builddir --destdir bin
 ```
 
 After building, three binaries are available:
-- __hirte__: manager, the central unit which is run on the main machine, sending commands to the nodes and monitoring the progress
-- __hirte-agent__: the executing unit which connects with the manager and executes commands on the node machine
-- __hirtectl__: a helper program to send an commands to the manager
+- __hirte__: the orchestrator which is run on the main machine, sending commands to the agents and monitoring the progress
+- __hirte-agent__: the node agent unit which connects with the orchestrator and executes commands on the node machine
+- __hirtectl__: a helper (CLI) program to send an commands to the orchestrator
 
 ### Unit tests
 
@@ -89,7 +89,7 @@ At the moment the hirtectl binary do only print a simple greeting and exit.
 
 Hirte, the orchestrator can be run via:
 ```bash
-./bin/hirte -P <port>
+hirte -c ./doc/example.ini
 ```
 It starts a tcp socket and accepts connections, but does not do much more at this point.
 This can be tested manually via
@@ -101,7 +101,7 @@ nc <host> <port>
 
 Nodes can be run via:
 ```bash
-./bin/hirte-agent -H <host> -P <port>
+./bin/hirte-agent -n <agent name> -H <host> -P <port>
 ```
 It creates a new dbus which tries to connect to the specified host. The host will print out a message if the request was accepted. It does not do much more at this point.
 
