@@ -12,6 +12,21 @@
 
 #include "agent.h"
 
+struct JobTracker {
+        char *job_object_path;
+        job_tracker_callback callback;
+        void *userdata;
+        free_func_t free_userdata;
+        LIST_FIELDS(JobTracker, tracked_jobs);
+};
+
+static bool
+                agent_track_job(Agent *agent,
+                                const char *job_object_path,
+                                job_tracker_callback callback,
+                                void *userdata,
+                                free_func_t free_userdata);
+
 SystemdRequest *systemd_request_ref(SystemdRequest *req) {
         req->ref_count++;
         return req;
@@ -117,6 +132,8 @@ Agent *agent_new(void) {
         n->event = steal_pointer(&event);
         n->user_bus_service_name = steal_pointer(&service_name);
         n->port = HIRTE_DEFAULT_PORT;
+        LIST_HEAD_INIT(n->outstanding_requests);
+        LIST_HEAD_INIT(n->tracked_jobs);
 
         return n;
 }
@@ -279,6 +296,79 @@ static const sd_bus_vtable internal_agent_vtable[] = {
 };
 
 
+static void job_tracker_free(JobTracker *track) {
+        if (track->userdata && track->free_userdata) {
+                track->free_userdata(track->userdata);
+        }
+        free(track->job_object_path);
+        free(track);
+}
+
+static void job_tracker_freep(JobTracker **trackp) {
+        if (trackp && *trackp) {
+                job_tracker_free(*trackp);
+                *trackp = NULL;
+        }
+}
+
+#define _cleanup_job_tracker_ _cleanup_(job_tracker_freep)
+
+static bool
+                agent_track_job(Agent *agent,
+                                const char *job_object_path,
+                                job_tracker_callback callback,
+                                void *userdata,
+                                free_func_t free_userdata) {
+        _cleanup_job_tracker_ JobTracker *track = malloc0(sizeof(JobTracker));
+        if (track == NULL) {
+                return false;
+        }
+
+        track->job_object_path = strdup(job_object_path);
+        if (track->job_object_path == NULL) {
+                return false;
+        }
+
+        track->callback = callback;
+        track->userdata = userdata;
+        track->free_userdata = free_userdata;
+        LIST_INIT(tracked_jobs, track);
+
+        LIST_PREPEND(tracked_jobs, agent->tracked_jobs, steal_pointer(&track));
+
+        return true;
+}
+
+static int agent_match_job_removed(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *error) {
+        Agent *agent = userdata;
+        const char *job_path = NULL;
+        const char *unit = NULL;
+        const char *result = NULL;
+        JobTracker *track = NULL, *next_track = NULL;
+        uint32_t id = 0;
+        int r = 0;
+
+        r = sd_bus_message_read(m, "uoss", &id, &job_path, &unit, &result);
+        if (r < 0) {
+                fprintf(stderr, "Can't parse job result\n");
+                return 0;
+        }
+
+        (void) sd_bus_message_rewind(m, true);
+
+        LIST_FOREACH_SAFE(tracked_jobs, track, next_track, agent->tracked_jobs) {
+                if (streq(track->job_object_path, job_path)) {
+                        LIST_REMOVE(tracked_jobs, agent->tracked_jobs, track);
+                        track->callback(m, result, track->userdata);
+                        job_tracker_free(track);
+                        break;
+                }
+        }
+
+        return 0;
+}
+
+
 bool agent_start(Agent *agent) {
         struct sockaddr_in host;
         int r = 0;
@@ -331,6 +421,20 @@ bool agent_start(Agent *agent) {
         agent->systemd_dbus = systemd_bus_open(agent->event);
         if (agent->systemd_dbus == NULL) {
                 fprintf(stderr, "Failed to open systemd dbus\n");
+                return false;
+        }
+
+        r = sd_bus_match_signal(
+                        agent->systemd_dbus,
+                        NULL,
+                        SYSTEMD_BUS_NAME,
+                        SYSTEMD_OBJECT_PATH,
+                        SYSTEMD_MANAGER_IFACE,
+                        "JobRemoved",
+                        agent_match_job_removed,
+                        agent);
+        if (r < 0) {
+                fprintf(stderr, "Failed to add job-removed peer bus match: %s\n", strerror(-r));
                 return false;
         }
 
