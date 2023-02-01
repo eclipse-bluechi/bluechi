@@ -1,4 +1,5 @@
 #include "node.h"
+#include "job.h"
 #include "manager.h"
 
 #define DEBUG_AGENT_MESSAGES 0
@@ -6,6 +7,7 @@
 static int node_method_register(sd_bus_message *m, void *userdata, sd_bus_error *ret_error);
 static int node_disconnected(sd_bus_message *message, void *userdata, sd_bus_error *error);
 static int node_method_list_units(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error);
+static int node_method_start_unit(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error);
 
 static const sd_bus_vtable internal_manager_orchestrator_vtable[] = {
         SD_BUS_VTABLE_START(0), SD_BUS_METHOD("Register", "s", "", node_method_register, 0), SD_BUS_VTABLE_END
@@ -14,6 +16,7 @@ static const sd_bus_vtable internal_manager_orchestrator_vtable[] = {
 static const sd_bus_vtable node_vtable[] = {
         SD_BUS_VTABLE_START(0),
         SD_BUS_METHOD("ListUnits", "", "a(ssssssouso)", node_method_list_units, 0),
+        SD_BUS_METHOD("StartUnit", "ss", "o", node_method_start_unit, 0),
         SD_BUS_VTABLE_END
 };
 
@@ -119,6 +122,22 @@ bool node_has_agent(Node *node) {
         return node->agent_bus != NULL;
 }
 
+static int node_match_job_done(UNUSED sd_bus_message *m, UNUSED void *userdata, UNUSED sd_bus_error *error) {
+        Node *node = userdata;
+        Manager *manager = node->manager;
+        uint32_t hirte_job_id = 0;
+        const char *result = NULL;
+
+        int r = sd_bus_message_read(m, "us", &hirte_job_id, &result);
+        if (r < 0) {
+                fprintf(stderr, "Invalid JobDone signal\n");
+                return 0;
+        }
+
+        manager_finish_job(manager, hirte_job_id, result);
+        return 1;
+}
+
 bool node_set_agent_bus(Node *node, sd_bus *bus) {
         int r = 0;
 
@@ -141,6 +160,21 @@ bool node_set_agent_bus(Node *node, sd_bus *bus) {
                 if (r < 0) {
                         node_unset_agent_bus(node);
                         fprintf(stderr, "Failed to add peer bus vtable: %s\n", strerror(-r));
+                        return false;
+                }
+        } else {
+                // Only listen to signals on named nodes
+                r = sd_bus_match_signal(
+                                bus,
+                                NULL,
+                                NULL,
+                                INTERNAL_AGENT_OBJECT_PATH,
+                                INTERNAL_AGENT_INTERFACE,
+                                "JobDone",
+                                node_match_job_done,
+                                node);
+                if (r < 0) {
+                        fprintf(stderr, "Failed to add job-removed peer bus match: %s\n", strerror(-r));
                         return false;
                 }
         }
@@ -402,6 +436,91 @@ static int node_method_list_units(sd_bus_message *m, void *userdata, UNUSED sd_b
                         sd_bus_message_ref(m),
                         (free_func_t) sd_bus_message_unref);
         if (agent_req == NULL) {
+                return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "Internal error");
+        }
+
+        return 1;
+}
+
+typedef struct {
+        sd_bus_message *request_message;
+        Job *job;
+} StartUnitOp;
+
+static void start_unit_op_free(StartUnitOp *op) {
+        if (op->job) {
+                job_unref(op->job);
+        }
+        if (op->request_message) {
+                sd_bus_message_unref(op->request_message);
+        }
+        free(op);
+}
+static void start_unit_op_freep(StartUnitOp **opp) {
+        if (opp && *opp) {
+                start_unit_op_free(*opp);
+                *opp = NULL;
+        }
+}
+
+#define _cleanup_start_unit_op_ _cleanup_(start_unit_op_freep)
+
+static int method_start_unit_callback(
+                AgentRequest *req, UNUSED sd_bus_message *m, UNUSED sd_bus_error *ret_error) {
+        Node *node = req->node;
+        Manager *manager = node->manager;
+        StartUnitOp *op = req->userdata;
+
+        if (sd_bus_message_is_method_error(m, NULL)) {
+                /* Forward error */
+                return sd_bus_reply_method_error(op->request_message, sd_bus_message_get_error(m));
+        }
+
+        if (!manager_add_job(manager, op->job)) {
+                return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "Internal error");
+        }
+
+        return sd_bus_reply_method_return(op->request_message, "o", op->job->object_path);
+}
+
+static int node_method_start_unit(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error) {
+        Node *node = userdata;
+        const char *unit = NULL;
+        const char *mode = NULL;
+
+        int r = sd_bus_message_read(m, "ss", &unit, &mode);
+        if (r < 0) {
+                return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_INVALID_ARGS, "Invalid arguments");
+        }
+
+        if (!node_has_agent(node)) {
+                return sd_bus_reply_method_errorf(m, HIRTE_BUS_ERROR_OFFLINE, "Node is offline");
+        }
+
+        _cleanup_start_unit_op_ StartUnitOp *op = malloc0(sizeof(StartUnitOp));
+        if (op == NULL) {
+                return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "Out of memory");
+        }
+
+        /* TODO: Handle mode, queueing job as needed */
+
+        op->request_message = sd_bus_message_ref(m);
+        op->job = job_new(node, unit, "Start");
+        if (op->job == NULL) {
+                return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "Internal error");
+        }
+
+        _cleanup_agent_request_ AgentRequest *req = node_create_request(
+                        node, "StartUnit", method_start_unit_callback, op, (free_func_t) start_unit_op_free);
+        if (req == NULL) {
+                return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "Internal error");
+        }
+
+        sd_bus_message_append(req->message, "ssu", unit, mode, op->job->id);
+
+        steal_pointer(&op); /* Ownership passed to req */
+
+        if (!agent_request_start(req)) {
                 return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "Internal error");
         }
 

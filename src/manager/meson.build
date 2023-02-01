@@ -5,6 +5,8 @@ orch_src = [
     'manager.c',
     'node.h',
     'node.c',
+    'job.h',
+    'job.c',
     'main.c',
 ]
 

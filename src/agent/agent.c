@@ -289,9 +289,98 @@ static int agent_method_list_units(UNUSED sd_bus_message *m, void *userdata, UNU
         return 1;
 }
 
+typedef struct {
+        Agent *agent;
+        uint32_t hirte_job_id;
+} StartUnitOp;
+
+static void start_unit_op_free(StartUnitOp *op) {
+        free(op);
+}
+
+static void start_unit_job_done(UNUSED sd_bus_message *m, const char *result, void *userdata) {
+        StartUnitOp *op = userdata;
+        Agent *agent = op->agent;
+
+        int r = sd_bus_emit_signal(
+                        agent->peer_dbus,
+                        INTERNAL_AGENT_OBJECT_PATH,
+                        INTERNAL_AGENT_INTERFACE,
+                        "JobDone",
+                        "us",
+                        op->hirte_job_id,
+                        result);
+        if (r < 0) {
+                fprintf(stderr, "Failed to emit JobDone\n");
+        }
+}
+
+static int start_unit_callback(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error) {
+        _cleanup_systemd_request_ SystemdRequest *req = userdata;
+        Agent *agent = req->agent;
+        const char *job_object_path = NULL;
+
+        if (sd_bus_message_is_method_error(m, NULL)) {
+                /* Forward error */
+                return sd_bus_reply_method_error(req->request_message, sd_bus_message_get_error(m));
+        }
+
+        int r = sd_bus_message_read(m, "o", &job_object_path);
+        if (r < 0) {
+                return sd_bus_reply_method_errorf(req->request_message, SD_BUS_ERROR_FAILED, "Internal Error");
+        }
+
+        StartUnitOp *op = steal_pointer(&req->userdata);
+        if (!agent_track_job(agent, job_object_path, start_unit_job_done, op, (free_func_t) start_unit_op_free)) {
+                start_unit_op_free(op);
+                return sd_bus_reply_method_errorf(req->request_message, SD_BUS_ERROR_FAILED, "Internal Error");
+        }
+
+        return sd_bus_reply_method_return(req->request_message, "");
+}
+
+static int agent_method_start_unit(UNUSED sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error) {
+        Agent *agent = userdata;
+        const char *name = NULL;
+        const char *mode = NULL;
+        uint32_t job_id = 0;
+
+        int r = sd_bus_message_read(m, "ssu", &name, &mode, &job_id);
+        if (r < 0) {
+                return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_INVALID_ARGS, "Invalid arguments");
+        }
+
+
+        _cleanup_systemd_request_ SystemdRequest *req = agent_create_request(agent, m, "StartUnit");
+        if (req == NULL) {
+                return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "Internal error");
+        }
+
+        StartUnitOp *op = malloc0(sizeof(StartUnitOp));
+        if (op == NULL) {
+                return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "Internal error");
+        }
+        op->agent = agent;
+        op->hirte_job_id = job_id;
+        systemd_request_set_userdata(req, op, (free_func_t) start_unit_op_free);
+
+        r = sd_bus_message_append(req->message, "ss", name, mode);
+        if (r < 0) {
+                return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "Internal error");
+        }
+
+        if (!systemd_request_start(req, start_unit_callback)) {
+                return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "Internal error");
+        }
+
+        return 1;
+}
+
 static const sd_bus_vtable internal_agent_vtable[] = {
         SD_BUS_VTABLE_START(0),
         SD_BUS_METHOD("ListUnits", "", "a(ssssssouso)", agent_method_list_units, 0),
+        SD_BUS_METHOD("StartUnit", "ssu", "", agent_method_start_unit, 0),
+        SD_BUS_SIGNAL_WITH_NAMES("JobDone", "us", SD_BUS_PARAM(id) SD_BUS_PARAM(result), 0),
         SD_BUS_VTABLE_END
 };
 
@@ -351,7 +440,7 @@ static int agent_match_job_removed(sd_bus_message *m, void *userdata, UNUSED sd_
         r = sd_bus_message_read(m, "uoss", &id, &job_path, &unit, &result);
         if (r < 0) {
                 fprintf(stderr, "Can't parse job result\n");
-                return 0;
+                return r;
         }
 
         (void) sd_bus_message_rewind(m, true);
