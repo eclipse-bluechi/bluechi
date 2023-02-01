@@ -19,6 +19,9 @@ struct SystemdRequest {
 
         sd_bus_message *message;
 
+        void *userdata;
+        free_func_t free_userdata;
+
         LIST_FIELDS(SystemdRequest, outstanding_requests);
 };
 

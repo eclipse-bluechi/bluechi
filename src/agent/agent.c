@@ -25,6 +25,10 @@ void systemd_request_unref(SystemdRequest *req) {
                 return;
         }
 
+        if (req->userdata && req->free_userdata) {
+                req->free_userdata(req->userdata);
+        }
+
         if (req->request_message) {
                 sd_bus_message_unref(req->request_message);
         }
@@ -71,6 +75,11 @@ static SystemdRequest *agent_create_request(Agent *agent, sd_bus_message *reques
         }
 
         return steal_pointer(&req);
+}
+
+static void systemd_request_set_userdata(SystemdRequest *req, void *userdata, free_func_t free_userdata) {
+        req->userdata = userdata;
+        req->free_userdata = free_userdata;
 }
 
 static bool systemd_request_start(SystemdRequest *req, sd_bus_message_handler_t callback) {
