@@ -40,7 +40,7 @@ static const sd_bus_vtable node_vtable[] = {
         SD_BUS_METHOD("RestartUnit", "ss", "o", node_method_restart_unit, 0),
         SD_BUS_METHOD("ReloadUnit", "ss", "o", node_method_reload_unit, 0),
         SD_BUS_PROPERTY("Name", "s", node_property_get_nodename, 0, 0),
-        SD_BUS_PROPERTY("Status", "s", node_property_get_status, 0, 0),
+        SD_BUS_PROPERTY("Status", "s", node_property_get_status, 0, SD_BUS_VTABLE_PROPERTY_EMITS_CHANGE),
         SD_BUS_VTABLE_END
 };
 
@@ -192,6 +192,12 @@ bool node_set_agent_bus(Node *node, sd_bus *bus) {
                         fprintf(stderr, "Failed to add job-removed peer bus match: %s\n", strerror(-r));
                         return false;
                 }
+
+                r = sd_bus_emit_properties_changed(
+                                node->manager->user_dbus, node->object_path, NODE_INTERFACE, "Status", NULL);
+                if (r < 0) {
+                        fprintf(stderr, "Failed to emit status property changed: %s\n", strerror(-r));
+                }
         }
 
         r = sd_bus_match_signal_async(
@@ -218,6 +224,8 @@ bool node_set_agent_bus(Node *node, sd_bus *bus) {
 }
 
 void node_unset_agent_bus(Node *node) {
+        bool was_online = node->name && node_has_agent(node);
+
         sd_bus_slot_unrefp(&node->disconnect_slot);
         node->disconnect_slot = NULL;
 
@@ -226,8 +234,15 @@ void node_unset_agent_bus(Node *node) {
 
         sd_bus_unrefp(&node->agent_bus);
         node->agent_bus = NULL;
-}
 
+        if (was_online) {
+                int r = sd_bus_emit_properties_changed(
+                                node->manager->user_dbus, node->object_path, NODE_INTERFACE, "Status", NULL);
+                if (r < 0) {
+                        fprintf(stderr, "Failed to emit status property changed: %s\n", strerror(-r));
+                }
+        }
+}
 
 /* org.containers.hirte.internal.Manager.Register(in s name)) */
 static int node_method_register(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error) {
