@@ -442,49 +442,82 @@ static int node_method_list_units(sd_bus_message *m, void *userdata, UNUSED sd_b
         return 1;
 }
 
+/* Keep track of data related to setting up a job. For example calling
+   the initial agent request before we know the job is actually going to
+   happen. */
 typedef struct {
+        int ref_count;
         sd_bus_message *request_message;
         Job *job;
-} StartUnitOp;
+} JobSetup;
 
-static void start_unit_op_free(StartUnitOp *op) {
-        if (op->job) {
-                job_unref(op->job);
-        }
-        if (op->request_message) {
-                sd_bus_message_unref(op->request_message);
-        }
-        free(op);
-}
-static void start_unit_op_freep(StartUnitOp **opp) {
-        if (opp && *opp) {
-                start_unit_op_free(*opp);
-                *opp = NULL;
-        }
+#define _cleanup_job_setup_ _cleanup_(job_setup_unrefp)
+
+static JobSetup *job_setup_ref(JobSetup *setup) {
+        setup->ref_count++;
+        return setup;
 }
 
-#define _cleanup_start_unit_op_ _cleanup_(start_unit_op_freep)
+static void job_setup_unref(JobSetup *setup) {
+        setup->ref_count--;
+        if (setup->ref_count != 0) {
+                return;
+        }
+
+        if (setup->job) {
+                job_unref(setup->job);
+        }
+        if (setup->request_message) {
+                sd_bus_message_unref(setup->request_message);
+        }
+        free(setup);
+}
+
+static void job_setup_unrefp(JobSetup **setupp) {
+        if (setupp && *setupp) {
+                job_setup_unref(*setupp);
+                *setupp = NULL;
+        }
+}
+
+static JobSetup *job_setup_new(sd_bus_message *request_message, Node *node, const char *unit, const char *type) {
+        _cleanup_job_setup_ JobSetup *setup = malloc0(sizeof(JobSetup));
+
+        setup->ref_count = 1;
+        setup->request_message = sd_bus_message_ref(request_message);
+        setup->job = job_new(node, unit, type);
+        if (setup->job == NULL) {
+                NULL;
+        }
+
+        return steal_pointer(&setup);
+}
+
+/*************************************************************************
+ ********** org.containers.hirte.Node.StartUnit **************************
+ ************************************************************************/
 
 static int method_start_unit_callback(
                 AgentRequest *req, UNUSED sd_bus_message *m, UNUSED sd_bus_error *ret_error) {
         Node *node = req->node;
         Manager *manager = node->manager;
-        StartUnitOp *op = req->userdata;
+        JobSetup *setup = req->userdata;
 
         if (sd_bus_message_is_method_error(m, NULL)) {
                 /* Forward error */
-                return sd_bus_reply_method_error(op->request_message, sd_bus_message_get_error(m));
+                return sd_bus_reply_method_error(setup->request_message, sd_bus_message_get_error(m));
         }
 
-        if (!manager_add_job(manager, op->job)) {
+        if (!manager_add_job(manager, setup->job)) {
                 return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "Internal error");
         }
 
-        return sd_bus_reply_method_return(op->request_message, "o", op->job->object_path);
+        return sd_bus_reply_method_return(setup->request_message, "o", setup->job->object_path);
 }
 
 static int node_method_start_unit(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error) {
         Node *node = userdata;
+        _cleanup_agent_request_ AgentRequest *req = NULL;
         const char *unit = NULL;
         const char *mode = NULL;
 
@@ -497,28 +530,23 @@ static int node_method_start_unit(sd_bus_message *m, void *userdata, UNUSED sd_b
                 return sd_bus_reply_method_errorf(m, HIRTE_BUS_ERROR_OFFLINE, "Node is offline");
         }
 
-        _cleanup_start_unit_op_ StartUnitOp *op = malloc0(sizeof(StartUnitOp));
-        if (op == NULL) {
+        _cleanup_job_setup_ JobSetup *setup = job_setup_new(m, node, unit, "Start");
+        if (setup == NULL) {
                 return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "Out of memory");
         }
 
         /* TODO: Handle mode, queueing job as needed */
-
-        op->request_message = sd_bus_message_ref(m);
-        op->job = job_new(node, unit, "Start");
-        if (op->job == NULL) {
-                return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "Internal error");
-        }
-
-        _cleanup_agent_request_ AgentRequest *req = node_create_request(
-                        node, "StartUnit", method_start_unit_callback, op, (free_func_t) start_unit_op_free);
+        req = node_create_request(
+                        node,
+                        "StartUnit",
+                        method_start_unit_callback,
+                        job_setup_ref(setup),
+                        (free_func_t) job_setup_unref);
         if (req == NULL) {
                 return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "Internal error");
         }
 
-        sd_bus_message_append(req->message, "ssu", unit, mode, op->job->id);
-
-        steal_pointer(&op); /* Ownership passed to req */
+        sd_bus_message_append(req->message, "ssu", unit, mode, setup->job->id);
 
         if (!agent_request_start(req)) {
                 return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "Internal error");
