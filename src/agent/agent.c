@@ -419,10 +419,80 @@ static int agent_method_start_unit(UNUSED sd_bus_message *m, void *userdata, UNU
         return 1;
 }
 
+/*************************************************************************
+ ********** org.containers.hirte.internal.Agent.StopUnit ****************
+ ************************************************************************/
+
+static int stop_unit_callback(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error) {
+        _cleanup_systemd_request_ SystemdRequest *req = userdata;
+        Agent *agent = req->agent;
+        const char *job_object_path = NULL;
+
+        if (sd_bus_message_is_method_error(m, NULL)) {
+                /* Forward error */
+                return sd_bus_reply_method_error(req->request_message, sd_bus_message_get_error(m));
+        }
+
+        int r = sd_bus_message_read(m, "o", &job_object_path);
+        if (r < 0) {
+                return sd_bus_reply_method_errorf(req->request_message, SD_BUS_ERROR_FAILED, "Internal Error");
+        }
+
+        AgentJobOp *op = req->userdata;
+
+        if (!agent_track_job(
+                            agent,
+                            job_object_path,
+                            agent_job_done,
+                            agent_job_op_ref(op),
+                            (free_func_t) agent_job_op_unref)) {
+                return sd_bus_reply_method_errorf(req->request_message, SD_BUS_ERROR_FAILED, "Internal Error");
+        }
+
+        return sd_bus_reply_method_return(req->request_message, "");
+}
+
+static int agent_method_stop_unit(UNUSED sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error) {
+        Agent *agent = userdata;
+        const char *name = NULL;
+        const char *mode = NULL;
+        uint32_t job_id = 0;
+
+        int r = sd_bus_message_read(m, "ssu", &name, &mode, &job_id);
+        if (r < 0) {
+                return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_INVALID_ARGS, "Invalid arguments");
+        }
+
+
+        _cleanup_systemd_request_ SystemdRequest *req = agent_create_request(agent, m, "StopUnit");
+        if (req == NULL) {
+                return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "Internal error");
+        }
+
+        _cleanup_agent_job_op_ AgentJobOp *op = agent_job_new(agent, job_id);
+        if (op == NULL) {
+                return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "Internal error");
+        }
+        systemd_request_set_userdata(req, agent_job_op_ref(op), (free_func_t) agent_job_op_unref);
+
+        r = sd_bus_message_append(req->message, "ss", name, mode);
+        if (r < 0) {
+                return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "Internal error");
+        }
+
+        if (!systemd_request_start(req, stop_unit_callback)) {
+                return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "Internal error");
+        }
+
+        return 1;
+}
+
+
 static const sd_bus_vtable internal_agent_vtable[] = {
         SD_BUS_VTABLE_START(0),
         SD_BUS_METHOD("ListUnits", "", "a(ssssssouso)", agent_method_list_units, 0),
         SD_BUS_METHOD("StartUnit", "ssu", "", agent_method_start_unit, 0),
+        SD_BUS_METHOD("StopUnit", "ssu", "", agent_method_stop_unit, 0),
         SD_BUS_SIGNAL_WITH_NAMES("JobDone", "us", SD_BUS_PARAM(id) SD_BUS_PARAM(result), 0),
         SD_BUS_VTABLE_END
 };
