@@ -59,12 +59,6 @@ void systemd_request_unref(SystemdRequest *req) {
         free(req);
 }
 
-void systemd_request_unrefp(SystemdRequest **reqp) {
-        if (reqp && *reqp) {
-                systemd_request_unref(*reqp);
-        }
-}
-
 static SystemdRequest *agent_create_request(Agent *agent, sd_bus_message *request_message, const char *method) {
         _cleanup_systemd_request_ SystemdRequest *req = malloc0(sizeof(SystemdRequest));
         if (req == NULL) {
@@ -169,13 +163,6 @@ void agent_unref(Agent *agent) {
         }
 
         free(agent);
-}
-
-void agent_unrefp(Agent **agentp) {
-        if (agentp && *agentp) {
-                agent_unref(*agentp);
-                *agentp = NULL;
-        }
 }
 
 bool agent_set_port(Agent *agent, const char *port_s) {
@@ -298,7 +285,6 @@ typedef struct {
         uint32_t hirte_job_id;
 } AgentJobOp;
 
-#define _cleanup_agent_job_op_ _cleanup_(agent_job_op_unrefp)
 
 static AgentJobOp *agent_job_op_ref(AgentJobOp *op) {
         op->ref_count++;
@@ -315,12 +301,8 @@ static void agent_job_op_unref(AgentJobOp *op) {
         free(op);
 }
 
-static void agent_job_op_unrefp(AgentJobOp **opp) {
-        if (opp && *opp) {
-                agent_job_op_unref(*opp);
-                *opp = NULL;
-        }
-}
+DEFINE_CLEANUP_FUNC(AgentJobOp, agent_job_op_unref)
+#define _cleanup_agent_job_op_ _cleanup_(agent_job_op_unrefp)
 
 static AgentJobOp *agent_job_new(Agent *agent, uint32_t hirte_job_id) {
         AgentJobOp *op = malloc0(sizeof(AgentJobOp));

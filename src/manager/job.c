@@ -4,7 +4,6 @@
 
 static const sd_bus_vtable job_vtable[] = { SD_BUS_VTABLE_START(0), SD_BUS_VTABLE_END };
 
-
 Job *job_new(Node *node, const char *unit, const char *type) {
         static uint32_t next_id = 0;
 
@@ -56,13 +55,6 @@ void job_unref(Job *job) {
         free(job->unit);
         free(job->type);
         free(job);
-}
-
-void job_unrefp(Job **jobp) {
-        if (jobp && *jobp) {
-                job_unref(*jobp);
-                *jobp = NULL;
-        }
 }
 
 bool job_export(Job *job) {

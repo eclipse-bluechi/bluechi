@@ -94,13 +94,6 @@ void manager_unref(Manager *manager) {
         free(manager);
 }
 
-void manager_unrefp(Manager **managerp) {
-        if (managerp && *managerp) {
-                manager_unref(*managerp);
-                *managerp = NULL;
-        }
-}
-
 Node *manager_find_node(Manager *manager, const char *name) {
         Node *node = NULL;
 

@@ -30,7 +30,6 @@ struct Manager {
 Manager *manager_new(void);
 Manager *manager_ref(Manager *manager);
 void manager_unref(Manager *manager);
-void manager_unrefp(Manager **managerp);
 
 bool manager_set_port(Manager *manager, const char *port);
 bool manager_parse_config(Manager *manager, const char *configfile);
@@ -48,4 +47,5 @@ bool manager_add_job(Manager *manager, Job *job);
 void manager_remove_job(Manager *manager, Job *job, const char *result);
 void manager_finish_job(Manager *manager, uint32_t job_id, const char *result);
 
+DEFINE_CLEANUP_FUNC(Manager, manager_unref)
 #define _cleanup_manager_ _cleanup_(manager_unrefp)

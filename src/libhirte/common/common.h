@@ -62,6 +62,16 @@ static inline void *malloc0_array(size_t base_size, size_t element_size, size_t 
 #define _cleanup_free_ _cleanup_(freep)
 #define _cleanup_fd_ _cleanup_(closep)
 
+// NOLINTBEGIN(bugprone-macro-parentheses)
+#define DEFINE_CLEANUP_FUNC(_type, _freefunc)         \
+        static inline void _freefunc##p(_type **pp) { \
+                if (pp && *pp) {                      \
+                        _freefunc(*pp);               \
+                        *pp = NULL;                   \
+                }                                     \
+        }
+// NOLINTEND(bugprone-macro-parentheses)
+
 #define _cleanup_sd_event_ _cleanup_(sd_event_unrefp)
 #define _cleanup_sd_event_source_ _cleanup_(sd_event_source_unrefp)
 #define _cleanup_sd_bus_ _cleanup_(sd_bus_unrefp)

@@ -69,13 +69,6 @@ void node_unref(Node *node) {
         free(node);
 }
 
-void node_unrefp(Node **nodep) {
-        if (nodep && *nodep) {
-                node_unref(*nodep);
-                *nodep = NULL;
-        }
-}
-
 bool node_export(Node *node) {
         Manager *manager = node->manager;
 
@@ -319,12 +312,6 @@ void agent_request_unref(AgentRequest *req) {
         free(req);
 }
 
-void agent_request_unrefp(AgentRequest **reqp) {
-        if (reqp && *reqp) {
-                agent_request_unref(*reqp);
-        }
-}
-
 static AgentRequest *node_create_request(
                 Node *node,
                 const char *method,
@@ -449,8 +436,6 @@ typedef struct {
         Job *job;
 } JobSetup;
 
-#define _cleanup_job_setup_ _cleanup_(job_setup_unrefp)
-
 static JobSetup *job_setup_ref(JobSetup *setup) {
         setup->ref_count++;
         return setup;
@@ -471,12 +456,8 @@ static void job_setup_unref(JobSetup *setup) {
         free(setup);
 }
 
-static void job_setup_unrefp(JobSetup **setupp) {
-        if (setupp && *setupp) {
-                job_setup_unref(*setupp);
-                *setupp = NULL;
-        }
-}
+DEFINE_CLEANUP_FUNC(JobSetup, job_setup_unref)
+#define _cleanup_job_setup_ _cleanup_(job_setup_unrefp)
 
 static JobSetup *job_setup_new(sd_bus_message *request_message, Node *node, const char *unit, const char *type) {
         _cleanup_job_setup_ JobSetup *setup = malloc0(sizeof(JobSetup));
