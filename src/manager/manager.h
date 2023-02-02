@@ -22,6 +22,8 @@ struct Manager {
         int n_nodes;
         LIST_HEAD(Node, nodes);
         LIST_HEAD(Node, anonymous_nodes);
+
+        LIST_HEAD(Job, jobs);
 };
 
 Manager *manager_new(void);
@@ -39,5 +41,9 @@ Node *manager_find_node(Manager *manager, const char *name);
 void manager_remove_node(Manager *manager, Node *node);
 
 Node *manager_add_node(Manager *manager, const char *name);
+
+bool manager_add_job(Manager *manager, Job *job);
+void manager_remove_job(Manager *manager, Job *job, const char *result);
+void manager_finish_job(Manager *manager, uint32_t job_id, const char *result);
 
 #define _cleanup_manager_ _cleanup_(manager_unrefp)

@@ -19,12 +19,18 @@ struct SystemdRequest {
 
         sd_bus_message *message;
 
+        void *userdata;
+        free_func_t free_userdata;
+
         LIST_FIELDS(SystemdRequest, outstanding_requests);
 };
 
 SystemdRequest *systemd_request_ref(SystemdRequest *req);
 void systemd_request_unref(SystemdRequest *req);
 void systemd_request_unrefp(SystemdRequest **req);
+
+typedef void (*job_tracker_callback)(sd_bus_message *m, const char *result, void *userdata);
+typedef struct JobTracker JobTracker;
 
 struct Agent {
         int ref_count;
@@ -43,6 +49,8 @@ struct Agent {
         sd_bus *peer_dbus;
 
         LIST_HEAD(SystemdRequest, outstanding_requests);
+
+        LIST_HEAD(JobTracker, tracked_jobs);
 };
 
 Agent *agent_new(void);

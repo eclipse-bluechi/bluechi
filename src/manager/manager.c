@@ -9,6 +9,7 @@
 #include "libhirte/service/shutdown.h"
 #include "libhirte/socket.h"
 
+#include "job.h"
 #include "manager.h"
 #include "node.h"
 
@@ -37,6 +38,8 @@ Manager *manager_new(void) {
                 manager->user_bus_service_name = steal_pointer(&service_name);
                 manager->event = steal_pointer(&event);
                 LIST_HEAD_INIT(manager->nodes);
+                LIST_HEAD_INIT(manager->anonymous_nodes);
+                LIST_HEAD_INIT(manager->jobs);
         }
 
         return manager;
@@ -79,6 +82,10 @@ void manager_unref(Manager *manager) {
                 node_unref(node);
         }
 
+        Job *job = NULL;
+        LIST_FOREACH(jobs, job, manager->jobs) {
+                job_unref(job);
+        }
 
         free(manager);
 }
@@ -110,6 +117,59 @@ void manager_remove_node(Manager *manager, Node *node) {
                 LIST_REMOVE(nodes, manager->anonymous_nodes, node);
         }
         node_unref(node);
+}
+
+bool manager_add_job(Manager *manager, Job *job) {
+        if (!job_export(job)) {
+                return false;
+        }
+
+        int r = sd_bus_emit_signal(
+                        manager->user_dbus,
+                        HIRTE_MANAGER_OBJECT_PATH,
+                        MANAGER_INTERFACE,
+                        "JobNew",
+                        "uo",
+                        job->id,
+                        job->object_path);
+        if (r < 0) {
+                return false;
+        }
+
+        LIST_APPEND(jobs, manager->jobs, job_ref(job));
+        return true;
+}
+
+void manager_remove_job(Manager *manager, Job *job, const char *result) {
+
+        int r = sd_bus_emit_signal(
+                        manager->user_dbus,
+                        HIRTE_MANAGER_OBJECT_PATH,
+                        MANAGER_INTERFACE,
+                        "JobRemoved",
+                        "uosss",
+                        job->id,
+                        job->object_path,
+                        job->node->name,
+                        job->unit,
+                        result);
+        if (r < 0) {
+                fprintf(stderr, "Warning: Failed to send JobRemoved event\n");
+                /* We can't really return a failure here */
+        }
+
+        LIST_REMOVE(jobs, manager->jobs, job);
+        job_unref(job);
+}
+
+void manager_finish_job(Manager *manager, uint32_t job_id, const char *result) {
+        Job *job = NULL;
+        LIST_FOREACH(jobs, job, manager->jobs) {
+                if (job->id == job_id) {
+                        manager_remove_job(manager, job, result);
+                        break;
+                }
+        }
 }
 
 Node *manager_add_node(Manager *manager, const char *name) {
@@ -284,7 +344,7 @@ static void list_unit_request_free(ListUnitsRequest *req) {
         free(req);
 }
 
-void list_unit_request_freep(ListUnitsRequest **reqp) {
+static void list_unit_request_freep(ListUnitsRequest **reqp) {
         if (reqp && *reqp) {
                 list_unit_request_free(*reqp);
                 *reqp = NULL;
@@ -437,6 +497,13 @@ static const sd_bus_vtable manager_vtable[] = {
         SD_BUS_VTABLE_START(0),
         SD_BUS_METHOD("Ping", "s", "s", manager_method_ping, 0),
         SD_BUS_METHOD("ListUnits", "", "a(sssssssouso)", manager_method_list_units, 0),
+        SD_BUS_SIGNAL_WITH_NAMES("JobNew", "uo", SD_BUS_PARAM(id) SD_BUS_PARAM(job), 0),
+        SD_BUS_SIGNAL_WITH_NAMES(
+                        "JobRemoved",
+                        "uosss",
+                        SD_BUS_PARAM(id) SD_BUS_PARAM(job) SD_BUS_PARAM(node) SD_BUS_PARAM(unit)
+                                        SD_BUS_PARAM(result),
+                        0),
         SD_BUS_VTABLE_END
 };
 
@@ -490,7 +557,7 @@ bool manager_start(Manager *manager) {
                         manager_vtable,
                         manager);
         if (r < 0) {
-                fprintf(stderr, "Failed to add node vtable: %s\n", strerror(-r));
+                fprintf(stderr, "Failed to add manager vtable: %s\n", strerror(-r));
                 return false;
         }
 
