@@ -428,10 +428,6 @@ static int method_list_units_callback(AgentRequest *req, sd_bus_message *m, UNUS
 static int node_method_list_units(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error) {
         Node *node = userdata;
 
-        if (!node_has_agent(node)) {
-                return sd_bus_reply_method_errorf(m, HIRTE_BUS_ERROR_OFFLINE, "Node is offline");
-        }
-
         _cleanup_agent_request_ AgentRequest *agent_req = node_request_list_units(
                         node,
                         method_list_units_callback,
@@ -528,10 +524,6 @@ static int node_method_start_unit(sd_bus_message *m, void *userdata, UNUSED sd_b
                 return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_INVALID_ARGS, "Invalid arguments");
         }
 
-        if (!node_has_agent(node)) {
-                return sd_bus_reply_method_errorf(m, HIRTE_BUS_ERROR_OFFLINE, "Node is offline");
-        }
-
         _cleanup_job_setup_ JobSetup *setup = job_setup_new(m, node, unit, "Start");
         if (setup == NULL) {
                 return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "Out of memory");
@@ -587,10 +579,6 @@ static int node_method_stop_unit(sd_bus_message *m, void *userdata, UNUSED sd_bu
         int r = sd_bus_message_read(m, "ss", &unit, &mode);
         if (r < 0) {
                 return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_INVALID_ARGS, "Invalid arguments");
-        }
-
-        if (!node_has_agent(node)) {
-                return sd_bus_reply_method_errorf(m, HIRTE_BUS_ERROR_OFFLINE, "Node is offline");
         }
 
         _cleanup_job_setup_ JobSetup *setup = job_setup_new(m, node, unit, "Stop");

@@ -66,6 +66,10 @@ void manager_unref(Manager *manager) {
                 sd_event_source_unrefp(&manager->node_connection_source);
         }
 
+        if (manager->filter_slot) {
+                sd_bus_slot_unref(manager->filter_slot);
+        }
+
         if (manager->manager_slot != NULL) {
                 sd_bus_slot_unref(manager->manager_slot);
         }
@@ -102,6 +106,19 @@ Node *manager_find_node(Manager *manager, const char *name) {
 
         LIST_FOREACH(nodes, node, manager->nodes) {
                 if (strcmp(node->name, name) == 0) {
+                        return node;
+                }
+        }
+
+        return NULL;
+}
+
+
+Node *manager_find_node_by_path(Manager *manager, const char *path) {
+        Node *node = NULL;
+
+        LIST_FOREACH(nodes, node, manager->nodes) {
+                if (streq(node->object_path, path)) {
                         return node;
                 }
         }
@@ -507,13 +524,29 @@ static const sd_bus_vtable manager_vtable[] = {
         SD_BUS_VTABLE_END
 };
 
-static int debug_messages_handler(sd_bus_message *m, UNUSED void *userdata, UNUSED sd_bus_error *ret_error) {
-        fprintf(stderr,
-                "Incomming public message: path: %s, iface: %s, member: %s, signature: '%s'\n",
-                sd_bus_message_get_path(m),
-                sd_bus_message_get_interface(m),
-                sd_bus_message_get_member(m),
-                sd_bus_message_get_signature(m, true));
+static int manager_dbus_filter(UNUSED sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error) {
+        Manager *manager = userdata;
+        const char *object_path = sd_bus_message_get_path(m);
+        const char *iface = sd_bus_message_get_interface(m);
+
+        if (DEBUG_MESSAGES) {
+                fprintf(stderr,
+                        "Incomming public message: path: %s, iface: %s, member: %s, signature: '%s'\n",
+                        object_path,
+                        iface,
+                        sd_bus_message_get_member(m),
+                        sd_bus_message_get_signature(m, true));
+        }
+
+        if (iface != NULL && streq(iface, NODE_INTERFACE)) {
+                Node *node = manager_find_node_by_path(manager, object_path);
+
+                /* All Node interface objects fail if the node is offline */
+                if (node && !node_has_agent(node)) {
+                        return sd_bus_reply_method_errorf(m, HIRTE_BUS_ERROR_OFFLINE, "Node is offline");
+                }
+        }
+
         return 0;
 }
 
@@ -545,8 +578,10 @@ bool manager_start(Manager *manager) {
                 return false;
         }
 
-        if (DEBUG_MESSAGES) {
-                sd_bus_add_filter(manager->user_dbus, NULL, debug_messages_handler, NULL);
+        r = sd_bus_add_filter(manager->user_dbus, &manager->filter_slot, manager_dbus_filter, manager);
+        if (r < 0) {
+                fprintf(stderr, "Failed to add manager filter: %s\n", strerror(-r));
+                return false;
         }
 
         r = sd_bus_add_object_vtable(

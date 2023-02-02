@@ -18,6 +18,7 @@ struct Manager {
 
         sd_bus *user_dbus;
         sd_bus_slot *manager_slot;
+        sd_bus_slot *filter_slot;
 
         int n_nodes;
         LIST_HEAD(Node, nodes);
@@ -38,6 +39,7 @@ bool manager_start(Manager *manager);
 bool manager_stop(Manager *manager);
 
 Node *manager_find_node(Manager *manager, const char *name);
+Node *manager_find_node_by_path(Manager *manager, const char *path);
 void manager_remove_node(Manager *manager, Node *node);
 
 Node *manager_add_node(Manager *manager, const char *name);
