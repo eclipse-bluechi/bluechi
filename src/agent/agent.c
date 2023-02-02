@@ -232,6 +232,10 @@ bool agent_parse_config(Agent *agent, const char *configfile) {
         return true;
 }
 
+/*************************************************************************
+ ********** org.containers.hirte.internal.Agent.ListUnits ****************
+ ************************************************************************/
+
 static int list_units_callback(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error) {
         _cleanup_systemd_request_ SystemdRequest *req = userdata;
 
@@ -255,7 +259,7 @@ static int list_units_callback(sd_bus_message *m, void *userdata, UNUSED sd_bus_
         return sd_bus_message_send(reply);
 }
 
-static int agent_method_list_units(UNUSED sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error) {
+static int agent_method_list_units(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error) {
         Agent *agent = userdata;
 
         _cleanup_systemd_request_ SystemdRequest *req = agent_create_request(agent, m, "ListUnits");
@@ -326,12 +330,7 @@ static void agent_job_done(UNUSED sd_bus_message *m, const char *result, void *u
         }
 }
 
-
-/*************************************************************************
- ********** org.containers.hirte.internal.Agent.StartUnit ****************
- ************************************************************************/
-
-static int start_unit_callback(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error) {
+static int unit_lifecycle_method_callback(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error) {
         _cleanup_systemd_request_ SystemdRequest *req = userdata;
         Agent *agent = req->agent;
         const char *job_object_path = NULL;
@@ -360,8 +359,7 @@ static int start_unit_callback(sd_bus_message *m, void *userdata, UNUSED sd_bus_
         return sd_bus_reply_method_return(req->request_message, "");
 }
 
-static int agent_method_start_unit(UNUSED sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error) {
-        Agent *agent = userdata;
+static int agent_run_unit_lifecycle_method(sd_bus_message *m, Agent *agent, const char *method) {
         const char *name = NULL;
         const char *mode = NULL;
         uint32_t job_id = 0;
@@ -372,7 +370,7 @@ static int agent_method_start_unit(UNUSED sd_bus_message *m, void *userdata, UNU
         }
 
 
-        _cleanup_systemd_request_ SystemdRequest *req = agent_create_request(agent, m, "StartUnit");
+        _cleanup_systemd_request_ SystemdRequest *req = agent_create_request(agent, m, method);
         if (req == NULL) {
                 return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "Internal error");
         }
@@ -388,87 +386,52 @@ static int agent_method_start_unit(UNUSED sd_bus_message *m, void *userdata, UNU
                 return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "Internal error");
         }
 
-        if (!systemd_request_start(req, start_unit_callback)) {
+        if (!systemd_request_start(req, unit_lifecycle_method_callback)) {
                 return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "Internal error");
         }
 
         return 1;
+}
+
+/*************************************************************************
+ ********** org.containers.hirte.internal.Agent.StartUnit ****************
+ ************************************************************************/
+
+static int agent_method_start_unit(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error) {
+        return agent_run_unit_lifecycle_method(m, (Agent *) userdata, "StartUnit");
 }
 
 /*************************************************************************
  ********** org.containers.hirte.internal.Agent.StopUnit ****************
  ************************************************************************/
 
-static int stop_unit_callback(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error) {
-        _cleanup_systemd_request_ SystemdRequest *req = userdata;
-        Agent *agent = req->agent;
-        const char *job_object_path = NULL;
-
-        if (sd_bus_message_is_method_error(m, NULL)) {
-                /* Forward error */
-                return sd_bus_reply_method_error(req->request_message, sd_bus_message_get_error(m));
-        }
-
-        int r = sd_bus_message_read(m, "o", &job_object_path);
-        if (r < 0) {
-                return sd_bus_reply_method_errorf(req->request_message, SD_BUS_ERROR_FAILED, "Internal Error");
-        }
-
-        AgentJobOp *op = req->userdata;
-
-        if (!agent_track_job(
-                            agent,
-                            job_object_path,
-                            agent_job_done,
-                            agent_job_op_ref(op),
-                            (free_func_t) agent_job_op_unref)) {
-                return sd_bus_reply_method_errorf(req->request_message, SD_BUS_ERROR_FAILED, "Internal Error");
-        }
-
-        return sd_bus_reply_method_return(req->request_message, "");
+static int agent_method_stop_unit(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error) {
+        return agent_run_unit_lifecycle_method(m, (Agent *) userdata, "StopUnit");
 }
 
-static int agent_method_stop_unit(UNUSED sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error) {
-        Agent *agent = userdata;
-        const char *name = NULL;
-        const char *mode = NULL;
-        uint32_t job_id = 0;
+/*************************************************************************
+ ********** org.containers.hirte.internal.Agent.RestartUnit **************
+ ************************************************************************/
 
-        int r = sd_bus_message_read(m, "ssu", &name, &mode, &job_id);
-        if (r < 0) {
-                return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_INVALID_ARGS, "Invalid arguments");
-        }
-
-
-        _cleanup_systemd_request_ SystemdRequest *req = agent_create_request(agent, m, "StopUnit");
-        if (req == NULL) {
-                return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "Internal error");
-        }
-
-        _cleanup_agent_job_op_ AgentJobOp *op = agent_job_new(agent, job_id);
-        if (op == NULL) {
-                return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "Internal error");
-        }
-        systemd_request_set_userdata(req, agent_job_op_ref(op), (free_func_t) agent_job_op_unref);
-
-        r = sd_bus_message_append(req->message, "ss", name, mode);
-        if (r < 0) {
-                return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "Internal error");
-        }
-
-        if (!systemd_request_start(req, stop_unit_callback)) {
-                return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "Internal error");
-        }
-
-        return 1;
+static int agent_method_restart_unit(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error) {
+        return agent_run_unit_lifecycle_method(m, (Agent *) userdata, "RestartUnit");
 }
 
+/*************************************************************************
+ ********** org.containers.hirte.internal.Agent.ReloadUnit ***************
+ ************************************************************************/
+
+static int agent_method_reload_unit(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error) {
+        return agent_run_unit_lifecycle_method(m, (Agent *) userdata, "ReloadUnit");
+}
 
 static const sd_bus_vtable internal_agent_vtable[] = {
         SD_BUS_VTABLE_START(0),
         SD_BUS_METHOD("ListUnits", "", "a(ssssssouso)", agent_method_list_units, 0),
         SD_BUS_METHOD("StartUnit", "ssu", "", agent_method_start_unit, 0),
         SD_BUS_METHOD("StopUnit", "ssu", "", agent_method_stop_unit, 0),
+        SD_BUS_METHOD("RestartUnit", "ssu", "", agent_method_restart_unit, 0),
+        SD_BUS_METHOD("ReloadUnit", "ssu", "", agent_method_reload_unit, 0),
         SD_BUS_SIGNAL_WITH_NAMES("JobDone", "us", SD_BUS_PARAM(id) SD_BUS_PARAM(result), 0),
         SD_BUS_VTABLE_END
 };

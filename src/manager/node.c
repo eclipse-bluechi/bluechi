@@ -9,6 +9,8 @@ static int node_disconnected(sd_bus_message *message, void *userdata, sd_bus_err
 static int node_method_list_units(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error);
 static int node_method_start_unit(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error);
 static int node_method_stop_unit(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error);
+static int node_method_restart_unit(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error);
+static int node_method_reload_unit(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error);
 static int node_property_get_nodename(
                 sd_bus *bus,
                 const char *path,
@@ -35,6 +37,8 @@ static const sd_bus_vtable node_vtable[] = {
         SD_BUS_METHOD("ListUnits", "", "a(ssssssouso)", node_method_list_units, 0),
         SD_BUS_METHOD("StartUnit", "ss", "o", node_method_start_unit, 0),
         SD_BUS_METHOD("StopUnit", "ss", "o", node_method_stop_unit, 0),
+        SD_BUS_METHOD("RestartUnit", "ss", "o", node_method_restart_unit, 0),
+        SD_BUS_METHOD("ReloadUnit", "ss", "o", node_method_reload_unit, 0),
         SD_BUS_PROPERTY("Name", "s", node_property_get_nodename, 0, 0),
         SD_BUS_PROPERTY("Status", "s", node_property_get_status, 0, 0),
         SD_BUS_VTABLE_END
@@ -510,121 +514,91 @@ static JobSetup *job_setup_new(sd_bus_message *request_message, Node *node, cons
         return steal_pointer(&setup);
 }
 
+static int unit_lifecycle_method_callback(AgentRequest *req, sd_bus_message *m, UNUSED sd_bus_error *ret_error) {
+        Node *node = req->node;
+        Manager *manager = node->manager;
+        JobSetup *setup = req->userdata;
+
+        if (sd_bus_message_is_method_error(m, NULL)) {
+                /* Forward error */
+                return sd_bus_reply_method_error(setup->request_message, sd_bus_message_get_error(m));
+        }
+
+        if (!manager_add_job(manager, setup->job)) {
+                return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "Internal error");
+        }
+
+        return sd_bus_reply_method_return(setup->request_message, "o", setup->job->object_path);
+}
+
+static int node_run_unit_lifecycle_method(
+                sd_bus_message *m, Node *node, const char *job_type, const char *method) {
+        _cleanup_agent_request_ AgentRequest *req = NULL;
+        const char *unit = NULL;
+        const char *mode = NULL;
+
+        int r = sd_bus_message_read(m, "ss", &unit, &mode);
+        if (r < 0) {
+                return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_INVALID_ARGS, "Invalid arguments");
+        }
+
+        _cleanup_job_setup_ JobSetup *setup = job_setup_new(m, node, unit, job_type);
+        if (setup == NULL) {
+                return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "Out of memory");
+        }
+
+        req = node_create_request(
+                        node,
+                        method,
+                        unit_lifecycle_method_callback,
+                        job_setup_ref(setup),
+                        (free_func_t) job_setup_unref);
+        if (req == NULL) {
+                return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "Internal error");
+        }
+
+        r = sd_bus_message_append(req->message, "ssu", unit, mode, setup->job->id);
+        if (r < 0) {
+                return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "Internal error");
+        }
+
+        if (!agent_request_start(req)) {
+                return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "Internal error");
+        }
+
+        return 1;
+}
+
+
 /*************************************************************************
  ********** org.containers.hirte.Node.StartUnit **************************
  ************************************************************************/
 
-static int method_start_unit_callback(
-                AgentRequest *req, UNUSED sd_bus_message *m, UNUSED sd_bus_error *ret_error) {
-        Node *node = req->node;
-        Manager *manager = node->manager;
-        JobSetup *setup = req->userdata;
-
-        if (sd_bus_message_is_method_error(m, NULL)) {
-                /* Forward error */
-                return sd_bus_reply_method_error(setup->request_message, sd_bus_message_get_error(m));
-        }
-
-        if (!manager_add_job(manager, setup->job)) {
-                return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "Internal error");
-        }
-
-        return sd_bus_reply_method_return(setup->request_message, "o", setup->job->object_path);
-}
-
 static int node_method_start_unit(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error) {
-        Node *node = userdata;
-        _cleanup_agent_request_ AgentRequest *req = NULL;
-        const char *unit = NULL;
-        const char *mode = NULL;
-
-        int r = sd_bus_message_read(m, "ss", &unit, &mode);
-        if (r < 0) {
-                return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_INVALID_ARGS, "Invalid arguments");
-        }
-
-        _cleanup_job_setup_ JobSetup *setup = job_setup_new(m, node, unit, "Start");
-        if (setup == NULL) {
-                return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "Out of memory");
-        }
-
-        req = node_create_request(
-                        node,
-                        "StartUnit",
-                        method_start_unit_callback,
-                        job_setup_ref(setup),
-                        (free_func_t) job_setup_unref);
-        if (req == NULL) {
-                return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "Internal error");
-        }
-
-        r = sd_bus_message_append(req->message, "ssu", unit, mode, setup->job->id);
-        if (r < 0) {
-                return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "Internal error");
-        }
-
-        if (!agent_request_start(req)) {
-                return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "Internal error");
-        }
-
-        return 1;
+        return node_run_unit_lifecycle_method(m, (Node *) userdata, "Start", "StartUnit");
 }
 
 /*************************************************************************
- ********** org.containers.hirte.Node.StopUnit **************************
+ ********** org.containers.hirte.Node.StopUnit ***************************
  ************************************************************************/
 
-static int method_stop_unit_callback(AgentRequest *req, UNUSED sd_bus_message *m, UNUSED sd_bus_error *ret_error) {
-        Node *node = req->node;
-        Manager *manager = node->manager;
-        JobSetup *setup = req->userdata;
-
-        if (sd_bus_message_is_method_error(m, NULL)) {
-                /* Forward error */
-                return sd_bus_reply_method_error(setup->request_message, sd_bus_message_get_error(m));
-        }
-
-        if (!manager_add_job(manager, setup->job)) {
-                return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "Internal error");
-        }
-
-        return sd_bus_reply_method_return(setup->request_message, "o", setup->job->object_path);
-}
 
 static int node_method_stop_unit(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error) {
-        Node *node = userdata;
-        _cleanup_agent_request_ AgentRequest *req = NULL;
-        const char *unit = NULL;
-        const char *mode = NULL;
+        return node_run_unit_lifecycle_method(m, (Node *) userdata, "Stop", "StopUnit");
+}
 
-        int r = sd_bus_message_read(m, "ss", &unit, &mode);
-        if (r < 0) {
-                return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_INVALID_ARGS, "Invalid arguments");
-        }
+/*************************************************************************
+ ********** org.containers.hirte.Node.RestartUnit ************************
+ ************************************************************************/
 
-        _cleanup_job_setup_ JobSetup *setup = job_setup_new(m, node, unit, "Stop");
-        if (setup == NULL) {
-                return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "Out of memory");
-        }
+static int node_method_restart_unit(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error) {
+        return node_run_unit_lifecycle_method(m, (Node *) userdata, "Restart", "RestartUnit");
+}
 
-        req = node_create_request(
-                        node,
-                        "StopUnit",
-                        method_stop_unit_callback,
-                        job_setup_ref(setup),
-                        (free_func_t) job_setup_unref);
-        if (req == NULL) {
-                return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "Internal error");
-        }
+/*************************************************************************
+ ********** org.containers.hirte.Node.ReloadUnit **************************
+ ************************************************************************/
 
-        r = sd_bus_message_append(req->message, "ssu", unit, mode, setup->job->id);
-        if (r < 0) {
-                return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "Internal error");
-        }
-
-        if (!agent_request_start(req)) {
-                return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "Internal error");
-        }
-
-        return 1;
+static int node_method_reload_unit(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error) {
+        return node_run_unit_lifecycle_method(m, (Node *) userdata, "Reload", "ReloadUnit");
 }
