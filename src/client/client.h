@@ -1,0 +1,53 @@
+#pragma once
+#include "libhirte/bus/utils.h"
+#include "libhirte/common/common.h"
+#include "printer.h"
+#include "types.h"
+
+struct Client {
+        int ref_count;
+
+        char *op;
+        int opargc;
+        char **opargv;
+
+        sd_bus *user_bus;
+        char *object_path;
+
+        Printer printer;
+};
+
+Client *new_client(char *op, int opargc, char **opargv);
+Client *client_ref(Client *client);
+void client_unref(Client *client);
+
+struct UnitList {
+        int ref_count;
+
+        LIST_FIELDS(UnitList, node_units);
+
+        LIST_HEAD(UnitInfo, units);
+};
+
+UnitList *new_unit_list();
+UnitList *unit_list_ref(UnitList *unit_list);
+void unit_list_unref(UnitList *unit_list);
+
+struct NodesUnitList {
+        int ref_count;
+
+        LIST_HEAD(UnitList, nodes_units);
+};
+
+NodesUnitList *new_nodes_unit_list();
+NodesUnitList *nodes_unit_list_ref(NodesUnitList *nodes_unit_list);
+void nodes_unit_list_unref(NodesUnitList *nodes_unit_list);
+
+int client_call_manager(Client *client);
+
+DEFINE_CLEANUP_FUNC(Client, client_unref)
+#define _cleanup_client_ _cleanup_(client_unrefp)
+DEFINE_CLEANUP_FUNC(UnitList, unit_list_unref)
+#define _cleanup_unit_list_ _cleanup_(unit_list_unrefp)
+DEFINE_CLEANUP_FUNC(NodesUnitList, nodes_unit_list_unref)
+#define _cleanup_nodes_unit_list_ _cleanup_(nodes_unit_list_unrefp)

@@ -359,7 +359,7 @@ static void list_unit_request_freep(ListUnitsRequest **reqp) {
 
 
 static int manager_method_list_units_encode_reply(ListUnitsRequest *req, sd_bus_message *reply) {
-        int r = sd_bus_message_open_container(reply, SD_BUS_TYPE_ARRAY, "(sssssssouso)");
+        int r = sd_bus_message_open_container(reply, SD_BUS_TYPE_ARRAY, UNIT_INFO_STRUCT_TYPESTRING);
         if (r < 0) {
                 return r;
         }
@@ -371,17 +371,17 @@ static int manager_method_list_units_encode_reply(ListUnitsRequest *req, sd_bus_
                         continue;
                 }
 
-                r = sd_bus_message_enter_container(m, SD_BUS_TYPE_ARRAY, "(ssssssouso)");
+                r = sd_bus_message_enter_container(m, SD_BUS_TYPE_ARRAY, UNIT_INFO_STRUCT_TYPESTRING);
                 if (r < 0) {
                         return r;
                 }
 
                 while (sd_bus_message_at_end(m, false) == 0) {
-                        r = sd_bus_message_open_container(reply, SD_BUS_TYPE_STRUCT, "sssssssouso");
+                        r = sd_bus_message_open_container(reply, SD_BUS_TYPE_STRUCT, UNIT_INFO_TYPESTRING);
                         if (r < 0) {
                                 return r;
                         }
-                        r = sd_bus_message_enter_container(m, SD_BUS_TYPE_STRUCT, "ssssssouso");
+                        r = sd_bus_message_enter_container(m, SD_BUS_TYPE_STRUCT, UNIT_INFO_TYPESTRING);
                         if (r < 0) {
                                 return r;
                         }
@@ -500,7 +500,7 @@ static int manager_method_list_units(sd_bus_message *m, void *userdata, UNUSED s
 static const sd_bus_vtable manager_vtable[] = {
         SD_BUS_VTABLE_START(0),
         SD_BUS_METHOD("Ping", "s", "s", manager_method_ping, 0),
-        SD_BUS_METHOD("ListUnits", "", "a(sssssssouso)", manager_method_list_units, 0),
+        SD_BUS_METHOD("ListUnits", "", UNIT_INFO_STRUCT_ARRAY_TYPESTRING, manager_method_list_units, 0),
         SD_BUS_SIGNAL_WITH_NAMES("JobNew", "uo", SD_BUS_PARAM(id) SD_BUS_PARAM(job), 0),
         SD_BUS_SIGNAL_WITH_NAMES(
                         "JobRemoved",

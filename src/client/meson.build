@@ -1,7 +1,9 @@
 # client build configuration
 
 client_src = [
-  'client.c'
+  'main.c',
+  'client.c',
+  'printer.c'
 ]
 
 executable(
@@ -14,5 +16,6 @@ executable(
     hirte_lib,
   ],
   c_args: common_cflags,
-  install: true
+  install: true,
+  include_directories: include_directories('..')
 )

@@ -19,8 +19,11 @@ Checks: >
     -bugprone-assignment-in-if-condition,
     -clang-analyzer-unix.Malloc,
     -cppcoreguidelines-interfaces-global-init,
+    -cppcoreguidelines-avoid-non-const-global-variables,
     -readability-function-cognitive-complexity,
-    -modernize-macro-to-enum
+    -modernize-macro-to-enum,
+    -llvm-else-after-return,
+    -readability-else-after-return
 
 CheckOptions:
     - key: readability-function-cognitive-complexity.Threshold

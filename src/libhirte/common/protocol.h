@@ -39,6 +39,12 @@
 #define USEC_PER_SEC 1000000
 #define HIRTE_DEFAULT_DBUS_TIMEOUT ((uint64_t) (USEC_PER_SEC * 30))
 
+/* Typestrings */
+
+#define UNIT_INFO_TYPESTRING "ssssssouso"
+#define UNIT_INFO_STRUCT_TYPESTRING "(" UNIT_INFO_TYPESTRING ")"
+#define UNIT_INFO_STRUCT_ARRAY_TYPESTRING "a" UNIT_INFO_STRUCT_TYPESTRING
+
 typedef enum JobState {
         JOB_WAITING,
         JOB_RUNNING,
