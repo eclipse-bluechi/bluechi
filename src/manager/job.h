@@ -26,6 +26,8 @@ Job *job_new(Node *node, const char *unit, const char *type);
 Job *job_ref(Job *job);
 void job_unref(Job *job);
 
+void job_set_state(Job *job, JobState state);
+
 bool job_export(Job *job);
 
 DEFINE_CLEANUP_FUNC(Job, job_unref)

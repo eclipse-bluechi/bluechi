@@ -160,6 +160,18 @@ void manager_remove_job(Manager *manager, Job *job, const char *result) {
         job_unref(job);
 }
 
+void manager_job_state_changed(Manager *manager, uint32_t job_id, const char *state) {
+        JobState new_state = job_state_from_string(state);
+        Job *job = NULL;
+        LIST_FOREACH(jobs, job, manager->jobs) {
+                if (job->id == job_id) {
+                        job_set_state(job, new_state);
+                        break;
+                }
+        }
+}
+
+
 void manager_finish_job(Manager *manager, uint32_t job_id, const char *result) {
         Job *job = NULL;
         LIST_FOREACH(jobs, job, manager->jobs) {

@@ -137,6 +137,23 @@ bool node_has_agent(Node *node) {
         return node->agent_bus != NULL;
 }
 
+static int node_match_job_state_changed(
+                UNUSED sd_bus_message *m, UNUSED void *userdata, UNUSED sd_bus_error *error) {
+        Node *node = userdata;
+        Manager *manager = node->manager;
+        uint32_t hirte_job_id = 0;
+        const char *state = NULL;
+
+        int r = sd_bus_message_read(m, "us", &hirte_job_id, &state);
+        if (r < 0) {
+                fprintf(stderr, "Invalid JobStateChange signal\n");
+                return 0;
+        }
+
+        manager_job_state_changed(manager, hirte_job_id, state);
+        return 1;
+}
+
 static int node_match_job_done(UNUSED sd_bus_message *m, UNUSED void *userdata, UNUSED sd_bus_error *error) {
         Node *node = userdata;
         Manager *manager = node->manager;
@@ -189,7 +206,21 @@ bool node_set_agent_bus(Node *node, sd_bus *bus) {
                                 node_match_job_done,
                                 node);
                 if (r < 0) {
-                        fprintf(stderr, "Failed to add job-removed peer bus match: %s\n", strerror(-r));
+                        fprintf(stderr, "Failed to add JobDone peer bus match: %s\n", strerror(-r));
+                        return false;
+                }
+
+                r = sd_bus_match_signal(
+                                bus,
+                                NULL,
+                                NULL,
+                                INTERNAL_AGENT_OBJECT_PATH,
+                                INTERNAL_AGENT_INTERFACE,
+                                "JobStateChanged",
+                                node_match_job_state_changed,
+                                node);
+                if (r < 0) {
+                        fprintf(stderr, "Failed to add JobStateChanged peer bus match: %s\n", strerror(-r));
                         return false;
                 }
 

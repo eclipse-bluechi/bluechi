@@ -29,7 +29,7 @@ static const sd_bus_vtable job_vtable[] = {
         SD_BUS_PROPERTY("Node", "s", job_property_get_nodename, 0, SD_BUS_VTABLE_PROPERTY_CONST),
         SD_BUS_PROPERTY("Unit", "s", NULL, offsetof(Job, unit), SD_BUS_VTABLE_PROPERTY_CONST),
         SD_BUS_PROPERTY("JobType", "s", NULL, offsetof(Job, type), SD_BUS_VTABLE_PROPERTY_CONST),
-        SD_BUS_PROPERTY("State", "s", job_property_get_state, 0, 0),
+        SD_BUS_PROPERTY("State", "s", job_property_get_state, 0, SD_BUS_VTABLE_PROPERTY_EMITS_CHANGE),
         SD_BUS_VTABLE_END
 };
 
@@ -98,6 +98,18 @@ bool job_export(Job *job) {
         return true;
 }
 
+void job_set_state(Job *job, JobState state) {
+        Node *node = job->node;
+        Manager *manager = node->manager;
+
+        job->state = state;
+
+        int r = sd_bus_emit_properties_changed(
+                        manager->user_dbus, job->object_path, JOB_INTERFACE, "State", NULL);
+        if (r < 0) {
+                fprintf(stderr, "Failed to emit status property changed: %s\n", strerror(-r));
+        }
+}
 
 static int job_property_get_nodename(
                 UNUSED sd_bus *bus,
