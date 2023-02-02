@@ -239,10 +239,10 @@ This is the main interface that the node implements and that is used
 by the manager to affect change on the node.
 
  * Methods:
-   * StartUnit(in s name, out o job)
-   * StopUnit(in s name, out o job)
-   * ReloadUnit(in s name, out o job)
-   * RestartUnit(in s name, out o job)
+   * StartUnit(in s name, in s mode, in u id)
+   * StopUnit(in s name, in s mode, in u id)
+   * ReloadUnit(in s name, in s mode, in u id)
+   * RestartUnit(in s name, in s mode, in u id)
    * KillUnit(in s name, in s who, in i signal)
    * GetUnitProperties(in name, out a{sv} props);
    * ListUnits(out a(ssssssouso) units);
@@ -273,15 +273,8 @@ by the manager to affect change on the node.
      none left, call Unsubscribe() in the systemd API.
 
 * Signals:
-  * JobNew(u id,
-           o job,
-           s nodeName,
-           s unit)
-  * JobRemoved(u id,
-               o job,
-               s nodeName,
-               s unit,
-               s result)
+   * JobDone(u id,
+             s result)
 
      Mirrors of the job signals in the manager and used to
      forward state changes from systemd to the manager.

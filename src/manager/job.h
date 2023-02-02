@@ -25,9 +25,8 @@ struct Job {
 Job *job_new(Node *node, const char *unit, const char *type);
 Job *job_ref(Job *job);
 void job_unref(Job *job);
-void job_unrefp(Job **jobp);
 
 bool job_export(Job *job);
 
+DEFINE_CLEANUP_FUNC(Job, job_unref)
 #define _cleanup_job_ _cleanup_(job_unrefp)
-#define _cleanup_agent_request_ _cleanup_(agent_request_unrefp)

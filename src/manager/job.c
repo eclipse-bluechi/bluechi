@@ -1,9 +1,35 @@
+#include <stddef.h>
+
 #include "job.h"
 #include "manager.h"
 #include "node.h"
 
-static const sd_bus_vtable job_vtable[] = { SD_BUS_VTABLE_START(0), SD_BUS_VTABLE_END };
+static int job_property_get_nodename(
+                sd_bus *bus,
+                const char *path,
+                const char *interface,
+                const char *property,
+                sd_bus_message *reply,
+                void *userdata,
+                sd_bus_error *ret_error);
+static int job_property_get_state(
+                sd_bus *bus,
+                const char *path,
+                const char *interface,
+                const char *property,
+                sd_bus_message *reply,
+                void *userdata,
+                sd_bus_error *ret_error);
+static int job_method_cancel(sd_bus_message *m, void *userdata, sd_bus_error *ret_error);
 
+static const sd_bus_vtable job_vtable[] = { SD_BUS_VTABLE_START(0),
+                                            SD_BUS_METHOD("Cancel", "", "", job_method_cancel, 0),
+                                            SD_BUS_PROPERTY("Id", "u", NULL, offsetof(Job, id), 0),
+                                            SD_BUS_PROPERTY("Node", "s", job_property_get_nodename, 0, 0),
+                                            SD_BUS_PROPERTY("Unit", "s", NULL, offsetof(Job, unit), 0),
+                                            SD_BUS_PROPERTY("JobType", "s", NULL, offsetof(Job, type), 0),
+                                            SD_BUS_PROPERTY("State", "s", job_property_get_state, 0, 0),
+                                            SD_BUS_VTABLE_END };
 
 Job *job_new(Node *node, const char *unit, const char *type) {
         static uint32_t next_id = 0;
@@ -48,21 +74,12 @@ void job_unref(Job *job) {
                 return;
         }
 
-        if (job->export_slot) {
-                sd_bus_slot_unref(job->export_slot);
-        }
+        sd_bus_slot_unrefp(&job->export_slot);
 
         free(job->object_path);
         free(job->unit);
         free(job->type);
         free(job);
-}
-
-void job_unrefp(Job **jobp) {
-        if (jobp && *jobp) {
-                job_unref(*jobp);
-                *jobp = NULL;
-        }
 }
 
 bool job_export(Job *job) {
@@ -77,4 +94,37 @@ bool job_export(Job *job) {
         }
 
         return true;
+}
+
+
+static int job_property_get_nodename(
+                UNUSED sd_bus *bus,
+                UNUSED const char *path,
+                UNUSED const char *interface,
+                UNUSED const char *property,
+                sd_bus_message *reply,
+                void *userdata,
+                UNUSED sd_bus_error *ret_error) {
+        Job *job = userdata;
+        Node *node = job->node;
+
+        return sd_bus_message_append(reply, "s", node->name);
+}
+
+static int job_property_get_state(
+                UNUSED sd_bus *bus,
+                UNUSED const char *path,
+                UNUSED const char *interface,
+                UNUSED const char *property,
+                sd_bus_message *reply,
+                void *userdata,
+                UNUSED sd_bus_error *ret_error) {
+        Job *job = userdata;
+
+        return sd_bus_message_append(reply, "s", job_state_to_string(job->state));
+}
+
+static int job_method_cancel(UNUSED sd_bus_message *m, UNUSED void *userdata, UNUSED sd_bus_error *ret_error) {
+        /* TODO: Implement */
+        return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "Not implemented yet");
 }

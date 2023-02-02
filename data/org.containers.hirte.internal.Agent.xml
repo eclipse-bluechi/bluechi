@@ -3,19 +3,23 @@
   <interface name="org.containers.hirte.internal.Agent">
     <method name="StartUnit">
       <arg name="name" type="s" direction="in" />
-      <arg name="job" type="o" direction="out" />
+      <arg name="mode" type="s" direction="in" />
+      <arg name="jobid" type="u" direction="in" />
     </method>
     <method name="StopUnit">
       <arg name="name" type="s" direction="in" />
-      <arg name="job" type="o" direction="out" />
+      <arg name="mode" type="s" direction="in" />
+      <arg name="jobid" type="u" direction="in" />
     </method>
     <method name="ReloadUnit">
       <arg name="name" type="s" direction="in" />
-      <arg name="job" type="o" direction="out" />
+      <arg name="mode" type="s" direction="in" />
+      <arg name="jobid" type="u" direction="in" />
     </method>
     <method name="RestartUnit">
       <arg name="name" type="s" direction="in" />
-      <arg name="job" type="o" direction="out" />
+      <arg name="mode" type="s" direction="in" />
+      <arg name="jobid" type="u" direction="in" />
     </method>
     <method name="KillUnit">
       <arg name="name" type="s" direction="in" />
@@ -36,17 +40,8 @@
       <arg name="unit" type="s" direction="in" />
     </method>
 
-    <signal name="JobNew">
+    <signal name="JobDone">
       <arg name="id" type="u" />
-      <arg name="job" type="o" />
-      <arg name="nodeName" type="s" />
-      <arg name="unit" type="s" />
-    </signal>
-    <signal name="JobRemoved">
-      <arg name="id" type="u" />
-      <arg name="job" type="o" />
-      <arg name="nodeName" type="s" />
-      <arg name="unit" type="s" />
       <arg name="result" type="s" />
     </signal>
     <signal name="UnitPropertiesChanged">

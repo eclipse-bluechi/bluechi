@@ -3,7 +3,7 @@
   <interface name="org.containers.hirte.Job">
     <method name="Cancel" />
 
-    <property name="Id" type="s" access="read" />
+    <property name="Id" type="u" access="read" />
     <property name="Node" type="s" access="read" />
     <property name="Unit" type="s" access="read" />
     <property name="JobType" type="s" access="read" />

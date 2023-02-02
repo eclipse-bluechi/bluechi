@@ -23,8 +23,6 @@ struct AgentRequest {
 
 AgentRequest *agent_request_ref(AgentRequest *req);
 void agent_request_unref(AgentRequest *req);
-void agent_request_unrefp(AgentRequest **req);
-
 
 struct Node {
         int ref_count;
@@ -51,7 +49,6 @@ struct Node {
 Node *node_new(Manager *manager, const char *name);
 Node *node_ref(Node *node);
 void node_unref(Node *node);
-void node_unrefp(Node **nodep);
 
 bool node_export(Node *node);
 bool node_has_agent(Node *node);
@@ -61,5 +58,7 @@ void node_unset_agent_bus(Node *node);
 AgentRequest *node_request_list_units(
                 Node *node, agent_request_response_t cb, void *userdata, free_func_t free_userdata);
 
+DEFINE_CLEANUP_FUNC(Node, node_unref)
 #define _cleanup_node_ _cleanup_(node_unrefp)
+DEFINE_CLEANUP_FUNC(AgentRequest, agent_request_unref)
 #define _cleanup_agent_request_ _cleanup_(agent_request_unrefp)
