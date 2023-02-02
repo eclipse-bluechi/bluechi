@@ -494,7 +494,6 @@ static int node_method_start_unit(sd_bus_message *m, void *userdata, UNUSED sd_b
                 return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "Out of memory");
         }
 
-        /* TODO: Handle mode, queueing job as needed */
         req = node_create_request(
                         node,
                         "StartUnit",
@@ -551,7 +550,6 @@ static int node_method_stop_unit(sd_bus_message *m, void *userdata, UNUSED sd_bu
                 return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "Out of memory");
         }
 
-        /* TODO: Handle mode, queueing job as needed */
         req = node_create_request(
                         node,
                         "StopUnit",
