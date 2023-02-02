@@ -39,7 +39,7 @@ static const sd_bus_vtable node_vtable[] = {
         SD_BUS_METHOD("StopUnit", "ss", "o", node_method_stop_unit, 0),
         SD_BUS_METHOD("RestartUnit", "ss", "o", node_method_restart_unit, 0),
         SD_BUS_METHOD("ReloadUnit", "ss", "o", node_method_reload_unit, 0),
-        SD_BUS_PROPERTY("Name", "s", node_property_get_nodename, 0, 0),
+        SD_BUS_PROPERTY("Name", "s", node_property_get_nodename, 0, SD_BUS_VTABLE_PROPERTY_CONST),
         SD_BUS_PROPERTY("Status", "s", node_property_get_status, 0, SD_BUS_VTABLE_PROPERTY_EMITS_CHANGE),
         SD_BUS_VTABLE_END
 };

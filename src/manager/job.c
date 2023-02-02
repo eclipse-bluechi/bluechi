@@ -22,14 +22,16 @@ static int job_property_get_state(
                 sd_bus_error *ret_error);
 static int job_method_cancel(sd_bus_message *m, void *userdata, sd_bus_error *ret_error);
 
-static const sd_bus_vtable job_vtable[] = { SD_BUS_VTABLE_START(0),
-                                            SD_BUS_METHOD("Cancel", "", "", job_method_cancel, 0),
-                                            SD_BUS_PROPERTY("Id", "u", NULL, offsetof(Job, id), 0),
-                                            SD_BUS_PROPERTY("Node", "s", job_property_get_nodename, 0, 0),
-                                            SD_BUS_PROPERTY("Unit", "s", NULL, offsetof(Job, unit), 0),
-                                            SD_BUS_PROPERTY("JobType", "s", NULL, offsetof(Job, type), 0),
-                                            SD_BUS_PROPERTY("State", "s", job_property_get_state, 0, 0),
-                                            SD_BUS_VTABLE_END };
+static const sd_bus_vtable job_vtable[] = {
+        SD_BUS_VTABLE_START(0),
+        SD_BUS_METHOD("Cancel", "", "", job_method_cancel, 0),
+        SD_BUS_PROPERTY("Id", "u", NULL, offsetof(Job, id), SD_BUS_VTABLE_PROPERTY_CONST),
+        SD_BUS_PROPERTY("Node", "s", job_property_get_nodename, 0, SD_BUS_VTABLE_PROPERTY_CONST),
+        SD_BUS_PROPERTY("Unit", "s", NULL, offsetof(Job, unit), SD_BUS_VTABLE_PROPERTY_CONST),
+        SD_BUS_PROPERTY("JobType", "s", NULL, offsetof(Job, type), SD_BUS_VTABLE_PROPERTY_CONST),
+        SD_BUS_PROPERTY("State", "s", job_property_get_state, 0, 0),
+        SD_BUS_VTABLE_END
+};
 
 Job *job_new(Node *node, const char *unit, const char *type) {
         static uint32_t next_id = 0;
