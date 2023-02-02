@@ -7,6 +7,8 @@ libhirte_src = [
     'bus/user-bus.h',
     'bus/system-bus.c',
     'bus/system-bus.h',
+    'bus/utils.c',
+    'bus/utils.h',
     'common/common.h',
     'common/protocol.c',
     'common/list.h',
