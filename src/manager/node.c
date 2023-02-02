@@ -558,7 +558,10 @@ static int node_method_start_unit(sd_bus_message *m, void *userdata, UNUSED sd_b
                 return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "Internal error");
         }
 
-        sd_bus_message_append(req->message, "ssu", unit, mode, setup->job->id);
+        r = sd_bus_message_append(req->message, "ssu", unit, mode, setup->job->id);
+        if (r < 0) {
+                return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "Internal error");
+        }
 
         if (!agent_request_start(req)) {
                 return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "Internal error");
@@ -614,7 +617,10 @@ static int node_method_stop_unit(sd_bus_message *m, void *userdata, UNUSED sd_bu
                 return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "Internal error");
         }
 
-        sd_bus_message_append(req->message, "ssu", unit, mode, setup->job->id);
+        r = sd_bus_message_append(req->message, "ssu", unit, mode, setup->job->id);
+        if (r < 0) {
+                return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "Internal error");
+        }
 
         if (!agent_request_start(req)) {
                 return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "Internal error");
