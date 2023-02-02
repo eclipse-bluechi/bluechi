@@ -289,17 +289,52 @@ static int agent_method_list_units(UNUSED sd_bus_message *m, void *userdata, UNU
         return 1;
 }
 
+/* Keep track of outstanding systemd job and connect it back to
+   the originating hirte job id so we can proxy changes to it. */
 typedef struct {
+        int ref_count;
+
         Agent *agent;
         uint32_t hirte_job_id;
-} StartUnitOp;
+} AgentJobOp;
 
-static void start_unit_op_free(StartUnitOp *op) {
+#define _cleanup_agent_job_op_ _cleanup_(agent_job_op_unrefp)
+
+static AgentJobOp *agent_job_op_ref(AgentJobOp *op) {
+        op->ref_count++;
+        return op;
+}
+
+static void agent_job_op_unref(AgentJobOp *op) {
+        op->ref_count--;
+        if (op->ref_count != 0) {
+                return;
+        }
+
+        agent_unref(op->agent);
         free(op);
 }
 
-static void start_unit_job_done(UNUSED sd_bus_message *m, const char *result, void *userdata) {
-        StartUnitOp *op = userdata;
+static void agent_job_op_unrefp(AgentJobOp **opp) {
+        if (opp && *opp) {
+                agent_job_op_unref(*opp);
+                *opp = NULL;
+        }
+}
+
+static AgentJobOp *agent_job_new(Agent *agent, uint32_t hirte_job_id) {
+        AgentJobOp *op = malloc0(sizeof(AgentJobOp));
+        if (op) {
+                op->ref_count = 1;
+                op->agent = agent_ref(agent);
+                op->hirte_job_id = hirte_job_id;
+        }
+        return op;
+}
+
+
+static void agent_job_done(UNUSED sd_bus_message *m, const char *result, void *userdata) {
+        AgentJobOp *op = userdata;
         Agent *agent = op->agent;
 
         int r = sd_bus_emit_signal(
@@ -314,6 +349,11 @@ static void start_unit_job_done(UNUSED sd_bus_message *m, const char *result, vo
                 fprintf(stderr, "Failed to emit JobDone\n");
         }
 }
+
+
+/*************************************************************************
+ ********** org.containers.hirte.internal.Agent.StartUnit ****************
+ ************************************************************************/
 
 static int start_unit_callback(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error) {
         _cleanup_systemd_request_ SystemdRequest *req = userdata;
@@ -330,9 +370,14 @@ static int start_unit_callback(sd_bus_message *m, void *userdata, UNUSED sd_bus_
                 return sd_bus_reply_method_errorf(req->request_message, SD_BUS_ERROR_FAILED, "Internal Error");
         }
 
-        StartUnitOp *op = steal_pointer(&req->userdata);
-        if (!agent_track_job(agent, job_object_path, start_unit_job_done, op, (free_func_t) start_unit_op_free)) {
-                start_unit_op_free(op);
+        AgentJobOp *op = req->userdata;
+
+        if (!agent_track_job(
+                            agent,
+                            job_object_path,
+                            agent_job_done,
+                            agent_job_op_ref(op),
+                            (free_func_t) agent_job_op_unref)) {
                 return sd_bus_reply_method_errorf(req->request_message, SD_BUS_ERROR_FAILED, "Internal Error");
         }
 
@@ -356,13 +401,11 @@ static int agent_method_start_unit(UNUSED sd_bus_message *m, void *userdata, UNU
                 return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "Internal error");
         }
 
-        StartUnitOp *op = malloc0(sizeof(StartUnitOp));
+        _cleanup_agent_job_op_ AgentJobOp *op = agent_job_new(agent, job_id);
         if (op == NULL) {
                 return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "Internal error");
         }
-        op->agent = agent;
-        op->hirte_job_id = job_id;
-        systemd_request_set_userdata(req, op, (free_func_t) start_unit_op_free);
+        systemd_request_set_userdata(req, agent_job_op_ref(op), (free_func_t) agent_job_op_unref);
 
         r = sd_bus_message_append(req->message, "ss", name, mode);
         if (r < 0) {
