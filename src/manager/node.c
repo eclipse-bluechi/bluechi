@@ -9,6 +9,22 @@ static int node_disconnected(sd_bus_message *message, void *userdata, sd_bus_err
 static int node_method_list_units(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error);
 static int node_method_start_unit(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error);
 static int node_method_stop_unit(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error);
+static int node_property_get_nodename(
+                sd_bus *bus,
+                const char *path,
+                const char *interface,
+                const char *property,
+                sd_bus_message *reply,
+                void *userdata,
+                sd_bus_error *ret_error);
+static int node_property_get_status(
+                sd_bus *bus,
+                const char *path,
+                const char *interface,
+                const char *property,
+                sd_bus_message *reply,
+                void *userdata,
+                sd_bus_error *ret_error);
 
 static const sd_bus_vtable internal_manager_orchestrator_vtable[] = {
         SD_BUS_VTABLE_START(0), SD_BUS_METHOD("Register", "s", "", node_method_register, 0), SD_BUS_VTABLE_END
@@ -19,6 +35,8 @@ static const sd_bus_vtable node_vtable[] = {
         SD_BUS_METHOD("ListUnits", "", "a(ssssssouso)", node_method_list_units, 0),
         SD_BUS_METHOD("StartUnit", "ss", "o", node_method_start_unit, 0),
         SD_BUS_METHOD("StopUnit", "ss", "o", node_method_stop_unit, 0),
+        SD_BUS_PROPERTY("Name", "s", node_property_get_nodename, 0, 0),
+        SD_BUS_PROPERTY("Status", "s", node_property_get_status, 0, 0),
         SD_BUS_VTABLE_END
 };
 
@@ -275,6 +293,38 @@ static int node_disconnected(UNUSED sd_bus_message *message, void *userdata, UNU
         return 0;
 }
 
+static int node_property_get_nodename(
+                UNUSED sd_bus *bus,
+                UNUSED const char *path,
+                UNUSED const char *interface,
+                UNUSED const char *property,
+                sd_bus_message *reply,
+                void *userdata,
+                UNUSED sd_bus_error *ret_error) {
+        Node *node = userdata;
+
+        return sd_bus_message_append(reply, "s", node->name);
+}
+
+static int node_property_get_status(
+                UNUSED sd_bus *bus,
+                UNUSED const char *path,
+                UNUSED const char *interface,
+                UNUSED const char *property,
+                sd_bus_message *reply,
+                void *userdata,
+                UNUSED sd_bus_error *ret_error) {
+        Node *node = userdata;
+        const char *status = NULL;
+
+        if (node_has_agent(node)) {
+                status = "online";
+        } else {
+                status = "offline";
+        }
+
+        return sd_bus_message_append(reply, "s", status);
+}
 
 AgentRequest *agent_request_ref(AgentRequest *req) {
         req->ref_count++;
