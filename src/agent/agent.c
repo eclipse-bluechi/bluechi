@@ -12,6 +12,9 @@
 
 #include "agent.h"
 
+#define DEBUG_SYSTEMD_MESSAGES 0
+#define DEBUG_SYSTEMD_MESSAGES_CONTENT 0
+
 struct JobTracker {
         char *job_object_path;
         job_tracker_callback callback;
@@ -509,6 +512,20 @@ static int agent_match_job_removed(sd_bus_message *m, void *userdata, UNUSED sd_
         return 0;
 }
 
+static int debug_systemd_message_handler(
+                sd_bus_message *m, UNUSED void *userdata, UNUSED sd_bus_error *ret_error) {
+        fprintf(stderr,
+                "Incomming message from systemd: path: %s, iface: %s, member: %s, signature: '%s'\n",
+                sd_bus_message_get_path(m),
+                sd_bus_message_get_interface(m),
+                sd_bus_message_get_member(m),
+                sd_bus_message_get_signature(m, true));
+        if (DEBUG_SYSTEMD_MESSAGES_CONTENT) {
+                sd_bus_message_dump(m, stderr, 0);
+                sd_bus_message_rewind(m, true);
+        }
+        return 0;
+}
 
 bool agent_start(Agent *agent) {
         struct sockaddr_in host;
@@ -577,6 +594,10 @@ bool agent_start(Agent *agent) {
         if (r < 0) {
                 fprintf(stderr, "Failed to add job-removed peer bus match: %s\n", strerror(-r));
                 return false;
+        }
+
+        if (DEBUG_SYSTEMD_MESSAGES) {
+                sd_bus_add_filter(agent->systemd_dbus, NULL, debug_systemd_message_handler, agent);
         }
 
         agent->peer_dbus = peer_bus_open(agent->event, "peer-bus-to-orchestrator", agent->orch_addr);
