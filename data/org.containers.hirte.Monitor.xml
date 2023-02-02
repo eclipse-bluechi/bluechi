@@ -1,0 +1,20 @@
+<!DOCTYPE node PUBLIC "-//freedesktop//DTD D-BUS Object Introspection 1.0//EN" "http://www.freedesktop.org/standards/dbus/1.0/introspect.dtd">
+<node>
+  <interface name="org.freedesktop.systemd1.Manager">
+    <method name="Close" />
+    <method name="Subscribe">
+      <arg name="node" type="s" direction="in" />
+      <arg name="unit" type="s" direction="in" />
+    </method>
+    <method name="Unsubscribe">
+      <arg name="node" type="s" direction="in" />
+      <arg name="unit" type="s" direction="in" />
+    </method>
+
+    <signal name="UnitPropertiesChanged">
+      <arg name="node" type="s" />
+      <arg name="unit" type="s" />
+      <arg name="props" type="a{sv}" />
+    </signal>
+  </interface>
+</node>

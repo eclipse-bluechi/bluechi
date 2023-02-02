@@ -1,9 +1,9 @@
-# Hierte interfaces
+# Hirte interfaces
 
 Hirte is a tool that allows you to manage a multitude of systems, each
 running systemd, in a single place.
 
-The main service in hierte is called the manager. It runs on some
+The main service in hirte is called the manager. It runs on some
 kind of linux system, that linux system itself may be connected to
 hirte itself, but that is not strictly necessary.
 
@@ -292,8 +292,8 @@ by the manager to affect change on the node.
      only. The same set of properties described there is supported
      here.
 
-  * ProxyNew(s node_name,
-             s unit_name,
+  * ProxyNew(s nodeName,
+             s unitName,
              o proxy)
 
     Whenever a proxy service is running on the system with the node it
@@ -305,8 +305,8 @@ by the manager to affect change on the node.
     started, or when the start fails, the manager will call the
     Ready() method on it.
 
-  * ProxyRemoved(s node_name,
-                 s unit_name,
+  * ProxyRemoved(s nodeName,
+                 s unitName,
                  o proxy)
 
     This is emitted when a proxy is not needed anymore because the

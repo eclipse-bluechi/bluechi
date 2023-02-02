@@ -1,0 +1,27 @@
+<!DOCTYPE node PUBLIC "-//freedesktop//DTD D-BUS Object Introspection 1.0//EN" "http://www.freedesktop.org/standards/dbus/1.0/introspect.dtd">
+<node>
+  <interface name="org.containers.hirte.Manager">
+    <method name="ListUnits">
+      <arg name="units" type="a(ssssssouso)" direction="out" />
+    </method>
+    <method name="CreateMonitor">
+      <arg name="monitor" type="o" direction="out" />
+    </method>
+
+    <signal name="JobNew">
+      <arg name="id" type="u" />
+      <arg name="job" type="o" />
+      <arg name="nodeName" type="s" />
+      <arg name="unit" type="s" />
+    </signal>
+    <signal name="JobRemoved">
+      <arg name="id" type="u" />
+      <arg name="job" type="o" />
+      <arg name="nodeName" type="s" />
+      <arg name="unit" type="s" />
+      <arg name="result" type="s" />
+    </signal>
+
+    <property name="Nodes" type="as" access="read" />
+  </interface>
+</node>
