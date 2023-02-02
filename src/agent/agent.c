@@ -582,6 +582,21 @@ bool agent_start(Agent *agent) {
                 return false;
         }
 
+        r = sd_bus_call_method(
+                        agent->systemd_dbus,
+                        SYSTEMD_BUS_NAME,
+                        SYSTEMD_OBJECT_PATH,
+                        SYSTEMD_MANAGER_IFACE,
+                        "Subscribe",
+                        &error,
+                        &m,
+                        "");
+        if (r < 0) {
+                fprintf(stderr, "Failed to issue subscribe call: %s\n", error.message);
+                sd_bus_error_free(&error);
+                return false;
+        }
+
         r = sd_bus_match_signal(
                         agent->systemd_dbus,
                         NULL,
