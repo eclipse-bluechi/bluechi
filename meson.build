@@ -29,3 +29,6 @@ subdir('src/libhirte')
 subdir('src/manager')
 subdir('src/agent')
 subdir('src/client')
+
+# Subdirectory for the API description
+subdir('data')
