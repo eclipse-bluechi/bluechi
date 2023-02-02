@@ -47,9 +47,7 @@ void job_unref(Job *job) {
                 return;
         }
 
-        if (job->export_slot) {
-                sd_bus_slot_unref(job->export_slot);
-        }
+        sd_bus_slot_unrefp(&job->export_slot);
 
         free(job->object_path);
         free(job->unit);

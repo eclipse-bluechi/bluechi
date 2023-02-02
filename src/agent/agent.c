@@ -44,15 +44,9 @@ void systemd_request_unref(SystemdRequest *req) {
                 req->free_userdata(req->userdata);
         }
 
-        if (req->request_message) {
-                sd_bus_message_unref(req->request_message);
-        }
-        if (req->slot) {
-                sd_bus_slot_unref(req->slot);
-        }
-        if (req->message) {
-                sd_bus_message_unref(req->message);
-        }
+        sd_bus_message_unrefp(&req->request_message);
+        sd_bus_slot_unrefp(&req->slot);
+        sd_bus_message_unrefp(&req->message);
 
         LIST_REMOVE(outstanding_requests, agent->outstanding_requests, req);
         agent_unref(req->agent);

@@ -56,27 +56,15 @@ void manager_unref(Manager *manager) {
                 return;
         }
 
-        if (manager->event != NULL) {
-                sd_event_unrefp(&manager->event);
-        }
+        sd_event_unrefp(&manager->event);
 
         free(manager->user_bus_service_name);
 
-        if (manager->node_connection_source != NULL) {
-                sd_event_source_unrefp(&manager->node_connection_source);
-        }
+        sd_event_source_unrefp(&manager->node_connection_source);
 
-        if (manager->filter_slot) {
-                sd_bus_slot_unref(manager->filter_slot);
-        }
-
-        if (manager->manager_slot != NULL) {
-                sd_bus_slot_unref(manager->manager_slot);
-        }
-
-        if (manager->user_dbus != NULL) {
-                sd_bus_unrefp(&manager->user_dbus);
-        }
+        sd_bus_slot_unrefp(&manager->filter_slot);
+        sd_bus_slot_unrefp(&manager->manager_slot);
+        sd_bus_unrefp(&manager->user_dbus);
 
         Node *node = NULL;
         LIST_FOREACH(nodes, node, manager->nodes) {
@@ -340,15 +328,9 @@ static void list_unit_request_free(ListUnitsRequest *req) {
         sd_bus_message_unref(req->request_message);
 
         for (int i = 0; i < req->n_sub_req; i++) {
-                if (req->sub_req[i].node) {
-                        node_unref(req->sub_req[i].node);
-                }
-                if (req->sub_req[i].m) {
-                        sd_bus_message_unref(req->sub_req[i].m);
-                }
-                if (req->sub_req[i].agent_req) {
-                        agent_request_unref(req->sub_req[i].agent_req);
-                }
+                node_unrefp(&req->sub_req[i].node);
+                sd_bus_message_unrefp(&req->sub_req[i].m);
+                agent_request_unrefp(&req->sub_req[i].agent_req);
         }
 
         free(req);

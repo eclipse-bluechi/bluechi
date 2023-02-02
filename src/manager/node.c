@@ -58,9 +58,7 @@ void node_unref(Node *node) {
         if (node->ref_count != 0) {
                 return;
         }
-        if (node->export_slot) {
-                sd_bus_slot_unref(node->export_slot);
-        }
+        sd_bus_slot_unrefp(&node->export_slot);
 
         node_unset_agent_bus(node);
 
@@ -198,20 +196,14 @@ bool node_set_agent_bus(Node *node, sd_bus *bus) {
 }
 
 void node_unset_agent_bus(Node *node) {
-        if (node->disconnect_slot) {
-                sd_bus_slot_unref(node->disconnect_slot);
-                node->disconnect_slot = NULL;
-        }
+        sd_bus_slot_unrefp(&node->disconnect_slot);
+        node->disconnect_slot = NULL;
 
-        if (node->internal_manager_slot) {
-                sd_bus_slot_unref(node->internal_manager_slot);
-                node->internal_manager_slot = NULL;
-        }
+        sd_bus_slot_unrefp(&node->internal_manager_slot);
+        node->internal_manager_slot = NULL;
 
-        if (node->agent_bus) {
-                sd_bus_unref(node->agent_bus);
-                node->agent_bus = NULL;
-        }
+        sd_bus_unrefp(&node->agent_bus);
+        node->agent_bus = NULL;
 }
 
 
@@ -300,12 +292,8 @@ void agent_request_unref(AgentRequest *req) {
         if (req->userdata && req->free_userdata) {
                 req->free_userdata(req->userdata);
         }
-        if (req->slot) {
-                sd_bus_slot_unref(req->slot);
-        }
-        if (req->message) {
-                sd_bus_message_unref(req->message);
-        }
+        sd_bus_slot_unrefp(&req->slot);
+        sd_bus_message_unrefp(&req->message);
 
         LIST_REMOVE(outstanding_requests, node->outstanding_requests, req);
         node_unref(req->node);
@@ -447,12 +435,8 @@ static void job_setup_unref(JobSetup *setup) {
                 return;
         }
 
-        if (setup->job) {
-                job_unref(setup->job);
-        }
-        if (setup->request_message) {
-                sd_bus_message_unref(setup->request_message);
-        }
+        job_unrefp(&setup->job);
+        sd_bus_message_unrefp(&setup->request_message);
         free(setup);
 }
 
