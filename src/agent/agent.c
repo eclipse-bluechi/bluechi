@@ -432,7 +432,7 @@ static int agent_method_reload_unit(sd_bus_message *m, void *userdata, UNUSED sd
 
 static const sd_bus_vtable internal_agent_vtable[] = {
         SD_BUS_VTABLE_START(0),
-        SD_BUS_METHOD("ListUnits", "", "a(ssssssouso)", agent_method_list_units, 0),
+        SD_BUS_METHOD("ListUnits", "", UNIT_INFO_STRUCT_ARRAY_TYPESTRING, agent_method_list_units, 0),
         SD_BUS_METHOD("StartUnit", "ssu", "", agent_method_start_unit, 0),
         SD_BUS_METHOD("StopUnit", "ssu", "", agent_method_stop_unit, 0),
         SD_BUS_METHOD("RestartUnit", "ssu", "", agent_method_restart_unit, 0),

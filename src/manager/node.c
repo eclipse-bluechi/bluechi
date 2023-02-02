@@ -1,5 +1,6 @@
 #include "node.h"
 #include "job.h"
+#include "libhirte/bus/utils.h"
 #include "manager.h"
 
 #define DEBUG_AGENT_MESSAGES 0
@@ -34,7 +35,7 @@ static const sd_bus_vtable internal_manager_orchestrator_vtable[] = {
 
 static const sd_bus_vtable node_vtable[] = {
         SD_BUS_VTABLE_START(0),
-        SD_BUS_METHOD("ListUnits", "", "a(ssssssouso)", node_method_list_units, 0),
+        SD_BUS_METHOD("ListUnits", "", UNIT_INFO_STRUCT_ARRAY_TYPESTRING, node_method_list_units, 0),
         SD_BUS_METHOD("StartUnit", "ss", "o", node_method_start_unit, 0),
         SD_BUS_METHOD("StopUnit", "ss", "o", node_method_stop_unit, 0),
         SD_BUS_METHOD("RestartUnit", "ss", "o", node_method_restart_unit, 0),
@@ -60,8 +61,7 @@ Node *node_new(Manager *manager, const char *name) {
                         return NULL;
                 }
 
-                /* TODO: Should escape the name if needed */
-                int r = asprintf(&node->object_path, "%s/%s", NODE_OBJECT_PATH_PREFIX, name);
+                int r = assemble_object_path_string(NODE_OBJECT_PATH_PREFIX, name, &node->object_path);
                 if (r < 0) {
                         return NULL;
                 }

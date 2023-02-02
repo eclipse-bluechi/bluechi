@@ -1,7 +1,6 @@
 #include <errno.h>
 #include <stdio.h>
 
-#include "libhirte/common/common.h"
 #include "utils.h"
 
 int bus_parse_property_string(sd_bus_message *m, const char *name, const char **value) {
@@ -73,4 +72,63 @@ int bus_parse_property_string(sd_bus_message *m, const char *name, const char **
                 return 0;
         }
         return -ENOENT;
+}
+
+UnitInfo *new_unit() {
+        _cleanup_unit_ UnitInfo *unit = malloc0(sizeof(UnitInfo));
+        if (unit == NULL) {
+                return NULL;
+        }
+
+        unit->ref_count = 1;
+        LIST_INIT(units, unit);
+
+        return steal_pointer(&unit);
+}
+
+UnitInfo *unit_ref(UnitInfo *unit) {
+        unit->ref_count++;
+        return unit;
+}
+
+void unit_unref(UnitInfo *unit) {
+        unit->ref_count--;
+        if (unit->ref_count != 0) {
+                return;
+        }
+
+        free(unit);
+}
+
+/*
+ * Copied from systemd/bus-unit-util.c
+ */
+int bus_parse_unit_info(sd_bus_message *message, UnitInfo *u) {
+        assert(message);
+        assert(u);
+
+        u->node = NULL;
+
+        return sd_bus_message_read(
+                        message,
+                        UNIT_INFO_STRUCT_TYPESTRING,
+                        &u->id,
+                        &u->description,
+                        &u->load_state,
+                        &u->active_state,
+                        &u->sub_state,
+                        &u->following,
+                        &u->unit_path,
+                        &u->job_id,
+                        &u->job_type,
+                        &u->job_path);
+}
+
+int assemble_object_path_string(const char *prefix, const char *name, char **res) {
+        /* TODO: Should escape the name if needed */
+        int r = asprintf(res, "%s/%s", prefix, name);
+        if (r < 0) {
+                fprintf(stderr, "Out of memory\n");
+        }
+        return r;
 }
