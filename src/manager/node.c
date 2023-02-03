@@ -575,7 +575,7 @@ static int node_run_unit_lifecycle_method(
  ************************************************************************/
 
 static int node_method_start_unit(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error) {
-        return node_run_unit_lifecycle_method(m, (Node *) userdata, "Start", "StartUnit");
+        return node_run_unit_lifecycle_method(m, (Node *) userdata, "start", "StartUnit");
 }
 
 /*************************************************************************
@@ -584,7 +584,7 @@ static int node_method_start_unit(sd_bus_message *m, void *userdata, UNUSED sd_b
 
 
 static int node_method_stop_unit(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error) {
-        return node_run_unit_lifecycle_method(m, (Node *) userdata, "Stop", "StopUnit");
+        return node_run_unit_lifecycle_method(m, (Node *) userdata, "stop", "StopUnit");
 }
 
 /*************************************************************************
@@ -592,7 +592,7 @@ static int node_method_stop_unit(sd_bus_message *m, void *userdata, UNUSED sd_bu
  ************************************************************************/
 
 static int node_method_restart_unit(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error) {
-        return node_run_unit_lifecycle_method(m, (Node *) userdata, "Restart", "RestartUnit");
+        return node_run_unit_lifecycle_method(m, (Node *) userdata, "restart", "RestartUnit");
 }
 
 /*************************************************************************
@@ -600,5 +600,5 @@ static int node_method_restart_unit(sd_bus_message *m, void *userdata, UNUSED sd
  ************************************************************************/
 
 static int node_method_reload_unit(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error) {
-        return node_run_unit_lifecycle_method(m, (Node *) userdata, "Reload", "ReloadUnit");
+        return node_run_unit_lifecycle_method(m, (Node *) userdata, "reload", "ReloadUnit");
 }
