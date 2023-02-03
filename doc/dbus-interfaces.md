@@ -279,6 +279,11 @@ by the manager to affect change on the node.
      Mirrors of the job signals in the manager and used to
      forward state changes from systemd to the manager.
 
+   * JobStateChanged(u id,
+                     s state)
+
+     Forwards the job state property changes from systemd to the manager.
+
    * UnitPropertiesChanged(s unit, a{sv} props)
 
      This is equivalend to the Monitor signal, but for this node

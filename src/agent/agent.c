@@ -1,9 +1,12 @@
 #include <arpa/inet.h>
+#include <errno.h>
 #include <stdio.h>
 
 #include "libhirte/bus/peer-bus.h"
+#include "libhirte/bus/system-bus.h"
 #include "libhirte/bus/systemd-bus.h"
 #include "libhirte/bus/user-bus.h"
+#include "libhirte/bus/utils.h"
 #include "libhirte/common/common.h"
 #include "libhirte/common/opt.h"
 #include "libhirte/common/parse-util.h"
@@ -11,6 +14,9 @@
 #include "libhirte/service/shutdown.h"
 
 #include "agent.h"
+
+#define DEBUG_SYSTEMD_MESSAGES 0
+#define DEBUG_SYSTEMD_MESSAGES_CONTENT 0
 
 struct JobTracker {
         char *job_object_path;
@@ -369,7 +375,6 @@ static int agent_run_unit_lifecycle_method(sd_bus_message *m, Agent *agent, cons
                 return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_INVALID_ARGS, "Invalid arguments");
         }
 
-
         _cleanup_systemd_request_ SystemdRequest *req = agent_create_request(agent, m, method);
         if (req == NULL) {
                 return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "Internal error");
@@ -433,6 +438,7 @@ static const sd_bus_vtable internal_agent_vtable[] = {
         SD_BUS_METHOD("RestartUnit", "ssu", "", agent_method_restart_unit, 0),
         SD_BUS_METHOD("ReloadUnit", "ssu", "", agent_method_reload_unit, 0),
         SD_BUS_SIGNAL_WITH_NAMES("JobDone", "us", SD_BUS_PARAM(id) SD_BUS_PARAM(result), 0),
+        SD_BUS_SIGNAL_WITH_NAMES("JobStateChanged", "us", SD_BUS_PARAM(id) SD_BUS_PARAM(state), 0),
         SD_BUS_VTABLE_END
 };
 
@@ -480,6 +486,61 @@ static bool
         return true;
 }
 
+
+static int agent_match_job_changed(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error) {
+        Agent *agent = userdata;
+        const char *interface = NULL;
+        const char *state = NULL;
+        const char *object_path = sd_bus_message_get_path(m);
+        JobTracker *track = NULL;
+        AgentJobOp *op = NULL;
+
+        int r = sd_bus_message_read(m, "s", &interface);
+        if (r < 0) {
+                return r;
+        }
+
+        /* Only handle Job iface changes */
+        if (!streq(interface, "org.freedesktop.systemd1.Job")) {
+                return 0;
+        }
+
+        /* Look for tracked jobs */
+        LIST_FOREACH(tracked_jobs, track, agent->tracked_jobs) {
+                if (streq(track->job_object_path, object_path)) {
+                        op = track->userdata;
+                        break;
+                }
+        }
+
+        if (op == NULL) {
+                return 0;
+        }
+
+        r = bus_parse_property_string(m, "State", &state);
+        if (r < 0) {
+                if (r == -ENOENT) {
+                        return 0; /* Some other property changed */
+                }
+                fprintf(stderr, "Failed to get job property\n");
+                return r;
+        }
+
+        r = sd_bus_emit_signal(
+                        agent->peer_dbus,
+                        INTERNAL_AGENT_OBJECT_PATH,
+                        INTERNAL_AGENT_INTERFACE,
+                        "JobStateChanged",
+                        "us",
+                        op->hirte_job_id,
+                        state);
+        if (r < 0) {
+                fprintf(stderr, "Failed to emit JobStateChanged\n");
+        }
+
+        return 0;
+}
+
 static int agent_match_job_removed(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *error) {
         Agent *agent = userdata;
         const char *job_path = NULL;
@@ -509,6 +570,20 @@ static int agent_match_job_removed(sd_bus_message *m, void *userdata, UNUSED sd_
         return 0;
 }
 
+static int debug_systemd_message_handler(
+                sd_bus_message *m, UNUSED void *userdata, UNUSED sd_bus_error *ret_error) {
+        fprintf(stderr,
+                "Incomming message from systemd: path: %s, iface: %s, member: %s, signature: '%s'\n",
+                sd_bus_message_get_path(m),
+                sd_bus_message_get_interface(m),
+                sd_bus_message_get_member(m),
+                sd_bus_message_get_signature(m, true));
+        if (DEBUG_SYSTEMD_MESSAGES_CONTENT) {
+                sd_bus_message_dump(m, stderr, 0);
+                sd_bus_message_rewind(m, true);
+        }
+        return 0;
+}
 
 bool agent_start(Agent *agent) {
         struct sockaddr_in host;
@@ -565,6 +640,32 @@ bool agent_start(Agent *agent) {
                 return false;
         }
 
+        r = sd_bus_call_method(
+                        agent->systemd_dbus,
+                        SYSTEMD_BUS_NAME,
+                        SYSTEMD_OBJECT_PATH,
+                        SYSTEMD_MANAGER_IFACE,
+                        "Subscribe",
+                        &error,
+                        &m,
+                        "");
+        if (r < 0) {
+                fprintf(stderr, "Failed to issue subscribe call: %s\n", error.message);
+                sd_bus_error_free(&error);
+                return false;
+        }
+
+        r = sd_bus_add_match(
+                        agent->systemd_dbus,
+                        NULL,
+                        "type='signal',sender='org.freedesktop.systemd1',interface='org.freedesktop.DBus.Properties',member='PropertiesChanged',path_namespace='/org/freedesktop/systemd1/job'",
+                        agent_match_job_changed,
+                        agent);
+        if (r < 0) {
+                fprintf(stderr, "Failed to add match\n");
+                return false;
+        }
+
         r = sd_bus_match_signal(
                         agent->systemd_dbus,
                         NULL,
@@ -577,6 +678,10 @@ bool agent_start(Agent *agent) {
         if (r < 0) {
                 fprintf(stderr, "Failed to add job-removed peer bus match: %s\n", strerror(-r));
                 return false;
+        }
+
+        if (DEBUG_SYSTEMD_MESSAGES) {
+                sd_bus_add_filter(agent->systemd_dbus, NULL, debug_systemd_message_handler, agent);
         }
 
         agent->peer_dbus = peer_bus_open(agent->event, "peer-bus-to-orchestrator", agent->orch_addr);

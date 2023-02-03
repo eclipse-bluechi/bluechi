@@ -44,6 +44,10 @@
       <arg name="id" type="u" />
       <arg name="result" type="s" />
     </signal>
+    <signal name="JobStateChanged">
+      <arg name="id" type="u" />
+      <arg name="state" type="s" />
+    </signal>
     <signal name="UnitPropertiesChanged">
       <arg name="unit" type="s" />
       <arg name="props" type="a{sv}" />

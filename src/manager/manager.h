@@ -46,6 +46,7 @@ Node *manager_add_node(Manager *manager, const char *name);
 bool manager_add_job(Manager *manager, Job *job);
 void manager_remove_job(Manager *manager, Job *job, const char *result);
 void manager_finish_job(Manager *manager, uint32_t job_id, const char *result);
+void manager_job_state_changed(Manager *manager, uint32_t job_id, const char *state);
 
 DEFINE_CLEANUP_FUNC(Manager, manager_unref)
 #define _cleanup_manager_ _cleanup_(manager_unrefp)

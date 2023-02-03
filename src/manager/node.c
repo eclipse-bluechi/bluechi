@@ -39,8 +39,8 @@ static const sd_bus_vtable node_vtable[] = {
         SD_BUS_METHOD("StopUnit", "ss", "o", node_method_stop_unit, 0),
         SD_BUS_METHOD("RestartUnit", "ss", "o", node_method_restart_unit, 0),
         SD_BUS_METHOD("ReloadUnit", "ss", "o", node_method_reload_unit, 0),
-        SD_BUS_PROPERTY("Name", "s", node_property_get_nodename, 0, 0),
-        SD_BUS_PROPERTY("Status", "s", node_property_get_status, 0, 0),
+        SD_BUS_PROPERTY("Name", "s", node_property_get_nodename, 0, SD_BUS_VTABLE_PROPERTY_CONST),
+        SD_BUS_PROPERTY("Status", "s", node_property_get_status, 0, SD_BUS_VTABLE_PROPERTY_EMITS_CHANGE),
         SD_BUS_VTABLE_END
 };
 
@@ -137,6 +137,23 @@ bool node_has_agent(Node *node) {
         return node->agent_bus != NULL;
 }
 
+static int node_match_job_state_changed(
+                UNUSED sd_bus_message *m, UNUSED void *userdata, UNUSED sd_bus_error *error) {
+        Node *node = userdata;
+        Manager *manager = node->manager;
+        uint32_t hirte_job_id = 0;
+        const char *state = NULL;
+
+        int r = sd_bus_message_read(m, "us", &hirte_job_id, &state);
+        if (r < 0) {
+                fprintf(stderr, "Invalid JobStateChange signal\n");
+                return 0;
+        }
+
+        manager_job_state_changed(manager, hirte_job_id, state);
+        return 1;
+}
+
 static int node_match_job_done(UNUSED sd_bus_message *m, UNUSED void *userdata, UNUSED sd_bus_error *error) {
         Node *node = userdata;
         Manager *manager = node->manager;
@@ -189,8 +206,28 @@ bool node_set_agent_bus(Node *node, sd_bus *bus) {
                                 node_match_job_done,
                                 node);
                 if (r < 0) {
-                        fprintf(stderr, "Failed to add job-removed peer bus match: %s\n", strerror(-r));
+                        fprintf(stderr, "Failed to add JobDone peer bus match: %s\n", strerror(-r));
                         return false;
+                }
+
+                r = sd_bus_match_signal(
+                                bus,
+                                NULL,
+                                NULL,
+                                INTERNAL_AGENT_OBJECT_PATH,
+                                INTERNAL_AGENT_INTERFACE,
+                                "JobStateChanged",
+                                node_match_job_state_changed,
+                                node);
+                if (r < 0) {
+                        fprintf(stderr, "Failed to add JobStateChanged peer bus match: %s\n", strerror(-r));
+                        return false;
+                }
+
+                r = sd_bus_emit_properties_changed(
+                                node->manager->user_dbus, node->object_path, NODE_INTERFACE, "Status", NULL);
+                if (r < 0) {
+                        fprintf(stderr, "Failed to emit status property changed: %s\n", strerror(-r));
                 }
         }
 
@@ -218,6 +255,8 @@ bool node_set_agent_bus(Node *node, sd_bus *bus) {
 }
 
 void node_unset_agent_bus(Node *node) {
+        bool was_online = node->name && node_has_agent(node);
+
         sd_bus_slot_unrefp(&node->disconnect_slot);
         node->disconnect_slot = NULL;
 
@@ -226,8 +265,15 @@ void node_unset_agent_bus(Node *node) {
 
         sd_bus_unrefp(&node->agent_bus);
         node->agent_bus = NULL;
-}
 
+        if (was_online) {
+                int r = sd_bus_emit_properties_changed(
+                                node->manager->user_dbus, node->object_path, NODE_INTERFACE, "Status", NULL);
+                if (r < 0) {
+                        fprintf(stderr, "Failed to emit status property changed: %s\n", strerror(-r));
+                }
+        }
+}
 
 /* org.containers.hirte.internal.Manager.Register(in s name)) */
 static int node_method_register(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error) {

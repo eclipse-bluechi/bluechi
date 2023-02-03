@@ -38,3 +38,12 @@
 
 #define USEC_PER_SEC 1000000
 #define HIRTE_DEFAULT_DBUS_TIMEOUT ((uint64_t) (USEC_PER_SEC * 30))
+
+typedef enum JobState {
+        JOB_WAITING,
+        JOB_RUNNING,
+        JOB_INVALID = -1,
+} JobState;
+
+const char *job_state_to_string(JobState s);
+JobState job_state_from_string(const char *s);
