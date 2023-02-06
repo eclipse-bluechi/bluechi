@@ -35,6 +35,7 @@
 #define SYSTEMD_BUS_NAME "org.freedesktop.systemd1"
 #define SYSTEMD_OBJECT_PATH "/org/freedesktop/systemd1"
 #define SYSTEMD_MANAGER_IFACE "org.freedesktop.systemd1.Manager"
+#define SYSTEMD_UNIT_IFACE "org.freedesktop.systemd1.Unit"
 
 #define USEC_PER_SEC 1000000
 #define HIRTE_DEFAULT_DBUS_TIMEOUT ((uint64_t) (USEC_PER_SEC * 30))
