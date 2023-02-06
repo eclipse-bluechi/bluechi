@@ -14,6 +14,7 @@ typedef enum LogLevel {
         LOG_LEVEL_ERROR,
 } LogLevel;
 
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 static const char *log_level_strings[] = { "DEBUG", "INFO", "WARN", "ERROR" };
 
 const char *log_level_to_string(LogLevel l) {
@@ -35,7 +36,8 @@ void hirte_log_to_journald(LogLevel lvl, const char *msg, const char *data) {
 
 void hirte_log_to_stdout(LogLevel lvl, const char *msg, const char *data) {
         time_t t = time(NULL);
-        char timebuf[9];
+        const size_t timestamp_size = 9;
+        char timebuf[timestamp_size];
         timebuf[strftime(timebuf, sizeof(timebuf), "%H:%M:%S", localtime(&t))] = '\0';
 
         // clang-format off
@@ -46,11 +48,13 @@ void hirte_log_to_stdout(LogLevel lvl, const char *msg, const char *data) {
 }
 
 
+// NOLINTBEGIN(cppcoreguidelines-avoid-non-const-global-variables)
 static struct {
         LogFn log_fn;
         LogLevel level;
         bool is_quiet;
 } HirteLogConfig;
+// NOLINTEND(cppcoreguidelines-avoid-non-const-global-variables)
 
 void hirte_log_set_log_fn(LogFn log_fn) {
         HirteLogConfig.log_fn = log_fn;
