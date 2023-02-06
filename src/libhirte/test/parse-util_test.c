@@ -16,7 +16,7 @@ bool test_parse_long(const char *input, bool expectedReturn, long expectedResult
         long res = 0;
         int ret = parse_long(input, &res);
         if ((ret != expectedReturn) || (res != expectedResult)) {
-                asprintf(&msg,
+                ret = asprintf(&msg,
                          "FAILED: %s\n\tInput: '%s'\n\tExpected: Return=%d, Result=%ld\n\tGot: Return=%d, Result=%ld\n",
                          __FUNCTION_NAME__,
                          input,
@@ -39,7 +39,7 @@ bool test_parse_port(const char *input, bool expected_return, uint16_t expected_
         uint16_t res = 0;
         bool ret = parse_port(input, &res);
         if ((ret != expected_return) || (res != expected_result)) {
-                asprintf(&msg,
+                ret = asprintf(&msg,
                          "FAILED: %s\n\tInput: '%s'\n\tExpected: Return=%d, Result=%d\n\tGot: Return=%d, Result=%d\n",
                          __FUNCTION_NAME__,
                          input,
