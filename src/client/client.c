@@ -7,7 +7,7 @@
 int main() {
         hirte_log_set_level(LOG_LEVEL_INFO);
         hirte_log_set_quiet(false);
-        hirte_log_set_log_fn(hirte_log_to_journald_with_location);
+        hirte_log_set_log_fn(hirte_log_to_stderr_with_location);
 
         hirte_log_debug("This is the debug log message will not appear");
         hirte_log_info("This is the info log message you are waiting for");

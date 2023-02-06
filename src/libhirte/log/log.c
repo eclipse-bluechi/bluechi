@@ -32,7 +32,7 @@ void hirte_log_to_journald_with_location(
         // clang-format on
 }
 
-void hirte_log_to_stdout_with_location(
+void hirte_log_to_stderr_with_location(
                 LogLevel lvl,
                 const char *file,
                 const char *line,
