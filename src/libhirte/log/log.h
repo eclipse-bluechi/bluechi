@@ -40,14 +40,12 @@ void hirte_log_to_stdout_with_location(
                 const char *msg,
                 const char *data);
 
-#define hirte_log_to_stdout hirte_log_to_stdout_with_location
-#define hirte_log_to_journald hirte_log_to_journald_with_location
-
 struct HirteLogConfig {
         LogFn log_fn;
         LogLevel level;
         bool is_quiet;
 };
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 extern struct HirteLogConfig config;
 
 void hirte_log_set_log_fn(LogFn log_fn);

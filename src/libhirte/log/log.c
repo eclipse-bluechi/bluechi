@@ -53,6 +53,7 @@ void hirte_log_to_stdout_with_location(
         // clang-format on
 }
 
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 struct HirteLogConfig config;
 
 void hirte_log_set_log_fn(LogFn log_fn) {
