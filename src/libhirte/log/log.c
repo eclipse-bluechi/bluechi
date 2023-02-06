@@ -53,21 +53,70 @@ void hirte_log_to_stderr_with_location(
         // clang-format on
 }
 
-// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
-struct HirteLogConfig config;
+// NOLINTBEGIN(cppcoreguidelines-avoid-non-const-global-variables)
+static struct HirteLogConfig {
+        LogFn log_fn;
+        LogLevel level;
+        bool is_quiet;
+} HirteLogConfig;
+// NOLINTEND(cppcoreguidelines-avoid-non-const-global-variables)
 
 void hirte_log_set_log_fn(LogFn log_fn) {
-        config.log_fn = log_fn;
+        HirteLogConfig.log_fn = log_fn;
 }
 
 void hirte_log_set_level(LogLevel level) {
-        config.level = level;
+        HirteLogConfig.level = level;
 }
 
 void hirte_log_set_quiet(bool is_quiet) {
-        config.is_quiet = is_quiet;
+        HirteLogConfig.is_quiet = is_quiet;
 }
 
 bool shouldLog(LogLevel lvl) {
-        return (config.level <= lvl && !config.is_quiet && config.log_fn != NULL);
+        return (HirteLogConfig.level <= lvl && !HirteLogConfig.is_quiet && HirteLogConfig.log_fn != NULL);
+}
+
+void hirte_log(LogLevel lvl,
+               const char *file,
+               const char *line,
+               const char *func,
+               const char *msg,
+               const char *data) {
+        if (shouldLog(lvl)) {
+                HirteLogConfig.log_fn(lvl, file, line, func, msg, data);
+        }
+}
+
+void hirte_logf(LogLevel lvl, const char *file, const char *line, const char *func, const char *msgfmt, ...) {
+        if (shouldLog(lvl)) {
+                _cleanup_free_ char *msg = NULL;
+
+                va_list argp;
+                va_start(argp, msgfmt);
+                vasprintf(&msg, msgfmt, argp);
+                va_end(argp);
+
+                HirteLogConfig.log_fn(lvl, file, line, func, msg, "");
+        }
+}
+
+void hirte_log_with_data(
+                LogLevel lvl,
+                const char *file,
+                const char *line,
+                const char *func,
+                const char *msg,
+                const char *datafmt,
+                ...) {
+        if (shouldLog(lvl)) {
+                _cleanup_free_ char *data = NULL;
+
+                va_list argp;
+                va_start(argp, datafmt);
+                vasprintf(&data, datafmt, argp);
+                va_end(argp);
+
+                HirteLogConfig.log_fn(lvl, file, line, func, msg, data);
+        }
 }

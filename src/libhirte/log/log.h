@@ -40,55 +40,50 @@ void hirte_log_to_stderr_with_location(
                 const char *msg,
                 const char *data);
 
-struct HirteLogConfig {
-        LogFn log_fn;
-        LogLevel level;
-        bool is_quiet;
-};
-// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
-extern struct HirteLogConfig config;
-
 void hirte_log_set_log_fn(LogFn log_fn);
 void hirte_log_set_level(LogLevel level);
 void hirte_log_set_quiet(bool is_quiet);
 bool shouldLog(LogLevel lvl);
 
-#define hirte_log(lvl, msg, ...)                                                          \
-        if (shouldLog(lvl)) {                                                             \
-                config.log_fn(lvl, __FILE__, _SD_STRINGIFY(__LINE__), __func__, msg, ""); \
-        }
+void hirte_log(LogLevel lvl,
+               const char *file,
+               const char *line,
+               const char *func,
+               const char *msg,
+               const char *data);
+void hirte_logf(LogLevel lvl, const char *file, const char *line, const char *func, const char *msgfmt, ...);
+void hirte_log_with_data(
+                LogLevel lvl,
+                const char *file,
+                const char *line,
+                const char *func,
+                const char *msg,
+                const char *datafmt,
+                ...);
 
-#define hirte_log_debug(msg) hirte_log(LOG_LEVEL_DEBUG, msg)
-#define hirte_log_info(msg) hirte_log(LOG_LEVEL_INFO, msg)
-#define hirte_log_warn(msg) hirte_log(LOG_LEVEL_WARN, msg)
-#define hirte_log_error(msg) hirte_log(LOG_LEVEL_ERROR, msg)
+#define hirte_log_debug(msg) hirte_log(LOG_LEVEL_DEBUG, __FILE__, _SD_STRINGIFY(__LINE__), __func__, msg, "")
+#define hirte_log_info(msg) hirte_log(LOG_LEVEL_INFO, __FILE__, _SD_STRINGIFY(__LINE__), __func__, msg, "")
+#define hirte_log_warn(msg) hirte_log(LOG_LEVEL_WARN, __FILE__, _SD_STRINGIFY(__LINE__), __func__, msg, "")
+#define hirte_log_error(msg) hirte_log(LOG_LEVEL_ERROR, __FILE__, _SD_STRINGIFY(__LINE__), __func__, msg, "")
 
-
-#define hirte_logf(lvl, msgfmt, ...)                                                      \
-        if (shouldLog(lvl)) {                                                             \
-                _cleanup_free_ char *msg = NULL;                                          \
-                asprintf(&msg, msgfmt, __VA_ARGS__);                                      \
-                config.log_fn(lvl, __FILE__, _SD_STRINGIFY(__LINE__), __func__, msg, ""); \
-        }
-
-#define hirte_log_debugf(fmt, ...) hirte_logf(LOG_LEVEL_DEBUG, fmt, __VA_ARGS__)
-#define hirte_log_infof(fmt, ...) hirte_logf(LOG_LEVEL_INFO, fmt, __VA_ARGS__)
-#define hirte_log_warnf(fmt, ...) hirte_logf(LOG_LEVEL_WARN, fmt, __VA_ARGS__)
-#define hirte_log_errorf(fmt, ...) hirte_logf(LOG_LEVEL_ERROR, fmt, __VA_ARGS__)
-
-
-#define hirte_log_with_data(lvl, msg, datafmt, ...)                                         \
-        if (shouldLog(lvl)) {                                                               \
-                _cleanup_free_ char *data = NULL;                                           \
-                asprintf(&data, datafmt, __VA_ARGS__);                                      \
-                config.log_fn(lvl, __FILE__, _SD_STRINGIFY(__LINE__), __func__, msg, data); \
-        }
+#define hirte_log_debugf(fmt, ...) \
+        hirte_logf(LOG_LEVEL_DEBUG, __FILE__, _SD_STRINGIFY(__LINE__), __func__, fmt, __VA_ARGS__)
+#define hirte_log_infof(fmt, ...) \
+        hirte_logf(LOG_LEVEL_INFO, __FILE__, _SD_STRINGIFY(__LINE__), __func__, fmt, __VA_ARGS__)
+#define hirte_log_warnf(fmt, ...) \
+        hirte_logf(LOG_LEVEL_WARN, __FILE__, _SD_STRINGIFY(__LINE__), __func__, fmt, __VA_ARGS__)
+#define hirte_log_errorf(fmt, ...) \
+        hirte_logf(LOG_LEVEL_ERROR, __FILE__, _SD_STRINGIFY(__LINE__), __func__, fmt, __VA_ARGS__)
 
 #define hirte_log_debug_with_data(msg, datafmt, ...) \
-        hirte_log_with_data(LOG_LEVEL_DEBUG, msg, datafmt, __VA_ARGS__)
+        hirte_log_with_data(                         \
+                        LOG_LEVEL_DEBUG, __FILE__, _SD_STRINGIFY(__LINE__), __func__, msg, datafmt, __VA_ARGS__)
 #define hirte_log_info_with_data(msg, datafmt, ...) \
-        hirte_log_with_data(LOG_LEVEL_INFO, msg, datafmt, __VA_ARGS__)
+        hirte_log_with_data(                        \
+                        LOG_LEVEL_INFO, __FILE__, _SD_STRINGIFY(__LINE__), __func__, msg, datafmt, __VA_ARGS__)
 #define hirte_log_warn_with_data(msg, datafmt, ...) \
-        hirte_log_with_data(LOG_LEVEL_WARN, msg, datafmt, __VA_ARGS__)
+        hirte_log_with_data(                        \
+                        LOG_LEVEL_WARN, __FILE__, _SD_STRINGIFY(__LINE__), __func__, msg, datafmt, __VA_ARGS__)
 #define hirte_log_error_with_data(msg, datafmt, ...) \
-        hirte_log_with_data(LOG_LEVEL_ERROR, msg, datafmt, __VA_ARGS__)
+        hirte_log_with_data(                         \
+                        LOG_LEVEL_ERROR, __FILE__, _SD_STRINGIFY(__LINE__), __func__, msg, datafmt, __VA_ARGS__)
