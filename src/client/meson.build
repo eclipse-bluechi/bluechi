@@ -14,6 +14,5 @@ executable(
     hirte_lib,
   ],
   c_args: common_cflags,
-  include_directories: include_directories('..'),
   install: true
 )

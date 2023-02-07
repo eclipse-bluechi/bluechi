@@ -1,44 +1,32 @@
+#include <signal.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
 
-#include "libhirte/log/log.h"
+// NOLINTNEXTLINE
+static bool done = false;
 
+static void signal_handler(int signal) {
+        printf("\n%s(): Received signal %d\n", __func__, signal);
+        done = true;
+}
 
 int main() {
-        hirte_log_set_level(LOG_LEVEL_INFO);
-        hirte_log_set_quiet(false);
-        hirte_log_set_log_fn(hirte_log_to_stderr_with_location);
+        struct sigaction sa;
+        sa.sa_handler = &signal_handler;
+        sigaction(SIGINT, &sa, NULL);
+        sigaction(SIGTERM, &sa, NULL);
+        sigaction(SIGSEGV, &sa, NULL);
+        sigaction(SIGBUS, &sa, NULL);
+        sigaction(SIGABRT, &sa, NULL);
 
-        hirte_log_debug("This is the debug log message will not appear");
-        hirte_log_info("This is the info log message you are waiting for");
-        hirte_log_warn("This is the warn log message you are waiting for");
-        hirte_log_error("This is the error log message you are waiting for");
+        while (!done) {
+                sleep(1);
+                printf("%s(): Hello from client\n", __func__);
+        }
 
-        hirte_log_debugf("This is the formatted %s log message will not appear", "debug");
-        hirte_log_infof("This is the formatted %s log message you are waiting for", "info");
-        hirte_log_warnf("This is the formatted %s log message you are waiting for", "warn");
-        hirte_log_errorf("This is the formatted %s log message you are waiting for", "error");
-
-        hirte_log_debug_with_data(
-                        "This is the enriched debug log message that will not appear",
-                        "{\"%s\": \"%s\"}",
-                        "jsonkey",
-                        "jsonvalue");
-        hirte_log_info_with_data(
-                        "This is the enriched info log message you are waiting for",
-                        "{\"%s\": \"%s\"}",
-                        "jsonkey",
-                        "jsonvalue");
-        hirte_log_warn_with_data(
-                        "This is the enriched warn log message you are waiting for",
-                        "{\"%s\": \"%s\"}",
-                        "jsonkey",
-                        "jsonvalue");
-        hirte_log_error_with_data(
-                        "This is the enriched error log message you are waiting for",
-                        "{\"%s\": \"%s\"}",
-                        "jsonkey",
-                        "jsonvalue");
+        printf("%s(): Goodbye fromt client\n", __func__);
 
         exit(EXIT_SUCCESS);
 }
