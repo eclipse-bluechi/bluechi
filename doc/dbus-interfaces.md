@@ -50,6 +50,14 @@ easily track when they change.
     will automatically be closed if the calling peer disconnects from
     the bus.
 
+   * ListNodes(out a(sos) nodes);
+
+     Returns information (name, object_path and status) of all know nodes.
+
+   * GetNode(in s name, out o path);
+
+     Returns the object path of a node given its name.
+
 * Signals:
   * JobNew(u id,
            o job,

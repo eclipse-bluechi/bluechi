@@ -311,6 +311,10 @@ static bool manager_setup_node_connection_handler(Manager *manager) {
         return true;
 }
 
+/*************************************************************************
+ ************** org.containers.hirte.Manager.Ping ************************
+ ************************************************************************/
+
 /* This is a test method for now, it just returns what you passed */
 static int manager_method_ping(sd_bus_message *m, UNUSED void *userdata, UNUSED sd_bus_error *ret_error) {
         const char *arg = NULL;
@@ -322,6 +326,11 @@ static int manager_method_ping(sd_bus_message *m, UNUSED void *userdata, UNUSED 
 
         return sd_bus_reply_method_return(m, "s", arg);
 }
+
+
+/*************************************************************************
+ ************** org.containers.hirte.Manager.ListUnits *******************
+ ************************************************************************/
 
 typedef struct ListUnitsRequest {
         sd_bus_message *request_message;
@@ -449,7 +458,6 @@ static void manager_method_list_units_maybe_done(ListUnitsRequest *req) {
         }
 }
 
-
 static int manager_list_units_callback(
                 AgentRequest *agent_req, UNUSED sd_bus_message *m, UNUSED sd_bus_error *ret_error) {
         ListUnitsRequest *req = agent_req->userdata;
@@ -499,10 +507,93 @@ static int manager_method_list_units(sd_bus_message *m, void *userdata, UNUSED s
         return 1;
 }
 
+/*************************************************************************
+ ************** org.containers.hirte.Manager.ListNodes *******************
+ ************************************************************************/
+
+static int manager_method_list_encode_node(sd_bus_message *reply, Node *node) {
+        int r = sd_bus_message_open_container(reply, SD_BUS_TYPE_STRUCT, "sos");
+        if (r < 0) {
+                return r;
+        }
+
+        r = sd_bus_message_append(reply, "sos", node->name, node->object_path, node_get_status(node));
+        if (r < 0) {
+                return r;
+        }
+        return sd_bus_message_close_container(reply);
+}
+
+static int manager_method_list_nodes(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error) {
+        Manager *manager = userdata;
+        _cleanup_sd_bus_message_ sd_bus_message *reply = NULL;
+        Node *node = NULL;
+
+        int r = sd_bus_message_new_method_return(m, &reply);
+        if (r < 0) {
+                return sd_bus_reply_method_errorf(reply, SD_BUS_ERROR_FAILED, "Internal error");
+        }
+
+        r = sd_bus_message_open_container(reply, SD_BUS_TYPE_ARRAY, "(sos)");
+        if (r < 0) {
+                return sd_bus_reply_method_errorf(reply, SD_BUS_ERROR_FAILED, "Internal error");
+        }
+
+        LIST_FOREACH(nodes, node, manager->nodes) {
+                r = manager_method_list_encode_node(reply, node);
+                if (r < 0) {
+                        return sd_bus_reply_method_errorf(reply, SD_BUS_ERROR_FAILED, "Internal error");
+                }
+        }
+
+        r = sd_bus_message_close_container(reply);
+        if (r < 0) {
+                return sd_bus_reply_method_errorf(reply, SD_BUS_ERROR_FAILED, "Internal error");
+        }
+
+        return sd_bus_message_send(reply);
+}
+
+/*************************************************************************
+ ************** org.containers.hirte.Manager.GetNode *********************
+ ************************************************************************/
+
+static int manager_method_get_node(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error) {
+        Manager *manager = userdata;
+        _cleanup_sd_bus_message_ sd_bus_message *reply = NULL;
+        Node *node = NULL;
+        const char *node_name = NULL;
+
+        int r = sd_bus_message_read(m, "s", &node_name);
+        if (r < 0) {
+                return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_INVALID_ARGS, "Invalid arguments");
+        }
+
+        node = manager_find_node(manager, node_name);
+        if (node == NULL) {
+                return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_SERVICE_UNKNOWN, "Node not found");
+        }
+
+        r = sd_bus_message_new_method_return(m, &reply);
+        if (r < 0) {
+                return sd_bus_reply_method_errorf(reply, SD_BUS_ERROR_FAILED, "Internal error");
+        }
+
+        r = sd_bus_message_append(reply, "o", node->object_path);
+        if (r < 0) {
+                return sd_bus_reply_method_errorf(reply, SD_BUS_ERROR_FAILED, "Internal error");
+        }
+
+        return sd_bus_message_send(reply);
+}
+
+
 static const sd_bus_vtable manager_vtable[] = {
         SD_BUS_VTABLE_START(0),
         SD_BUS_METHOD("Ping", "s", "s", manager_method_ping, 0),
         SD_BUS_METHOD("ListUnits", "", NODE_AND_UNIT_INFO_STRUCT_ARRAY_TYPESTRING, manager_method_list_units, 0),
+        SD_BUS_METHOD("ListNodes", "", "a(sos)", manager_method_list_nodes, 0),
+        SD_BUS_METHOD("GetNode", "s", "o", manager_method_get_node, 0),
         SD_BUS_SIGNAL_WITH_NAMES("JobNew", "uo", SD_BUS_PARAM(id) SD_BUS_PARAM(job), 0),
         SD_BUS_SIGNAL_WITH_NAMES(
                         "JobRemoved",
