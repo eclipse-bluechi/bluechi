@@ -17,7 +17,7 @@ typedef enum LogLevel {
 const char *log_level_to_string(LogLevel l);
 
 
-typedef void (*LogFn)(
+typedef int (*LogFn)(
                 LogLevel lvl,
                 const char *file,
                 const char *line,
@@ -25,14 +25,14 @@ typedef void (*LogFn)(
                 const char *msg,
                 const char *data);
 
-void hirte_log_to_journald_with_location(
+int hirte_log_to_journald_with_location(
                 LogLevel lvl,
                 const char *file,
                 const char *line,
                 const char *func,
                 const char *msg,
                 const char *data);
-void hirte_log_to_stderr_with_location(
+int hirte_log_to_stderr_with_location(
                 LogLevel lvl,
                 const char *file,
                 const char *line,
@@ -45,14 +45,14 @@ void hirte_log_set_level(LogLevel level);
 void hirte_log_set_quiet(bool is_quiet);
 bool shouldLog(LogLevel lvl);
 
-void hirte_log(LogLevel lvl,
-               const char *file,
-               const char *line,
-               const char *func,
-               const char *msg,
-               const char *data);
-void hirte_logf(LogLevel lvl, const char *file, const char *line, const char *func, const char *msgfmt, ...);
-void hirte_log_with_data(
+int hirte_log(LogLevel lvl,
+              const char *file,
+              const char *line,
+              const char *func,
+              const char *msg,
+              const char *data);
+int hirte_logf(LogLevel lvl, const char *file, const char *line, const char *func, const char *msgfmt, ...);
+int hirte_log_with_data(
                 LogLevel lvl,
                 const char *file,
                 const char *line,

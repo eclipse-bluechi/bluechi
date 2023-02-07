@@ -7,20 +7,27 @@ const char *log_level_to_string(LogLevel l) {
 }
 
 
-void hirte_log_to_journald_with_location(
+int hirte_log_to_journald_with_location(
                 LogLevel lvl,
                 const char *file,
                 const char *line,
                 const char *func,
                 const char *msg,
                 const char *data) {
+        int r = 0;
         // file and line are required to contain the field names and func gets its key
         // automatically set (in contrast to what is written in the documentation).
         // see https://www.freedesktop.org/software/systemd/man/sd_journal_print.html
         _cleanup_free_ char *file_info = NULL;
         _cleanup_free_ char *line_info = NULL;
-        asprintf(&file_info, "CODE_FILE=%s", file);
-        asprintf(&line_info, "CODE_LINE=%s", line);
+        r = asprintf(&file_info, "CODE_FILE=%s", file);
+        if (r < 0) {
+                return r;
+        }
+        r = asprintf(&line_info, "CODE_LINE=%s", line);
+        if (r < 0) {
+                return r;
+        }
 
         // clang-format off
         sd_journal_send_with_location(
@@ -30,9 +37,10 @@ void hirte_log_to_journald_with_location(
                 "HIRTE_DATA=%s", data,
                 NULL);
         // clang-format on
+        return 0;
 }
 
-void hirte_log_to_stderr_with_location(
+int hirte_log_to_stderr_with_location(
                 LogLevel lvl,
                 const char *file,
                 const char *line,
@@ -51,6 +59,7 @@ void hirte_log_to_stderr_with_location(
                 file, line, func,
                 msg, data);
         // clang-format on
+        return 0;
 }
 
 // NOLINTBEGIN(cppcoreguidelines-avoid-non-const-global-variables)
@@ -77,31 +86,37 @@ bool shouldLog(LogLevel lvl) {
         return (HirteLogConfig.level <= lvl && !HirteLogConfig.is_quiet && HirteLogConfig.log_fn != NULL);
 }
 
-void hirte_log(LogLevel lvl,
-               const char *file,
-               const char *line,
-               const char *func,
-               const char *msg,
-               const char *data) {
+int hirte_log(LogLevel lvl,
+              const char *file,
+              const char *line,
+              const char *func,
+              const char *msg,
+              const char *data) {
         if (shouldLog(lvl)) {
-                HirteLogConfig.log_fn(lvl, file, line, func, msg, data);
+                return HirteLogConfig.log_fn(lvl, file, line, func, msg, data);
         }
+        return 0;
 }
 
-void hirte_logf(LogLevel lvl, const char *file, const char *line, const char *func, const char *msgfmt, ...) {
+int hirte_logf(LogLevel lvl, const char *file, const char *line, const char *func, const char *msgfmt, ...) {
         if (shouldLog(lvl)) {
                 _cleanup_free_ char *msg = NULL;
 
                 va_list argp;
                 va_start(argp, msgfmt);
-                vasprintf(&msg, msgfmt, argp);
+                int r = vasprintf(&msg, msgfmt, argp);
+                if (r < 0) {
+                        va_end(argp);
+                        return r;
+                }
                 va_end(argp);
 
-                HirteLogConfig.log_fn(lvl, file, line, func, msg, "");
+                return HirteLogConfig.log_fn(lvl, file, line, func, msg, "");
         }
+        return 0;
 }
 
-void hirte_log_with_data(
+int hirte_log_with_data(
                 LogLevel lvl,
                 const char *file,
                 const char *line,
@@ -114,9 +129,14 @@ void hirte_log_with_data(
 
                 va_list argp;
                 va_start(argp, datafmt);
-                vasprintf(&data, datafmt, argp);
+                int r = vasprintf(&data, datafmt, argp);
+                if (r < 0) {
+                        va_end(argp);
+                        return r;
+                }
                 va_end(argp);
 
-                HirteLogConfig.log_fn(lvl, file, line, func, msg, data);
+                return HirteLogConfig.log_fn(lvl, file, line, func, msg, data);
         }
+        return 0;
 }
