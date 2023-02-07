@@ -1,8 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "libhirte/bus/peer-bus.h"
-#include "libhirte/bus/user-bus.h"
+#include "libhirte/bus/bus.h"
 #include "libhirte/common/common.h"
 #include "libhirte/common/parse-util.h"
 #include "libhirte/ini/config.h"
