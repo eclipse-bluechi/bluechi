@@ -63,6 +63,7 @@ void manager_unref(Manager *manager) {
 
         sd_event_source_unrefp(&manager->node_connection_source);
 
+        sd_bus_slot_unrefp(&manager->name_owner_changed_slot);
         sd_bus_slot_unrefp(&manager->filter_slot);
         sd_bus_slot_unrefp(&manager->manager_slot);
         sd_bus_unrefp(&manager->user_dbus);
@@ -602,7 +603,7 @@ static int manager_method_create_monitor(sd_bus_message *m, void *userdata, UNUS
         Manager *manager = userdata;
         _cleanup_sd_bus_message_ sd_bus_message *reply = NULL;
 
-        _cleanup_monitor_ Monitor *monitor = monitor_new(manager);
+        _cleanup_monitor_ Monitor *monitor = monitor_new(manager, sd_bus_message_get_sender(m));
         if (monitor == NULL) {
                 return sd_bus_reply_method_errorf(reply, SD_BUS_ERROR_FAILED, "Internal error");
         }
@@ -674,6 +675,43 @@ static int manager_dbus_filter(UNUSED sd_bus_message *m, void *userdata, UNUSED 
         return 0;
 }
 
+void manager_remove_monitor(Manager *manager, Monitor *monitor) {
+        LIST_REMOVE(monitors, manager->monitors, monitor);
+        monitor_unref(monitor);
+}
+
+static void manager_client_disconnected(Manager *manager, const char *client_id) {
+        /* Free any monitors owned by the client */
+
+        Monitor *monitor = NULL;
+        Monitor *next_monitor = NULL;
+        LIST_FOREACH_SAFE(monitors, monitor, next_monitor, manager->monitors) {
+                if (streq(monitor->client, client_id)) {
+                        monitor_close(monitor);
+                        manager_remove_monitor(manager, monitor);
+                        break;
+                }
+        }
+}
+
+static int manager_name_owner_changed(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error) {
+        Manager *manager = userdata;
+        const char *name = NULL;
+        const char *old_owner = NULL;
+        const char *new_owner = NULL;
+
+        int r = sd_bus_message_read(m, "sss", &name, &old_owner, &new_owner);
+        if (r < 0) {
+                return r;
+        }
+
+        if (*name == ':' && *new_owner == 0) {
+                manager_client_disconnected(manager, name);
+        }
+
+        return 0;
+}
+
 bool manager_start(Manager *manager) {
         fprintf(stdout, "Starting Manager...\n");
 
@@ -705,6 +743,20 @@ bool manager_start(Manager *manager) {
         r = sd_bus_add_filter(manager->user_dbus, &manager->filter_slot, manager_dbus_filter, manager);
         if (r < 0) {
                 fprintf(stderr, "Failed to add manager filter: %s\n", strerror(-r));
+                return false;
+        }
+
+        r = sd_bus_match_signal(
+                        manager->user_dbus,
+                        &manager->name_owner_changed_slot,
+                        "org.freedesktop.DBus",
+                        "/org/freedesktop/DBus",
+                        "org.freedesktop.DBus",
+                        "NameOwnerChanged",
+                        manager_name_owner_changed,
+                        manager);
+        if (r < 0) {
+                fprintf(stderr, "Failed to add nameloist filter: %s\n", strerror(-r));
                 return false;
         }
 

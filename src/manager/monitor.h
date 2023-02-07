@@ -7,6 +7,7 @@
 struct Monitor {
         int ref_count;
         uint32_t id;
+        char *client;
 
         Manager *manager; /* weak ref */
 
@@ -16,9 +17,11 @@ struct Monitor {
         LIST_FIELDS(Monitor, monitors);
 };
 
-Monitor *monitor_new(Manager *manager);
+Monitor *monitor_new(Manager *manager, const char *client);
 Monitor *monitor_ref(Monitor *monitor);
 void monitor_unref(Monitor *monitor);
+
+void monitor_close(Monitor *monitor);
 
 bool monitor_export(Monitor *monitor);
 
