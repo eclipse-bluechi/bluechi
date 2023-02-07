@@ -43,6 +43,7 @@ int hirte_log_to_stderr_with_location(
 void hirte_log_set_log_fn(LogFn log_fn);
 void hirte_log_set_level(LogLevel level);
 void hirte_log_set_quiet(bool is_quiet);
+void hirte_log_init();
 bool shouldLog(LogLevel lvl);
 
 int hirte_log(LogLevel lvl,

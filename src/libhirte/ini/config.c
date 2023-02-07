@@ -1,9 +1,10 @@
 #include <assert.h>
 #include <stdlib.h>
 
+#include "libhirte/common/common.h"
+
 #include "config.h"
 #include "ini.h"
-#include "libhirte/common/common.h"
 
 typedef struct {
         char *key;

@@ -1,7 +1,9 @@
-#include "node.h"
-#include "job.h"
 #include "libhirte/bus/utils.h"
+#include "libhirte/log/log.h"
+
+#include "job.h"
 #include "manager.h"
+#include "node.h"
 
 #define DEBUG_AGENT_MESSAGES 0
 
@@ -143,7 +145,7 @@ bool node_export(Node *node) {
                         node_vtable,
                         node);
         if (r < 0) {
-                fprintf(stderr, "Failed to add node vtable: %s\n", strerror(-r));
+                hirte_log_errorf("Failed to add node vtable: %s\n", strerror(-r));
                 return false;
         }
 
@@ -153,22 +155,20 @@ bool node_export(Node *node) {
 static int debug_messages_handler(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error) {
         Node *node = userdata;
         if (node->name) {
-                fprintf(stderr,
-                        "Incomming message from node '%s' (fd %d): path: %s, iface: %s, member: %s, signature: '%s'\n",
-                        node->name,
-                        sd_bus_get_fd(node->agent_bus),
-                        sd_bus_message_get_path(m),
-                        sd_bus_message_get_interface(m),
-                        sd_bus_message_get_member(m),
-                        sd_bus_message_get_signature(m, true));
+                hirte_log_infof("Incomming message from node '%s' (fd %d): path: %s, iface: %s, member: %s, signature: '%s'\n",
+                                node->name,
+                                sd_bus_get_fd(node->agent_bus),
+                                sd_bus_message_get_path(m),
+                                sd_bus_message_get_interface(m),
+                                sd_bus_message_get_member(m),
+                                sd_bus_message_get_signature(m, true));
         } else {
-                fprintf(stderr,
-                        "Incomming message from node fd %d: path: %s, iface: %s, member: %s, signature: '%s'\n",
-                        sd_bus_get_fd(node->agent_bus),
-                        sd_bus_message_get_path(m),
-                        sd_bus_message_get_interface(m),
-                        sd_bus_message_get_member(m),
-                        sd_bus_message_get_signature(m, true));
+                hirte_log_infof("Incomming message from node fd %d: path: %s, iface: %s, member: %s, signature: '%s'\n",
+                                sd_bus_get_fd(node->agent_bus),
+                                sd_bus_message_get_path(m),
+                                sd_bus_message_get_interface(m),
+                                sd_bus_message_get_member(m),
+                                sd_bus_message_get_signature(m, true));
         }
         return 0;
 }
@@ -186,7 +186,7 @@ static int node_match_job_state_changed(
 
         int r = sd_bus_message_read(m, "us", &hirte_job_id, &state);
         if (r < 0) {
-                fprintf(stderr, "Invalid JobStateChange signal\n");
+                hirte_log_errorf("Invalid JobStateChange signal: %s\n", strerror(-r));
                 return 0;
         }
 
@@ -244,7 +244,7 @@ static int node_match_job_done(UNUSED sd_bus_message *m, UNUSED void *userdata, 
 
         int r = sd_bus_message_read(m, "us", &hirte_job_id, &result);
         if (r < 0) {
-                fprintf(stderr, "Invalid JobDone signal\n");
+                hirte_log_errorf("Invalid JobDone signal: %s\n", strerror(-r));
                 return 0;
         }
 
@@ -256,7 +256,7 @@ bool node_set_agent_bus(Node *node, sd_bus *bus) {
         int r = 0;
 
         if (node->agent_bus != NULL) {
-                fprintf(stderr, "Error: Trying to add two agents for a node\n");
+                hirte_log_error("Error: Trying to add two agents for a node\n");
                 return false;
         }
 
@@ -273,7 +273,7 @@ bool node_set_agent_bus(Node *node, sd_bus *bus) {
                                 node);
                 if (r < 0) {
                         node_unset_agent_bus(node);
-                        fprintf(stderr, "Failed to add peer bus vtable: %s\n", strerror(-r));
+                        hirte_log_errorf("Failed to add peer bus vtable: %s\n", strerror(-r));
                         return false;
                 }
         } else {
@@ -288,7 +288,7 @@ bool node_set_agent_bus(Node *node, sd_bus *bus) {
                                 node_match_job_done,
                                 node);
                 if (r < 0) {
-                        fprintf(stderr, "Failed to add JobDone peer bus match: %s\n", strerror(-r));
+                        hirte_log_errorf("Failed to add JobDone peer bus match: %s\n", strerror(-r));
                         return false;
                 }
 
@@ -302,7 +302,7 @@ bool node_set_agent_bus(Node *node, sd_bus *bus) {
                                 node_match_job_state_changed,
                                 node);
                 if (r < 0) {
-                        fprintf(stderr, "Failed to add JobStateChanged peer bus match: %s\n", strerror(-r));
+                        hirte_log_errorf("Failed to add JobStateChanged peer bus match: %s\n", strerror(-r));
                         return false;
                 }
 
@@ -353,7 +353,7 @@ bool node_set_agent_bus(Node *node, sd_bus *bus) {
                 r = sd_bus_emit_properties_changed(
                                 node->manager->user_dbus, node->object_path, NODE_INTERFACE, "Status", NULL);
                 if (r < 0) {
-                        fprintf(stderr, "Failed to emit status property changed: %s\n", strerror(-r));
+                        hirte_log_errorf("Failed to emit status property changed: %s\n", strerror(-r));
                 }
         }
 
@@ -369,7 +369,7 @@ bool node_set_agent_bus(Node *node, sd_bus *bus) {
                         node);
         if (r < 0) {
                 node_unset_agent_bus(node);
-                fprintf(stderr, "Failed to request match for Disconnected message: %s\n", strerror(-r));
+                hirte_log_errorf("Failed to request match for Disconnected message: %s\n", strerror(-r));
                 return false;
         }
 
@@ -400,7 +400,7 @@ void node_unset_agent_bus(Node *node) {
                 int r = sd_bus_emit_properties_changed(
                                 node->manager->user_dbus, node->object_path, NODE_INTERFACE, "Status", NULL);
                 if (r < 0) {
-                        fprintf(stderr, "Failed to emit status property changed: %s\n", strerror(-r));
+                        hirte_log_errorf("Failed to emit status property changed: %s\n", strerror(-r));
                 }
         }
 }
@@ -420,7 +420,7 @@ static int node_method_register(sd_bus_message *m, void *userdata, UNUSED sd_bus
         /* Read the parameters */
         int r = sd_bus_message_read(m, "s", &name);
         if (r < 0) {
-                fprintf(stderr, "Failed to parse parameters: %s\n", strerror(-r));
+                hirte_log_errorf("Failed to parse parameters: %s\n", strerror(-r));
                 return r;
         }
 
@@ -448,7 +448,7 @@ static int node_method_register(sd_bus_message *m, void *userdata, UNUSED sd_bus
 
         node_unset_agent_bus(node);
 
-        printf("Registered managed node from fd %d as '%s'\n", sd_bus_get_fd(agent_bus), name);
+        hirte_log_infof("Registered managed node from fd %d as '%s'\n", sd_bus_get_fd(agent_bus), name);
 
         return sd_bus_reply_method_return(m, "");
 }
@@ -458,9 +458,9 @@ static int node_disconnected(UNUSED sd_bus_message *message, void *userdata, UNU
         Manager *manager = node->manager;
 
         if (node->name) {
-                fprintf(stderr, "Node '%s' disconnected\n", node->name);
+                hirte_log_infof("Node '%s' disconnected\n", node->name);
         } else {
-                fprintf(stderr, "Anonymous node disconnected\n");
+                hirte_log_info("Anonymous node disconnected\n");
         }
 
         node_unset_agent_bus(node);
@@ -559,6 +559,7 @@ static AgentRequest *node_create_request(
                         INTERNAL_AGENT_INTERFACE,
                         method);
         if (r < 0) {
+                hirte_log_errorf("Failed to create new bus message: %s\n", strerror(-r));
                 return NULL;
         }
 
@@ -582,7 +583,7 @@ static bool agent_request_start(AgentRequest *req) {
                         req,
                         HIRTE_DEFAULT_DBUS_TIMEOUT);
         if (r < 0) {
-                fprintf(stderr, "Failed to call async: %s\n", strerror(-r));
+                hirte_log_errorf("Failed to call async: %s\n", strerror(-r));
                 return false;
         }
 

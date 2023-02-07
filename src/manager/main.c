@@ -1,11 +1,12 @@
 #include <getopt.h>
-#include <stdio.h>
 #include <stdlib.h>
 
 #include "libhirte/common/opt.h"
 #include "libhirte/common/parse-util.h"
 #include "libhirte/ini/config.h"
+#include "libhirte/log/log.h"
 #include "libhirte/service/shutdown.h"
+
 #include "manager.h"
 
 const struct option options[] = { { ARG_PORT, required_argument, 0, ARG_PORT_SHORT },
@@ -21,7 +22,7 @@ static const char *opt_config = NULL;
 // NOLINTEND(cppcoreguidelines-avoid-non-const-global-variables)
 
 static void usage(char *argv[]) {
-        fprintf(stderr, "Usage: %s [-p port] [-c config]\n", argv[0]);
+        hirte_log_errorf("Usage: %s [-p port] [-c config]\n", argv[0]);
 }
 
 static void get_opts(int argc, char *argv[]) {
@@ -43,7 +44,7 @@ static void get_opts(int argc, char *argv[]) {
                         break;
 
                 default:
-                        fprintf(stderr, "Unsupported option %c\n", opt);
+                        hirte_log_errorf("Unsupported option %c\n", opt);
                         usage(argv);
                         exit(EXIT_FAILURE);
                 }
@@ -52,9 +53,11 @@ static void get_opts(int argc, char *argv[]) {
 
 
 int main(int argc, char *argv[]) {
-        fprintf(stdout, "Hello from manager!\n");
+        hirte_log_init();
 
         get_opts(argc, argv);
+
+        hirte_log_set_log_fn(hirte_log_to_journald_with_location);
 
         _cleanup_manager_ Manager *manager = manager_new();
         if (manager == NULL) {
@@ -77,8 +80,5 @@ int main(int argc, char *argv[]) {
         if (manager_start(manager)) {
                 return EXIT_SUCCESS;
         }
-
-        fprintf(stdout, "Manager exited\n");
-
         return EXIT_FAILURE;
 }

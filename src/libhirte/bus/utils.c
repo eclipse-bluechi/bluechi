@@ -1,5 +1,4 @@
 #include <errno.h>
-#include <stdio.h>
 
 #include "utils.h"
 

@@ -1,8 +1,9 @@
 #include <stdio.h>
 
-#include "client.h"
 #include "libhirte/bus/utils.h"
 #include "libhirte/common/common.h"
+
+#include "client.h"
 #include "printer.h"
 #include "types.h"
 

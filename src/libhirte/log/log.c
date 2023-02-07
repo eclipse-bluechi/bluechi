@@ -82,6 +82,12 @@ void hirte_log_set_quiet(bool is_quiet) {
         HirteLogConfig.is_quiet = is_quiet;
 }
 
+void hirte_log_init() {
+        hirte_log_set_level(LOG_LEVEL_INFO);
+        hirte_log_set_quiet(false);
+        hirte_log_set_log_fn(hirte_log_to_stderr_with_location);
+}
+
 bool shouldLog(LogLevel lvl) {
         return (HirteLogConfig.level <= lvl && !HirteLogConfig.is_quiet && HirteLogConfig.log_fn != NULL);
 }
