@@ -27,6 +27,8 @@ libhirte_src = [
     'service/shutdown.h',
     'socket.c',
     'socket.h',
+    'log/log.h',
+    'log/log.c',
 ]
 
 hirte_lib = static_library('hirte',
