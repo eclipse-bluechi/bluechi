@@ -358,6 +358,13 @@ static int node_property_get_nodename(
         return sd_bus_message_append(reply, "s", node->name);
 }
 
+const char *node_get_status(Node *node) {
+        if (node_has_agent(node)) {
+                return "online";
+        }
+        return "offline";
+}
+
 static int node_property_get_status(
                 UNUSED sd_bus *bus,
                 UNUSED const char *path,
@@ -367,15 +374,8 @@ static int node_property_get_status(
                 void *userdata,
                 UNUSED sd_bus_error *ret_error) {
         Node *node = userdata;
-        const char *status = NULL;
 
-        if (node_has_agent(node)) {
-                status = "online";
-        } else {
-                status = "offline";
-        }
-
-        return sd_bus_message_append(reply, "s", status);
+        return sd_bus_message_append(reply, "s", node_get_status(node));
 }
 
 AgentRequest *agent_request_ref(AgentRequest *req) {

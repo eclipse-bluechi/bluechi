@@ -50,6 +50,8 @@ Node *node_new(Manager *manager, const char *name);
 Node *node_ref(Node *node);
 void node_unref(Node *node);
 
+const char *node_get_status(Node *node);
+
 bool node_export(Node *node);
 bool node_has_agent(Node *node);
 bool node_set_agent_bus(Node *node, sd_bus *bus);
