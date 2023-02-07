@@ -2,10 +2,7 @@
 #include <errno.h>
 #include <stdio.h>
 
-#include "libhirte/bus/peer-bus.h"
-#include "libhirte/bus/system-bus.h"
-#include "libhirte/bus/systemd-bus.h"
-#include "libhirte/bus/user-bus.h"
+#include "libhirte/bus/bus.h"
 #include "libhirte/bus/utils.h"
 #include "libhirte/common/common.h"
 #include "libhirte/common/opt.h"

@@ -1,9 +1,14 @@
 #include <arpa/inet.h>
 #include <errno.h>
-#include <stdio.h>
 
 #include "libhirte/common/common.h"
-#include "peer-bus.h"
+#include "libhirte/socket.h"
+
+#include "bus.h"
+
+/*****************
+ *** peer dbus ***
+ *****************/
 
 char *assemble_tcp_address(const struct sockaddr_in *addr) {
         if (addr == NULL) {
@@ -79,7 +84,6 @@ sd_bus *peer_bus_open(sd_event *event, const char *dbus_description, const char 
 }
 
 /* This is just some helper to make the peer connections look like a bus for e.g busctl */
-
 static int method_peer_hello(sd_bus_message *m, UNUSED void *userdata, UNUSED sd_bus_error *ret_error) {
         /* Reply with the response */
         return sd_bus_reply_method_return(m, "s", ":1.0");
@@ -158,4 +162,121 @@ sd_bus *peer_bus_open_server(sd_event *event, const char *dbus_description, cons
         }
 
         return steal_pointer(&dbus);
+}
+
+
+/*******************
+ *** system dbus ***
+ *******************/
+
+sd_bus *system_bus_open(sd_event *event) {
+        int r = 0;
+        _cleanup_sd_bus_ sd_bus *bus = NULL;
+
+        r = sd_bus_open_system(&bus);
+        if (r < 0) {
+                fprintf(stderr, "Failed to connect to system bus: %s\n", strerror(-r));
+                return NULL;
+        }
+
+        r = sd_bus_attach_event(bus, event, SD_EVENT_PRIORITY_NORMAL);
+        if (r < 0) {
+                fprintf(stderr, "Failed to attach bus to event: %s\n", strerror(-r));
+                return NULL;
+        }
+        (void) sd_bus_set_description(bus, "system-bus");
+
+        return steal_pointer(&bus);
+}
+
+
+/********************
+ *** systemd dbus ***
+ ********************/
+
+static int systemd_bus_new(sd_bus **ret) {
+        if (ret == NULL) {
+                return -EINVAL;
+        }
+
+        int r = 0;
+        _cleanup_sd_bus_ sd_bus *bus = NULL;
+
+        if (geteuid() != 0) {
+                r = sd_bus_default_system(&bus);
+                if (r < 0) {
+                        return r;
+                }
+                *ret = steal_pointer(&bus);
+                return 1;
+        }
+
+        r = sd_bus_new(&bus);
+        if (r < 0) {
+                return r;
+        }
+        r = sd_bus_set_address(bus, "unix:path=/run/systemd/private");
+        if (r < 0) {
+                return r;
+        }
+        r = sd_bus_start(bus);
+        if (r < 0) {
+                return r;
+        }
+
+        int fd = sd_bus_get_fd(bus);
+        if (fd < 0) {
+                return fd;
+        }
+        r = fd_check_peercred(fd);
+        if (r < 0) {
+                return r;
+        }
+
+        *ret = steal_pointer(&bus);
+        return 1;
+}
+
+sd_bus *systemd_bus_open(sd_event *event) {
+        int r = 0;
+        _cleanup_sd_bus_ sd_bus *bus = NULL;
+
+        r = systemd_bus_new(&bus);
+        if (r < 0) {
+                fprintf(stderr, "Failed to connect to systemd bus: %s\n", strerror(-r));
+                return NULL;
+        }
+        r = sd_bus_attach_event(bus, event, SD_EVENT_PRIORITY_NORMAL);
+        if (r < 0) {
+                fprintf(stderr, "Failed to attach systemd bus to event: %s\n", strerror(-r));
+                return NULL;
+        }
+        (void) sd_bus_set_description(bus, "systemd-bus");
+
+        return steal_pointer(&bus);
+}
+
+
+/*****************
+ *** user dbus ***
+ *****************/
+
+sd_bus *user_bus_open(sd_event *event) {
+        int r = 0;
+        _cleanup_sd_bus_ sd_bus *bus = NULL;
+
+        r = sd_bus_open_user(&bus);
+        if (r < 0) {
+                fprintf(stderr, "Failed to connect to user bus: %s\n", strerror(-r));
+                return NULL;
+        }
+
+        r = sd_bus_attach_event(bus, event, SD_EVENT_PRIORITY_NORMAL);
+        if (r < 0) {
+                fprintf(stderr, "Failed to attach bus to event: %s\n", strerror(-r));
+                return NULL;
+        }
+        (void) sd_bus_set_description(bus, "user-bus");
+
+        return steal_pointer(&bus);
 }
