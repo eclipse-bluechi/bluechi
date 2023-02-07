@@ -25,6 +25,7 @@ struct Manager {
         LIST_HEAD(Node, anonymous_nodes);
 
         LIST_HEAD(Job, jobs);
+        LIST_HEAD(Monitor, monitors);
 };
 
 Manager *manager_new(void);

@@ -10,6 +10,7 @@
 
 #include "job.h"
 #include "manager.h"
+#include "monitor.h"
 #include "node.h"
 
 #define DEBUG_MESSAGES 0
@@ -39,6 +40,7 @@ Manager *manager_new(void) {
                 LIST_HEAD_INIT(manager->nodes);
                 LIST_HEAD_INIT(manager->anonymous_nodes);
                 LIST_HEAD_INIT(manager->jobs);
+                LIST_HEAD_INIT(manager->monitors);
         }
 
         return manager;
@@ -76,6 +78,11 @@ void manager_unref(Manager *manager) {
         Job *job = NULL;
         LIST_FOREACH(jobs, job, manager->jobs) {
                 job_unref(job);
+        }
+
+        Monitor *monitor = NULL;
+        LIST_FOREACH(monitors, monitor, manager->monitors) {
+                monitor_unref(monitor);
         }
 
         free(manager);
@@ -587,6 +594,42 @@ static int manager_method_get_node(sd_bus_message *m, void *userdata, UNUSED sd_
         return sd_bus_message_send(reply);
 }
 
+/*************************************************************************
+ ************** org.containers.hirte.Manager.CreateMonitor ***************
+ ************************************************************************/
+
+static int manager_method_create_monitor(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error) {
+        Manager *manager = userdata;
+        _cleanup_sd_bus_message_ sd_bus_message *reply = NULL;
+
+        _cleanup_monitor_ Monitor *monitor = monitor_new(manager);
+        if (monitor == NULL) {
+                return sd_bus_reply_method_errorf(reply, SD_BUS_ERROR_FAILED, "Internal error");
+        }
+
+        if (!monitor_export(monitor)) {
+                return sd_bus_reply_method_errorf(reply, SD_BUS_ERROR_FAILED, "Internal error");
+        }
+
+        int r = sd_bus_message_new_method_return(m, &reply);
+        if (r < 0) {
+                return sd_bus_reply_method_errorf(reply, SD_BUS_ERROR_FAILED, "Internal error");
+        }
+
+        r = sd_bus_message_append(reply, "o", monitor->object_path);
+        if (r < 0) {
+                return sd_bus_reply_method_errorf(reply, SD_BUS_ERROR_FAILED, "Internal error");
+        }
+
+        r = sd_bus_message_send(reply);
+        if (r < 0) {
+                return r;
+        }
+
+        /* We reported it to the client, now keep it alive and keep track of it */
+        LIST_APPEND(monitors, manager->monitors, monitor_ref(monitor));
+        return 1;
+}
 
 static const sd_bus_vtable manager_vtable[] = {
         SD_BUS_VTABLE_START(0),
@@ -594,6 +637,7 @@ static const sd_bus_vtable manager_vtable[] = {
         SD_BUS_METHOD("ListUnits", "", NODE_AND_UNIT_INFO_STRUCT_ARRAY_TYPESTRING, manager_method_list_units, 0),
         SD_BUS_METHOD("ListNodes", "", "a(sos)", manager_method_list_nodes, 0),
         SD_BUS_METHOD("GetNode", "s", "o", manager_method_get_node, 0),
+        SD_BUS_METHOD("CreateMonitor", "", "o", manager_method_create_monitor, 0),
         SD_BUS_SIGNAL_WITH_NAMES("JobNew", "uo", SD_BUS_PARAM(id) SD_BUS_PARAM(job), 0),
         SD_BUS_SIGNAL_WITH_NAMES(
                         "JobRemoved",
