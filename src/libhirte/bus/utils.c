@@ -125,12 +125,11 @@ int bus_parse_unit_info(sd_bus_message *message, UnitInfo *u) {
 }
 
 int assemble_object_path_string(const char *prefix, const char *name, char **res) {
-        /* TODO: Should escape the name if needed */
-        int r = asprintf(res, "%s/%s", prefix, name);
-        if (r < 0) {
-                fprintf(stderr, "Out of memory\n");
+        _cleanup_free_ char *escaped = bus_path_escape(name);
+        if (escaped == NULL) {
+                return -ENOMEM;
         }
-        return r;
+        return asprintf(res, "%s/%s", prefix, escaped);
 }
 
 static char hexchar(int x) {
