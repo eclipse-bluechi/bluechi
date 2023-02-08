@@ -18,7 +18,7 @@ static int opargc;
 static bool no_action = false;
 
 static void usage(char *argv[]) {
-        hirte_log_errorf("Usage: %s COMMAND ... \n", argv[0]);
+        hirte_log_errorf("Usage: %s COMMAND ... ", argv[0]);
 }
 
 static int get_opts(int argc, char *argv[]) {
@@ -30,7 +30,7 @@ static int get_opts(int argc, char *argv[]) {
                         no_action = true;
                         return 0;
                 } else {
-                        hirte_log_errorf("Unsupported option %c\n", opt);
+                        hirte_log_errorf("Unsupported option %c", opt);
                         usage(argv);
                         return -EINVAL;
                 }
@@ -41,7 +41,7 @@ static int get_opts(int argc, char *argv[]) {
                 opargv = &argv[optind];
                 opargc = argc - optind;
         } else {
-                hirte_log_error("No command given\n");
+                hirte_log_error("No command given");
                 usage(argv);
                 return -EINVAL;
         }

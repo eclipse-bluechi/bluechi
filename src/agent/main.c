@@ -24,7 +24,7 @@ static const char *opt_config = NULL;
 // NOLINTEND(cppcoreguidelines-avoid-non-const-global-variables)
 
 static void usage(char *argv[]) {
-        hirte_log_errorf("Usage: %s [-H host] [-p port] [-c config] [-n name]\n", argv[0]);
+        hirte_log_errorf("Usage: %s [-H host] [-p port] [-c config] [-n name]", argv[0]);
 }
 
 static void get_opts(int argc, char *argv[]) {
@@ -54,7 +54,7 @@ static void get_opts(int argc, char *argv[]) {
                         break;
 
                 default:
-                        hirte_log_errorf("Unsupported option %c\n", opt);
+                        hirte_log_errorf("Unsupported option %c", opt);
                         usage(argv);
                         exit(EXIT_FAILURE);
                 }
@@ -66,7 +66,7 @@ int main(int argc, char *argv[]) {
 
         get_opts(argc, argv);
 
-        hirte_log_set_log_fn(hirte_log_to_journald_with_location);
+        // hirte_log_set_log_fn(hirte_log_to_journald_with_location);
 
         _cleanup_agent_ Agent *agent = agent_new();
         if (agent == NULL) {

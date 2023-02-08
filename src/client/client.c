@@ -4,7 +4,7 @@
 #include "client.h"
 
 int list_units_on_all(UNUSED Client *client) {
-        hirte_log_info("Listing units on all\n");
+        hirte_log_info("Listing units on all");
         return 0;
 }
 
@@ -14,11 +14,11 @@ int list_units_on(const char *name, Client *client) {
 
         int r = 0;
 
-        hirte_log_infof("Listing units on %s\n", name);
+        hirte_log_infof("Listing units on %s", name);
 
         r = assemble_object_path_string(NODE_OBJECT_PATH_PREFIX, name, &client->object_path);
         if (r < 0) {
-                hirte_log_errorf("Failed to assemble object path: %s\n", strerror(-r));
+                hirte_log_errorf("Failed to assemble object path: %s", strerror(-r));
                 return r;
         }
 
@@ -32,13 +32,13 @@ int list_units_on(const char *name, Client *client) {
                         &message,
                         "");
         if (r < 0) {
-                hirte_log_errorf("Failed to issue method call: %s\n", error.message);
+                hirte_log_errorf("Failed to issue method call: %s", error.message);
                 return r;
         }
 
         r = sd_bus_message_enter_container(message, SD_BUS_TYPE_ARRAY, UNIT_INFO_STRUCT_TYPESTRING);
         if (r < 0) {
-                hirte_log_errorf("Failed to read sd-bus message: %s\n", strerror(-r));
+                hirte_log_errorf("Failed to read sd-bus message: %s", strerror(-r));
                 return r;
         }
 
@@ -49,7 +49,7 @@ int list_units_on(const char *name, Client *client) {
 
                 r = bus_parse_unit_info(message, info);
                 if (r < 0) {
-                        hirte_log_errorf("Failed to parse unit info: %s\n", strerror(-r));
+                        hirte_log_errorf("Failed to parse unit info: %s", strerror(-r));
                         return r;
                 }
                 if (r == 0) {
@@ -166,7 +166,7 @@ int client_call_manager(Client *client) {
 
         r = sd_bus_open_user(&(client->user_bus));
         if (r < 0) {
-                hirte_log_errorf("Failed to connect to system bus: %s\n", strerror(-r));
+                hirte_log_errorf("Failed to connect to system bus: %s", strerror(-r));
                 return r;
         }
 

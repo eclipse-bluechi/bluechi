@@ -24,7 +24,7 @@ static int method_shutdown(sd_bus_message *m, void *userdata, UNUSED sd_bus_erro
 
         int r = shutdown_event_loop(event);
         if (r < 0) {
-                return sd_bus_reply_method_errnof(m, -r, "Failed to shutown event loop: %m\n");
+                return sd_bus_reply_method_errnof(m, -r, "Failed to shutown event loop: %m");
         }
         return sd_bus_reply_method_return(m, "");
 }
@@ -70,7 +70,7 @@ int service_call_shutdown(sd_bus *target_bus, const char *service_name) {
                         &reply,
                         "");
         if (r < 0) {
-                hirte_log_errorf("Failed to call '%s': %s\n", method_name_shutdown, error.message);
+                hirte_log_errorf("Failed to call '%s': %s", method_name_shutdown, error.message);
                 return r;
         }
         return 0;
@@ -98,34 +98,34 @@ int event_loop_add_shutdown_signals(sd_event *event) {
         // signals can be handled by the event loop instead.
         r = sigemptyset(&sigset);
         if (r < 0) {
-                hirte_log_errorf("sigemptyset() failed: %s\n", strerror(-r));
+                hirte_log_errorf("sigemptyset() failed: %s", strerror(-r));
                 return -1;
         }
         r = sigaddset(&sigset, SIGTERM);
         if (r < 0) {
-                hirte_log_errorf("sigaddset() failed: %s\n", strerror(-r));
+                hirte_log_errorf("sigaddset() failed: %s", strerror(-r));
                 return -1;
         }
         r = sigaddset(&sigset, SIGINT);
         if (r < 0) {
-                hirte_log_errorf("sigaddset() failed: %s\n", strerror(-r));
+                hirte_log_errorf("sigaddset() failed: %s", strerror(-r));
                 return -1;
         }
         r = sigprocmask(SIG_BLOCK, &sigset, NULL);
         if (r < 0) {
-                hirte_log_errorf("sigprocmask() failed: %s\n", strerror(-r));
+                hirte_log_errorf("sigprocmask() failed: %s", strerror(-r));
                 return -1;
         }
 
         // Add SIGTERM and SIGINT as event sources in the event loop.
         r = sd_event_add_signal(event, NULL, SIGTERM, event_loop_signal_handler, NULL);
         if (r < 0) {
-                hirte_log_errorf("sd_event_add_signal() failed: %s\n", strerror(-r));
+                hirte_log_errorf("sd_event_add_signal() failed: %s", strerror(-r));
                 return -1;
         }
         r = sd_event_add_signal(event, NULL, SIGINT, event_loop_signal_handler, NULL);
         if (r < 0) {
-                hirte_log_errorf("sd_event_add_signal() failed: %s\n", strerror(-r));
+                hirte_log_errorf("sd_event_add_signal() failed: %s", strerror(-r));
                 return -1;
         }
 
