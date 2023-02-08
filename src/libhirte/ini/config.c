@@ -28,7 +28,6 @@ static void topic_free(void *item) {
         hashmap_free(topic->keys_and_values);
 }
 
-// NOLINTNEXTLINE
 int key_value_compare_key(const void *a, const void *b, UNUSED void *udata) {
         const keyValue *kva = a;
         const keyValue *kvb = b;
@@ -40,7 +39,6 @@ uint64_t key_value_hash(const void *item, uint64_t seed0, uint64_t seed1) {
         return hashmap_sip(kv->key, strlen(kv->key), seed0, seed1);
 }
 
-// NOLINTNEXTLINE
 int topic_compare_topic_name(const void *a, const void *b, UNUSED void *udata) {
         const topic *ta = a;
         const topic *tb = b;

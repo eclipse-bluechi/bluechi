@@ -16,10 +16,8 @@ const struct option options[] = { { ARG_PORT, required_argument, 0, ARG_PORT_SHO
 
 #define OPTIONS_STR ARG_PORT_SHORT_S ARG_HELP_SHORT_S ARG_CONFIG_SHORT_S
 
-// NOLINTBEGIN(cppcoreguidelines-avoid-non-const-global-variables)
 static const char *opt_port = 0;
 static const char *opt_config = NULL;
-// NOLINTEND(cppcoreguidelines-avoid-non-const-global-variables)
 
 static void usage(char *argv[]) {
         hirte_log_errorf("Usage: %s [-p port] [-c config]", argv[0]);

@@ -62,13 +62,12 @@ int hirte_log_to_stderr_with_location(
         return 0;
 }
 
-// NOLINTBEGIN(cppcoreguidelines-avoid-non-const-global-variables)
+
 static struct HirteLogConfig {
         LogFn log_fn;
         LogLevel level;
         bool is_quiet;
 } HirteLogConfig;
-// NOLINTEND(cppcoreguidelines-avoid-non-const-global-variables)
 
 void hirte_log_set_log_fn(LogFn log_fn) {
         HirteLogConfig.log_fn = log_fn;

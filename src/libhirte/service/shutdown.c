@@ -31,7 +31,6 @@ static int method_shutdown(sd_bus_message *m, void *userdata, UNUSED sd_bus_erro
 
 #define method_name_shutdown "Shutdown"
 
-// NOLINTNEXTLINE(cppcoreguidelines-interfaces-global-init)
 static const sd_bus_vtable vtable_shutdown[] = {
         SD_BUS_VTABLE_START(0), SD_BUS_METHOD(method_name_shutdown, "", "", method_shutdown, 0), SD_BUS_VTABLE_END
 };
