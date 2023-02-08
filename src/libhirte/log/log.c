@@ -1,9 +1,32 @@
+#include <errno.h>
+
 #include "log.h"
 
 static const char * const log_level_strings[] = { "DEBUG", "INFO", "WARN", "ERROR" };
 
 const char *log_level_to_string(LogLevel l) {
         return log_level_strings[l];
+}
+
+LogLevel string_to_log_level(const char *l) {
+        if (l == NULL) {
+                return LOG_LEVEL_INVALID;
+        }
+
+        if (streq(log_level_strings[0], l)) {
+                return LOG_LEVEL_DEBUG;
+        }
+        if (streq(log_level_strings[1], l)) {
+                return LOG_LEVEL_INFO;
+        }
+        if (streq(log_level_strings[2], l)) {
+                return LOG_LEVEL_WARN;
+        }
+        if (streq(log_level_strings[3], l)) {
+                return LOG_LEVEL_ERROR;
+        }
+
+        return LOG_LEVEL_INVALID;
 }
 
 
@@ -85,6 +108,41 @@ void hirte_log_init() {
         hirte_log_set_level(LOG_LEVEL_INFO);
         hirte_log_set_quiet(false);
         hirte_log_set_log_fn(hirte_log_to_stderr_with_location);
+}
+
+int hirte_log_init_from_config(config *conf) {
+        if (conf == NULL) {
+                return -EINVAL;
+        }
+
+        topic *logging_topic = NULL;
+        _cleanup_free_ const char *target = NULL;
+        _cleanup_free_ const char *quiet = NULL;
+
+        logging_topic = config_lookup_topic(conf, "Logging");
+        if (logging_topic == NULL) {
+                return -EINVAL;
+        }
+
+        LogLevel level = string_to_log_level(topic_lookup(logging_topic, "Level"));
+        if (level == LOG_LEVEL_INVALID) {
+                level = LOG_LEVEL_INFO;
+        }
+        hirte_log_set_level(level);
+
+        target = topic_lookup(logging_topic, "Target");
+        hirte_log_set_log_fn(hirte_log_to_stderr_with_location);
+        if (target && streq("journald", target)) {
+                hirte_log_set_log_fn(hirte_log_to_journald_with_location);
+        }
+
+        quiet = topic_lookup(logging_topic, "Quiet");
+        hirte_log_set_quiet(false);
+        if (quiet && streq("true", quiet)) {
+                hirte_log_set_quiet(true);
+        }
+
+        return 0;
 }
 
 bool shouldLog(LogLevel lvl) {

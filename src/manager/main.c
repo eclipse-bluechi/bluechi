@@ -55,8 +55,6 @@ int main(int argc, char *argv[]) {
 
         get_opts(argc, argv);
 
-        hirte_log_set_log_fn(hirte_log_to_journald_with_location);
-
         _cleanup_manager_ Manager *manager = manager_new();
         if (manager == NULL) {
                 return EXIT_FAILURE;

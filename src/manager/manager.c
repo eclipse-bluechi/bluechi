@@ -319,6 +319,8 @@ bool manager_parse_config(Manager *manager, const char *configfile) {
                 return false;
         }
 
+        hirte_log_init_from_config(config);
+
         topic = config_lookup_topic(config, "Manager");
         if (topic == NULL) {
                 return true;

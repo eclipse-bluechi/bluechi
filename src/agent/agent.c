@@ -249,6 +249,8 @@ bool agent_parse_config(Agent *agent, const char *configfile) {
                 return false;
         }
 
+        hirte_log_init_from_config(config);
+
         topic = config_lookup_topic(config, "Node");
         if (topic == NULL) {
                 return true;

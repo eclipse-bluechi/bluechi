@@ -63,8 +63,6 @@ int main(int argc, char *argv[]) {
                 return EXIT_SUCCESS;
         }
 
-        hirte_log_set_log_fn(hirte_log_to_journald_with_location);
-
         _cleanup_client_ Client *client = new_client(op, opargc, opargv);
         r = client_call_manager(client);
         if (r < 0) {
