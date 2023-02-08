@@ -31,6 +31,7 @@
 #define INTERNAL_AGENT_INTERFACE HIRTE_INTERFACE_BASE_NAME ".internal.Agent"
 
 #define HIRTE_BUS_ERROR_OFFLINE "org.containers.hirte.Offline"
+#define HIRTE_BUS_ERROR_NO_SUCH_SUBSCRIPTION "org.containers.hirte.NoSuchSubscription"
 
 /* Systemd protocol */
 

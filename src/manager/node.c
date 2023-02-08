@@ -5,6 +5,8 @@
 
 #define DEBUG_AGENT_MESSAGES 0
 
+static void node_send_agent_subscribe_all(Node *node);
+
 static int node_method_register(sd_bus_message *m, void *userdata, sd_bus_error *ret_error);
 static int node_disconnected(sd_bus_message *message, void *userdata, sd_bus_error *error);
 static int node_method_list_units(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error);
@@ -47,6 +49,28 @@ static const sd_bus_vtable node_vtable[] = {
         SD_BUS_VTABLE_END
 };
 
+typedef struct {
+        char *unit;
+        uint32_t num_subscriptions;
+} UnitSubscription;
+
+static void unit_subscription_clear(void *item) {
+        UnitSubscription *sub = item;
+        free(sub->unit);
+}
+
+static uint64_t unit_subscription_hash(const void *item, uint64_t seed0, uint64_t seed1) {
+        const UnitSubscription *sub = item;
+        return hashmap_sip(sub->unit, strlen(sub->unit), seed0, seed1);
+}
+
+static int unit_subscription_compare(const void *a, const void *b, UNUSED void *udata) {
+        const UnitSubscription *sub_a = a;
+        const UnitSubscription *sub_b = b;
+
+        return strcmp(sub_a->unit, sub_b->unit);
+}
+
 Node *node_new(Manager *manager, const char *name) {
         _cleanup_node_ Node *node = malloc0(sizeof(Node));
         if (node == NULL) {
@@ -56,6 +80,19 @@ Node *node_new(Manager *manager, const char *name) {
         node->ref_count = 1;
         node->manager = manager;
         LIST_INIT(nodes, node);
+
+        node->unit_subscriptions = hashmap_new(
+                        sizeof(UnitSubscription),
+                        0,
+                        0,
+                        0,
+                        unit_subscription_hash,
+                        unit_subscription_compare,
+                        unit_subscription_clear,
+                        NULL);
+        if (node->unit_subscriptions == NULL) {
+                return NULL;
+        }
 
         if (name) {
                 node->name = strdup(name);
@@ -85,6 +122,8 @@ void node_unref(Node *node) {
         sd_bus_slot_unrefp(&node->export_slot);
 
         node_unset_agent_bus(node);
+
+        hashmap_free(node->unit_subscriptions);
 
         free(node->name);
         free(node->object_path);
@@ -134,7 +173,6 @@ static int debug_messages_handler(sd_bus_message *m, void *userdata, UNUSED sd_b
         return 0;
 }
 
-
 bool node_has_agent(Node *node) {
         return node->agent_bus != NULL;
 }
@@ -153,6 +191,15 @@ static int node_match_job_state_changed(
         }
 
         manager_job_state_changed(manager, hirte_job_id, state);
+        return 1;
+}
+
+static int node_match_unit_properties_changed(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *error) {
+        Node *node = userdata;
+        Manager *manager = node->manager;
+
+        manager_unit_properties_changed(manager, node->name, m);
+
         return 1;
 }
 
@@ -226,6 +273,20 @@ bool node_set_agent_bus(Node *node, sd_bus *bus) {
                         return false;
                 }
 
+                r = sd_bus_match_signal(
+                                bus,
+                                NULL,
+                                NULL,
+                                INTERNAL_AGENT_OBJECT_PATH,
+                                INTERNAL_AGENT_INTERFACE,
+                                "UnitPropertiesChanged",
+                                node_match_unit_properties_changed,
+                                node);
+                if (r < 0) {
+                        fprintf(stderr, "Failed to add JobStateChanged peer bus match: %s\n", strerror(-r));
+                        return false;
+                }
+
                 r = sd_bus_emit_properties_changed(
                                 node->manager->user_dbus, node->object_path, NODE_INTERFACE, "Status", NULL);
                 if (r < 0) {
@@ -252,6 +313,10 @@ bool node_set_agent_bus(Node *node, sd_bus *bus) {
         if (DEBUG_AGENT_MESSAGES) {
                 sd_bus_add_filter(bus, NULL, debug_messages_handler, node);
         }
+
+
+        /* Register any active subscriptions with new agent */
+        node_send_agent_subscribe_all(node);
 
         return true;
 }
@@ -377,6 +442,7 @@ static int node_property_get_status(
 
         return sd_bus_message_append(reply, "s", node_get_status(node));
 }
+
 
 AgentRequest *agent_request_ref(AgentRequest *req) {
         req->ref_count++;
@@ -707,4 +773,97 @@ static int node_method_restart_unit(sd_bus_message *m, void *userdata, UNUSED sd
 
 static int node_method_reload_unit(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error) {
         return node_run_unit_lifecycle_method(m, (Node *) userdata, "reload", "ReloadUnit");
+}
+
+static int send_agent_simple_message(Node *node, const char *method, const char *arg) {
+        _cleanup_sd_bus_message_ sd_bus_message *m = NULL;
+        int r = sd_bus_message_new_method_call(
+                        node->agent_bus,
+                        &m,
+                        HIRTE_AGENT_DBUS_NAME,
+                        INTERNAL_AGENT_OBJECT_PATH,
+                        INTERNAL_AGENT_INTERFACE,
+                        method);
+        if (r < 0) {
+                return r;
+        }
+
+        r = sd_bus_message_append(m, "s", arg);
+        if (r < 0) {
+                return r;
+        }
+
+        return sd_bus_send(node->agent_bus, m, NULL);
+}
+
+static void node_send_agent_subscribe(Node *node, const char *unit) {
+        if (!node_has_agent(node)) {
+                return;
+        }
+
+        int r = send_agent_simple_message(node, "Subscribe", unit);
+        if (r < 0) {
+                fprintf(stderr, "Failed to subscribe w/ agent");
+        }
+}
+
+
+static void node_send_agent_unsubscribe(Node *node, const char *unit) {
+        if (!node_has_agent(node)) {
+                return;
+        }
+
+        int r = send_agent_simple_message(node, "Unsubscribe", unit);
+        if (r < 0) {
+                fprintf(stderr, "Failed to subscribe w/ agent");
+        }
+}
+
+/* Resubscribe to all subscriptions */
+static void node_send_agent_subscribe_all(Node *node) {
+        void *item = NULL;
+        size_t i = 0;
+
+        while (hashmap_iter(node->unit_subscriptions, &i, &item)) {
+                UnitSubscription *sub = item;
+
+                node_send_agent_subscribe(node, sub->unit);
+        }
+}
+
+void node_subscribe(Node *node, const char *unit) {
+        const UnitSubscription key = { (char *) unit, 1 };
+        UnitSubscription *sub = NULL;
+
+        sub = hashmap_get(node->unit_subscriptions, &key);
+        if (sub == NULL) {
+                sub = hashmap_set(node->unit_subscriptions, &key);
+                if (sub == NULL && hashmap_oom(node->unit_subscriptions)) {
+                        fprintf(stderr, "Failed to subscribe to unit, OOM\n");
+                        return;
+                }
+                node_send_agent_subscribe(node, unit);
+        } else {
+                sub->num_subscriptions++;
+        }
+}
+
+void node_unsubscribe(Node *node, const char *unit) {
+        UnitSubscription key = { (char *) unit, 1 };
+        UnitSubscription *sub = NULL;
+
+        /* NOTE: If there are errors during subscribe we may still
+           call unsubscribe, so this must silently handle the
+           case of too many unsubscribes. */
+
+        sub = hashmap_get(node->unit_subscriptions, &key);
+        if (sub == NULL) {
+                return;
+        }
+
+        --sub->num_subscriptions;
+        if (sub->num_subscriptions == 0) {
+                node_send_agent_unsubscribe(node, unit);
+                hashmap_delete(node->unit_subscriptions, &key);
+        }
 }

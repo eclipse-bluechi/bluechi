@@ -1,6 +1,7 @@
 #pragma once
 
 #include "libhirte/common/common.h"
+#include "libhirte/hashmap/hashmap.h"
 
 #include "types.h"
 
@@ -43,8 +44,9 @@ struct Node {
         char *object_path;
 
         LIST_HEAD(AgentRequest, outstanding_requests);
-};
 
+        struct hashmap *unit_subscriptions;
+};
 
 Node *node_new(Manager *manager, const char *name);
 Node *node_ref(Node *node);
@@ -59,6 +61,9 @@ void node_unset_agent_bus(Node *node);
 
 AgentRequest *node_request_list_units(
                 Node *node, agent_request_response_t cb, void *userdata, free_func_t free_userdata);
+
+void node_subscribe(Node *node, const char *unit);
+void node_unsubscribe(Node *node, const char *unit);
 
 DEFINE_CLEANUP_FUNC(Node, node_unref)
 #define _cleanup_node_ _cleanup_(node_unrefp)

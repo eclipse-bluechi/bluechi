@@ -107,6 +107,28 @@ static bool systemd_request_start(SystemdRequest *req, sd_bus_message_handler_t 
         return true;
 }
 
+typedef struct {
+        char *object_path; /* key */
+        char *unit;
+} UnitSubscription;
+
+static void unit_subscription_clear(void *item) {
+        UnitSubscription *sub = item;
+        free(sub->object_path);
+        free(sub->unit);
+}
+
+static uint64_t unit_subscription_hash(const void *item, uint64_t seed0, uint64_t seed1) {
+        const UnitSubscription *sub = item;
+        return hashmap_sip(sub->object_path, strlen(sub->object_path), seed0, seed1);
+}
+
+static int unit_subscription_compare(const void *a, const void *b, UNUSED void *udata) {
+        const UnitSubscription *sub_a = a;
+        const UnitSubscription *sub_b = b;
+
+        return strcmp(sub_a->object_path, sub_b->object_path);
+}
 
 Agent *agent_new(void) {
         int r = 0;
@@ -123,7 +145,7 @@ Agent *agent_new(void) {
                 return NULL;
         }
 
-        Agent *n = malloc0(sizeof(Agent));
+        _cleanup_agent_ Agent *n = malloc0(sizeof(Agent));
         n->ref_count = 1;
         n->event = steal_pointer(&event);
         n->user_bus_service_name = steal_pointer(&service_name);
@@ -131,7 +153,20 @@ Agent *agent_new(void) {
         LIST_HEAD_INIT(n->outstanding_requests);
         LIST_HEAD_INIT(n->tracked_jobs);
 
-        return n;
+        n->unit_subscriptions = hashmap_new(
+                        sizeof(UnitSubscription),
+                        0,
+                        0,
+                        0,
+                        unit_subscription_hash,
+                        unit_subscription_compare,
+                        unit_subscription_clear,
+                        NULL);
+        if (n->unit_subscriptions == NULL) {
+                return NULL;
+        }
+
+        return steal_pointer(&n);
 }
 
 Agent *agent_ref(Agent *agent) {
@@ -144,6 +179,8 @@ void agent_unref(Agent *agent) {
         if (agent->ref_count != 0) {
                 return;
         }
+
+        hashmap_free(agent->unit_subscriptions);
 
         free(agent->name);
         free(agent->host);
@@ -519,6 +556,69 @@ static int agent_method_reload_unit(sd_bus_message *m, void *userdata, UNUSED sd
         return agent_run_unit_lifecycle_method(m, (Agent *) userdata, "ReloadUnit");
 }
 
+/*************************************************************************
+ ********** org.containers.hirte.internal.Agent.Subscribe ****************
+ ************************************************************************/
+
+static int agent_method_subscribe(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error) {
+        Agent *agent = userdata;
+        const char *unit = NULL;
+        int r = sd_bus_message_read(m, "s", &unit);
+        if (r < 0) {
+                return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_INVALID_ARGS, "Invalid arguments");
+        }
+
+        _cleanup_free_ char *u = strdup(unit);
+        _cleanup_free_ char *escaped = bus_path_escape(unit);
+        _cleanup_free_ char *path = NULL;
+        if (escaped) {
+                path = strcat_dup(SYSTEMD_OBJECT_PATH "/unit/", escaped);
+        }
+        if (u == NULL || escaped == NULL || path == NULL) {
+                return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "Internal error");
+        }
+
+        UnitSubscription v = { path, u };
+
+        UnitSubscription *replaced = hashmap_set(agent->unit_subscriptions, &v);
+        if (replaced == NULL && hashmap_oom(agent->unit_subscriptions)) {
+                return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "Internal error");
+        }
+
+        /* These are now in hashtable */
+        steal_pointer(&u);
+        steal_pointer(&path);
+
+        return sd_bus_reply_method_return(m, "");
+}
+
+/*************************************************************************
+ ********** org.containers.hirte.internal.Agent.Unsubscribe **************
+ ************************************************************************/
+
+static int agent_method_unsubscribe(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error) {
+        Agent *agent = userdata;
+        const char *unit = NULL;
+        int r = sd_bus_message_read(m, "s", &unit);
+        if (r < 0) {
+                return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_INVALID_ARGS, "Invalid arguments");
+        }
+
+        _cleanup_free_ char *escaped = bus_path_escape(unit);
+        _cleanup_free_ char *path = NULL;
+        if (escaped) {
+                path = strcat_dup(SYSTEMD_OBJECT_PATH "/unit/", escaped);
+        }
+        if (escaped == NULL || path == NULL) {
+                return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "Internal error");
+        }
+
+        UnitSubscription key = { path, (char *) unit };
+        hashmap_delete(agent->unit_subscriptions, &key);
+
+        return sd_bus_reply_method_return(m, "");
+}
+
 static const sd_bus_vtable internal_agent_vtable[] = {
         SD_BUS_VTABLE_START(0),
         SD_BUS_METHOD("ListUnits", "", UNIT_INFO_STRUCT_ARRAY_TYPESTRING, agent_method_list_units, 0),
@@ -527,8 +627,12 @@ static const sd_bus_vtable internal_agent_vtable[] = {
         SD_BUS_METHOD("StopUnit", "ssu", "", agent_method_stop_unit, 0),
         SD_BUS_METHOD("RestartUnit", "ssu", "", agent_method_restart_unit, 0),
         SD_BUS_METHOD("ReloadUnit", "ssu", "", agent_method_reload_unit, 0),
+        SD_BUS_METHOD("Subscribe", "s", "", agent_method_subscribe, 0),
+        SD_BUS_METHOD("Unsubscribe", "s", "", agent_method_unsubscribe, 0),
         SD_BUS_SIGNAL_WITH_NAMES("JobDone", "us", SD_BUS_PARAM(id) SD_BUS_PARAM(result), 0),
         SD_BUS_SIGNAL_WITH_NAMES("JobStateChanged", "us", SD_BUS_PARAM(id) SD_BUS_PARAM(state), 0),
+        SD_BUS_SIGNAL_WITH_NAMES(
+                        "UnitPropertiesChanged", "sa{sv}", SD_BUS_PARAM(unit) SD_BUS_PARAM(properties), 0),
         SD_BUS_VTABLE_END
 };
 
@@ -629,6 +733,55 @@ static int agent_match_job_changed(sd_bus_message *m, void *userdata, UNUSED sd_
         }
 
         return 0;
+}
+
+static int agent_match_unit_changed(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error) {
+        Agent *agent = userdata;
+        const char *interface = NULL;
+
+        int r = sd_bus_message_read(m, "s", &interface);
+        if (r < 0) {
+                return r;
+        }
+
+        /* Only handle Unit iface changes */
+        if (!streq(interface, "org.freedesktop.systemd1.Unit")) {
+                return 0;
+        }
+
+        const char *path = sd_bus_message_get_path(m);
+        UnitSubscription key = { (char *) path, NULL };
+        UnitSubscription *sub = hashmap_get(agent->unit_subscriptions, &key);
+
+        if (sub == NULL) {
+                /* The changed unit has no subscription */
+                return 0;
+        }
+
+        /* Forward the property changes */
+
+        _cleanup_sd_bus_message_ sd_bus_message *sig = NULL;
+        r = sd_bus_message_new_signal(
+                        agent->peer_dbus,
+                        &sig,
+                        INTERNAL_AGENT_OBJECT_PATH,
+                        INTERNAL_AGENT_INTERFACE,
+                        "UnitPropertiesChanged");
+        if (r < 0) {
+                return r;
+        }
+
+        r = sd_bus_message_append(sig, "s", sub->unit);
+        if (r < 0) {
+                return r;
+        }
+
+        r = sd_bus_message_copy(sig, m, false);
+        if (r < 0) {
+                return r;
+        }
+
+        return sd_bus_send(agent->peer_dbus, sig, NULL);
 }
 
 static int agent_match_job_removed(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *error) {
@@ -750,6 +903,17 @@ bool agent_start(Agent *agent) {
                         NULL,
                         "type='signal',sender='org.freedesktop.systemd1',interface='org.freedesktop.DBus.Properties',member='PropertiesChanged',path_namespace='/org/freedesktop/systemd1/job'",
                         agent_match_job_changed,
+                        agent);
+        if (r < 0) {
+                fprintf(stderr, "Failed to add match\n");
+                return false;
+        }
+
+        r = sd_bus_add_match(
+                        agent->systemd_dbus,
+                        NULL,
+                        "type='signal',sender='org.freedesktop.systemd1',interface='org.freedesktop.DBus.Properties',member='PropertiesChanged',path_namespace='/org/freedesktop/systemd1/unit'",
+                        agent_match_unit_changed,
                         agent);
         if (r < 0) {
                 fprintf(stderr, "Failed to add match\n");

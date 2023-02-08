@@ -27,6 +27,7 @@ struct Manager {
 
         LIST_HEAD(Job, jobs);
         LIST_HEAD(Monitor, monitors);
+        LIST_HEAD(Subscription, all_subscriptions);
 };
 
 Manager *manager_new(void);
@@ -51,6 +52,10 @@ void manager_finish_job(Manager *manager, uint32_t job_id, const char *result);
 void manager_job_state_changed(Manager *manager, uint32_t job_id, const char *state);
 
 void manager_remove_monitor(Manager *manager, Monitor *monitor);
+
+void manager_add_subscription(Manager *manager, Subscription *sub);
+void manager_remove_subscription(Manager *manager, Subscription *sub);
+void manager_unit_properties_changed(Manager *manager, const char *node, sd_bus_message *m);
 
 DEFINE_CLEANUP_FUNC(Manager, manager_unref)
 #define _cleanup_manager_ _cleanup_(manager_unrefp)

@@ -41,6 +41,7 @@ Manager *manager_new(void) {
                 LIST_HEAD_INIT(manager->anonymous_nodes);
                 LIST_HEAD_INIT(manager->jobs);
                 LIST_HEAD_INIT(manager->monitors);
+                LIST_HEAD_INIT(manager->all_subscriptions);
         }
 
         return manager;
@@ -81,12 +82,78 @@ void manager_unref(Manager *manager) {
                 job_unref(job);
         }
 
+        Subscription *sub = NULL;
+        LIST_FOREACH(all_subscriptions, sub, manager->all_subscriptions) {
+                subscription_unref(sub);
+        }
+
         Monitor *monitor = NULL;
         LIST_FOREACH(monitors, monitor, manager->monitors) {
                 monitor_unref(monitor);
         }
 
         free(manager);
+}
+
+void manager_unit_properties_changed(Manager *manager, const char *node, sd_bus_message *m) {
+        const char *unit = NULL;
+
+        int r = sd_bus_message_read(m, "s", &unit);
+        if (r >= 0) {
+                r = sd_bus_message_rewind(m, false);
+        }
+        if (r < 0) {
+                fprintf(stderr, "Invalid UnitPropertiesChanged signal\n");
+                return;
+        }
+
+        Subscription *sub = NULL;
+        LIST_FOREACH(all_subscriptions, sub, manager->all_subscriptions) {
+                if ((*sub->node == 0 || streq(sub->node, node)) && streq(sub->unit, unit)) {
+                        r = monitor_emit_unit_property_changed(sub->monitor, node, unit, m);
+                        if (r < 0) {
+                                fprintf(stderr, "Failed to emit UnitPropertiesChanged signal\n");
+                                return;
+                        }
+                }
+        }
+}
+
+void manager_add_subscription(Manager *manager, Subscription *sub) {
+        Node *node = NULL;
+
+        if (*sub->node == 0) {
+                LIST_FOREACH(nodes, node, manager->nodes) {
+                        node_subscribe(node, sub->unit);
+                }
+        } else {
+                node = manager_find_node(manager, sub->node);
+                if (node) {
+                        node_subscribe(node, sub->unit);
+                } else {
+                        fprintf(stderr, "Warning: Subscription to non-existing node %s\n", sub->node);
+                }
+        }
+
+        LIST_APPEND(all_subscriptions, manager->all_subscriptions, subscription_ref(sub));
+}
+
+void manager_remove_subscription(Manager *manager, Subscription *sub) {
+        Node *node = NULL;
+
+        if (*sub->node == 0) {
+                LIST_FOREACH(nodes, node, manager->nodes) {
+                        node_unsubscribe(node, sub->unit);
+                }
+        } else {
+                node = manager_find_node(manager, sub->node);
+                if (node) {
+                        node_unsubscribe(node, sub->unit);
+                }
+        }
+
+        LIST_REMOVE(all_subscriptions, manager->all_subscriptions, sub);
+        subscription_unref(sub);
 }
 
 Node *manager_find_node(Manager *manager, const char *name) {
