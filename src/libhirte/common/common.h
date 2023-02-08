@@ -13,6 +13,14 @@
 #define streq(a, b) (strcmp((a), (b)) == 0)
 #define strneq(a, b, n) (strncmp((a), (b), (n)) == 0)
 
+static inline bool ascii_isdigit(char a) {
+        return a >= '0' && a <= '9';
+}
+
+static inline bool ascii_isalpha(char a) {
+        return (a >= 'a' && a <= 'z') || (a >= 'A' && a <= 'Z');
+}
+
 #define UNUSED __attribute__((unused))
 
 static inline void *steal_pointer(void *ptr) {
