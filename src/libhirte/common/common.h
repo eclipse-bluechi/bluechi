@@ -66,6 +66,20 @@ static inline void *malloc0_array(size_t base_size, size_t element_size, size_t 
         return malloc0(total_size);
 }
 
+static inline char *strcat_dup(const char *a, const char *b) {
+        size_t a_len = strlen(a);
+        size_t b_len = strlen(b);
+        size_t len = a_len + b_len + 1;
+        char *res = malloc(len);
+        if (res) {
+                memcpy(res, a, a_len);
+                memcpy(res + a_len, b, b_len);
+                res[a_len + b_len] = 0;
+        }
+
+        return res;
+}
+
 #define _cleanup_(x) __attribute__((__cleanup__(x)))
 #define _cleanup_free_ _cleanup_(freep)
 #define _cleanup_fd_ _cleanup_(closep)
