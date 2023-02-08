@@ -1,3 +1,4 @@
+#include <errno.h>
 #include <getopt.h>
 #include <stdlib.h>
 #include <string.h>
@@ -25,15 +26,14 @@ static void usage(char *argv[]) {
         hirte_log_errorf("Usage: %s [-H host] [-p port] [-c config] [-n name]", argv[0]);
 }
 
-static void get_opts(int argc, char *argv[]) {
+static int get_opts(int argc, char *argv[]) {
         int opt = 0;
 
         while ((opt = getopt_long(argc, argv, OPTIONS_STR, options, NULL)) != -1) {
                 switch (opt) {
                 case ARG_HELP_SHORT:
                         usage(argv);
-                        exit(EXIT_SUCCESS);
-                        break;
+                        return 0;
 
                 case ARG_NAME_SHORT:
                         opt_name = optarg;
@@ -54,15 +54,20 @@ static void get_opts(int argc, char *argv[]) {
                 default:
                         hirte_log_errorf("Unsupported option %c", opt);
                         usage(argv);
-                        exit(EXIT_FAILURE);
+                        return -EINVAL;
                 }
         }
+
+        return 0;
 }
 
 int main(int argc, char *argv[]) {
         hirte_log_init();
 
-        get_opts(argc, argv);
+        int r = get_opts(argc, argv);
+        if (r < 0) {
+                return EXIT_FAILURE;
+        }
 
         // hirte_log_set_log_fn(hirte_log_to_journald_with_location);
 
