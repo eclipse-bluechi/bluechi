@@ -56,6 +56,8 @@ void manager_remove_monitor(Manager *manager, Monitor *monitor);
 void manager_add_subscription(Manager *manager, Subscription *sub);
 void manager_remove_subscription(Manager *manager, Subscription *sub);
 void manager_unit_properties_changed(Manager *manager, const char *node, sd_bus_message *m);
+void manager_unit_new(Manager *manager, const char *node, const char *unit);
+void manager_unit_removed(Manager *manager, const char *node, const char *unit);
 
 DEFINE_CLEANUP_FUNC(Manager, manager_unref)
 #define _cleanup_manager_ _cleanup_(manager_unrefp)

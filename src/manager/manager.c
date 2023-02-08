@@ -119,6 +119,33 @@ void manager_unit_properties_changed(Manager *manager, const char *node, sd_bus_
         }
 }
 
+void manager_unit_new(Manager *manager, const char *node, const char *unit) {
+        Subscription *sub = NULL;
+        LIST_FOREACH(all_subscriptions, sub, manager->all_subscriptions) {
+                if ((*sub->node == 0 || streq(sub->node, node)) && streq(sub->unit, unit)) {
+                        int r = monitor_emit_unit_new(sub->monitor, node, unit);
+                        if (r < 0) {
+                                fprintf(stderr, "Failed to emit UnitNew signal\n");
+                                return;
+                        }
+                }
+        }
+}
+
+void manager_unit_removed(Manager *manager, const char *node, const char *unit) {
+        Subscription *sub = NULL;
+        LIST_FOREACH(all_subscriptions, sub, manager->all_subscriptions) {
+                if ((*sub->node == 0 || streq(sub->node, node)) && streq(sub->unit, unit)) {
+                        int r = monitor_emit_unit_removed(sub->monitor, node, unit);
+                        if (r < 0) {
+                                fprintf(stderr, "Failed to emit UnitRemoved signal\n");
+                                return;
+                        }
+                }
+        }
+}
+
+
 void manager_add_subscription(Manager *manager, Subscription *sub) {
         Node *node = NULL;
 

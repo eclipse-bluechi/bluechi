@@ -118,6 +118,15 @@ Object path: /org/containers/hirte/monitor/$id
      the current state in a race-free way without missing any
      changes.
 
+   * UnitNew(s node, s unit)
+
+     Emitted when a new unit is created, for example when a service is started.
+
+   * UnitRemove(s node, s unit)
+
+     Emitted when a unit is removed.
+
+
 ## interface org.containers.hirte.Node
 
 Each Node object represent a configured node in the system,

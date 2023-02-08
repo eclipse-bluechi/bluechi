@@ -58,6 +58,8 @@ static const sd_bus_vtable monitor_vtable[] = {
                         "ssa{sv}",
                         SD_BUS_PARAM(node) SD_BUS_PARAM(unit) SD_BUS_PARAM(properties),
                         0),
+        SD_BUS_SIGNAL_WITH_NAMES("UnitNew", "ss", SD_BUS_PARAM(node) SD_BUS_PARAM(unit), 0),
+        SD_BUS_SIGNAL_WITH_NAMES("UnitRemoved", "ss", SD_BUS_PARAM(node) SD_BUS_PARAM(unit), 0),
         SD_BUS_VTABLE_END
 };
 
@@ -257,4 +259,24 @@ int monitor_emit_unit_property_changed(Monitor *monitor, const char *node, const
         }
 
         return sd_bus_message_rewind(m, false);
+}
+
+int monitor_emit_unit_new(Monitor *monitor, const char *node, const char *unit) {
+        Manager *manager = monitor->manager;
+
+        return sd_bus_emit_signal(
+                        manager->user_dbus, monitor->object_path, MONITOR_INTERFACE, "UnitNew", "ss", node, unit);
+}
+
+int monitor_emit_unit_removed(Monitor *monitor, const char *node, const char *unit) {
+        Manager *manager = monitor->manager;
+
+        return sd_bus_emit_signal(
+                        manager->user_dbus,
+                        monitor->object_path,
+                        MONITOR_INTERFACE,
+                        "UnitRemoved",
+                        "ss",
+                        node,
+                        unit);
 }

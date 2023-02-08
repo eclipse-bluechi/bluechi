@@ -203,6 +203,39 @@ static int node_match_unit_properties_changed(sd_bus_message *m, void *userdata,
         return 1;
 }
 
+static int node_match_unit_new(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *error) {
+        Node *node = userdata;
+        Manager *manager = node->manager;
+        const char *unit = NULL;
+
+        int r = sd_bus_message_read(m, "s", &unit);
+        if (r < 0) {
+                fprintf(stderr, "Invalid UnitNew signal\n");
+                return 0;
+        }
+
+        manager_unit_new(manager, node->name, unit);
+
+        return 1;
+}
+
+static int node_match_unit_removed(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *error) {
+        Node *node = userdata;
+        Manager *manager = node->manager;
+        const char *unit = NULL;
+
+        int r = sd_bus_message_read(m, "s", &unit);
+        if (r < 0) {
+                fprintf(stderr, "Invalid UnitRemoved signal\n");
+                return 0;
+        }
+
+        manager_unit_removed(manager, node->name, unit);
+
+        return 1;
+}
+
+
 static int node_match_job_done(UNUSED sd_bus_message *m, UNUSED void *userdata, UNUSED sd_bus_error *error) {
         Node *node = userdata;
         Manager *manager = node->manager;
@@ -283,7 +316,37 @@ bool node_set_agent_bus(Node *node, sd_bus *bus) {
                                 node_match_unit_properties_changed,
                                 node);
                 if (r < 0) {
-                        fprintf(stderr, "Failed to add JobStateChanged peer bus match: %s\n", strerror(-r));
+                        fprintf(stderr,
+                                "Failed to add UnitPropertiesChanged peer bus match: %s\n",
+                                strerror(-r));
+                        return false;
+                }
+
+                r = sd_bus_match_signal(
+                                bus,
+                                NULL,
+                                NULL,
+                                INTERNAL_AGENT_OBJECT_PATH,
+                                INTERNAL_AGENT_INTERFACE,
+                                "UnitNew",
+                                node_match_unit_new,
+                                node);
+                if (r < 0) {
+                        fprintf(stderr, "Failed to add UnitNew peer bus match: %s\n", strerror(-r));
+                        return false;
+                }
+
+                r = sd_bus_match_signal(
+                                bus,
+                                NULL,
+                                NULL,
+                                INTERNAL_AGENT_OBJECT_PATH,
+                                INTERNAL_AGENT_INTERFACE,
+                                "UnitRemoved",
+                                node_match_unit_removed,
+                                node);
+                if (r < 0) {
+                        fprintf(stderr, "Failed to add UnitRemoved peer bus match: %s\n", strerror(-r));
                         return false;
                 }
 

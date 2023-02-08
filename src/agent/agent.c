@@ -633,6 +633,8 @@ static const sd_bus_vtable internal_agent_vtable[] = {
         SD_BUS_SIGNAL_WITH_NAMES("JobStateChanged", "us", SD_BUS_PARAM(id) SD_BUS_PARAM(state), 0),
         SD_BUS_SIGNAL_WITH_NAMES(
                         "UnitPropertiesChanged", "sa{sv}", SD_BUS_PARAM(unit) SD_BUS_PARAM(properties), 0),
+        SD_BUS_SIGNAL_WITH_NAMES("UnitNew", "s", SD_BUS_PARAM(unit), 0),
+        SD_BUS_SIGNAL_WITH_NAMES("UnitRemoved", "s", SD_BUS_PARAM(unit), 0),
         SD_BUS_VTABLE_END
 };
 
@@ -735,6 +737,12 @@ static int agent_match_job_changed(sd_bus_message *m, void *userdata, UNUSED sd_
         return 0;
 }
 
+static UnitSubscription *agent_get_unit_subscription(Agent *agent, const char *unit_path) {
+        UnitSubscription key = { (char *) unit_path, NULL };
+
+        return hashmap_get(agent->unit_subscriptions, &key);
+}
+
 static int agent_match_unit_changed(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error) {
         Agent *agent = userdata;
         const char *interface = NULL;
@@ -749,17 +757,12 @@ static int agent_match_unit_changed(sd_bus_message *m, void *userdata, UNUSED sd
                 return 0;
         }
 
-        const char *path = sd_bus_message_get_path(m);
-        UnitSubscription key = { (char *) path, NULL };
-        UnitSubscription *sub = hashmap_get(agent->unit_subscriptions, &key);
-
+        UnitSubscription *sub = agent_get_unit_subscription(agent, sd_bus_message_get_path(m));
         if (sub == NULL) {
-                /* The changed unit has no subscription */
                 return 0;
         }
 
         /* Forward the property changes */
-
         _cleanup_sd_bus_message_ sd_bus_message *sig = NULL;
         r = sd_bus_message_new_signal(
                         agent->peer_dbus,
@@ -783,6 +786,55 @@ static int agent_match_unit_changed(sd_bus_message *m, void *userdata, UNUSED sd
 
         return sd_bus_send(agent->peer_dbus, sig, NULL);
 }
+
+static int agent_match_unit_new(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *error) {
+        Agent *agent = userdata;
+        const char *id = NULL;
+        const char *path = NULL;
+
+        int r = sd_bus_message_read(m, "so", &id, &path);
+        if (r < 0) {
+                return r;
+        }
+
+        UnitSubscription *sub = agent_get_unit_subscription(agent, path);
+        if (sub == NULL) {
+                return 0;
+        }
+
+        return sd_bus_emit_signal(
+                        agent->peer_dbus,
+                        INTERNAL_AGENT_OBJECT_PATH,
+                        INTERNAL_AGENT_INTERFACE,
+                        "UnitNew",
+                        "s",
+                        sub->unit);
+}
+
+static int agent_match_unit_removed(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *error) {
+        Agent *agent = userdata;
+        const char *id = NULL;
+        const char *path = NULL;
+
+        int r = sd_bus_message_read(m, "so", &id, &path);
+        if (r < 0) {
+                return r;
+        }
+
+        UnitSubscription *sub = agent_get_unit_subscription(agent, path);
+        if (sub == NULL) {
+                return 0;
+        }
+
+        return sd_bus_emit_signal(
+                        agent->peer_dbus,
+                        INTERNAL_AGENT_OBJECT_PATH,
+                        INTERNAL_AGENT_INTERFACE,
+                        "UnitRemoved",
+                        "s",
+                        sub->unit);
+}
+
 
 static int agent_match_job_removed(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *error) {
         Agent *agent = userdata;
@@ -917,6 +969,34 @@ bool agent_start(Agent *agent) {
                         agent);
         if (r < 0) {
                 fprintf(stderr, "Failed to add match\n");
+                return false;
+        }
+
+        r = sd_bus_match_signal(
+                        agent->systemd_dbus,
+                        NULL,
+                        SYSTEMD_BUS_NAME,
+                        SYSTEMD_OBJECT_PATH,
+                        SYSTEMD_MANAGER_IFACE,
+                        "UnitNew",
+                        agent_match_unit_new,
+                        agent);
+        if (r < 0) {
+                fprintf(stderr, "Failed to add unit-new peer bus match: %s\n", strerror(-r));
+                return false;
+        }
+
+        r = sd_bus_match_signal(
+                        agent->systemd_dbus,
+                        NULL,
+                        SYSTEMD_BUS_NAME,
+                        SYSTEMD_OBJECT_PATH,
+                        SYSTEMD_MANAGER_IFACE,
+                        "UnitRemoved",
+                        agent_match_unit_removed,
+                        agent);
+        if (r < 0) {
+                fprintf(stderr, "Failed to add unit-removed peer bus match: %s\n", strerror(-r));
                 return false;
         }
 
