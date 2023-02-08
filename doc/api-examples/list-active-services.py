@@ -4,7 +4,9 @@ from collections import namedtuple
 import dasbus.connection
 bus = dasbus.connection.SessionMessageBus()
 
-NodeUnitInfo = namedtuple("NodeUnitInfo", ["node", "name", "description", "load_state", "active_state", "sub_state", "follower", "object_path", "job_id", "job_type", "job_object_path"])
+NodeUnitInfo = namedtuple("NodeUnitInfo", ["node", "name",
+                                           "description", "load_state", "active_state", "sub_state", "follower",
+                                           "object_path", "job_id", "job_type", "job_object_path"])
 
 manager = bus.get_proxy("org.containers.hirte",  "/org/containers/hirte")
 units = manager.ListUnits()

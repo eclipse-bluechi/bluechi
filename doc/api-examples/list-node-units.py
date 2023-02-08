@@ -5,7 +5,9 @@ from collections import namedtuple
 import dasbus.connection
 bus = dasbus.connection.SessionMessageBus()
 
-UnitInfo = namedtuple("UnitInfo", ["name", "description", "load_state", "active_state", "sub_state", "follower", "object_path", "job_id", "job_type", "job_object_path"])
+UnitInfo = namedtuple("UnitInfo", ["name", "description",
+                                   "load_state", "active_state", "sub_state", "follower", "object_path",
+                                   "job_id", "job_type", "job_object_path"])
 
 if len(sys.argv) != 2:
     print("No node name supplied")
