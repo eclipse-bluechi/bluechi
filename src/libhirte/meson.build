@@ -4,6 +4,8 @@ libhirte_src = [
     'bus/utils.c',
     'bus/utils.h',
     'common/common.h',
+    'common/event-util.c',
+    'common/event-util.h',
     'common/protocol.c',
     'common/list.h',
     'common/opt.h',

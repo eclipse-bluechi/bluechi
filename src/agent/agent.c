@@ -6,6 +6,7 @@
 #include "libhirte/bus/utils.h"
 #include "libhirte/common/common.h"
 #include "libhirte/common/opt.h"
+#include "libhirte/common/event-util.h"
 #include "libhirte/common/parse-util.h"
 #include "libhirte/ini/config.h"
 #include "libhirte/service/shutdown.h"
@@ -30,6 +31,65 @@ static bool
                                 void *userdata,
                                 free_func_t free_userdata);
 
+#define AGENT_HEARTBEAT_INTERVAL_USEC (1000000)
+
+static int agent_reset_heartbeat_timer(Agent *agent, sd_event_source **event_source);
+
+static int agent_heartbeat_timer_callback(
+                        sd_event_source *event_source,
+                        UNUSED uint64_t usec,
+                        void *userdata) {
+        Agent *agent = userdata;
+        int r;
+
+        assert(event_source);
+
+        static uint32_t count;
+        printf("%s(): count = %d\n", __func__, count++);
+
+        r = sd_bus_emit_signal(
+                    agent->peer_dbus,
+                    INTERNAL_MANAGER_OBJECT_PATH,
+                    INTERNAL_MANAGER_INTERFACE,
+                    "Heartbeat",
+                    "s",
+                    agent->name);
+        if (r < 0) {
+                fprintf(stderr, "Failed to emit heartbeat signal: %m");
+                return r;
+        }
+
+        r = agent_reset_heartbeat_timer(agent, &event_source);
+        if (r < 0) {
+                fprintf(stdout, "Failed to reset periodic timer event source, ignoring: %m");
+                return r;
+        }
+
+        return 0;
+}
+
+static int agent_reset_heartbeat_timer(
+                        Agent *agent,
+                        sd_event_source **event_source) {
+        sd_event *event = agent->event;
+        return event_reset_time_relative(event, event_source, CLOCK_BOOTTIME, AGENT_HEARTBEAT_INTERVAL_USEC, 0,
+                                         agent_heartbeat_timer_callback, agent, 0, "periodic-timer-event-source", false);
+}
+
+static int agent_setup_heartbeat_timer(Agent *agent) {
+        _cleanup_(sd_event_source_unrefp) sd_event_source *event_source = NULL;
+        int r;
+
+        assert(agent);
+
+        r = agent_reset_heartbeat_timer(agent, &event_source);
+        if (r < 0) {
+                fprintf(stdout, "Failed to reset heartbeat timer: %m");
+                return r;
+        }
+
+        return sd_event_source_set_floating(event_source, true);
+}
 SystemdRequest *systemd_request_ref(SystemdRequest *req) {
         req->ref_count++;
         return req;
@@ -118,15 +178,18 @@ Agent *agent_new(void) {
                 return NULL;
         }
 
-        Agent *n = malloc0(sizeof(Agent));
-        n->ref_count = 1;
-        n->event = steal_pointer(&event);
-        n->user_bus_service_name = steal_pointer(&service_name);
-        n->port = HIRTE_DEFAULT_PORT;
-        LIST_HEAD_INIT(n->outstanding_requests);
-        LIST_HEAD_INIT(n->tracked_jobs);
+        Agent *agent = malloc0(sizeof(Agent));
+        if (agent != NULL) {
+                agent->ref_count = 1;
+                agent->event = steal_pointer(&event);
+                agent->user_bus_service_name = steal_pointer(&service_name);
+                agent->port = HIRTE_DEFAULT_PORT;
+        }
 
-        return n;
+        LIST_HEAD_INIT(agent->outstanding_requests);
+        LIST_HEAD_INIT(agent->tracked_jobs);
+
+        return agent;
 }
 
 Agent *agent_ref(Agent *agent) {
@@ -732,6 +795,12 @@ bool agent_start(Agent *agent) {
         r = event_loop_add_shutdown_signals(agent->event);
         if (r < 0) {
                 fprintf(stderr, "Failed to add signals to agent event loop\n");
+                return false;
+        }
+
+        r = agent_setup_heartbeat_timer(agent);
+        if (r < 0) {
+                fprintf(stderr, "Failed to set up periodic timer: %m\n");
                 return false;
         }
 

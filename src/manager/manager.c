@@ -33,6 +33,7 @@ Manager *manager_new(void) {
 
         Manager *manager = malloc0(sizeof(Manager));
         if (manager != NULL) {
+                manager->ref_count = 1;
                 manager->port = HIRTE_DEFAULT_PORT;
                 manager->user_bus_service_name = steal_pointer(&service_name);
                 manager->event = steal_pointer(&event);

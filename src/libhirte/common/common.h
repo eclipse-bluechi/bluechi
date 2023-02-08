@@ -78,3 +78,7 @@ static inline void *malloc0_array(size_t base_size, size_t element_size, size_t 
 #define _cleanup_sd_bus_slot_ _cleanup_(sd_bus_slot_unrefp)
 #define _cleanup_sd_bus_message_ _cleanup_(sd_bus_message_unrefp)
 #define _cleanup_sd_bus_error_ _cleanup_(sd_bus_error_free)
+
+typedef uint64_t usec_t;
+
+#define USEC_INFINITY ((usec_t) UINT64_MAX)
