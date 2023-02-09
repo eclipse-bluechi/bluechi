@@ -5,7 +5,6 @@
 #include "libhirte/common/opt.h"
 #include "libhirte/common/parse-util.h"
 #include "libhirte/ini/config.h"
-#include "libhirte/log/log.h"
 #include "libhirte/service/shutdown.h"
 
 #include "manager.h"
@@ -21,7 +20,7 @@ static const char *opt_port = 0;
 static const char *opt_config = NULL;
 
 static void usage(char *argv[]) {
-        hirte_log_errorf("Usage: %s [-p port] [-c config]", argv[0]);
+        printf("Usage: %s [-p port] [-c config]", argv[0]);
 }
 
 static int get_opts(int argc, char *argv[]) {
@@ -42,7 +41,7 @@ static int get_opts(int argc, char *argv[]) {
                         break;
 
                 default:
-                        hirte_log_errorf("Unsupported option %c", opt);
+                        fprintf(stderr, "Unsupported option %c", opt);
                         usage(argv);
                         return -EINVAL;
                 }
@@ -53,8 +52,6 @@ static int get_opts(int argc, char *argv[]) {
 
 
 int main(int argc, char *argv[]) {
-        hirte_log_init();
-
         int r = get_opts(argc, argv);
         if (r < 0) {
                 return EXIT_FAILURE;

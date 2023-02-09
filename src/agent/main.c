@@ -1,5 +1,6 @@
 #include <errno.h>
 #include <getopt.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -23,7 +24,7 @@ static const char *opt_name = NULL;
 static const char *opt_config = NULL;
 
 static void usage(char *argv[]) {
-        hirte_log_errorf("Usage: %s [-H host] [-p port] [-c config] [-n name]", argv[0]);
+        printf("Usage: %s [-H host] [-p port] [-c config] [-n name]", argv[0]);
 }
 
 static int get_opts(int argc, char *argv[]) {
@@ -52,7 +53,7 @@ static int get_opts(int argc, char *argv[]) {
                         break;
 
                 default:
-                        hirte_log_errorf("Unsupported option %c", opt);
+                        fprintf(stderr, "Unsupported option %c", opt);
                         usage(argv);
                         return -EINVAL;
                 }
@@ -62,14 +63,10 @@ static int get_opts(int argc, char *argv[]) {
 }
 
 int main(int argc, char *argv[]) {
-        hirte_log_init();
-
         int r = get_opts(argc, argv);
         if (r < 0) {
                 return EXIT_FAILURE;
         }
-
-        // hirte_log_set_log_fn(hirte_log_to_journald_with_location);
 
         _cleanup_agent_ Agent *agent = agent_new();
         if (agent == NULL) {
