@@ -214,7 +214,7 @@ Agent *agent_new(void) {
         agent->port = HIRTE_DEFAULT_PORT;
         agent->api_bus_service_name = steal_pointer(&service_name);
         agent->event = steal_pointer(&event);
- 
+
         LIST_HEAD_INIT(agent->outstanding_requests);
         LIST_HEAD_INIT(agent->tracked_jobs);
 
