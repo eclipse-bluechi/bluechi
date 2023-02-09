@@ -17,8 +17,6 @@ manager = bus.get_proxy("org.containers.hirte",  "/org/containers/hirte")
 node_path = manager.GetNode(node_name)
 node = bus.get_proxy("org.containers.hirte",  node_path)
 
-
-my_job_path = node.StartUnit(unit_name, "replace")
 loop = EventLoop()
 
 def job_removed(id, job_path, node_name, unit, result):
@@ -27,5 +25,5 @@ def job_removed(id, job_path, node_name, unit, result):
         loop.quit()
 
 manager.JobRemoved.connect(job_removed)
-
+my_job_path = node.StartUnit(unit_name, "replace")
 loop.run()
