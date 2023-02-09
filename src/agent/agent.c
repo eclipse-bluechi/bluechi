@@ -909,7 +909,7 @@ bool agent_start(Agent *agent) {
 
         r = inet_pton(AF_INET, agent->host, &host.sin_addr);
         if (r < 1) {
-                hirte_log_errorf("Invalid host option '%s'", optarg);
+                hirte_log_errorf("Invalid host option '%s'", agent->host);
                 return false;
         }
 

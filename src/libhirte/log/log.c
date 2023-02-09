@@ -116,8 +116,8 @@ int hirte_log_init_from_config(config *conf) {
         }
 
         topic *logging_topic = NULL;
-        _cleanup_free_ const char *target = NULL;
-        _cleanup_free_ const char *quiet = NULL;
+        const char *target = NULL;
+        const char *quiet = NULL;
 
         logging_topic = config_lookup_topic(conf, "Logging");
         if (logging_topic == NULL) {
