@@ -174,12 +174,16 @@ static int node_match_heartbeat(UNUSED sd_bus_message *m, UNUSED void *userdata,
         char *node_name = NULL;
 
         int r = sd_bus_message_read(m, "s", &node_name);
-        if (r < 0 || node_name == NULL) {
+        if (r < 0) {
                 fprintf(stderr, "Error reading heartbeat: %m\n");
                 return 0;
         }
 
-        // printf("%s(): Heartbeat received: %s\n", __func__, node_name);
+        static bool first_heartbeat_received;
+        if (!first_heartbeat_received) {
+                printf("First heartbeat received from %s\n", node_name);
+                first_heartbeat_received = true;
+        }
 
         return 1;
 }
@@ -250,7 +254,7 @@ bool node_set_agent_bus(Node *node, sd_bus *bus) {
                                 NULL,
                                 INTERNAL_AGENT_OBJECT_PATH,
                                 INTERNAL_AGENT_INTERFACE,
-                                "Heartbeat",
+                                AGENT_HEARTBEAT_SIGNAL_NAME,
                                 node_match_heartbeat,
                                 NULL);
                 if (r < 0) {

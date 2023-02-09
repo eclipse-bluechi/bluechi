@@ -31,8 +31,6 @@ static bool
                                 void *userdata,
                                 free_func_t free_userdata);
 
-#define AGENT_HEARTBEAT_INTERVAL_USEC (1000000)
-
 static int agent_reset_heartbeat_timer(Agent *agent, sd_event_source **event_source);
 
 static int agent_heartbeat_timer_callback(sd_event_source *event_source, UNUSED uint64_t usec, void *userdata) {
@@ -40,9 +38,6 @@ static int agent_heartbeat_timer_callback(sd_event_source *event_source, UNUSED 
         int r = 0;
 
         assert(event_source);
-
-        // static uint32_t count;
-        // printf("%s(): heartbeat count = %d\n", __func__, count++);
 
         r = sd_bus_emit_signal(
                         agent->peer_dbus,
@@ -66,9 +61,8 @@ static int agent_heartbeat_timer_callback(sd_event_source *event_source, UNUSED 
 }
 
 static int agent_reset_heartbeat_timer(Agent *agent, sd_event_source **event_source) {
-        sd_event *event = agent->event;
         return event_reset_time_relative(
-                        event,
+                        agent->event,
                         event_source,
                         CLOCK_BOOTTIME,
                         AGENT_HEARTBEAT_INTERVAL_USEC,
@@ -94,6 +88,7 @@ static int agent_setup_heartbeat_timer(Agent *agent) {
 
         return sd_event_source_set_floating(event_source, true);
 }
+
 SystemdRequest *systemd_request_ref(SystemdRequest *req) {
         req->ref_count++;
         return req;
@@ -183,12 +178,14 @@ Agent *agent_new(void) {
         }
 
         Agent *agent = malloc0(sizeof(Agent));
-        if (agent != NULL) {
-                agent->ref_count = 1;
-                agent->event = steal_pointer(&event);
-                agent->user_bus_service_name = steal_pointer(&service_name);
-                agent->port = HIRTE_DEFAULT_PORT;
+        if (agent == NULL) {
+                return NULL;
         }
+
+        agent->ref_count = 1;
+        agent->port = HIRTE_DEFAULT_PORT;
+        agent->user_bus_service_name = steal_pointer(&service_name);
+        agent->event = steal_pointer(&event);
 
         LIST_HEAD_INIT(agent->outstanding_requests);
         LIST_HEAD_INIT(agent->tracked_jobs);

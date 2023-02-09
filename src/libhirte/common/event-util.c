@@ -15,8 +15,8 @@ static inline usec_t usec_add(usec_t a, usec_t b) {
 }
 
 static int event_reset_time(
-                sd_event *e,
-                sd_event_source **s,
+                sd_event *event,
+                sd_event_source **event_source,
                 clockid_t clock,
                 uint64_t usec,
                 uint64_t accuracy,
@@ -26,17 +26,16 @@ static int event_reset_time(
                 const char *description,
                 bool force_reset) {
 
-        bool created = false;
         int enabled = 0;
         int r = 0;
         clockid_t c = 0;
 
-        assert(e);
-        assert(s);
+        assert(event);
+        assert(event_source);
 
-        if (*s) {
+        if (*event_source) {
                 if (!force_reset) {
-                        r = sd_event_source_get_enabled(*s, &enabled);
+                        r = sd_event_source_get_enabled(*event_source, &enabled);
                         if (r < 0) {
                                 return r;
                         }
@@ -46,7 +45,7 @@ static int event_reset_time(
                         }
                 }
 
-                r = sd_event_source_get_time_clock(*s, &c);
+                r = sd_event_source_get_time_clock(*event_source, &c);
                 if (r < 0) {
                         return r;
                 }
@@ -55,44 +54,44 @@ static int event_reset_time(
                         return r;
                 }
 
-                r = sd_event_source_set_time(*s, usec);
+                r = sd_event_source_set_time(*event_source, usec);
                 if (r < 0) {
                         return r;
                 }
 
-                r = sd_event_source_set_time_accuracy(*s, accuracy);
+                r = sd_event_source_set_time_accuracy(*event_source, accuracy);
                 if (r < 0) {
                         return r;
                 }
 
-                (void) sd_event_source_set_userdata(*s, userdata);
+                if (sd_event_source_set_userdata(*event_source, userdata) == NULL) {
+                        return -1;
+                }
 
-                r = sd_event_source_set_enabled(*s, SD_EVENT_ONESHOT);
+                r = sd_event_source_set_enabled(*event_source, SD_EVENT_ONESHOT);
                 if (r < 0) {
                         return r;
                 }
         } else {
-                r = sd_event_add_time(e, s, clock, usec, accuracy, callback, userdata);
+                r = sd_event_add_time(event, event_source, clock, usec, accuracy, callback, userdata);
                 if (r < 0) {
                         return r;
                 }
-
-                created = true;
         }
 
-        r = sd_event_source_set_priority(*s, priority);
+        r = sd_event_source_set_priority(*event_source, priority);
         if (r < 0) {
                 return r;
         }
 
         if (description) {
-                r = sd_event_source_set_description(*s, description);
+                r = sd_event_source_set_description(*event_source, description);
                 if (r < 0) {
                         return r;
                 }
         }
 
-        return created;
+        return 0;
 }
 
 int event_reset_time_relative(
