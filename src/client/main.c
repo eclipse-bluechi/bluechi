@@ -29,7 +29,7 @@ static int get_opts(int argc, char *argv[]) {
                         no_action = true;
                         return 0;
                 } else {
-                        fprintf(stderr, "Unsupported option %c", opt);
+                        fprintf(stderr, "Unsupported option %c\n", opt);
                         usage(argv);
                         return -EINVAL;
                 }
