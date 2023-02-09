@@ -47,13 +47,13 @@ static int agent_heartbeat_timer_callback(sd_event_source *event_source, UNUSED 
                         "s",
                         agent->name);
         if (r < 0) {
-                fprintf(stderr, "Failed to emit heartbeat signal: %m");
+                hirte_log_errorf("Failed to emit heartbeat signal: %s", strerror(-r));
                 return r;
         }
 
         r = agent_reset_heartbeat_timer(agent, &event_source);
         if (r < 0) {
-                fprintf(stdout, "Failed to reset periodic timer event source, ignoring: %m");
+                hirte_log_errorf("Failed to reset agent heartbeat timer: %s", strerror(-r));
                 return r;
         }
 
@@ -82,7 +82,7 @@ static int agent_setup_heartbeat_timer(Agent *agent) {
 
         r = agent_reset_heartbeat_timer(agent, &event_source);
         if (r < 0) {
-                fprintf(stdout, "Failed to reset heartbeat timer: %m");
+                hirte_log_errorf("Failed to reset agent heartbeat timer: %s", strerror(-r));
                 return r;
         }
 
@@ -1151,7 +1151,7 @@ bool agent_start(Agent *agent) {
 
         r = agent_setup_heartbeat_timer(agent);
         if (r < 0) {
-                fprintf(stderr, "Failed to set up periodic timer: %m\n");
+                hirte_log_errorf("Failed to set up agent heartbeat timer: %s", strerror(-r));
                 return false;
         }
 

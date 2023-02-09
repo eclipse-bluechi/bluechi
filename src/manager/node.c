@@ -252,13 +252,13 @@ static int node_match_heartbeat(UNUSED sd_bus_message *m, UNUSED void *userdata,
 
         int r = sd_bus_message_read(m, "s", &node_name);
         if (r < 0) {
-                fprintf(stderr, "Error reading heartbeat: %m\n");
+                hirte_log_errorf("Error reading heartbeat: %s", strerror(-r));
                 return 0;
         }
 
         static bool first_heartbeat_received;
         if (!first_heartbeat_received) {
-                printf("First heartbeat received from %s\n", node_name);
+                hirte_log_infof("First heartbeat received from %s\n", node_name);
                 first_heartbeat_received = true;
         }
 
@@ -377,7 +377,7 @@ bool node_set_agent_bus(Node *node, sd_bus *bus) {
                                 node_match_heartbeat,
                                 NULL);
                 if (r < 0) {
-                        fprintf(stderr, "Failed to add heartbeat signal match: %m\n");
+                        hirte_log_errorf("Failed to add heartbeat signal match: %s", strerror(-r));
                         return false;
                 }
         }
