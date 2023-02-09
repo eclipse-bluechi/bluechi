@@ -17,7 +17,7 @@ static int opargc;
 static bool no_action = false;
 
 static void usage(char *argv[]) {
-        printf("Usage: %s COMMAND ... ", argv[0]);
+        printf("Usage: %s COMMAND ... \n", argv[0]);
 }
 
 static int get_opts(int argc, char *argv[]) {
@@ -40,7 +40,7 @@ static int get_opts(int argc, char *argv[]) {
                 opargv = &argv[optind];
                 opargc = argc - optind;
         } else {
-                fprintf(stderr, "No command given");
+                fprintf(stderr, "No command given\n");
                 usage(argv);
                 return -EINVAL;
         }
@@ -63,7 +63,7 @@ int main(int argc, char *argv[]) {
         _cleanup_client_ Client *client = new_client(op, opargc, opargv);
         r = client_call_manager(client);
         if (r < 0) {
-                fprintf(stderr, "Call to manager failed: %s", strerror(-r));
+                fprintf(stderr, "Call to manager failed: %s\n", strerror(-r));
                 return EXIT_FAILURE;
         }
 

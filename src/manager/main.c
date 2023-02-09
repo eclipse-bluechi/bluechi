@@ -20,7 +20,7 @@ static const char *opt_port = 0;
 static const char *opt_config = NULL;
 
 static void usage(char *argv[]) {
-        printf("Usage: %s [-p port] [-c config]", argv[0]);
+        printf("Usage: %s [-p port] [-c config]\n", argv[0]);
 }
 
 static int get_opts(int argc, char *argv[]) {
@@ -41,7 +41,7 @@ static int get_opts(int argc, char *argv[]) {
                         break;
 
                 default:
-                        fprintf(stderr, "Unsupported option %c", opt);
+                        fprintf(stderr, "Unsupported option %c\n", opt);
                         usage(argv);
                         return -EINVAL;
                 }

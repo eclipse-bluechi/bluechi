@@ -201,3 +201,12 @@ void free_configp(config **configp) {
                 free_config(*configp);
         }
 }
+
+bool is_true_value(const char *value) {
+        if (value == NULL) {
+                return false;
+        }
+
+        return (streqi("true", value) || streqi("t", value) || streqi("yes", value) || streqi("y", value) ||
+                streqi("on", value));
+}

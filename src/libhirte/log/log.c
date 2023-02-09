@@ -138,7 +138,7 @@ int hirte_log_init_from_config(config *conf) {
 
         quiet = topic_lookup(logging_topic, "Quiet");
         hirte_log_set_quiet(false);
-        if (quiet && streq("true", quiet)) {
+        if (quiet && is_true_value(quiet)) {
                 hirte_log_set_quiet(true);
         }
 
