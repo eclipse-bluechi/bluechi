@@ -565,7 +565,7 @@ static int manager_list_units_callback(
         ListUnitsRequest *req = agent_req->userdata;
         int i = 0;
 
-        for (int i = 0; i < req->n_sub_req; i++) {
+        for (i = 0; i < req->n_sub_req; i++) {
                 if (req->sub_req[i].agent_req == agent_req) {
                         break;
                 }
