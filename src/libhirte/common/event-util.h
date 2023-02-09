@@ -1,5 +1,8 @@
 #pragma once
 
+#include <stdbool.h>
+#include <systemd/sd-event.h>
+
 // These functions are essentially copied from
 // systemd/src/libsystemd/sd-event/event-util.c.
 

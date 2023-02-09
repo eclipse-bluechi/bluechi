@@ -37,7 +37,7 @@ static int agent_reset_heartbeat_timer(Agent *agent, sd_event_source **event_sou
 
 static int agent_heartbeat_timer_callback(sd_event_source *event_source, UNUSED uint64_t usec, void *userdata) {
         Agent *agent = userdata;
-        int r;
+        int r = 0;
 
         assert(event_source);
 
@@ -82,7 +82,7 @@ static int agent_reset_heartbeat_timer(Agent *agent, sd_event_source **event_sou
 
 static int agent_setup_heartbeat_timer(Agent *agent) {
         _cleanup_(sd_event_source_unrefp) sd_event_source *event_source = NULL;
-        int r;
+        int r = 0;
 
         assert(agent);
 
