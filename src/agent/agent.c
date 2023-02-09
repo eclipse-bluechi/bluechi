@@ -218,7 +218,7 @@ Agent *agent_new(void) {
         LIST_HEAD_INIT(agent->outstanding_requests);
         LIST_HEAD_INIT(agent->tracked_jobs);
 
-        n->unit_subscriptions = hashmap_new(
+        agent->unit_subscriptions = hashmap_new(
                         sizeof(UnitSubscription),
                         0,
                         0,
@@ -227,11 +227,11 @@ Agent *agent_new(void) {
                         unit_subscription_compare,
                         unit_subscription_clear,
                         NULL);
-        if (n->unit_subscriptions == NULL) {
+        if (agent->unit_subscriptions == NULL) {
                 return NULL;
         }
 
-        return steal_pointer(&n);
+        return steal_pointer(&agent);
 }
 
 Agent *agent_ref(Agent *agent) {
