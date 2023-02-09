@@ -101,7 +101,7 @@ void manager_unit_properties_changed(Manager *manager, const char *node, sd_bus_
                 r = sd_bus_message_rewind(m, false);
         }
         if (r < 0) {
-                fprintf(stderr, "Invalid UnitPropertiesChanged signal\n");
+                hirte_log_error("Invalid UnitPropertiesChanged signal");
                 return;
         }
 
@@ -110,7 +110,7 @@ void manager_unit_properties_changed(Manager *manager, const char *node, sd_bus_
                 if ((*sub->node == 0 || streq(sub->node, node)) && streq(sub->unit, unit)) {
                         r = monitor_emit_unit_property_changed(sub->monitor, node, unit, m);
                         if (r < 0) {
-                                fprintf(stderr, "Failed to emit UnitPropertiesChanged signal\n");
+                                hirte_log_error("Failed to emit UnitPropertiesChanged signal");
                                 return;
                         }
                 }
@@ -123,7 +123,7 @@ void manager_unit_new(Manager *manager, const char *node, const char *unit) {
                 if ((*sub->node == 0 || streq(sub->node, node)) && streq(sub->unit, unit)) {
                         int r = monitor_emit_unit_new(sub->monitor, node, unit);
                         if (r < 0) {
-                                fprintf(stderr, "Failed to emit UnitNew signal\n");
+                                hirte_log_error("Failed to emit UnitNew signal");
                                 return;
                         }
                 }
@@ -136,7 +136,7 @@ void manager_unit_removed(Manager *manager, const char *node, const char *unit) 
                 if ((*sub->node == 0 || streq(sub->node, node)) && streq(sub->unit, unit)) {
                         int r = monitor_emit_unit_removed(sub->monitor, node, unit);
                         if (r < 0) {
-                                fprintf(stderr, "Failed to emit UnitRemoved signal\n");
+                                hirte_log_error("Failed to emit UnitRemoved signal");
                                 return;
                         }
                 }
@@ -156,7 +156,7 @@ void manager_add_subscription(Manager *manager, Subscription *sub) {
                 if (node) {
                         node_subscribe(node, sub->unit);
                 } else {
-                        fprintf(stderr, "Warning: Subscription to non-existing node %s\n", sub->node);
+                        hirte_log_errorf("Warning: Subscription to non-existing node %s", sub->node);
                 }
         }
 
@@ -846,7 +846,7 @@ bool manager_start(Manager *manager) {
                         manager_name_owner_changed,
                         manager);
         if (r < 0) {
-                fprintf(stderr, "Failed to add nameloist filter: %s\n", strerror(-r));
+                hirte_log_errorf("Failed to add nameloist filter: %s", strerror(-r));
                 return false;
         }
 

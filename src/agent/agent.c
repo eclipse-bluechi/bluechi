@@ -969,7 +969,7 @@ bool agent_start(Agent *agent) {
                         agent_match_unit_changed,
                         agent);
         if (r < 0) {
-                fprintf(stderr, "Failed to add match\n");
+                hirte_log_error("Failed to add match");
                 return false;
         }
 
@@ -983,7 +983,7 @@ bool agent_start(Agent *agent) {
                         agent_match_unit_new,
                         agent);
         if (r < 0) {
-                fprintf(stderr, "Failed to add unit-new peer bus match: %s\n", strerror(-r));
+                hirte_log_errorf("Failed to add unit-new peer bus match: %s", strerror(-r));
                 return false;
         }
 
@@ -997,7 +997,7 @@ bool agent_start(Agent *agent) {
                         agent_match_unit_removed,
                         agent);
         if (r < 0) {
-                fprintf(stderr, "Failed to add unit-removed peer bus match: %s\n", strerror(-r));
+                hirte_log_errorf("Failed to add unit-removed peer bus match: %s", strerror(-r));
                 return false;
         }
 

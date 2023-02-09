@@ -210,7 +210,7 @@ static int node_match_unit_new(sd_bus_message *m, void *userdata, UNUSED sd_bus_
 
         int r = sd_bus_message_read(m, "s", &unit);
         if (r < 0) {
-                fprintf(stderr, "Invalid UnitNew signal\n");
+                hirte_log_error("Invalid UnitNew signal");
                 return 0;
         }
 
@@ -226,7 +226,7 @@ static int node_match_unit_removed(sd_bus_message *m, void *userdata, UNUSED sd_
 
         int r = sd_bus_message_read(m, "s", &unit);
         if (r < 0) {
-                fprintf(stderr, "Invalid UnitRemoved signal\n");
+                hirte_log_error("Invalid UnitRemoved signal");
                 return 0;
         }
 
@@ -316,9 +316,7 @@ bool node_set_agent_bus(Node *node, sd_bus *bus) {
                                 node_match_unit_properties_changed,
                                 node);
                 if (r < 0) {
-                        fprintf(stderr,
-                                "Failed to add UnitPropertiesChanged peer bus match: %s\n",
-                                strerror(-r));
+                        hirte_log_errorf("Failed to add UnitPropertiesChanged peer bus match: %s", strerror(-r));
                         return false;
                 }
 
@@ -332,7 +330,7 @@ bool node_set_agent_bus(Node *node, sd_bus *bus) {
                                 node_match_unit_new,
                                 node);
                 if (r < 0) {
-                        fprintf(stderr, "Failed to add UnitNew peer bus match: %s\n", strerror(-r));
+                        hirte_log_errorf("Failed to add UnitNew peer bus match: %s", strerror(-r));
                         return false;
                 }
 
@@ -346,7 +344,7 @@ bool node_set_agent_bus(Node *node, sd_bus *bus) {
                                 node_match_unit_removed,
                                 node);
                 if (r < 0) {
-                        fprintf(stderr, "Failed to add UnitRemoved peer bus match: %s\n", strerror(-r));
+                        hirte_log_errorf("Failed to add UnitRemoved peer bus match: %s", strerror(-r));
                         return false;
                 }
 
@@ -867,7 +865,7 @@ static void node_send_agent_subscribe(Node *node, const char *unit) {
 
         int r = send_agent_simple_message(node, "Subscribe", unit);
         if (r < 0) {
-                fprintf(stderr, "Failed to subscribe w/ agent");
+                hirte_log_error("Failed to subscribe w/ agent");
         }
 }
 
@@ -879,7 +877,7 @@ static void node_send_agent_unsubscribe(Node *node, const char *unit) {
 
         int r = send_agent_simple_message(node, "Unsubscribe", unit);
         if (r < 0) {
-                fprintf(stderr, "Failed to subscribe w/ agent");
+                hirte_log_error("Failed to subscribe w/ agent");
         }
 }
 
@@ -903,7 +901,7 @@ void node_subscribe(Node *node, const char *unit) {
         if (sub == NULL) {
                 sub = hashmap_set(node->unit_subscriptions, &key);
                 if (sub == NULL && hashmap_oom(node->unit_subscriptions)) {
-                        fprintf(stderr, "Failed to subscribe to unit, OOM\n");
+                        hirte_log_error("Failed to subscribe to unit, OOM");
                         return;
                 }
                 node_send_agent_subscribe(node, unit);

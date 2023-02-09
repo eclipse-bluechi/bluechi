@@ -1,6 +1,8 @@
-#include "monitor.h"
+#include "libhirte/log/log.h"
+
 #include "job.h"
 #include "manager.h"
+#include "monitor.h"
 #include "node.h"
 
 Subscription *subscription_new(Monitor *monitor, const char *node, const char *unit) {
@@ -117,7 +119,7 @@ bool monitor_export(Monitor *monitor) {
                         monitor_vtable,
                         monitor);
         if (r < 0) {
-                fprintf(stderr, "Failed to add monitor vtable: %s\n", strerror(-r));
+                hirte_log_errorf("Failed to add monitor vtable: %s", strerror(-r));
                 return false;
         }
 
