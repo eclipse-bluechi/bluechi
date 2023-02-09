@@ -149,7 +149,7 @@ config *new_config(void) {
 }
 
 /* Get the file path
-    if it can't find the or cant parse the path it will return configurationOrch
+    if it can't find the or can't parse the path it will return configurationOrch
     with nulls else will return configurationOrch with all the data */
 config *parsing_ini_file(const char *file) {
         config *config = new_config();

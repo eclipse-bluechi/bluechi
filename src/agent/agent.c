@@ -878,7 +878,7 @@ static int agent_match_job_removed(sd_bus_message *m, void *userdata, UNUSED sd_
 
 static int debug_systemd_message_handler(
                 sd_bus_message *m, UNUSED void *userdata, UNUSED sd_bus_error *ret_error) {
-        hirte_log_infof("Incomming message from systemd: path: %s, iface: %s, member: %s, signature: '%s'",
+        hirte_log_infof("Incoming message from systemd: path: %s, iface: %s, member: %s, signature: '%s'",
                         sd_bus_message_get_path(m),
                         sd_bus_message_get_interface(m),
                         sd_bus_message_get_member(m),

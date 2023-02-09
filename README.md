@@ -17,7 +17,7 @@ to generate systemd service configuration to run a container.
 Patches are welcome!
 
 Please submit patches to [github.com:containers/hirte](https://github.com/containers/hirte).
-More infomation about the development can be found in [README.developer](https://github.com/containers/hirte/README.developer.md).
+More information about the development can be found in [README.developer](https://github.com/containers/hirte/README.developer.md).
 
 If you are not familiar with the development process you can read about it in
 [Get started with GitHub](https://docs.github.com/en/get-started).
