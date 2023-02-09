@@ -1,4 +1,7 @@
 #include <errno.h>
+#include <netinet/in.h>
+#include <netinet/tcp.h>
+#include <sys/socket.h>
 
 #include "utils.h"
 
@@ -239,4 +242,34 @@ char *bus_path_escape(const char *s) {
         *t = 0;
 
         return r;
+}
+
+int bus_socket_set_no_delay(sd_bus *bus) {
+        int fd = sd_bus_get_fd(bus);
+        if (fd < 0) {
+                return fd;
+        }
+
+        int flag = 1;
+        int r = setsockopt(fd, SOL_TCP, TCP_NODELAY, (char *) &flag, sizeof(int));
+        if (r < 0) {
+                return -errno;
+        }
+
+        return 0;
+}
+
+int bus_socket_set_keepalive(sd_bus *bus) {
+        int fd = sd_bus_get_fd(bus);
+        if (fd < 0) {
+                return fd;
+        }
+
+        int flag = 1;
+        int r = setsockopt(fd, SOL_SOCKET, SO_KEEPALIVE, (char *) &flag, sizeof(int));
+        if (r < 0) {
+                return -errno;
+        }
+
+        return 0;
 }
