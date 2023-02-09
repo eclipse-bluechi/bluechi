@@ -64,6 +64,7 @@ JobState job_state_from_string(const char *s);
 
 /* Agent to Hirte heartbeat signals */
 
-#define AGENT_HEARTBEAT_INTERVAL_USEC (0020000)
+// Application-level heartbeat set at 1 second.
+#define AGENT_HEARTBEAT_INTERVAL_USEC (1000000)
 
 #define AGENT_HEARTBEAT_SIGNAL_NAME "Heartbeat"
