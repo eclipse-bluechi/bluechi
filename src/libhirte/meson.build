@@ -30,6 +30,7 @@ hirte_lib = static_library('hirte',
                             dependencies: [
                                 systemd_dep
                             ],
+                            c_args: common_cflags,
                             include_directories: include_directories('..'))
 
 
