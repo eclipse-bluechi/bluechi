@@ -749,7 +749,7 @@ static int manager_dbus_filter(UNUSED sd_bus_message *m, void *userdata, UNUSED 
         const char *iface = sd_bus_message_get_interface(m);
 
         if (DEBUG_MESSAGES) {
-                hirte_log_infof("Incomming public message: path: %s, iface: %s, member: %s, signature: '%s'",
+                hirte_log_infof("Incoming public message: path: %s, iface: %s, member: %s, signature: '%s'",
                                 object_path,
                                 iface,
                                 sd_bus_message_get_member(m),

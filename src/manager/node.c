@@ -150,7 +150,7 @@ bool node_export(Node *node) {
 static int debug_messages_handler(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error) {
         Node *node = userdata;
         if (node->name) {
-                hirte_log_infof("Incomming message from node '%s' (fd %d): path: %s, iface: %s, member: %s, signature: '%s'",
+                hirte_log_infof("Incoming message from node '%s' (fd %d): path: %s, iface: %s, member: %s, signature: '%s'",
                                 node->name,
                                 sd_bus_get_fd(node->agent_bus),
                                 sd_bus_message_get_path(m),
@@ -158,7 +158,7 @@ static int debug_messages_handler(sd_bus_message *m, void *userdata, UNUSED sd_b
                                 sd_bus_message_get_member(m),
                                 sd_bus_message_get_signature(m, true));
         } else {
-                hirte_log_infof("Incomming message from node fd %d: path: %s, iface: %s, member: %s, signature: '%s'",
+                hirte_log_infof("Incoming message from node fd %d: path: %s, iface: %s, member: %s, signature: '%s'",
                                 sd_bus_get_fd(node->agent_bus),
                                 sd_bus_message_get_path(m),
                                 sd_bus_message_get_interface(m),
@@ -458,7 +458,7 @@ static int node_disconnected(UNUSED sd_bus_message *message, void *userdata, UNU
 
         node_unset_agent_bus(node);
 
-        /* Remove anoymous nodes when they disconnect */
+        /* Remove anonymous nodes when they disconnect */
         if (node->name == NULL) {
                 manager_remove_node(manager, node);
         }
