@@ -138,12 +138,7 @@ bool node_export(Node *node) {
         assert(node->name != NULL);
 
         int r = sd_bus_add_object_vtable(
-                        manager->user_dbus,
-                        &node->export_slot,
-                        node->object_path,
-                        NODE_INTERFACE,
-                        node_vtable,
-                        node);
+                        manager->api_bus, &node->export_slot, node->object_path, NODE_INTERFACE, node_vtable, node);
         if (r < 0) {
                 hirte_log_errorf("Failed to add node vtable: %s", strerror(-r));
                 return false;
@@ -349,7 +344,7 @@ bool node_set_agent_bus(Node *node, sd_bus *bus) {
                 }
 
                 r = sd_bus_emit_properties_changed(
-                                node->manager->user_dbus, node->object_path, NODE_INTERFACE, "Status", NULL);
+                                node->manager->api_bus, node->object_path, NODE_INTERFACE, "Status", NULL);
                 if (r < 0) {
                         hirte_log_errorf("Failed to emit status property changed: %s", strerror(-r));
                 }
@@ -396,7 +391,7 @@ void node_unset_agent_bus(Node *node) {
 
         if (was_online) {
                 int r = sd_bus_emit_properties_changed(
-                                node->manager->user_dbus, node->object_path, NODE_INTERFACE, "Status", NULL);
+                                node->manager->api_bus, node->object_path, NODE_INTERFACE, "Status", NULL);
                 if (r < 0) {
                         hirte_log_errorf("Failed to emit status property changed: %s", strerror(-r));
                 }

@@ -13,7 +13,7 @@ struct Client {
         int opargc;
         char **opargv;
 
-        sd_bus *user_bus;
+        sd_bus *api_bus;
         char *object_path;
 
         Printer printer;

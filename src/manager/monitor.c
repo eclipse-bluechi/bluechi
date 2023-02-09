@@ -112,7 +112,7 @@ bool monitor_export(Monitor *monitor) {
         Manager *manager = monitor->manager;
 
         int r = sd_bus_add_object_vtable(
-                        manager->user_dbus,
+                        manager->api_bus,
                         &monitor->export_slot,
                         monitor->object_path,
                         MONITOR_INTERFACE,
@@ -232,11 +232,7 @@ int monitor_emit_unit_property_changed(Monitor *monitor, const char *node, const
 
         _cleanup_sd_bus_message_ sd_bus_message *sig = NULL;
         int r = sd_bus_message_new_signal(
-                        manager->user_dbus,
-                        &sig,
-                        monitor->object_path,
-                        MONITOR_INTERFACE,
-                        "UnitPropertiesChanged");
+                        manager->api_bus, &sig, monitor->object_path, MONITOR_INTERFACE, "UnitPropertiesChanged");
         if (r < 0) {
                 return r;
         }
@@ -255,7 +251,7 @@ int monitor_emit_unit_property_changed(Monitor *monitor, const char *node, const
                 return r;
         }
 
-        r = sd_bus_send_to(manager->user_dbus, sig, monitor->client, NULL);
+        r = sd_bus_send_to(manager->api_bus, sig, monitor->client, NULL);
         if (r < 0) {
                 return r;
         }
@@ -267,18 +263,12 @@ int monitor_emit_unit_new(Monitor *monitor, const char *node, const char *unit) 
         Manager *manager = monitor->manager;
 
         return sd_bus_emit_signal(
-                        manager->user_dbus, monitor->object_path, MONITOR_INTERFACE, "UnitNew", "ss", node, unit);
+                        manager->api_bus, monitor->object_path, MONITOR_INTERFACE, "UnitNew", "ss", node, unit);
 }
 
 int monitor_emit_unit_removed(Monitor *monitor, const char *node, const char *unit) {
         Manager *manager = monitor->manager;
 
         return sd_bus_emit_signal(
-                        manager->user_dbus,
-                        monitor->object_path,
-                        MONITOR_INTERFACE,
-                        "UnitRemoved",
-                        "ss",
-                        node,
-                        unit);
+                        manager->api_bus, monitor->object_path, MONITOR_INTERFACE, "UnitRemoved", "ss", node, unit);
 }

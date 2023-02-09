@@ -91,7 +91,7 @@ bool job_export(Job *job) {
         Manager *manager = node->manager;
 
         int r = sd_bus_add_object_vtable(
-                        manager->user_dbus, &job->export_slot, job->object_path, JOB_INTERFACE, job_vtable, job);
+                        manager->api_bus, &job->export_slot, job->object_path, JOB_INTERFACE, job_vtable, job);
         if (r < 0) {
                 hirte_log_errorf("Failed to add job vtable: %s", strerror(-r));
                 return false;
@@ -107,7 +107,7 @@ void job_set_state(Job *job, JobState state) {
         job->state = state;
 
         int r = sd_bus_emit_properties_changed(
-                        manager->user_dbus, job->object_path, JOB_INTERFACE, "State", NULL);
+                        manager->api_bus, job->object_path, JOB_INTERFACE, "State", NULL);
         if (r < 0) {
                 hirte_log_errorf("Failed to emit status property changed: %s", strerror(-r));
         }
