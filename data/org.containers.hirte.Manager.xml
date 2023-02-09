@@ -4,6 +4,13 @@
     <method name="ListUnits">
       <arg name="units" type="a(ssssssouso)" direction="out" />
     </method>
+    <method name="ListNodes">
+      <arg name="node" type="a(sos)" direction="out" />
+    </method>
+    <method name="GetNode">
+      <arg name="name" type="s" direction="in" />
+      <arg name="path" type="o" direction="out" />
+    </method>
     <method name="CreateMonitor">
       <arg name="monitor" type="o" direction="out" />
     </method>

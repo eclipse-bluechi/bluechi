@@ -10,6 +10,7 @@
 
 #include "job.h"
 #include "manager.h"
+#include "monitor.h"
 #include "node.h"
 
 #define DEBUG_MESSAGES 0
@@ -39,6 +40,8 @@ Manager *manager_new(void) {
                 LIST_HEAD_INIT(manager->nodes);
                 LIST_HEAD_INIT(manager->anonymous_nodes);
                 LIST_HEAD_INIT(manager->jobs);
+                LIST_HEAD_INIT(manager->monitors);
+                LIST_HEAD_INIT(manager->all_subscriptions);
         }
 
         return manager;
@@ -61,6 +64,7 @@ void manager_unref(Manager *manager) {
 
         sd_event_source_unrefp(&manager->node_connection_source);
 
+        sd_bus_slot_unrefp(&manager->name_owner_changed_slot);
         sd_bus_slot_unrefp(&manager->filter_slot);
         sd_bus_slot_unrefp(&manager->manager_slot);
         sd_bus_unrefp(&manager->user_dbus);
@@ -78,7 +82,105 @@ void manager_unref(Manager *manager) {
                 job_unref(job);
         }
 
+        Subscription *sub = NULL;
+        LIST_FOREACH(all_subscriptions, sub, manager->all_subscriptions) {
+                subscription_unref(sub);
+        }
+
+        Monitor *monitor = NULL;
+        LIST_FOREACH(monitors, monitor, manager->monitors) {
+                monitor_unref(monitor);
+        }
+
         free(manager);
+}
+
+void manager_unit_properties_changed(Manager *manager, const char *node, sd_bus_message *m) {
+        const char *unit = NULL;
+
+        int r = sd_bus_message_read(m, "s", &unit);
+        if (r >= 0) {
+                r = sd_bus_message_rewind(m, false);
+        }
+        if (r < 0) {
+                fprintf(stderr, "Invalid UnitPropertiesChanged signal\n");
+                return;
+        }
+
+        Subscription *sub = NULL;
+        LIST_FOREACH(all_subscriptions, sub, manager->all_subscriptions) {
+                if ((*sub->node == 0 || streq(sub->node, node)) && streq(sub->unit, unit)) {
+                        r = monitor_emit_unit_property_changed(sub->monitor, node, unit, m);
+                        if (r < 0) {
+                                fprintf(stderr, "Failed to emit UnitPropertiesChanged signal\n");
+                                return;
+                        }
+                }
+        }
+}
+
+void manager_unit_new(Manager *manager, const char *node, const char *unit) {
+        Subscription *sub = NULL;
+        LIST_FOREACH(all_subscriptions, sub, manager->all_subscriptions) {
+                if ((*sub->node == 0 || streq(sub->node, node)) && streq(sub->unit, unit)) {
+                        int r = monitor_emit_unit_new(sub->monitor, node, unit);
+                        if (r < 0) {
+                                fprintf(stderr, "Failed to emit UnitNew signal\n");
+                                return;
+                        }
+                }
+        }
+}
+
+void manager_unit_removed(Manager *manager, const char *node, const char *unit) {
+        Subscription *sub = NULL;
+        LIST_FOREACH(all_subscriptions, sub, manager->all_subscriptions) {
+                if ((*sub->node == 0 || streq(sub->node, node)) && streq(sub->unit, unit)) {
+                        int r = monitor_emit_unit_removed(sub->monitor, node, unit);
+                        if (r < 0) {
+                                fprintf(stderr, "Failed to emit UnitRemoved signal\n");
+                                return;
+                        }
+                }
+        }
+}
+
+
+void manager_add_subscription(Manager *manager, Subscription *sub) {
+        Node *node = NULL;
+
+        if (*sub->node == 0) {
+                LIST_FOREACH(nodes, node, manager->nodes) {
+                        node_subscribe(node, sub->unit);
+                }
+        } else {
+                node = manager_find_node(manager, sub->node);
+                if (node) {
+                        node_subscribe(node, sub->unit);
+                } else {
+                        fprintf(stderr, "Warning: Subscription to non-existing node %s\n", sub->node);
+                }
+        }
+
+        LIST_APPEND(all_subscriptions, manager->all_subscriptions, subscription_ref(sub));
+}
+
+void manager_remove_subscription(Manager *manager, Subscription *sub) {
+        Node *node = NULL;
+
+        if (*sub->node == 0) {
+                LIST_FOREACH(nodes, node, manager->nodes) {
+                        node_unsubscribe(node, sub->unit);
+                }
+        } else {
+                node = manager_find_node(manager, sub->node);
+                if (node) {
+                        node_unsubscribe(node, sub->unit);
+                }
+        }
+
+        LIST_REMOVE(all_subscriptions, manager->all_subscriptions, sub);
+        subscription_unref(sub);
 }
 
 Node *manager_find_node(Manager *manager, const char *name) {
@@ -311,6 +413,10 @@ static bool manager_setup_node_connection_handler(Manager *manager) {
         return true;
 }
 
+/*************************************************************************
+ ************** org.containers.hirte.Manager.Ping ************************
+ ************************************************************************/
+
 /* This is a test method for now, it just returns what you passed */
 static int manager_method_ping(sd_bus_message *m, UNUSED void *userdata, UNUSED sd_bus_error *ret_error) {
         const char *arg = NULL;
@@ -322,6 +428,11 @@ static int manager_method_ping(sd_bus_message *m, UNUSED void *userdata, UNUSED 
 
         return sd_bus_reply_method_return(m, "s", arg);
 }
+
+
+/*************************************************************************
+ ************** org.containers.hirte.Manager.ListUnits *******************
+ ************************************************************************/
 
 typedef struct ListUnitsRequest {
         sd_bus_message *request_message;
@@ -358,7 +469,7 @@ static void list_unit_request_freep(ListUnitsRequest **reqp) {
 
 
 static int manager_method_list_units_encode_reply(ListUnitsRequest *req, sd_bus_message *reply) {
-        int r = sd_bus_message_open_container(reply, SD_BUS_TYPE_ARRAY, UNIT_INFO_STRUCT_TYPESTRING);
+        int r = sd_bus_message_open_container(reply, SD_BUS_TYPE_ARRAY, NODE_AND_UNIT_INFO_STRUCT_TYPESTRING);
         if (r < 0) {
                 return r;
         }
@@ -376,11 +487,8 @@ static int manager_method_list_units_encode_reply(ListUnitsRequest *req, sd_bus_
                 }
 
                 while (sd_bus_message_at_end(m, false) == 0) {
-                        r = sd_bus_message_open_container(reply, SD_BUS_TYPE_STRUCT, UNIT_INFO_TYPESTRING);
-                        if (r < 0) {
-                                return r;
-                        }
-                        r = sd_bus_message_enter_container(m, SD_BUS_TYPE_STRUCT, UNIT_INFO_TYPESTRING);
+                        r = sd_bus_message_open_container(
+                                        reply, SD_BUS_TYPE_STRUCT, NODE_AND_UNIT_INFO_TYPESTRING);
                         if (r < 0) {
                                 return r;
                         }
@@ -389,6 +497,12 @@ static int manager_method_list_units_encode_reply(ListUnitsRequest *req, sd_bus_
                         if (r < 0) {
                                 return r;
                         }
+
+                        r = sd_bus_message_enter_container(m, SD_BUS_TYPE_STRUCT, UNIT_INFO_TYPESTRING);
+                        if (r < 0) {
+                                return r;
+                        }
+
                         r = sd_bus_message_copy(reply, m, true);
                         if (r < 0) {
                                 return r;
@@ -446,7 +560,6 @@ static void manager_method_list_units_maybe_done(ListUnitsRequest *req) {
         }
 }
 
-
 static int manager_list_units_callback(
                 AgentRequest *agent_req, UNUSED sd_bus_message *m, UNUSED sd_bus_error *ret_error) {
         ListUnitsRequest *req = agent_req->userdata;
@@ -496,10 +609,130 @@ static int manager_method_list_units(sd_bus_message *m, void *userdata, UNUSED s
         return 1;
 }
 
+/*************************************************************************
+ ************** org.containers.hirte.Manager.ListNodes *******************
+ ************************************************************************/
+
+static int manager_method_list_encode_node(sd_bus_message *reply, Node *node) {
+        int r = sd_bus_message_open_container(reply, SD_BUS_TYPE_STRUCT, "sos");
+        if (r < 0) {
+                return r;
+        }
+
+        r = sd_bus_message_append(reply, "sos", node->name, node->object_path, node_get_status(node));
+        if (r < 0) {
+                return r;
+        }
+        return sd_bus_message_close_container(reply);
+}
+
+static int manager_method_list_nodes(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error) {
+        Manager *manager = userdata;
+        _cleanup_sd_bus_message_ sd_bus_message *reply = NULL;
+        Node *node = NULL;
+
+        int r = sd_bus_message_new_method_return(m, &reply);
+        if (r < 0) {
+                return sd_bus_reply_method_errorf(reply, SD_BUS_ERROR_FAILED, "Internal error");
+        }
+
+        r = sd_bus_message_open_container(reply, SD_BUS_TYPE_ARRAY, "(sos)");
+        if (r < 0) {
+                return sd_bus_reply_method_errorf(reply, SD_BUS_ERROR_FAILED, "Internal error");
+        }
+
+        LIST_FOREACH(nodes, node, manager->nodes) {
+                r = manager_method_list_encode_node(reply, node);
+                if (r < 0) {
+                        return sd_bus_reply_method_errorf(reply, SD_BUS_ERROR_FAILED, "Internal error");
+                }
+        }
+
+        r = sd_bus_message_close_container(reply);
+        if (r < 0) {
+                return sd_bus_reply_method_errorf(reply, SD_BUS_ERROR_FAILED, "Internal error");
+        }
+
+        return sd_bus_message_send(reply);
+}
+
+/*************************************************************************
+ ************** org.containers.hirte.Manager.GetNode *********************
+ ************************************************************************/
+
+static int manager_method_get_node(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error) {
+        Manager *manager = userdata;
+        _cleanup_sd_bus_message_ sd_bus_message *reply = NULL;
+        Node *node = NULL;
+        const char *node_name = NULL;
+
+        int r = sd_bus_message_read(m, "s", &node_name);
+        if (r < 0) {
+                return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_INVALID_ARGS, "Invalid arguments");
+        }
+
+        node = manager_find_node(manager, node_name);
+        if (node == NULL) {
+                return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_SERVICE_UNKNOWN, "Node not found");
+        }
+
+        r = sd_bus_message_new_method_return(m, &reply);
+        if (r < 0) {
+                return sd_bus_reply_method_errorf(reply, SD_BUS_ERROR_FAILED, "Internal error");
+        }
+
+        r = sd_bus_message_append(reply, "o", node->object_path);
+        if (r < 0) {
+                return sd_bus_reply_method_errorf(reply, SD_BUS_ERROR_FAILED, "Internal error");
+        }
+
+        return sd_bus_message_send(reply);
+}
+
+/*************************************************************************
+ ************** org.containers.hirte.Manager.CreateMonitor ***************
+ ************************************************************************/
+
+static int manager_method_create_monitor(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error) {
+        Manager *manager = userdata;
+        _cleanup_sd_bus_message_ sd_bus_message *reply = NULL;
+
+        _cleanup_monitor_ Monitor *monitor = monitor_new(manager, sd_bus_message_get_sender(m));
+        if (monitor == NULL) {
+                return sd_bus_reply_method_errorf(reply, SD_BUS_ERROR_FAILED, "Internal error");
+        }
+
+        if (!monitor_export(monitor)) {
+                return sd_bus_reply_method_errorf(reply, SD_BUS_ERROR_FAILED, "Internal error");
+        }
+
+        int r = sd_bus_message_new_method_return(m, &reply);
+        if (r < 0) {
+                return sd_bus_reply_method_errorf(reply, SD_BUS_ERROR_FAILED, "Internal error");
+        }
+
+        r = sd_bus_message_append(reply, "o", monitor->object_path);
+        if (r < 0) {
+                return sd_bus_reply_method_errorf(reply, SD_BUS_ERROR_FAILED, "Internal error");
+        }
+
+        r = sd_bus_message_send(reply);
+        if (r < 0) {
+                return r;
+        }
+
+        /* We reported it to the client, now keep it alive and keep track of it */
+        LIST_APPEND(monitors, manager->monitors, monitor_ref(monitor));
+        return 1;
+}
+
 static const sd_bus_vtable manager_vtable[] = {
         SD_BUS_VTABLE_START(0),
         SD_BUS_METHOD("Ping", "s", "s", manager_method_ping, 0),
-        SD_BUS_METHOD("ListUnits", "", UNIT_INFO_STRUCT_ARRAY_TYPESTRING, manager_method_list_units, 0),
+        SD_BUS_METHOD("ListUnits", "", NODE_AND_UNIT_INFO_STRUCT_ARRAY_TYPESTRING, manager_method_list_units, 0),
+        SD_BUS_METHOD("ListNodes", "", "a(sos)", manager_method_list_nodes, 0),
+        SD_BUS_METHOD("GetNode", "s", "o", manager_method_get_node, 0),
+        SD_BUS_METHOD("CreateMonitor", "", "o", manager_method_create_monitor, 0),
         SD_BUS_SIGNAL_WITH_NAMES("JobNew", "uo", SD_BUS_PARAM(id) SD_BUS_PARAM(job), 0),
         SD_BUS_SIGNAL_WITH_NAMES(
                         "JobRemoved",
@@ -536,6 +769,42 @@ static int manager_dbus_filter(UNUSED sd_bus_message *m, void *userdata, UNUSED 
         return 0;
 }
 
+void manager_remove_monitor(Manager *manager, Monitor *monitor) {
+        LIST_REMOVE(monitors, manager->monitors, monitor);
+        monitor_unref(monitor);
+}
+
+static void manager_client_disconnected(Manager *manager, const char *client_id) {
+        /* Free any monitors owned by the client */
+
+        Monitor *monitor = NULL;
+        Monitor *next_monitor = NULL;
+        LIST_FOREACH_SAFE(monitors, monitor, next_monitor, manager->monitors) {
+                if (streq(monitor->client, client_id)) {
+                        monitor_close(monitor);
+                        manager_remove_monitor(manager, monitor);
+                }
+        }
+}
+
+static int manager_name_owner_changed(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error) {
+        Manager *manager = userdata;
+        const char *name = NULL;
+        const char *old_owner = NULL;
+        const char *new_owner = NULL;
+
+        int r = sd_bus_message_read(m, "sss", &name, &old_owner, &new_owner);
+        if (r < 0) {
+                return r;
+        }
+
+        if (*name == ':' && *new_owner == 0) {
+                manager_client_disconnected(manager, name);
+        }
+
+        return 0;
+}
+
 bool manager_start(Manager *manager) {
         fprintf(stdout, "Starting Manager...\n");
 
@@ -567,6 +836,20 @@ bool manager_start(Manager *manager) {
         r = sd_bus_add_filter(manager->user_dbus, &manager->filter_slot, manager_dbus_filter, manager);
         if (r < 0) {
                 fprintf(stderr, "Failed to add manager filter: %s\n", strerror(-r));
+                return false;
+        }
+
+        r = sd_bus_match_signal(
+                        manager->user_dbus,
+                        &manager->name_owner_changed_slot,
+                        "org.freedesktop.DBus",
+                        "/org/freedesktop/DBus",
+                        "org.freedesktop.DBus",
+                        "NameOwnerChanged",
+                        manager_name_owner_changed,
+                        manager);
+        if (r < 0) {
+                fprintf(stderr, "Failed to add nameloist filter: %s\n", strerror(-r));
                 return false;
         }
 

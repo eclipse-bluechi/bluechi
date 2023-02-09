@@ -7,6 +7,8 @@ orch_src = [
     'node.c',
     'job.h',
     'job.c',
+    'monitor.h',
+    'monitor.c',
     'main.c',
 ]
 

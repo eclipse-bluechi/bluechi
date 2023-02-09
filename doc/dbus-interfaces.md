@@ -50,6 +50,14 @@ easily track when they change.
     will automatically be closed if the calling peer disconnects from
     the bus.
 
+   * ListNodes(out a(sos) nodes);
+
+     Returns information (name, object_path and status) of all know nodes.
+
+   * GetNode(in s name, out o path);
+
+     Returns the object path of a node given its name.
+
 * Signals:
   * JobNew(u id,
            o job,
@@ -109,6 +117,15 @@ Object path: /org/containers/hirte/monitor/$id
      matched unit. This allows you to easily monitor and get
      the current state in a race-free way without missing any
      changes.
+
+   * UnitNew(s node, s unit)
+
+     Emitted when a new unit is created, for example when a service is started.
+
+   * UnitRemove(s node, s unit)
+
+     Emitted when a unit is removed.
+
 
 ## interface org.containers.hirte.Node
 

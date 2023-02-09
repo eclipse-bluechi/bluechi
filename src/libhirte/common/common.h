@@ -13,6 +13,14 @@
 #define streq(a, b) (strcmp((a), (b)) == 0)
 #define strneq(a, b, n) (strncmp((a), (b), (n)) == 0)
 
+static inline bool ascii_isdigit(char a) {
+        return a >= '0' && a <= '9';
+}
+
+static inline bool ascii_isalpha(char a) {
+        return (a >= 'a' && a <= 'z') || (a >= 'A' && a <= 'Z');
+}
+
 #define UNUSED __attribute__((unused))
 
 static inline void *steal_pointer(void *ptr) {
@@ -56,6 +64,20 @@ static inline void *malloc0_array(size_t base_size, size_t element_size, size_t 
         }
 
         return malloc0(total_size);
+}
+
+static inline char *strcat_dup(const char *a, const char *b) {
+        size_t a_len = strlen(a);
+        size_t b_len = strlen(b);
+        size_t len = a_len + b_len + 1;
+        char *res = malloc(len);
+        if (res) {
+                memcpy(res, a, a_len);
+                memcpy(res + a_len, b, b_len);
+                res[a_len + b_len] = 0;
+        }
+
+        return res;
 }
 
 #define _cleanup_(x) __attribute__((__cleanup__(x)))

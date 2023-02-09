@@ -19,12 +19,15 @@ struct Manager {
         sd_bus *user_dbus;
         sd_bus_slot *manager_slot;
         sd_bus_slot *filter_slot;
+        sd_bus_slot *name_owner_changed_slot;
 
         int n_nodes;
         LIST_HEAD(Node, nodes);
         LIST_HEAD(Node, anonymous_nodes);
 
         LIST_HEAD(Job, jobs);
+        LIST_HEAD(Monitor, monitors);
+        LIST_HEAD(Subscription, all_subscriptions);
 };
 
 Manager *manager_new(void);
@@ -47,6 +50,14 @@ bool manager_add_job(Manager *manager, Job *job);
 void manager_remove_job(Manager *manager, Job *job, const char *result);
 void manager_finish_job(Manager *manager, uint32_t job_id, const char *result);
 void manager_job_state_changed(Manager *manager, uint32_t job_id, const char *state);
+
+void manager_remove_monitor(Manager *manager, Monitor *monitor);
+
+void manager_add_subscription(Manager *manager, Subscription *sub);
+void manager_remove_subscription(Manager *manager, Subscription *sub);
+void manager_unit_properties_changed(Manager *manager, const char *node, sd_bus_message *m);
+void manager_unit_new(Manager *manager, const char *node, const char *unit);
+void manager_unit_removed(Manager *manager, const char *node, const char *unit);
 
 DEFINE_CLEANUP_FUNC(Manager, manager_unref)
 #define _cleanup_manager_ _cleanup_(manager_unrefp)
