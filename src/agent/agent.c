@@ -452,6 +452,8 @@ static void agent_job_done(UNUSED sd_bus_message *m, const char *result, void *u
         AgentJobOp *op = userdata;
         Agent *agent = op->agent;
 
+        hirte_log_debugf("Sending notification JobDone with results: %s", result);
+
         int r = sd_bus_emit_signal(
                         agent->peer_dbus,
                         INTERNAL_AGENT_OBJECT_PATH,
@@ -504,6 +506,8 @@ static int agent_run_unit_lifecycle_method(sd_bus_message *m, Agent *agent, cons
                 return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_INVALID_ARGS, "Invalid arguments");
         }
 
+        hirte_log_debugf("Request to %s unit: %s - Action: %s", method, name, mode);
+
         _cleanup_systemd_request_ SystemdRequest *req = agent_create_request(agent, m, method);
         if (req == NULL) {
                 return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "Internal error");
@@ -513,12 +517,15 @@ static int agent_run_unit_lifecycle_method(sd_bus_message *m, Agent *agent, cons
         if (op == NULL) {
                 return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "Internal error");
         }
+
         systemd_request_set_userdata(req, agent_job_op_ref(op), (free_func_t) agent_job_op_unref);
 
         r = sd_bus_message_append(req->message, "ss", name, mode);
         if (r < 0) {
                 return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "Internal error");
         }
+
+        hirte_log_debugf("Return value: %i", r);
 
         if (!systemd_request_start(req, unit_lifecycle_method_callback)) {
                 return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "Internal error");

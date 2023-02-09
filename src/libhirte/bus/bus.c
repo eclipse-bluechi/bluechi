@@ -187,6 +187,8 @@ sd_bus *system_bus_open(sd_event *event) {
         }
         (void) sd_bus_set_description(bus, "system-bus");
 
+        hirte_log_debug("Connected to system bus");
+
         return steal_pointer(&bus);
 }
 
@@ -254,6 +256,8 @@ sd_bus *systemd_bus_open(sd_event *event) {
         }
         (void) sd_bus_set_description(bus, "systemd-bus");
 
+        hirte_log_debug("Connected to systemd bus");
+
         return steal_pointer(&bus);
 }
 
@@ -278,6 +282,8 @@ sd_bus *user_bus_open(sd_event *event) {
                 return NULL;
         }
         (void) sd_bus_set_description(bus, "user-bus");
+
+        hirte_log_debug("Connected to user bus");
 
         return steal_pointer(&bus);
 }
