@@ -1,6 +1,5 @@
 #include <arpa/inet.h>
 #include <errno.h>
-#include <stdio.h>
 
 #include "libhirte/bus/bus.h"
 #include "libhirte/bus/utils.h"
@@ -9,6 +8,7 @@
 #include "libhirte/common/opt.h"
 #include "libhirte/common/parse-util.h"
 #include "libhirte/ini/config.h"
+#include "libhirte/log/log.h"
 #include "libhirte/service/shutdown.h"
 
 #include "agent.h"
@@ -115,7 +115,12 @@ void systemd_request_unref(SystemdRequest *req) {
         free(req);
 }
 
-static SystemdRequest *agent_create_request(Agent *agent, sd_bus_message *request_message, const char *method) {
+static SystemdRequest *agent_create_request_full(
+                Agent *agent,
+                sd_bus_message *request_message,
+                const char *object_path,
+                const char *iface,
+                const char *method) {
         _cleanup_systemd_request_ SystemdRequest *req = malloc0(sizeof(SystemdRequest));
         if (req == NULL) {
                 return NULL;
@@ -129,17 +134,18 @@ static SystemdRequest *agent_create_request(Agent *agent, sd_bus_message *reques
         LIST_APPEND(outstanding_requests, agent->outstanding_requests, req);
 
         int r = sd_bus_message_new_method_call(
-                        agent->systemd_dbus,
-                        &req->message,
-                        SYSTEMD_BUS_NAME,
-                        SYSTEMD_OBJECT_PATH,
-                        SYSTEMD_MANAGER_IFACE,
-                        method);
+                        agent->systemd_dbus, &req->message, SYSTEMD_BUS_NAME, object_path, iface, method);
         if (r < 0) {
+                hirte_log_errorf("Failed to create new bus message: %s", strerror(-r));
                 return NULL;
         }
 
         return steal_pointer(&req);
+}
+
+static SystemdRequest *agent_create_request(Agent *agent, sd_bus_message *request_message, const char *method) {
+        return agent_create_request_full(
+                        agent, request_message, SYSTEMD_OBJECT_PATH, SYSTEMD_MANAGER_IFACE, method);
 }
 
 static void systemd_request_set_userdata(SystemdRequest *req, void *userdata, free_func_t free_userdata) {
@@ -153,7 +159,7 @@ static bool systemd_request_start(SystemdRequest *req, sd_bus_message_handler_t 
         int r = sd_bus_call_async(
                         agent->systemd_dbus, &req->slot, req->message, callback, req, HIRTE_DEFAULT_DBUS_TIMEOUT);
         if (r < 0) {
-                fprintf(stderr, "Failed to call async: %s\n", strerror(-r));
+                hirte_log_errorf("Failed to call async: %s", strerror(-r));
                 return false;
         }
 
@@ -161,36 +167,71 @@ static bool systemd_request_start(SystemdRequest *req, sd_bus_message_handler_t 
         return true;
 }
 
+typedef struct {
+        char *object_path; /* key */
+        char *unit;
+} UnitSubscription;
+
+static void unit_subscription_clear(void *item) {
+        UnitSubscription *sub = item;
+        free(sub->object_path);
+        free(sub->unit);
+}
+
+static uint64_t unit_subscription_hash(const void *item, uint64_t seed0, uint64_t seed1) {
+        const UnitSubscription *sub = item;
+        return hashmap_sip(sub->object_path, strlen(sub->object_path), seed0, seed1);
+}
+
+static int unit_subscription_compare(const void *a, const void *b, UNUSED void *udata) {
+        const UnitSubscription *sub_a = a;
+        const UnitSubscription *sub_b = b;
+
+        return strcmp(sub_a->object_path, sub_b->object_path);
+}
 
 Agent *agent_new(void) {
         int r = 0;
         _cleanup_sd_event_ sd_event *event = NULL;
         r = sd_event_default(&event);
         if (r < 0) {
-                fprintf(stderr, "Failed to create event loop: %s\n", strerror(-r));
+                hirte_log_errorf("Failed to create event loop: %s", strerror(-r));
                 return NULL;
         }
 
         _cleanup_free_ char *service_name = strdup(HIRTE_AGENT_DBUS_NAME);
         if (service_name == NULL) {
-                fprintf(stderr, "Out of memory\n");
+                hirte_log_error("Out of memory");
                 return NULL;
         }
 
-        Agent *agent = malloc0(sizeof(Agent));
+        _cleanup_agent_ Agent *agent = malloc0(sizeof(Agent));
         if (agent == NULL) {
                 return NULL;
         }
 
         agent->ref_count = 1;
         agent->port = HIRTE_DEFAULT_PORT;
-        agent->user_bus_service_name = steal_pointer(&service_name);
+        agent->api_bus_service_name = steal_pointer(&service_name);
         agent->event = steal_pointer(&event);
 
         LIST_HEAD_INIT(agent->outstanding_requests);
         LIST_HEAD_INIT(agent->tracked_jobs);
 
-        return agent;
+        agent->unit_subscriptions = hashmap_new(
+                        sizeof(UnitSubscription),
+                        0,
+                        0,
+                        0,
+                        unit_subscription_hash,
+                        unit_subscription_compare,
+                        unit_subscription_clear,
+                        NULL);
+        if (agent->unit_subscriptions == NULL) {
+                return NULL;
+        }
+
+        return steal_pointer(&agent);
 }
 
 Agent *agent_ref(Agent *agent) {
@@ -204,10 +245,12 @@ void agent_unref(Agent *agent) {
                 return;
         }
 
+        hashmap_free(agent->unit_subscriptions);
+
         free(agent->name);
         free(agent->host);
         free(agent->orch_addr);
-        free(agent->user_bus_service_name);
+        free(agent->api_bus_service_name);
 
         if (agent->event != NULL) {
                 sd_event_unrefp(&agent->event);
@@ -216,8 +259,8 @@ void agent_unref(Agent *agent) {
         if (agent->peer_dbus != NULL) {
                 sd_bus_unrefp(&agent->peer_dbus);
         }
-        if (agent->user_dbus != NULL) {
-                sd_bus_unrefp(&agent->user_dbus);
+        if (agent->api_bus != NULL) {
+                sd_bus_unrefp(&agent->api_bus);
         }
         if (agent->systemd_dbus != NULL) {
                 sd_bus_unrefp(&agent->systemd_dbus);
@@ -230,7 +273,7 @@ bool agent_set_port(Agent *agent, const char *port_s) {
         uint16_t port = 0;
 
         if (!parse_port(port_s, &port)) {
-                fprintf(stderr, "Invalid port format '%s'\n", port_s);
+                hirte_log_errorf("Invalid port format '%s'", port_s);
                 return false;
         }
         agent->port = port;
@@ -240,7 +283,7 @@ bool agent_set_port(Agent *agent, const char *port_s) {
 bool agent_set_host(Agent *agent, const char *host) {
         char *dup = strdup(host);
         if (dup == NULL) {
-                fprintf(stderr, "Out of memory\n");
+                hirte_log_error("Out of memory");
                 return false;
         }
         free(agent->host);
@@ -251,7 +294,7 @@ bool agent_set_host(Agent *agent, const char *host) {
 bool agent_set_name(Agent *agent, const char *name) {
         char *dup = strdup(name);
         if (dup == NULL) {
-                fprintf(stderr, "Out of memory\n");
+                hirte_log_error("Out of memory");
                 return false;
         }
 
@@ -269,6 +312,8 @@ bool agent_parse_config(Agent *agent, const char *configfile) {
         if (config == NULL) {
                 return false;
         }
+
+        hirte_log_init_from_config(config);
 
         topic = config_lookup_topic(config, "Node");
         if (topic == NULL) {
@@ -341,6 +386,93 @@ static int agent_method_list_units(sd_bus_message *m, void *userdata, UNUSED sd_
         return 1;
 }
 
+/*************************************************************************
+ ******** org.containers.hirte.internal.Agent.GetUnitProperties **********
+ ************************************************************************/
+
+static int get_unit_properties_got_properties(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error) {
+        _cleanup_systemd_request_ SystemdRequest *req = userdata;
+
+        if (sd_bus_message_is_method_error(m, NULL)) {
+                /* Forward error */
+                return sd_bus_reply_method_error(req->request_message, sd_bus_message_get_error(m));
+        }
+
+        _cleanup_sd_bus_message_ sd_bus_message *reply = NULL;
+        int r = sd_bus_message_new_method_return(req->request_message, &reply);
+        if (r < 0) {
+                return r;
+        }
+
+        r = sd_bus_message_copy(reply, m, true);
+        if (r < 0) {
+                return r;
+        }
+
+        return sd_bus_message_send(reply);
+}
+
+
+static int get_unit_properties_got_unit(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error) {
+        _cleanup_systemd_request_ SystemdRequest *req = userdata;
+        Agent *agent = req->agent;
+
+        if (sd_bus_message_is_method_error(m, NULL)) {
+                /* Forward error */
+                return sd_bus_reply_method_error(req->request_message, sd_bus_message_get_error(m));
+        }
+
+        const char *unit_path = NULL;
+        int r = sd_bus_message_read(m, "o", &unit_path);
+        if (r < 0) {
+                return sd_bus_reply_method_errorf(req->request_message, SD_BUS_ERROR_FAILED, "Internal Error");
+        }
+
+        _cleanup_systemd_request_ SystemdRequest *req2 = agent_create_request_full(
+                        agent, req->request_message, unit_path, "org.freedesktop.DBus.Properties", "GetAll");
+        if (req2 == NULL) {
+                return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "Internal error");
+        }
+
+        r = sd_bus_message_append(req2->message, "s", SYSTEMD_UNIT_IFACE);
+        if (r < 0) {
+                return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "Internal error");
+        }
+
+        if (!systemd_request_start(req2, get_unit_properties_got_properties)) {
+                return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "Internal error");
+        }
+
+        return 1;
+}
+
+
+static int agent_method_get_unit_properties(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error) {
+        Agent *agent = userdata;
+        const char *unit = NULL;
+
+        int r = sd_bus_message_read(m, "s", &unit);
+        if (r < 0) {
+                return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "Internal Error");
+        }
+
+        _cleanup_systemd_request_ SystemdRequest *req = agent_create_request(agent, m, "GetUnit");
+        if (req == NULL) {
+                return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "Internal error");
+        }
+
+        r = sd_bus_message_append(req->message, "s", unit);
+        if (r < 0) {
+                return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "Internal error");
+        }
+
+        if (!systemd_request_start(req, get_unit_properties_got_unit)) {
+                return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "Internal error");
+        }
+
+        return 1;
+}
+
 /* Keep track of outstanding systemd job and connect it back to
    the originating hirte job id so we can proxy changes to it. */
 typedef struct {
@@ -384,6 +516,8 @@ static void agent_job_done(UNUSED sd_bus_message *m, const char *result, void *u
         AgentJobOp *op = userdata;
         Agent *agent = op->agent;
 
+        hirte_log_debugf("Sending notification JobDone with results: %s", result);
+
         int r = sd_bus_emit_signal(
                         agent->peer_dbus,
                         INTERNAL_AGENT_OBJECT_PATH,
@@ -393,7 +527,7 @@ static void agent_job_done(UNUSED sd_bus_message *m, const char *result, void *u
                         op->hirte_job_id,
                         result);
         if (r < 0) {
-                fprintf(stderr, "Failed to emit JobDone\n");
+                hirte_log_errorf("Failed to emit JobDone: %s", strerror(-r));
         }
 }
 
@@ -436,6 +570,8 @@ static int agent_run_unit_lifecycle_method(sd_bus_message *m, Agent *agent, cons
                 return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_INVALID_ARGS, "Invalid arguments");
         }
 
+        hirte_log_debugf("Request to %s unit: %s - Action: %s", method, name, mode);
+
         _cleanup_systemd_request_ SystemdRequest *req = agent_create_request(agent, m, method);
         if (req == NULL) {
                 return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "Internal error");
@@ -445,12 +581,15 @@ static int agent_run_unit_lifecycle_method(sd_bus_message *m, Agent *agent, cons
         if (op == NULL) {
                 return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "Internal error");
         }
+
         systemd_request_set_userdata(req, agent_job_op_ref(op), (free_func_t) agent_job_op_unref);
 
         r = sd_bus_message_append(req->message, "ss", name, mode);
         if (r < 0) {
                 return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "Internal error");
         }
+
+        hirte_log_debugf("Return value: %i", r);
 
         if (!systemd_request_start(req, unit_lifecycle_method_callback)) {
                 return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "Internal error");
@@ -491,15 +630,85 @@ static int agent_method_reload_unit(sd_bus_message *m, void *userdata, UNUSED sd
         return agent_run_unit_lifecycle_method(m, (Agent *) userdata, "ReloadUnit");
 }
 
+/*************************************************************************
+ ********** org.containers.hirte.internal.Agent.Subscribe ****************
+ ************************************************************************/
+
+static int agent_method_subscribe(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error) {
+        Agent *agent = userdata;
+        const char *unit = NULL;
+        int r = sd_bus_message_read(m, "s", &unit);
+        if (r < 0) {
+                return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_INVALID_ARGS, "Invalid arguments");
+        }
+
+        _cleanup_free_ char *u = strdup(unit);
+        _cleanup_free_ char *escaped = bus_path_escape(unit);
+        _cleanup_free_ char *path = NULL;
+        if (escaped) {
+                path = strcat_dup(SYSTEMD_OBJECT_PATH "/unit/", escaped);
+        }
+        if (u == NULL || escaped == NULL || path == NULL) {
+                return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "Internal error");
+        }
+
+        UnitSubscription v = { path, u };
+
+        UnitSubscription *replaced = hashmap_set(agent->unit_subscriptions, &v);
+        if (replaced == NULL && hashmap_oom(agent->unit_subscriptions)) {
+                return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "Internal error");
+        }
+
+        /* These are now in hashtable */
+        steal_pointer(&u);
+        steal_pointer(&path);
+
+        return sd_bus_reply_method_return(m, "");
+}
+
+/*************************************************************************
+ ********** org.containers.hirte.internal.Agent.Unsubscribe **************
+ ************************************************************************/
+
+static int agent_method_unsubscribe(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error) {
+        Agent *agent = userdata;
+        const char *unit = NULL;
+        int r = sd_bus_message_read(m, "s", &unit);
+        if (r < 0) {
+                return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_INVALID_ARGS, "Invalid arguments");
+        }
+
+        _cleanup_free_ char *escaped = bus_path_escape(unit);
+        _cleanup_free_ char *path = NULL;
+        if (escaped) {
+                path = strcat_dup(SYSTEMD_OBJECT_PATH "/unit/", escaped);
+        }
+        if (escaped == NULL || path == NULL) {
+                return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "Internal error");
+        }
+
+        UnitSubscription key = { path, (char *) unit };
+        hashmap_delete(agent->unit_subscriptions, &key);
+
+        return sd_bus_reply_method_return(m, "");
+}
+
 static const sd_bus_vtable internal_agent_vtable[] = {
         SD_BUS_VTABLE_START(0),
         SD_BUS_METHOD("ListUnits", "", UNIT_INFO_STRUCT_ARRAY_TYPESTRING, agent_method_list_units, 0),
+        SD_BUS_METHOD("GetUnitProperties", "s", "a{sv}", agent_method_get_unit_properties, 0),
         SD_BUS_METHOD("StartUnit", "ssu", "", agent_method_start_unit, 0),
         SD_BUS_METHOD("StopUnit", "ssu", "", agent_method_stop_unit, 0),
         SD_BUS_METHOD("RestartUnit", "ssu", "", agent_method_restart_unit, 0),
         SD_BUS_METHOD("ReloadUnit", "ssu", "", agent_method_reload_unit, 0),
+        SD_BUS_METHOD("Subscribe", "s", "", agent_method_subscribe, 0),
+        SD_BUS_METHOD("Unsubscribe", "s", "", agent_method_unsubscribe, 0),
         SD_BUS_SIGNAL_WITH_NAMES("JobDone", "us", SD_BUS_PARAM(id) SD_BUS_PARAM(result), 0),
         SD_BUS_SIGNAL_WITH_NAMES("JobStateChanged", "us", SD_BUS_PARAM(id) SD_BUS_PARAM(state), 0),
+        SD_BUS_SIGNAL_WITH_NAMES(
+                        "UnitPropertiesChanged", "sa{sv}", SD_BUS_PARAM(unit) SD_BUS_PARAM(properties), 0),
+        SD_BUS_SIGNAL_WITH_NAMES("UnitNew", "s", SD_BUS_PARAM(unit), 0),
+        SD_BUS_SIGNAL_WITH_NAMES("UnitRemoved", "s", SD_BUS_PARAM(unit), 0),
         SD_BUS_SIGNAL_WITH_NAMES("Heartbeat", "s", SD_BUS_PARAM(agent_name), 0),
         SD_BUS_VTABLE_END
 };
@@ -559,6 +768,7 @@ static int agent_match_job_changed(sd_bus_message *m, void *userdata, UNUSED sd_
 
         int r = sd_bus_message_read(m, "s", &interface);
         if (r < 0) {
+                hirte_log_errorf("Failed to read job property: %s", strerror(-r));
                 return r;
         }
 
@@ -584,7 +794,7 @@ static int agent_match_job_changed(sd_bus_message *m, void *userdata, UNUSED sd_
                 if (r == -ENOENT) {
                         return 0; /* Some other property changed */
                 }
-                fprintf(stderr, "Failed to get job property\n");
+                hirte_log_errorf("Failed to get job property: %s", strerror(-r));
                 return r;
         }
 
@@ -597,11 +807,110 @@ static int agent_match_job_changed(sd_bus_message *m, void *userdata, UNUSED sd_
                         op->hirte_job_id,
                         state);
         if (r < 0) {
-                fprintf(stderr, "Failed to emit JobStateChanged\n");
+                hirte_log_errorf("Failed to emit JobStateChanged: %s", strerror(-r));
         }
 
         return 0;
 }
+
+static UnitSubscription *agent_get_unit_subscription(Agent *agent, const char *unit_path) {
+        UnitSubscription key = { (char *) unit_path, NULL };
+
+        return hashmap_get(agent->unit_subscriptions, &key);
+}
+
+static int agent_match_unit_changed(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error) {
+        Agent *agent = userdata;
+        const char *interface = NULL;
+
+        int r = sd_bus_message_read(m, "s", &interface);
+        if (r < 0) {
+                return r;
+        }
+
+        /* Only handle Unit iface changes */
+        if (!streq(interface, "org.freedesktop.systemd1.Unit")) {
+                return 0;
+        }
+
+        UnitSubscription *sub = agent_get_unit_subscription(agent, sd_bus_message_get_path(m));
+        if (sub == NULL) {
+                return 0;
+        }
+
+        /* Forward the property changes */
+        _cleanup_sd_bus_message_ sd_bus_message *sig = NULL;
+        r = sd_bus_message_new_signal(
+                        agent->peer_dbus,
+                        &sig,
+                        INTERNAL_AGENT_OBJECT_PATH,
+                        INTERNAL_AGENT_INTERFACE,
+                        "UnitPropertiesChanged");
+        if (r < 0) {
+                return r;
+        }
+
+        r = sd_bus_message_append(sig, "s", sub->unit);
+        if (r < 0) {
+                return r;
+        }
+
+        r = sd_bus_message_copy(sig, m, false);
+        if (r < 0) {
+                return r;
+        }
+
+        return sd_bus_send(agent->peer_dbus, sig, NULL);
+}
+
+static int agent_match_unit_new(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *error) {
+        Agent *agent = userdata;
+        const char *id = NULL;
+        const char *path = NULL;
+
+        int r = sd_bus_message_read(m, "so", &id, &path);
+        if (r < 0) {
+                return r;
+        }
+
+        UnitSubscription *sub = agent_get_unit_subscription(agent, path);
+        if (sub == NULL) {
+                return 0;
+        }
+
+        return sd_bus_emit_signal(
+                        agent->peer_dbus,
+                        INTERNAL_AGENT_OBJECT_PATH,
+                        INTERNAL_AGENT_INTERFACE,
+                        "UnitNew",
+                        "s",
+                        sub->unit);
+}
+
+static int agent_match_unit_removed(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *error) {
+        Agent *agent = userdata;
+        const char *id = NULL;
+        const char *path = NULL;
+
+        int r = sd_bus_message_read(m, "so", &id, &path);
+        if (r < 0) {
+                return r;
+        }
+
+        UnitSubscription *sub = agent_get_unit_subscription(agent, path);
+        if (sub == NULL) {
+                return 0;
+        }
+
+        return sd_bus_emit_signal(
+                        agent->peer_dbus,
+                        INTERNAL_AGENT_OBJECT_PATH,
+                        INTERNAL_AGENT_INTERFACE,
+                        "UnitRemoved",
+                        "s",
+                        sub->unit);
+}
+
 
 static int agent_match_job_removed(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *error) {
         Agent *agent = userdata;
@@ -614,7 +923,7 @@ static int agent_match_job_removed(sd_bus_message *m, void *userdata, UNUSED sd_
 
         r = sd_bus_message_read(m, "uoss", &id, &job_path, &unit, &result);
         if (r < 0) {
-                fprintf(stderr, "Can't parse job result\n");
+                hirte_log_errorf("Can't parse job result: %s", strerror(-r));
                 return r;
         }
 
@@ -634,12 +943,11 @@ static int agent_match_job_removed(sd_bus_message *m, void *userdata, UNUSED sd_
 
 static int debug_systemd_message_handler(
                 sd_bus_message *m, UNUSED void *userdata, UNUSED sd_bus_error *ret_error) {
-        fprintf(stderr,
-                "Incomming message from systemd: path: %s, iface: %s, member: %s, signature: '%s'\n",
-                sd_bus_message_get_path(m),
-                sd_bus_message_get_interface(m),
-                sd_bus_message_get_member(m),
-                sd_bus_message_get_signature(m, true));
+        hirte_log_infof("Incomming message from systemd: path: %s, iface: %s, member: %s, signature: '%s'",
+                        sd_bus_message_get_path(m),
+                        sd_bus_message_get_interface(m),
+                        sd_bus_message_get_member(m),
+                        sd_bus_message_get_signature(m, true));
         if (DEBUG_SYSTEMD_MESSAGES_CONTENT) {
                 sd_bus_message_dump(m, stderr, 0);
                 sd_bus_message_rewind(m, true);
@@ -653,8 +961,6 @@ bool agent_start(Agent *agent) {
         sd_bus_error error = SD_BUS_ERROR_NULL;
         _cleanup_sd_bus_message_ sd_bus_message *m = NULL;
 
-        fprintf(stdout, "Starting Agent...\n");
-
         if (agent == NULL) {
                 return false;
         }
@@ -664,18 +970,18 @@ bool agent_start(Agent *agent) {
         host.sin_port = htons(agent->port);
 
         if (agent->name == NULL) {
-                fprintf(stderr, "No name specified\n");
+                hirte_log_error("No agent name specified");
                 return false;
         }
 
         if (agent->host == NULL) {
-                fprintf(stderr, "No host specified\n");
+                hirte_log_errorf("No manager host specified for agent '%s'", agent->name);
                 return false;
         }
 
         r = inet_pton(AF_INET, agent->host, &host.sin_addr);
         if (r < 1) {
-                fprintf(stderr, "Invalid host option '%s'\n", optarg);
+                hirte_log_errorf("Invalid host option '%s'", agent->host);
                 return false;
         }
 
@@ -684,21 +990,25 @@ bool agent_start(Agent *agent) {
                 return false;
         }
 
-        agent->user_dbus = user_bus_open(agent->event);
-        if (agent->user_dbus == NULL) {
-                fprintf(stderr, "Failed to open user dbus\n");
+#ifdef USE_USER_API_BUS
+        agent->api_bus = user_bus_open(agent->event);
+#else
+        agent->api_bus = system_bus_open(agent->event);
+#endif
+        if (agent->api_bus == NULL) {
+                hirte_log_error("Failed to open user dbus");
                 return false;
         }
 
-        r = sd_bus_request_name(agent->user_dbus, agent->user_bus_service_name, SD_BUS_NAME_REPLACE_EXISTING);
+        r = sd_bus_request_name(agent->api_bus, agent->api_bus_service_name, SD_BUS_NAME_REPLACE_EXISTING);
         if (r < 0) {
-                fprintf(stderr, "Failed to acquire service name on user dbus: %s\n", strerror(-r));
+                hirte_log_errorf("Failed to acquire service name on user dbus: %s", strerror(-r));
                 return false;
         }
 
         agent->systemd_dbus = systemd_bus_open(agent->event);
         if (agent->systemd_dbus == NULL) {
-                fprintf(stderr, "Failed to open systemd dbus\n");
+                hirte_log_error("Failed to open systemd dbus");
                 return false;
         }
 
@@ -712,7 +1022,7 @@ bool agent_start(Agent *agent) {
                         &m,
                         "");
         if (r < 0) {
-                fprintf(stderr, "Failed to issue subscribe call: %s\n", error.message);
+                hirte_log_errorf("Failed to issue subscribe call: %s", error.message);
                 sd_bus_error_free(&error);
                 return false;
         }
@@ -724,7 +1034,46 @@ bool agent_start(Agent *agent) {
                         agent_match_job_changed,
                         agent);
         if (r < 0) {
-                fprintf(stderr, "Failed to add match\n");
+                hirte_log_errorf("Failed to add match: %s", strerror(-r));
+                return false;
+        }
+
+        r = sd_bus_add_match(
+                        agent->systemd_dbus,
+                        NULL,
+                        "type='signal',sender='org.freedesktop.systemd1',interface='org.freedesktop.DBus.Properties',member='PropertiesChanged',path_namespace='/org/freedesktop/systemd1/unit'",
+                        agent_match_unit_changed,
+                        agent);
+        if (r < 0) {
+                hirte_log_error("Failed to add match");
+                return false;
+        }
+
+        r = sd_bus_match_signal(
+                        agent->systemd_dbus,
+                        NULL,
+                        SYSTEMD_BUS_NAME,
+                        SYSTEMD_OBJECT_PATH,
+                        SYSTEMD_MANAGER_IFACE,
+                        "UnitNew",
+                        agent_match_unit_new,
+                        agent);
+        if (r < 0) {
+                hirte_log_errorf("Failed to add unit-new peer bus match: %s", strerror(-r));
+                return false;
+        }
+
+        r = sd_bus_match_signal(
+                        agent->systemd_dbus,
+                        NULL,
+                        SYSTEMD_BUS_NAME,
+                        SYSTEMD_OBJECT_PATH,
+                        SYSTEMD_MANAGER_IFACE,
+                        "UnitRemoved",
+                        agent_match_unit_removed,
+                        agent);
+        if (r < 0) {
+                hirte_log_errorf("Failed to add unit-removed peer bus match: %s", strerror(-r));
                 return false;
         }
 
@@ -738,7 +1087,7 @@ bool agent_start(Agent *agent) {
                         agent_match_job_removed,
                         agent);
         if (r < 0) {
-                fprintf(stderr, "Failed to add job-removed peer bus match: %s\n", strerror(-r));
+                hirte_log_errorf("Failed to add job-removed peer bus match: %s", strerror(-r));
                 return false;
         }
 
@@ -748,7 +1097,7 @@ bool agent_start(Agent *agent) {
 
         agent->peer_dbus = peer_bus_open(agent->event, "peer-bus-to-orchestrator", agent->orch_addr);
         if (agent->peer_dbus == NULL) {
-                fprintf(stderr, "Failed to open peer dbus\n");
+                hirte_log_error("Failed to open peer dbus");
                 return false;
         }
 
@@ -760,7 +1109,7 @@ bool agent_start(Agent *agent) {
                         internal_agent_vtable,
                         agent);
         if (r < 0) {
-                fprintf(stderr, "Failed to add manager vtable: %s\n", strerror(-r));
+                hirte_log_errorf("Failed to add manager vtable: %s", strerror(-r));
                 return false;
         }
 
@@ -775,28 +1124,28 @@ bool agent_start(Agent *agent) {
                         "s",
                         agent->name);
         if (r < 0) {
-                fprintf(stderr, "Failed to issue method call: %s\n", error.message);
+                hirte_log_errorf("Failed to issue method call: %s", error.message);
                 sd_bus_error_free(&error);
                 return false;
         }
 
         r = sd_bus_message_read(m, "");
         if (r < 0) {
-                fprintf(stderr, "Failed to parse response message: %s\n", strerror(-r));
+                hirte_log_errorf("Failed to parse response message: %s", strerror(-r));
                 return false;
         }
 
-        printf("Registered as '%s'\n", agent->name);
+        hirte_log_infof("Registered to '%s' as '%s'", agent->orch_addr, agent->name);
 
-        r = shutdown_service_register(agent->user_dbus, agent->event);
+        r = shutdown_service_register(agent->api_bus, agent->event);
         if (r < 0) {
-                fprintf(stderr, "Failed to register shutdown service\n");
+                hirte_log_errorf("Failed to register shutdown service: %s", strerror(-r));
                 return false;
         }
 
         r = event_loop_add_shutdown_signals(agent->event);
         if (r < 0) {
-                fprintf(stderr, "Failed to add signals to agent event loop\n");
+                hirte_log_errorf("Failed to add signals to agent event loop: %s", strerror(-r));
                 return false;
         }
 
@@ -808,7 +1157,7 @@ bool agent_start(Agent *agent) {
 
         r = sd_event_loop(agent->event);
         if (r < 0) {
-                fprintf(stderr, "Starting event loop failed: %s\n", strerror(-r));
+                hirte_log_errorf("Starting event loop failed: %s", strerror(-r));
                 return false;
         }
 
@@ -816,8 +1165,6 @@ bool agent_start(Agent *agent) {
 }
 
 bool agent_stop(Agent *agent) {
-        fprintf(stdout, "Stopping Agent...\n");
-
         if (agent == NULL) {
                 return false;
         }
