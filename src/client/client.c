@@ -163,7 +163,11 @@ void nodes_unit_list_unref(NodesUnitList *nodes_unit_list) {
 int client_call_manager(Client *client) {
         int r = 0;
 
+#ifdef USE_USER_API_BUS
         r = sd_bus_open_user(&(client->api_bus));
+#else
+        r = sd_bus_open_system(&(client->api_bus));
+#endif
         if (r < 0) {
                 fprintf(stderr, "Failed to connect to system bus: %s\n", strerror(-r));
                 return r;

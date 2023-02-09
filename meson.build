@@ -22,6 +22,11 @@ common_cflags = cc.get_supported_arguments(test_cflags)
 # Link with systemd shared library.
 systemd_dep = dependency('libsystemd')
 
+api_bus = get_option('api_bus')
+if api_bus == 'user'
+   common_cflags += '-DUSE_USER_API_BUS'
+endif
+
 # Subdirectory for the shared library.
 subdir('src/libhirte')
 

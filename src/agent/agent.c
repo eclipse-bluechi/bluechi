@@ -918,7 +918,11 @@ bool agent_start(Agent *agent) {
                 return false;
         }
 
+#ifdef USE_USER_API_BUS
         agent->api_bus = user_bus_open(agent->event);
+#else
+        agent->api_bus = system_bus_open(agent->event);
+#endif
         if (agent->api_bus == NULL) {
                 hirte_log_error("Failed to open user dbus");
                 return false;

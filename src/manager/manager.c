@@ -809,7 +809,11 @@ bool manager_start(Manager *manager) {
                 return false;
         }
 
+#ifdef USE_USER_API_BUS
         manager->api_bus = user_bus_open(manager->event);
+#else
+        manager->api_bus = system_bus_open(manager->event);
+#endif
         if (manager->api_bus == NULL) {
                 hirte_log_error("Failed to open user dbus");
                 return false;
