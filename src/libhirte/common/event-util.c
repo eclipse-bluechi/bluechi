@@ -1,7 +1,7 @@
+#include <assert.h>
+#include <stdbool.h>
 #include <stdint.h>
 #include <systemd/sd-event.h>
-#include <stdbool.h>
-#include <assert.h>
 
 typedef uint64_t usec_t;
 
@@ -103,5 +103,15 @@ int event_reset_time_relative(
         if (r < 0)
                 return r;
 
-        return event_reset_time(e, s, clock, usec_add(usec_now, usec), accuracy, callback, userdata, priority, description, force_reset);
+        return event_reset_time(
+                        e,
+                        s,
+                        clock,
+                        usec_add(usec_now, usec),
+                        accuracy,
+                        callback,
+                        userdata,
+                        priority,
+                        description,
+                        force_reset);
 }

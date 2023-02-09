@@ -170,6 +170,20 @@ static int node_match_job_done(UNUSED sd_bus_message *m, UNUSED void *userdata, 
         return 1;
 }
 
+static int node_match_heartbeat(UNUSED sd_bus_message *m, UNUSED void *userdata, UNUSED sd_bus_error *error) {
+        char *node_name = NULL;
+
+        int r = sd_bus_message_read(m, "s", &node_name);
+        if (r < 0 || node_name == NULL) {
+                fprintf(stderr, "Error reading heartbeat: %m\n");
+                return 0;
+        }
+
+        // printf("%s(): Heartbeat received: %s\n", __func__, node_name);
+
+        return 1;
+}
+
 bool node_set_agent_bus(Node *node, sd_bus *bus) {
         int r = 0;
 
@@ -228,6 +242,20 @@ bool node_set_agent_bus(Node *node, sd_bus *bus) {
                                 node->manager->user_dbus, node->object_path, NODE_INTERFACE, "Status", NULL);
                 if (r < 0) {
                         fprintf(stderr, "Failed to emit status property changed: %s\n", strerror(-r));
+                }
+
+                sd_bus_match_signal(
+                                bus,
+                                NULL,
+                                NULL,
+                                INTERNAL_AGENT_OBJECT_PATH,
+                                INTERNAL_AGENT_INTERFACE,
+                                "Heartbeat",
+                                node_match_heartbeat,
+                                NULL);
+                if (r < 0) {
+                        fprintf(stderr, "Failed to add heartbeat signal match: %m\n");
+                        return false;
                 }
         }
 

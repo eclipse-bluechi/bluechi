@@ -5,8 +5,8 @@
 #include "libhirte/bus/bus.h"
 #include "libhirte/bus/utils.h"
 #include "libhirte/common/common.h"
-#include "libhirte/common/opt.h"
 #include "libhirte/common/event-util.h"
+#include "libhirte/common/opt.h"
 #include "libhirte/common/parse-util.h"
 #include "libhirte/ini/config.h"
 #include "libhirte/service/shutdown.h"
@@ -35,25 +35,22 @@ static bool
 
 static int agent_reset_heartbeat_timer(Agent *agent, sd_event_source **event_source);
 
-static int agent_heartbeat_timer_callback(
-                        sd_event_source *event_source,
-                        UNUSED uint64_t usec,
-                        void *userdata) {
+static int agent_heartbeat_timer_callback(sd_event_source *event_source, UNUSED uint64_t usec, void *userdata) {
         Agent *agent = userdata;
         int r;
 
         assert(event_source);
 
-        static uint32_t count;
-        printf("%s(): count = %d\n", __func__, count++);
+        // static uint32_t count;
+        // printf("%s(): heartbeat count = %d\n", __func__, count++);
 
         r = sd_bus_emit_signal(
-                    agent->peer_dbus,
-                    INTERNAL_MANAGER_OBJECT_PATH,
-                    INTERNAL_MANAGER_INTERFACE,
-                    "Heartbeat",
-                    "s",
-                    agent->name);
+                        agent->peer_dbus,
+                        INTERNAL_AGENT_OBJECT_PATH,
+                        INTERNAL_AGENT_INTERFACE,
+                        "Heartbeat",
+                        "s",
+                        agent->name);
         if (r < 0) {
                 fprintf(stderr, "Failed to emit heartbeat signal: %m");
                 return r;
@@ -68,12 +65,19 @@ static int agent_heartbeat_timer_callback(
         return 0;
 }
 
-static int agent_reset_heartbeat_timer(
-                        Agent *agent,
-                        sd_event_source **event_source) {
+static int agent_reset_heartbeat_timer(Agent *agent, sd_event_source **event_source) {
         sd_event *event = agent->event;
-        return event_reset_time_relative(event, event_source, CLOCK_BOOTTIME, AGENT_HEARTBEAT_INTERVAL_USEC, 0,
-                                         agent_heartbeat_timer_callback, agent, 0, "periodic-timer-event-source", false);
+        return event_reset_time_relative(
+                        event,
+                        event_source,
+                        CLOCK_BOOTTIME,
+                        AGENT_HEARTBEAT_INTERVAL_USEC,
+                        0,
+                        agent_heartbeat_timer_callback,
+                        agent,
+                        0,
+                        "agent-heartbeat-timer-source",
+                        false);
 }
 
 static int agent_setup_heartbeat_timer(Agent *agent) {
@@ -499,6 +503,7 @@ static const sd_bus_vtable internal_agent_vtable[] = {
         SD_BUS_METHOD("ReloadUnit", "ssu", "", agent_method_reload_unit, 0),
         SD_BUS_SIGNAL_WITH_NAMES("JobDone", "us", SD_BUS_PARAM(id) SD_BUS_PARAM(result), 0),
         SD_BUS_SIGNAL_WITH_NAMES("JobStateChanged", "us", SD_BUS_PARAM(id) SD_BUS_PARAM(state), 0),
+        SD_BUS_SIGNAL_WITH_NAMES("Heartbeat", "s", SD_BUS_PARAM(agent_name), 0),
         SD_BUS_VTABLE_END
 };
 
