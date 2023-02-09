@@ -6,15 +6,18 @@
 #include <systemd/sd-journal.h>
 
 #include "libhirte/common/common.h"
+#include "libhirte/ini/config.h"
 
 typedef enum LogLevel {
         LOG_LEVEL_DEBUG,
         LOG_LEVEL_INFO,
         LOG_LEVEL_WARN,
         LOG_LEVEL_ERROR,
+        LOG_LEVEL_INVALID,
 } LogLevel;
 
 const char *log_level_to_string(LogLevel l);
+LogLevel string_to_log_level(const char *l);
 
 
 typedef int (*LogFn)(
@@ -43,6 +46,8 @@ int hirte_log_to_stderr_with_location(
 void hirte_log_set_log_fn(LogFn log_fn);
 void hirte_log_set_level(LogLevel level);
 void hirte_log_set_quiet(bool is_quiet);
+void hirte_log_init();
+int hirte_log_init_from_config(config *conf);
 bool shouldLog(LogLevel lvl);
 
 int hirte_log(LogLevel lvl,

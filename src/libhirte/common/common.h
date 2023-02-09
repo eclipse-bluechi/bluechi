@@ -13,6 +13,9 @@
 #define streq(a, b) (strcmp((a), (b)) == 0)
 #define strneq(a, b, n) (strncmp((a), (b), (n)) == 0)
 
+#define streqi(a, b) (strcasecmp(a, b) == 0)
+#define strneqi(a, b) (strncasecmp(a, b) == 0)
+
 static inline bool ascii_isdigit(char a) {
         return a >= '0' && a <= '9';
 }

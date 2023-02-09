@@ -1,6 +1,5 @@
 #pragma once
 
-// NOLINTBEGIN(modernize-macro-to-enum)
 #define ARG_PORT "port"
 #define ARG_PORT_SHORT 'p'
 #define ARG_PORT_SHORT_S "p:"
@@ -20,4 +19,3 @@
 #define ARG_HELP "help"
 #define ARG_HELP_SHORT 'h'
 #define ARG_HELP_SHORT_S "h"
-// NOLINTEND(modernize-macro-to-enum)

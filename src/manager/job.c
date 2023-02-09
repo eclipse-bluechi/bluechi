@@ -1,6 +1,7 @@
 #include <stddef.h>
 
 #include "job.h"
+#include "libhirte/log/log.h"
 #include "manager.h"
 #include "node.h"
 
@@ -59,6 +60,7 @@ Job *job_new(Node *node, const char *unit, const char *type) {
 
         int r = asprintf(&job->object_path, "%s/%u", JOB_OBJECT_PATH_PREFIX, job->id);
         if (r < 0) {
+                hirte_log_error("Out of memory");
                 return NULL;
         }
 
@@ -91,7 +93,7 @@ bool job_export(Job *job) {
         int r = sd_bus_add_object_vtable(
                         manager->user_dbus, &job->export_slot, job->object_path, JOB_INTERFACE, job_vtable, job);
         if (r < 0) {
-                fprintf(stderr, "Failed to add job vtable: %s\n", strerror(-r));
+                hirte_log_errorf("Failed to add job vtable: %s", strerror(-r));
                 return false;
         }
 
@@ -107,7 +109,7 @@ void job_set_state(Job *job, JobState state) {
         int r = sd_bus_emit_properties_changed(
                         manager->user_dbus, job->object_path, JOB_INTERFACE, "State", NULL);
         if (r < 0) {
-                fprintf(stderr, "Failed to emit status property changed: %s\n", strerror(-r));
+                hirte_log_errorf("Failed to emit status property changed: %s", strerror(-r));
         }
 }
 

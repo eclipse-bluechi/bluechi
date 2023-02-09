@@ -1,6 +1,8 @@
 #pragma once
+
 #include "libhirte/bus/utils.h"
 #include "libhirte/common/common.h"
+
 #include "printer.h"
 #include "types.h"
 

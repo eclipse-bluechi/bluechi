@@ -1,10 +1,10 @@
-#include <stdio.h>
 #include <string.h>
 
 #include "libhirte/bus/bus.h"
 #include "libhirte/common/common.h"
 #include "libhirte/common/parse-util.h"
 #include "libhirte/ini/config.h"
+#include "libhirte/log/log.h"
 #include "libhirte/service/shutdown.h"
 #include "libhirte/socket.h"
 
@@ -16,19 +16,17 @@
 #define DEBUG_MESSAGES 0
 
 Manager *manager_new(void) {
-        fprintf(stdout, "Creating Manager...\n");
-
         int r = 0;
         _cleanup_sd_event_ sd_event *event = NULL;
         r = sd_event_default(&event);
         if (r < 0) {
-                fprintf(stderr, "Failed to create event loop: %s\n", strerror(-r));
+                hirte_log_errorf("Failed to create event loop: %s", strerror(-r));
                 return NULL;
         }
 
         _cleanup_free_ char *service_name = strdup(HIRTE_DBUS_NAME);
         if (service_name == NULL) {
-                fprintf(stderr, "Out of memory\n");
+                hirte_log_error("Out of memory");
                 return NULL;
         }
 
@@ -103,7 +101,7 @@ void manager_unit_properties_changed(Manager *manager, const char *node, sd_bus_
                 r = sd_bus_message_rewind(m, false);
         }
         if (r < 0) {
-                fprintf(stderr, "Invalid UnitPropertiesChanged signal\n");
+                hirte_log_error("Invalid UnitPropertiesChanged signal");
                 return;
         }
 
@@ -112,7 +110,7 @@ void manager_unit_properties_changed(Manager *manager, const char *node, sd_bus_
                 if ((*sub->node == 0 || streq(sub->node, node)) && streq(sub->unit, unit)) {
                         r = monitor_emit_unit_property_changed(sub->monitor, node, unit, m);
                         if (r < 0) {
-                                fprintf(stderr, "Failed to emit UnitPropertiesChanged signal\n");
+                                hirte_log_error("Failed to emit UnitPropertiesChanged signal");
                                 return;
                         }
                 }
@@ -125,7 +123,7 @@ void manager_unit_new(Manager *manager, const char *node, const char *unit) {
                 if ((*sub->node == 0 || streq(sub->node, node)) && streq(sub->unit, unit)) {
                         int r = monitor_emit_unit_new(sub->monitor, node, unit);
                         if (r < 0) {
-                                fprintf(stderr, "Failed to emit UnitNew signal\n");
+                                hirte_log_error("Failed to emit UnitNew signal");
                                 return;
                         }
                 }
@@ -138,7 +136,7 @@ void manager_unit_removed(Manager *manager, const char *node, const char *unit) 
                 if ((*sub->node == 0 || streq(sub->node, node)) && streq(sub->unit, unit)) {
                         int r = monitor_emit_unit_removed(sub->monitor, node, unit);
                         if (r < 0) {
-                                fprintf(stderr, "Failed to emit UnitRemoved signal\n");
+                                hirte_log_error("Failed to emit UnitRemoved signal");
                                 return;
                         }
                 }
@@ -158,7 +156,7 @@ void manager_add_subscription(Manager *manager, Subscription *sub) {
                 if (node) {
                         node_subscribe(node, sub->unit);
                 } else {
-                        fprintf(stderr, "Warning: Subscription to non-existing node %s\n", sub->node);
+                        hirte_log_errorf("Warning: Subscription to non-existing node %s", sub->node);
                 }
         }
 
@@ -232,6 +230,7 @@ bool manager_add_job(Manager *manager, Job *job) {
                         job->id,
                         job->object_path);
         if (r < 0) {
+                hirte_log_errorf("Failed to emit JobNew signal: %s", strerror(-r));
                 return false;
         }
 
@@ -253,7 +252,7 @@ void manager_remove_job(Manager *manager, Job *job, const char *result) {
                         job->unit,
                         result);
         if (r < 0) {
-                fprintf(stderr, "Warning: Failed to send JobRemoved event\n");
+                hirte_log_errorf("Warning: Failed to send JobRemoved event: %s", strerror(-r));
                 /* We can't really return a failure here */
         }
 
@@ -303,7 +302,7 @@ bool manager_set_port(Manager *manager, const char *port_s) {
         uint16_t port = 0;
 
         if (!parse_port(port_s, &port)) {
-                fprintf(stderr, "Invalid port format '%s'\n", port_s);
+                hirte_log_errorf("Invalid port format '%s'", port_s);
                 return false;
         }
         manager->port = port;
@@ -320,7 +319,7 @@ bool manager_parse_config(Manager *manager, const char *configfile) {
                 return false;
         }
 
-        print_all_topics(config);
+        hirte_log_init_from_config(config);
 
         topic = config_lookup_topic(config, "Manager");
         if (topic == NULL) {
@@ -357,8 +356,8 @@ static int manager_accept_node_connection(
         Manager *manager = userdata;
         Node *node = NULL;
         _cleanup_fd_ int nfd = accept_tcp_connection_request(fd);
-
         if (nfd < 0) {
+                hirte_log_errorf("Failed to accept TCP connection request: %s", strerror(-nfd));
                 return -1;
         }
 
@@ -388,18 +387,19 @@ static bool manager_setup_node_connection_handler(Manager *manager) {
 
         _cleanup_fd_ int accept_fd = create_tcp_socket(manager->port);
         if (accept_fd < 0) {
+                hirte_log_errorf("Failed to create TCP socket: %s", strerror(-r));
                 return false;
         }
 
         r = sd_event_add_io(
                         manager->event, &event_source, accept_fd, EPOLLIN, manager_accept_node_connection, manager);
         if (r < 0) {
-                fprintf(stderr, "Failed to add io event: %s\n", strerror(-r));
+                hirte_log_errorf("Failed to add io event: %s", strerror(-r));
                 return false;
         }
         r = sd_event_source_set_io_fd_own(event_source, true);
         if (r < 0) {
-                fprintf(stderr, "Failed to set io fd own: %s\n", strerror(-r));
+                hirte_log_errorf("Failed to set io fd own: %s", strerror(-r));
                 return false;
         }
 
@@ -549,7 +549,7 @@ static void manager_method_list_units_done(ListUnitsRequest *req) {
 
         r = sd_bus_message_send(reply);
         if (r < 0) {
-                fprintf(stderr, "Failed to send reply: %s\n", strerror(-r));
+                hirte_log_errorf("Failed to send reply: %s", strerror(-r));
                 return;
         }
 }
@@ -749,12 +749,11 @@ static int manager_dbus_filter(UNUSED sd_bus_message *m, void *userdata, UNUSED 
         const char *iface = sd_bus_message_get_interface(m);
 
         if (DEBUG_MESSAGES) {
-                fprintf(stderr,
-                        "Incomming public message: path: %s, iface: %s, member: %s, signature: '%s'\n",
-                        object_path,
-                        iface,
-                        sd_bus_message_get_member(m),
-                        sd_bus_message_get_signature(m, true));
+                hirte_log_infof("Incomming public message: path: %s, iface: %s, member: %s, signature: '%s'",
+                                object_path,
+                                iface,
+                                sd_bus_message_get_member(m),
+                                sd_bus_message_get_signature(m, true));
         }
 
         if (iface != NULL && streq(iface, NODE_INTERFACE)) {
@@ -806,15 +805,13 @@ static int manager_name_owner_changed(sd_bus_message *m, void *userdata, UNUSED 
 }
 
 bool manager_start(Manager *manager) {
-        fprintf(stdout, "Starting Manager...\n");
-
         if (manager == NULL) {
                 return false;
         }
 
         manager->user_dbus = user_bus_open(manager->event);
         if (manager->user_dbus == NULL) {
-                fprintf(stderr, "Failed to open user dbus\n");
+                hirte_log_error("Failed to open user dbus");
                 return false;
         }
 
@@ -829,13 +826,13 @@ bool manager_start(Manager *manager) {
         int r = sd_bus_request_name(
                         manager->user_dbus, manager->user_bus_service_name, SD_BUS_NAME_REPLACE_EXISTING);
         if (r < 0) {
-                fprintf(stderr, "Failed to acquire service name on user dbus: %s\n", strerror(-r));
+                hirte_log_errorf("Failed to acquire service name on user dbus: %s", strerror(-r));
                 return false;
         }
 
         r = sd_bus_add_filter(manager->user_dbus, &manager->filter_slot, manager_dbus_filter, manager);
         if (r < 0) {
-                fprintf(stderr, "Failed to add manager filter: %s\n", strerror(-r));
+                hirte_log_errorf("Failed to add manager filter: %s", strerror(-r));
                 return false;
         }
 
@@ -849,7 +846,7 @@ bool manager_start(Manager *manager) {
                         manager_name_owner_changed,
                         manager);
         if (r < 0) {
-                fprintf(stderr, "Failed to add nameloist filter: %s\n", strerror(-r));
+                hirte_log_errorf("Failed to add nameloist filter: %s", strerror(-r));
                 return false;
         }
 
@@ -861,7 +858,7 @@ bool manager_start(Manager *manager) {
                         manager_vtable,
                         manager);
         if (r < 0) {
-                fprintf(stderr, "Failed to add manager vtable: %s\n", strerror(-r));
+                hirte_log_errorf("Failed to add manager vtable: %s", strerror(-r));
                 return false;
         }
 
@@ -871,19 +868,19 @@ bool manager_start(Manager *manager) {
 
         r = shutdown_service_register(manager->user_dbus, manager->event);
         if (r < 0) {
-                fprintf(stderr, "Failed to register shutdown service\n");
+                hirte_log_errorf("Failed to register shutdown service: %s", strerror(-r));
                 return false;
         }
 
         r = event_loop_add_shutdown_signals(manager->event);
         if (r < 0) {
-                fprintf(stderr, "Failed to add signals to manager event loop\n");
+                hirte_log_errorf("Failed to add signals to manager event loop: %s", strerror(-r));
                 return false;
         }
 
         r = sd_event_loop(manager->event);
         if (r < 0) {
-                fprintf(stderr, "Starting event loop failed: %s\n", strerror(-r));
+                hirte_log_errorf("Starting event loop failed: %s", strerror(-r));
                 return false;
         }
 
@@ -891,8 +888,6 @@ bool manager_start(Manager *manager) {
 }
 
 bool manager_stop(UNUSED Manager *manager) {
-        fprintf(stdout, "Stopping Manager...\n");
-
         if (manager == NULL) {
                 return false;
         }

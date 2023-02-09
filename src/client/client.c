@@ -1,6 +1,6 @@
-#include "client.h"
 #include "libhirte/bus/utils.h"
-#include <stdio.h>
+
+#include "client.h"
 
 int list_units_on_all(UNUSED Client *client) {
         printf("Listing units on all\n");
@@ -17,6 +17,7 @@ int list_units_on(const char *name, Client *client) {
 
         r = assemble_object_path_string(NODE_OBJECT_PATH_PREFIX, name, &client->object_path);
         if (r < 0) {
+                fprintf(stderr, "Failed to assemble object path: %s\n", strerror(-r));
                 return r;
         }
 
@@ -36,7 +37,7 @@ int list_units_on(const char *name, Client *client) {
 
         r = sd_bus_message_enter_container(message, SD_BUS_TYPE_ARRAY, UNIT_INFO_STRUCT_TYPESTRING);
         if (r < 0) {
-                fprintf(stderr, "Failed to read sd-bus message\n");
+                fprintf(stderr, "Failed to read sd-bus message: %s\n", strerror(-r));
                 return r;
         }
 
@@ -47,7 +48,7 @@ int list_units_on(const char *name, Client *client) {
 
                 r = bus_parse_unit_info(message, info);
                 if (r < 0) {
-                        fprintf(stderr, "Failed to parse unit info\n");
+                        fprintf(stderr, "Failed to parse unit info: %s\n", strerror(-r));
                         return r;
                 }
                 if (r == 0) {

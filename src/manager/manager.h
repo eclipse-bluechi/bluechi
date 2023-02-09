@@ -3,9 +3,9 @@
 #include <inttypes.h>
 #include <stdbool.h>
 
-#include "types.h"
-
 #include "libhirte/common/common.h"
+
+#include "types.h"
 
 struct Manager {
         int ref_count;
