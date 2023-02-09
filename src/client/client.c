@@ -300,7 +300,9 @@ int client_call_manager(Client *client) {
                 return r;
         }
 
-        if (streq(client->op, "list-units")) {
+        if (streq(client->op, "help")) {
+                r = print_client_usage("hirte");
+        } else if (streq(client->op, "list-units")) {
                 if (client->opargc == 0) {
                         r = method_list_units_on_all(client);
                 } else {
@@ -329,4 +331,23 @@ int client_call_manager(Client *client) {
         }
 
         return r;
+}
+
+int print_client_usage(char *argv) {
+        printf("hirtectl is a convenience CLI tool to interact with hirte\n");
+        printf("Usage: %s COMMAND\n\n", argv);
+        printf("Available command:\n");
+        printf("  - help: shows this help message\n");
+        printf("    usage: help\n");
+        printf("  - list-units: returns the list of systemd service running on a specific not or on all the nodes\n");
+        printf("    usage: list-units [nodename]\n");
+        printf("  - start: starts a specific systemd service (or timer, or slice) on a specific node\n");
+        printf("    usage: start nodename unitname\n");
+        printf("  - stop: stop a specific systemd service (or timer, or slice) on a specific node\n");
+        printf("    usage: stop nodename unitname\n");
+        printf("  - reload: reloads a specific systemd service (or timer, or slice) on a specific node\n");
+        printf("    usage: reload nodename unitname\n");
+        printf("  - restart: restarts a specific systemd service (or timer, or slice) on a specific node\n");
+        printf("    usage: restart nodename unitname\n");
+        return 0;
 }
