@@ -1,6 +1,5 @@
 #pragma once
 
-// NOLINTNEXTLINE#
 #define HIRTE_DEFAULT_PORT 808 /* TODO: Pick a better default */
 
 #define HIRTE_DBUS_NAME "org.containers.hirte"
@@ -16,9 +15,11 @@
 #define MANAGER_INTERFACE HIRTE_INTERFACE_BASE_NAME ".Manager"
 #define NODE_INTERFACE HIRTE_INTERFACE_BASE_NAME ".Node"
 #define JOB_INTERFACE HIRTE_INTERFACE_BASE_NAME ".Job"
+#define MONITOR_INTERFACE HIRTE_INTERFACE_BASE_NAME ".Monitor"
 
 #define NODE_OBJECT_PATH_PREFIX HIRTE_OBJECT_PATH "/node"
 #define JOB_OBJECT_PATH_PREFIX HIRTE_OBJECT_PATH "/job"
+#define MONITOR_OBJECT_PATH_PREFIX HIRTE_OBJECT_PATH "/monitor"
 
 /* Internal objects */
 #define INTERNAL_MANAGER_OBJECT_PATH HIRTE_OBJECT_PATH "/internal"
@@ -29,12 +30,14 @@
 #define INTERNAL_AGENT_INTERFACE HIRTE_INTERFACE_BASE_NAME ".internal.Agent"
 
 #define HIRTE_BUS_ERROR_OFFLINE "org.containers.hirte.Offline"
+#define HIRTE_BUS_ERROR_NO_SUCH_SUBSCRIPTION "org.containers.hirte.NoSuchSubscription"
 
 /* Systemd protocol */
 
 #define SYSTEMD_BUS_NAME "org.freedesktop.systemd1"
 #define SYSTEMD_OBJECT_PATH "/org/freedesktop/systemd1"
 #define SYSTEMD_MANAGER_IFACE "org.freedesktop.systemd1.Manager"
+#define SYSTEMD_UNIT_IFACE "org.freedesktop.systemd1.Unit"
 
 #define USEC_PER_SEC 1000000
 #define HIRTE_DEFAULT_DBUS_TIMEOUT ((uint64_t) (USEC_PER_SEC * 30))
@@ -44,6 +47,11 @@
 #define UNIT_INFO_TYPESTRING "ssssssouso"
 #define UNIT_INFO_STRUCT_TYPESTRING "(" UNIT_INFO_TYPESTRING ")"
 #define UNIT_INFO_STRUCT_ARRAY_TYPESTRING "a" UNIT_INFO_STRUCT_TYPESTRING
+
+#define NODE_AND_UNIT_INFO_TYPESTRING "s" UNIT_INFO_TYPESTRING
+#define NODE_AND_UNIT_INFO_STRUCT_TYPESTRING "(" NODE_AND_UNIT_INFO_TYPESTRING ")"
+#define NODE_AND_UNIT_INFO_STRUCT_ARRAY_TYPESTRING "a" NODE_AND_UNIT_INFO_STRUCT_TYPESTRING
+
 
 typedef enum JobState {
         JOB_WAITING,

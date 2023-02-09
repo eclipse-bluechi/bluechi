@@ -5,6 +5,7 @@
 #include <sys/socket.h>
 
 #include "libhirte/common/common.h"
+#include "libhirte/hashmap/hashmap.h"
 
 typedef struct Agent Agent;
 typedef struct SystemdRequest SystemdRequest;
@@ -42,17 +43,19 @@ struct Agent {
         int port;
 
         char *orch_addr;
-        char *user_bus_service_name;
+        char *api_bus_service_name;
 
         sd_event *event;
 
-        sd_bus *user_dbus;
+        sd_bus *api_bus;
         sd_bus *systemd_dbus;
         sd_bus *peer_dbus;
 
         LIST_HEAD(SystemdRequest, outstanding_requests);
 
         LIST_HEAD(JobTracker, tracked_jobs);
+
+        struct hashmap *unit_subscriptions;
 };
 
 Agent *agent_new(void);

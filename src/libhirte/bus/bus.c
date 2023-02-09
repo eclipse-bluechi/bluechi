@@ -2,6 +2,7 @@
 #include <errno.h>
 
 #include "libhirte/common/common.h"
+#include "libhirte/log/log.h"
 #include "libhirte/socket.h"
 
 #include "bus.h"
@@ -12,14 +13,14 @@
 
 char *assemble_tcp_address(const struct sockaddr_in *addr) {
         if (addr == NULL) {
-                fprintf(stderr, "Can not assemble an empty address\n");
+                hirte_log_error("Can not assemble an empty address");
                 return NULL;
         }
 
         char *dbus_addr = NULL;
         int r = asprintf(&dbus_addr, "tcp:host=%s,port=%d", inet_ntoa(addr->sin_addr), ntohs(addr->sin_port));
         if (r < 0) {
-                fprintf(stderr, "Out of memory\n");
+                hirte_log_error("Out of memory");
                 return NULL;
         }
         return dbus_addr;
@@ -27,7 +28,7 @@ char *assemble_tcp_address(const struct sockaddr_in *addr) {
 
 static sd_bus *peer_bus_new(sd_event *event, const char *dbus_description) {
         if (event == NULL) {
-                fprintf(stderr, "Event loop must be initialized\n");
+                hirte_log_error("Event loop must be initialized");
                 return NULL;
         }
 
@@ -36,7 +37,7 @@ static sd_bus *peer_bus_new(sd_event *event, const char *dbus_description) {
 
         r = sd_bus_new(&dbus);
         if (r < 0) {
-                fprintf(stderr, "Failed to create bus: %s\n", strerror(-r));
+                hirte_log_errorf("Failed to create bus: %s", strerror(-r));
                 return NULL;
         }
         (void) sd_bus_set_description(dbus, dbus_description);
@@ -44,7 +45,7 @@ static sd_bus *peer_bus_new(sd_event *event, const char *dbus_description) {
         // trust everything to/from the orchestrator
         r = sd_bus_set_trusted(dbus, true);
         if (r < 0) {
-                fprintf(stderr, "Failed to trust orchestrator: %s\n", strerror(-r));
+                hirte_log_errorf("Failed to trust orchestrator: %s", strerror(-r));
                 return NULL;
         }
 
@@ -53,7 +54,7 @@ static sd_bus *peer_bus_new(sd_event *event, const char *dbus_description) {
 
 sd_bus *peer_bus_open(sd_event *event, const char *dbus_description, const char *dbus_server_addr) {
         if (dbus_server_addr == NULL) {
-                fprintf(stderr, "Peer address to connect to must be initialized\n");
+                hirte_log_error("Peer address to connect to must be initialized");
                 return NULL;
         }
 
@@ -64,19 +65,19 @@ sd_bus *peer_bus_open(sd_event *event, const char *dbus_description, const char 
         }
         r = sd_bus_set_address(dbus, dbus_server_addr);
         if (r < 0) {
-                fprintf(stderr, "Failed to set address: %s\n", strerror(-r));
+                hirte_log_errorf("Failed to set address: %s", strerror(-r));
                 return NULL;
         }
 
         r = sd_bus_start(dbus);
         if (r < 0) {
-                fprintf(stderr, "Failed to start peer bus: %s", strerror(-r));
+                hirte_log_errorf("Failed to start peer bus: %s", strerror(-r));
                 return NULL;
         }
 
         r = sd_bus_attach_event(dbus, event, SD_EVENT_PRIORITY_NORMAL);
         if (r < 0) {
-                fprintf(stderr, "Failed to attach bus to event: %s\n", strerror(-r));
+                hirte_log_errorf("Failed to attach bus to event: %s", strerror(-r));
                 return NULL;
         }
 
@@ -106,17 +107,17 @@ sd_bus *peer_bus_open_server(sd_event *event, const char *dbus_description, cons
 
         r = sd_bus_set_fd(dbus, fd, fd);
         if (r < 0) {
-                fprintf(stderr, "Failed to set fd on new connection bus: %s\n", strerror(-r));
+                hirte_log_errorf("Failed to set fd on new connection bus: %s", strerror(-r));
                 return NULL;
         }
         sd_id128_t server_id;
         r = sd_id128_randomize(&server_id);
         if (r < 0) {
-                fprintf(stderr, "Failed to create server id: %s\n", strerror(-r));
+                hirte_log_errorf("Failed to create server id: %s", strerror(-r));
         }
         r = sd_bus_set_server(dbus, 1, server_id);
         if (r < 0) {
-                fprintf(stderr, "Failed to enable server support for new connection bus: %s\n", strerror(-r));
+                hirte_log_errorf("Failed to enable server support for new connection bus: %s", strerror(-r));
                 return NULL;
         }
         r = sd_bus_negotiate_creds(
@@ -126,38 +127,38 @@ sd_bus *peer_bus_open_server(sd_event *event, const char *dbus_description, cons
                         SD_BUS_CREDS_PID | SD_BUS_CREDS_UID | SD_BUS_CREDS_EUID |
                                         SD_BUS_CREDS_EFFECTIVE_CAPS | SD_BUS_CREDS_SELINUX_CONTEXT);
         if (r < 0) {
-                fprintf(stderr, "Failed to enable credentials for new connection: %s\n", strerror(-r));
+                hirte_log_errorf("Failed to enable credentials for new connection: %s", strerror(-r));
                 return NULL;
         }
 
         r = sd_bus_set_anonymous(dbus, true);
         if (r < 0) {
-                fprintf(stderr, "Failed to set bus to anonymous: %s\n", strerror(-r));
+                hirte_log_errorf("Failed to set bus to anonymous: %s", strerror(-r));
                 return NULL;
         }
 
         r = sd_bus_set_sender(dbus, sender);
         if (r < 0) {
-                fprintf(stderr, "Failed to set sender for new connection bus: %s\n", strerror(-r));
+                hirte_log_errorf("Failed to set sender for new connection bus: %s", strerror(-r));
                 return NULL;
         }
 
         r = sd_bus_start(dbus);
         if (r < 0) {
-                fprintf(stderr, "Failed to start peer bus server: %s", strerror(-r));
+                hirte_log_errorf("Failed to start peer bus server: %s", strerror(-r));
                 return NULL;
         }
 
         r = sd_bus_add_object_vtable(
                         dbus, NULL, "/org/freedesktop/DBus", "org.freedesktop.DBus", peer_bus_vtable, NULL);
         if (r < 0) {
-                fprintf(stderr, "Failed to add peer bus vtable: %s\n", strerror(-r));
+                hirte_log_errorf("Failed to add peer bus vtable: %s", strerror(-r));
                 return NULL;
         }
 
         r = sd_bus_attach_event(dbus, event, SD_EVENT_PRIORITY_NORMAL);
         if (r < 0) {
-                fprintf(stderr, "Failed to attach bus to event: %s\n", strerror(-r));
+                hirte_log_errorf("Failed to attach bus to event: %s", strerror(-r));
                 return NULL;
         }
 
@@ -175,16 +176,18 @@ sd_bus *system_bus_open(sd_event *event) {
 
         r = sd_bus_open_system(&bus);
         if (r < 0) {
-                fprintf(stderr, "Failed to connect to system bus: %s\n", strerror(-r));
+                hirte_log_errorf("Failed to connect to system bus: %s", strerror(-r));
                 return NULL;
         }
 
         r = sd_bus_attach_event(bus, event, SD_EVENT_PRIORITY_NORMAL);
         if (r < 0) {
-                fprintf(stderr, "Failed to attach bus to event: %s\n", strerror(-r));
+                hirte_log_errorf("Failed to attach bus to event: %s", strerror(-r));
                 return NULL;
         }
         (void) sd_bus_set_description(bus, "system-bus");
+
+        hirte_log_debug("Connected to system bus");
 
         return steal_pointer(&bus);
 }
@@ -243,15 +246,17 @@ sd_bus *systemd_bus_open(sd_event *event) {
 
         r = systemd_bus_new(&bus);
         if (r < 0) {
-                fprintf(stderr, "Failed to connect to systemd bus: %s\n", strerror(-r));
+                hirte_log_errorf("Failed to connect to systemd bus: %s", strerror(-r));
                 return NULL;
         }
         r = sd_bus_attach_event(bus, event, SD_EVENT_PRIORITY_NORMAL);
         if (r < 0) {
-                fprintf(stderr, "Failed to attach systemd bus to event: %s\n", strerror(-r));
+                hirte_log_errorf("Failed to attach systemd bus to event: %s", strerror(-r));
                 return NULL;
         }
         (void) sd_bus_set_description(bus, "systemd-bus");
+
+        hirte_log_debug("Connected to systemd bus");
 
         return steal_pointer(&bus);
 }
@@ -267,16 +272,18 @@ sd_bus *user_bus_open(sd_event *event) {
 
         r = sd_bus_open_user(&bus);
         if (r < 0) {
-                fprintf(stderr, "Failed to connect to user bus: %s\n", strerror(-r));
+                hirte_log_errorf("Failed to connect to user bus: %s", strerror(-r));
                 return NULL;
         }
 
         r = sd_bus_attach_event(bus, event, SD_EVENT_PRIORITY_NORMAL);
         if (r < 0) {
-                fprintf(stderr, "Failed to attach bus to event: %s\n", strerror(-r));
+                hirte_log_errorf("Failed to attach bus to event: %s", strerror(-r));
                 return NULL;
         }
         (void) sd_bus_set_description(bus, "user-bus");
+
+        hirte_log_debug("Connected to user bus");
 
         return steal_pointer(&bus);
 }

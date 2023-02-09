@@ -6,6 +6,7 @@
 #include "libhirte/common/common.h"
 
 int bus_parse_property_string(sd_bus_message *m, const char *name, const char **value);
+char *bus_path_escape(const char *str);
 
 typedef struct UnitInfo UnitInfo;
 struct UnitInfo {

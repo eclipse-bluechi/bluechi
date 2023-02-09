@@ -1,11 +1,12 @@
+#include <errno.h>
 #include <getopt.h>
-#include <stdio.h>
 #include <stdlib.h>
 
 #include "libhirte/common/opt.h"
 #include "libhirte/common/parse-util.h"
 #include "libhirte/ini/config.h"
 #include "libhirte/service/shutdown.h"
+
 #include "manager.h"
 
 const struct option options[] = { { ARG_PORT, required_argument, 0, ARG_PORT_SHORT },
@@ -15,24 +16,21 @@ const struct option options[] = { { ARG_PORT, required_argument, 0, ARG_PORT_SHO
 
 #define OPTIONS_STR ARG_PORT_SHORT_S ARG_HELP_SHORT_S ARG_CONFIG_SHORT_S
 
-// NOLINTBEGIN(cppcoreguidelines-avoid-non-const-global-variables)
 static const char *opt_port = 0;
 static const char *opt_config = NULL;
-// NOLINTEND(cppcoreguidelines-avoid-non-const-global-variables)
 
 static void usage(char *argv[]) {
-        fprintf(stderr, "Usage: %s [-p port] [-c config]\n", argv[0]);
+        printf("Usage: %s [-p port] [-c config]\n", argv[0]);
 }
 
-static void get_opts(int argc, char *argv[]) {
+static int get_opts(int argc, char *argv[]) {
         int opt = 0;
 
         while ((opt = getopt_long(argc, argv, OPTIONS_STR, options, NULL)) != -1) {
                 switch (opt) {
                 case ARG_HELP_SHORT:
                         usage(argv);
-                        exit(EXIT_SUCCESS);
-                        break;
+                        return 0;
 
                 case ARG_PORT_SHORT:
                         opt_port = optarg;
@@ -45,16 +43,19 @@ static void get_opts(int argc, char *argv[]) {
                 default:
                         fprintf(stderr, "Unsupported option %c\n", opt);
                         usage(argv);
-                        exit(EXIT_FAILURE);
+                        return -EINVAL;
                 }
         }
+
+        return 0;
 }
 
 
 int main(int argc, char *argv[]) {
-        fprintf(stdout, "Hello from manager!\n");
-
-        get_opts(argc, argv);
+        int r = get_opts(argc, argv);
+        if (r < 0) {
+                return EXIT_FAILURE;
+        }
 
         _cleanup_manager_ Manager *manager = manager_new();
         if (manager == NULL) {
@@ -77,8 +78,5 @@ int main(int argc, char *argv[]) {
         if (manager_start(manager)) {
                 return EXIT_SUCCESS;
         }
-
-        fprintf(stdout, "Manager exited\n");
-
         return EXIT_FAILURE;
 }

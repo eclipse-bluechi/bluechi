@@ -1,6 +1,8 @@
 #pragma once
+
 #include "libhirte/bus/utils.h"
 #include "libhirte/common/common.h"
+
 #include "printer.h"
 #include "types.h"
 
@@ -11,7 +13,7 @@ struct Client {
         int opargc;
         char **opargv;
 
-        sd_bus *user_bus;
+        sd_bus *api_bus;
         char *object_path;
 
         Printer printer;

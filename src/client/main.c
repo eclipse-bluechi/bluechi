@@ -1,11 +1,11 @@
 #include <errno.h>
 #include <getopt.h>
-#include <stdio.h>
 #include <stdlib.h>
 
-#include "client.h"
 #include "libhirte/common/common.h"
 #include "libhirte/common/opt.h"
+
+#include "client.h"
 
 const struct option options[] = { { ARG_HELP, no_argument, 0, ARG_HELP_SHORT }, { NULL, 0, 0, '\0' } };
 
@@ -17,7 +17,7 @@ static int opargc;
 static bool no_action = false;
 
 static void usage(char *argv[]) {
-        fprintf(stderr, "Usage: %s COMMAND ... \n", argv[0]);
+        printf("Usage: %s COMMAND ... \n", argv[0]);
 }
 
 static int get_opts(int argc, char *argv[]) {
@@ -61,9 +61,9 @@ int main(int argc, char *argv[]) {
         }
 
         _cleanup_client_ Client *client = new_client(op, opargc, opargv);
-
         r = client_call_manager(client);
         if (r < 0) {
+                fprintf(stderr, "Call to manager failed: %s\n", strerror(-r));
                 return EXIT_FAILURE;
         }
 

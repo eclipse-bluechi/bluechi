@@ -1,5 +1,4 @@
 #include <errno.h>
-#include <stdio.h>
 
 #include "utils.h"
 
@@ -125,10 +124,43 @@ int bus_parse_unit_info(sd_bus_message *message, UnitInfo *u) {
 }
 
 int assemble_object_path_string(const char *prefix, const char *name, char **res) {
-        /* TODO: Should escape the name if needed */
-        int r = asprintf(res, "%s/%s", prefix, name);
-        if (r < 0) {
-                fprintf(stderr, "Out of memory\n");
+        _cleanup_free_ char *escaped = bus_path_escape(name);
+        if (escaped == NULL) {
+                return -ENOMEM;
         }
+        return asprintf(res, "%s/%s", prefix, escaped);
+}
+
+static char hexchar(int x) {
+        static const char table[16] = "0123456789abcdef";
+        return table[(unsigned int) x % sizeof(table)];
+}
+
+char *bus_path_escape(const char *s) {
+
+        if (*s == 0) {
+                return strdup("_");
+        }
+
+        char *r = malloc(strlen(s) * 3 + 1);
+        if (r == NULL) {
+                return NULL;
+        }
+
+        char *t = r;
+        for (const char *f = s; *f; f++) {
+                /* Escape everything that is not a-zA-Z0-9. We also escape 0-9 if it's the first character */
+                if (!ascii_isalpha(*f) && !(f > s && ascii_isdigit(*f))) {
+                        unsigned char c = *f;
+                        *(t++) = '_';
+                        *(t++) = hexchar(c >> 4U);
+                        *(t++) = hexchar(c);
+                } else {
+                        *(t++) = *f;
+                }
+        }
+
+        *t = 0;
+
         return r;
 }

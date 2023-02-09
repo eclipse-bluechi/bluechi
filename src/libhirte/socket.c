@@ -12,14 +12,12 @@ int create_tcp_socket(uint16_t port) {
         int fd = socket(AF_INET, SOCK_STREAM | SOCK_CLOEXEC | SOCK_NONBLOCK, 0);
         if (fd < 0) {
                 int errsv = errno;
-                fprintf(stderr, "Failed to create socket: %m\n");
                 return -errsv;
         }
 
         int yes = 1;
         if (setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int)) == -1) {
                 int errsv = errno;
-                fprintf(stderr, "Failed to create socket: %m\n");
                 return -errsv;
         }
 
@@ -29,13 +27,11 @@ int create_tcp_socket(uint16_t port) {
 
         if (bind(fd, (struct sockaddr *) &servaddr, sizeof(servaddr)) < 0) {
                 int errsv = errno;
-                fprintf(stderr, "Failed to bind socket: %m\n");
                 return -errsv;
         }
 
         if ((listen(fd, SOMAXCONN)) != 0) {
                 int errsv = errno;
-                fprintf(stderr, "Failed to listen to socket: %m\n");
                 return -errsv;
         }
 
@@ -50,7 +46,6 @@ int accept_tcp_connection_request(int fd) {
                 }
 
                 int errsv = errno;
-                fprintf(stderr, "Failed to accept: %m\n");
                 return -errsv;
         }
         return nfd;

@@ -214,11 +214,11 @@ Agent *agent_new(void) {
         agent->port = HIRTE_DEFAULT_PORT;
         agent->api_bus_service_name = steal_pointer(&service_name);
         agent->event = steal_pointer(&event);
-
+ 
         LIST_HEAD_INIT(agent->outstanding_requests);
         LIST_HEAD_INIT(agent->tracked_jobs);
 
-        agent->unit_subscriptions = hashmap_new(
+        n->unit_subscriptions = hashmap_new(
                         sizeof(UnitSubscription),
                         0,
                         0,
@@ -227,11 +227,11 @@ Agent *agent_new(void) {
                         unit_subscription_compare,
                         unit_subscription_clear,
                         NULL);
-        if (agent->unit_subscriptions == NULL) {
+        if (n->unit_subscriptions == NULL) {
                 return NULL;
         }
 
-        return steal_pointer(&agent);
+        return steal_pointer(&n);
 }
 
 Agent *agent_ref(Agent *agent) {

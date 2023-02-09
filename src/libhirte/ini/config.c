@@ -1,9 +1,10 @@
 #include <assert.h>
 #include <stdlib.h>
 
+#include "libhirte/common/common.h"
+
 #include "config.h"
 #include "ini.h"
-#include "libhirte/common/common.h"
 
 typedef struct {
         char *key;
@@ -27,7 +28,6 @@ static void topic_free(void *item) {
         hashmap_free(topic->keys_and_values);
 }
 
-// NOLINTNEXTLINE
 int key_value_compare_key(const void *a, const void *b, UNUSED void *udata) {
         const keyValue *kva = a;
         const keyValue *kvb = b;
@@ -39,7 +39,6 @@ uint64_t key_value_hash(const void *item, uint64_t seed0, uint64_t seed1) {
         return hashmap_sip(kv->key, strlen(kv->key), seed0, seed1);
 }
 
-// NOLINTNEXTLINE
 int topic_compare_topic_name(const void *a, const void *b, UNUSED void *udata) {
         const topic *ta = a;
         const topic *tb = b;
@@ -201,4 +200,13 @@ void free_configp(config **configp) {
         if (configp && *configp) {
                 free_config(*configp);
         }
+}
+
+bool is_true_value(const char *value) {
+        if (value == NULL) {
+                return false;
+        }
+
+        return (streqi("true", value) || streqi("t", value) || streqi("yes", value) || streqi("y", value) ||
+                streqi("on", value));
 }

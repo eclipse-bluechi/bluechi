@@ -1,6 +1,6 @@
-#include "client.h"
 #include "libhirte/bus/utils.h"
-#include <stdio.h>
+
+#include "client.h"
 
 int list_units_on_all(UNUSED Client *client) {
         printf("Listing units on all\n");
@@ -17,11 +17,12 @@ int list_units_on(const char *name, Client *client) {
 
         r = assemble_object_path_string(NODE_OBJECT_PATH_PREFIX, name, &client->object_path);
         if (r < 0) {
+                fprintf(stderr, "Failed to assemble object path: %s\n", strerror(-r));
                 return r;
         }
 
         r = sd_bus_call_method(
-                        client->user_bus,
+                        client->api_bus,
                         HIRTE_INTERFACE_BASE_NAME,
                         client->object_path,
                         NODE_INTERFACE,
@@ -36,7 +37,7 @@ int list_units_on(const char *name, Client *client) {
 
         r = sd_bus_message_enter_container(message, SD_BUS_TYPE_ARRAY, UNIT_INFO_STRUCT_TYPESTRING);
         if (r < 0) {
-                fprintf(stderr, "Failed to read sd-bus message\n");
+                fprintf(stderr, "Failed to read sd-bus message: %s\n", strerror(-r));
                 return r;
         }
 
@@ -47,7 +48,7 @@ int list_units_on(const char *name, Client *client) {
 
                 r = bus_parse_unit_info(message, info);
                 if (r < 0) {
-                        fprintf(stderr, "Failed to parse unit info\n");
+                        fprintf(stderr, "Failed to parse unit info: %s\n", strerror(-r));
                         return r;
                 }
                 if (r == 0) {
@@ -87,8 +88,8 @@ void client_unref(Client *client) {
                 return;
         }
 
-        if (client->user_bus != NULL) {
-                sd_bus_unrefp(&client->user_bus);
+        if (client->api_bus != NULL) {
+                sd_bus_unrefp(&client->api_bus);
         }
         if (client->object_path != NULL) {
                 free(client->object_path);
@@ -162,7 +163,11 @@ void nodes_unit_list_unref(NodesUnitList *nodes_unit_list) {
 int client_call_manager(Client *client) {
         int r = 0;
 
-        r = sd_bus_open_user(&(client->user_bus));
+#ifdef USE_USER_API_BUS
+        r = sd_bus_open_user(&(client->api_bus));
+#else
+        r = sd_bus_open_system(&(client->api_bus));
+#endif
         if (r < 0) {
                 fprintf(stderr, "Failed to connect to system bus: %s\n", strerror(-r));
                 return r;
