@@ -149,7 +149,7 @@ Agent *agent_new(void) {
         _cleanup_agent_ Agent *n = malloc0(sizeof(Agent));
         n->ref_count = 1;
         n->event = steal_pointer(&event);
-        n->user_bus_service_name = steal_pointer(&service_name);
+        n->api_bus_service_name = steal_pointer(&service_name);
         n->port = HIRTE_DEFAULT_PORT;
         LIST_HEAD_INIT(n->outstanding_requests);
         LIST_HEAD_INIT(n->tracked_jobs);
@@ -186,7 +186,7 @@ void agent_unref(Agent *agent) {
         free(agent->name);
         free(agent->host);
         free(agent->orch_addr);
-        free(agent->user_bus_service_name);
+        free(agent->api_bus_service_name);
 
         if (agent->event != NULL) {
                 sd_event_unrefp(&agent->event);
@@ -195,8 +195,8 @@ void agent_unref(Agent *agent) {
         if (agent->peer_dbus != NULL) {
                 sd_bus_unrefp(&agent->peer_dbus);
         }
-        if (agent->user_dbus != NULL) {
-                sd_bus_unrefp(&agent->user_dbus);
+        if (agent->api_bus != NULL) {
+                sd_bus_unrefp(&agent->api_bus);
         }
         if (agent->systemd_dbus != NULL) {
                 sd_bus_unrefp(&agent->systemd_dbus);
@@ -918,13 +918,13 @@ bool agent_start(Agent *agent) {
                 return false;
         }
 
-        agent->user_dbus = user_bus_open(agent->event);
-        if (agent->user_dbus == NULL) {
+        agent->api_bus = user_bus_open(agent->event);
+        if (agent->api_bus == NULL) {
                 hirte_log_error("Failed to open user dbus");
                 return false;
         }
 
-        r = sd_bus_request_name(agent->user_dbus, agent->user_bus_service_name, SD_BUS_NAME_REPLACE_EXISTING);
+        r = sd_bus_request_name(agent->api_bus, agent->api_bus_service_name, SD_BUS_NAME_REPLACE_EXISTING);
         if (r < 0) {
                 hirte_log_errorf("Failed to acquire service name on user dbus: %s", strerror(-r));
                 return false;
@@ -1061,7 +1061,7 @@ bool agent_start(Agent *agent) {
 
         hirte_log_infof("Registered to '%s' as '%s'", agent->orch_addr, agent->name);
 
-        r = shutdown_service_register(agent->user_dbus, agent->event);
+        r = shutdown_service_register(agent->api_bus, agent->event);
         if (r < 0) {
                 hirte_log_errorf("Failed to register shutdown service: %s", strerror(-r));
                 return false;

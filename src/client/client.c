@@ -22,7 +22,7 @@ int list_units_on(const char *name, Client *client) {
         }
 
         r = sd_bus_call_method(
-                        client->user_bus,
+                        client->api_bus,
                         HIRTE_INTERFACE_BASE_NAME,
                         client->object_path,
                         NODE_INTERFACE,
@@ -88,8 +88,8 @@ void client_unref(Client *client) {
                 return;
         }
 
-        if (client->user_bus != NULL) {
-                sd_bus_unrefp(&client->user_bus);
+        if (client->api_bus != NULL) {
+                sd_bus_unrefp(&client->api_bus);
         }
         if (client->object_path != NULL) {
                 free(client->object_path);
@@ -163,7 +163,7 @@ void nodes_unit_list_unref(NodesUnitList *nodes_unit_list) {
 int client_call_manager(Client *client) {
         int r = 0;
 
-        r = sd_bus_open_user(&(client->user_bus));
+        r = sd_bus_open_user(&(client->api_bus));
         if (r < 0) {
                 fprintf(stderr, "Failed to connect to system bus: %s\n", strerror(-r));
                 return r;

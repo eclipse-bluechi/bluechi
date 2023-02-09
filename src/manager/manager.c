@@ -33,7 +33,7 @@ Manager *manager_new(void) {
         Manager *manager = malloc0(sizeof(Manager));
         if (manager != NULL) {
                 manager->port = HIRTE_DEFAULT_PORT;
-                manager->user_bus_service_name = steal_pointer(&service_name);
+                manager->api_bus_service_name = steal_pointer(&service_name);
                 manager->event = steal_pointer(&event);
                 LIST_HEAD_INIT(manager->nodes);
                 LIST_HEAD_INIT(manager->anonymous_nodes);
@@ -58,14 +58,14 @@ void manager_unref(Manager *manager) {
 
         sd_event_unrefp(&manager->event);
 
-        free(manager->user_bus_service_name);
+        free(manager->api_bus_service_name);
 
         sd_event_source_unrefp(&manager->node_connection_source);
 
         sd_bus_slot_unrefp(&manager->name_owner_changed_slot);
         sd_bus_slot_unrefp(&manager->filter_slot);
         sd_bus_slot_unrefp(&manager->manager_slot);
-        sd_bus_unrefp(&manager->user_dbus);
+        sd_bus_unrefp(&manager->api_bus);
 
         Node *node = NULL;
         LIST_FOREACH(nodes, node, manager->nodes) {
@@ -222,7 +222,7 @@ bool manager_add_job(Manager *manager, Job *job) {
         }
 
         int r = sd_bus_emit_signal(
-                        manager->user_dbus,
+                        manager->api_bus,
                         HIRTE_MANAGER_OBJECT_PATH,
                         MANAGER_INTERFACE,
                         "JobNew",
@@ -241,7 +241,7 @@ bool manager_add_job(Manager *manager, Job *job) {
 void manager_remove_job(Manager *manager, Job *job, const char *result) {
 
         int r = sd_bus_emit_signal(
-                        manager->user_dbus,
+                        manager->api_bus,
                         HIRTE_MANAGER_OBJECT_PATH,
                         MANAGER_INTERFACE,
                         "JobRemoved",
@@ -809,8 +809,8 @@ bool manager_start(Manager *manager) {
                 return false;
         }
 
-        manager->user_dbus = user_bus_open(manager->event);
-        if (manager->user_dbus == NULL) {
+        manager->api_bus = user_bus_open(manager->event);
+        if (manager->api_bus == NULL) {
                 hirte_log_error("Failed to open user dbus");
                 return false;
         }
@@ -824,20 +824,20 @@ bool manager_start(Manager *manager) {
         }
 
         int r = sd_bus_request_name(
-                        manager->user_dbus, manager->user_bus_service_name, SD_BUS_NAME_REPLACE_EXISTING);
+                        manager->api_bus, manager->api_bus_service_name, SD_BUS_NAME_REPLACE_EXISTING);
         if (r < 0) {
                 hirte_log_errorf("Failed to acquire service name on user dbus: %s", strerror(-r));
                 return false;
         }
 
-        r = sd_bus_add_filter(manager->user_dbus, &manager->filter_slot, manager_dbus_filter, manager);
+        r = sd_bus_add_filter(manager->api_bus, &manager->filter_slot, manager_dbus_filter, manager);
         if (r < 0) {
                 hirte_log_errorf("Failed to add manager filter: %s", strerror(-r));
                 return false;
         }
 
         r = sd_bus_match_signal(
-                        manager->user_dbus,
+                        manager->api_bus,
                         &manager->name_owner_changed_slot,
                         "org.freedesktop.DBus",
                         "/org/freedesktop/DBus",
@@ -851,7 +851,7 @@ bool manager_start(Manager *manager) {
         }
 
         r = sd_bus_add_object_vtable(
-                        manager->user_dbus,
+                        manager->api_bus,
                         &manager->manager_slot,
                         HIRTE_MANAGER_OBJECT_PATH,
                         MANAGER_INTERFACE,
@@ -866,7 +866,7 @@ bool manager_start(Manager *manager) {
                 return false;
         }
 
-        r = shutdown_service_register(manager->user_dbus, manager->event);
+        r = shutdown_service_register(manager->api_bus, manager->event);
         if (r < 0) {
                 hirte_log_errorf("Failed to register shutdown service: %s", strerror(-r));
                 return false;

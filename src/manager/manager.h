@@ -11,12 +11,12 @@ struct Manager {
         int ref_count;
 
         uint16_t port;
-        char *user_bus_service_name;
+        char *api_bus_service_name;
 
         sd_event *event;
         sd_event_source *node_connection_source;
 
-        sd_bus *user_dbus;
+        sd_bus *api_bus;
         sd_bus_slot *manager_slot;
         sd_bus_slot *filter_slot;
         sd_bus_slot *name_owner_changed_slot;
