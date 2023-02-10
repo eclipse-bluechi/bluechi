@@ -300,7 +300,6 @@ Node *manager_add_node(Manager *manager, const char *name) {
 }
 
 bool manager_set_port(Manager *manager, const char *port_s) {
-        hirte_log_info("Setting port...");
         uint16_t port = 0;
 
         if (!parse_port(port_s, &port)) {
