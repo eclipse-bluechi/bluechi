@@ -210,3 +210,12 @@ bool is_true_value(const char *value) {
         return (streqi("true", value) || streqi("t", value) || streqi("yes", value) || streqi("y", value) ||
                 streqi("on", value));
 }
+
+bool is_false_value(const char *value) {
+        if (value == NULL) {
+                return false;
+        }
+
+        return (streqi("false", value) || streqi("f", value) || streqi("no", value) || streqi("n", value) ||
+                streqi("off", value));
+}

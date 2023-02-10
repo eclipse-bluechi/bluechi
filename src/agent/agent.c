@@ -249,6 +249,11 @@ bool agent_parse_config(Agent *agent, const char *configfile) {
                 return false;
         }
 
+        // set defaults for logging
+        hirte_log_init();
+        // overwrite log settings read from env vars
+        hirte_log_init_from_env();
+        // overwrite log settings read from config
         hirte_log_init_from_config(config);
 
         topic = config_lookup_topic(config, "Node");

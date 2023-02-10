@@ -300,6 +300,7 @@ Node *manager_add_node(Manager *manager, const char *name) {
 }
 
 bool manager_set_port(Manager *manager, const char *port_s) {
+        hirte_log_info("Setting port...");
         uint16_t port = 0;
 
         if (!parse_port(port_s, &port)) {
@@ -320,6 +321,11 @@ bool manager_parse_config(Manager *manager, const char *configfile) {
                 return false;
         }
 
+        // set defaults for logging
+        hirte_log_init();
+        // overwrite log settings read from env vars
+        hirte_log_init_from_env();
+        // overwrite log settings read from config
         hirte_log_init_from_config(config);
 
         topic = config_lookup_topic(config, "Manager");

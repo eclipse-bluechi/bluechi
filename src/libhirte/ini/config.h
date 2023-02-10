@@ -22,6 +22,7 @@ bool topic_set(topic *t, const char *key, const char *value);
 void free_hashmapp(struct hashmap **hmp);
 
 bool is_true_value(const char *value);
+bool is_false_value(const char *value);
 
 #define _cleanup_hashmap_ __attribute__((__cleanup__(free_hashmap)))
 #define _cleanup_config_ __attribute__((__cleanup__(free_configp)))
