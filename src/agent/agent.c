@@ -1036,6 +1036,16 @@ bool agent_start(Agent *agent) {
                 return false;
         }
 
+        r = bus_socket_set_no_delay(agent->peer_dbus);
+        if (r < 0) {
+                hirte_log_warn("Failed to set NO_DELAY on socket");
+        }
+
+        r = bus_socket_set_keepalive(agent->peer_dbus);
+        if (r < 0) {
+                hirte_log_warn("Failed to set KEEPALIVE on socket");
+        }
+
         r = sd_bus_add_object_vtable(
                         agent->peer_dbus,
                         NULL,

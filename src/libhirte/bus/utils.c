@@ -1,6 +1,15 @@
 #include <errno.h>
+#include <netinet/in.h>
+#include <netinet/tcp.h>
+#include <sys/socket.h>
 
 #include "utils.h"
+
+/* Number of seconds idle before sending keepalive packets */
+#define AGENT_KEEPALIVE_SOCKET_KEEPIDLE_SECS 10
+
+/* Number of seconds idle between each keepalive packet */
+#define AGENT_KEEPALIVE_SOCKET_KEEPINTVL_SECS 10
 
 int bus_parse_property_string(sd_bus_message *m, const char *name, const char **value) {
         bool found = false;
@@ -239,4 +248,46 @@ char *bus_path_escape(const char *s) {
         *t = 0;
 
         return r;
+}
+
+int bus_socket_set_no_delay(sd_bus *bus) {
+        int fd = sd_bus_get_fd(bus);
+        if (fd < 0) {
+                return fd;
+        }
+
+        int flag = 1;
+        int r = setsockopt(fd, SOL_TCP, TCP_NODELAY, (char *) &flag, sizeof(int));
+        if (r < 0) {
+                return -errno;
+        }
+
+        return 0;
+}
+
+int bus_socket_set_keepalive(sd_bus *bus) {
+        int fd = sd_bus_get_fd(bus);
+        if (fd < 0) {
+                return fd;
+        }
+
+        int flag = 1;
+        int r = setsockopt(fd, SOL_SOCKET, SO_KEEPALIVE, (char *) &flag, sizeof(int));
+        if (r < 0) {
+                return -errno;
+        }
+
+        int keepidle = AGENT_KEEPALIVE_SOCKET_KEEPIDLE_SECS;
+        r = setsockopt(fd, IPPROTO_TCP, TCP_KEEPIDLE, &keepidle, sizeof(int));
+        if (r < 0) {
+                return -errno;
+        }
+
+        int keepintvl = AGENT_KEEPALIVE_SOCKET_KEEPINTVL_SECS;
+        r = setsockopt(fd, IPPROTO_TCP, TCP_KEEPINTVL, &keepintvl, sizeof(int));
+        if (r < 0) {
+                return -errno;
+        }
+
+        return 0;
 }

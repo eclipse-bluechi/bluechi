@@ -1,6 +1,7 @@
 #include <string.h>
 
 #include "libhirte/bus/bus.h"
+#include "libhirte/bus/utils.h"
 #include "libhirte/common/common.h"
 #include "libhirte/common/parse-util.h"
 #include "libhirte/ini/config.h"
@@ -365,6 +366,15 @@ static int manager_accept_node_connection(
                         manager->event, "managed-node", HIRTE_DBUS_NAME, steal_fd(&nfd));
         if (dbus_server == NULL) {
                 return -1;
+        }
+
+        int r = bus_socket_set_no_delay(dbus_server);
+        if (r < 0) {
+                hirte_log_warn("Failed to set NO_DELAY on socket");
+        }
+        r = bus_socket_set_keepalive(dbus_server);
+        if (r < 0) {
+                hirte_log_warn("Failed to set KEEPALIVE on socket");
         }
 
         /* Add anonymous node */
