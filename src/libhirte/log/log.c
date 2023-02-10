@@ -150,17 +150,17 @@ int hirte_log_init_from_config(config *conf) {
         const char *target = NULL;
         const char *quiet = NULL;
 
-        logging_topic = config_lookup_topic(conf, "Logging");
+        logging_topic = config_lookup_topic(conf, HIRTE_LOG_CONFIG_TOPIC);
         if (logging_topic == NULL) {
                 return -EINVAL;
         }
 
-        LogLevel level = string_to_log_level(topic_lookup(logging_topic, "Level"));
+        LogLevel level = string_to_log_level(topic_lookup(logging_topic, HIRTE_LOG_CONFIG_KEY_LEVEL));
         if (level != LOG_LEVEL_INVALID) {
                 hirte_log_set_level(level);
         }
 
-        target = topic_lookup(logging_topic, "Target");
+        target = topic_lookup(logging_topic, HIRTE_LOG_CONFIG_KEY_TARGET);
         if (target != NULL) {
                 if (streqi(HIRTE_LOG_TARGET_JOURNALD, target)) {
                         hirte_log_set_log_fn(hirte_log_to_journald_with_location);
@@ -169,7 +169,7 @@ int hirte_log_init_from_config(config *conf) {
                 }
         }
 
-        quiet = topic_lookup(logging_topic, "Quiet");
+        quiet = topic_lookup(logging_topic, HIRTE_LOG_CONFIG_KEY_QUIET);
         if (is_true_value(quiet)) {
                 hirte_log_set_quiet(true);
         } else if (is_false_value(quiet)) {
