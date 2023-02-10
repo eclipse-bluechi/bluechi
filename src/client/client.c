@@ -2,30 +2,22 @@
 
 #include "client.h"
 
-int list_units_on_all(UNUSED Client *client) {
-        printf("Listing units on all\n");
-        return 0;
-}
-
-int list_units_on(const char *name, Client *client) {
+int fetch_unit_list(
+                Client *client,
+                char *interface,
+                char *typestring,
+                int (*parse_unit_info)(sd_bus_message *, UnitInfo *),
+                UnitList *unit_list) {
         _cleanup_sd_bus_error_ sd_bus_error error = SD_BUS_ERROR_NULL;
         _cleanup_sd_bus_message_ sd_bus_message *message = NULL;
 
         int r = 0;
 
-        printf("Listing units on %s\n", name);
-
-        r = assemble_object_path_string(NODE_OBJECT_PATH_PREFIX, name, &client->object_path);
-        if (r < 0) {
-                fprintf(stderr, "Failed to assemble object path: %s\n", strerror(-r));
-                return r;
-        }
-
         r = sd_bus_call_method(
                         client->api_bus,
                         HIRTE_INTERFACE_BASE_NAME,
                         client->object_path,
-                        NODE_INTERFACE,
+                        interface,
                         "ListUnits",
                         &error,
                         &message,
@@ -35,18 +27,16 @@ int list_units_on(const char *name, Client *client) {
                 return r;
         }
 
-        r = sd_bus_message_enter_container(message, SD_BUS_TYPE_ARRAY, UNIT_INFO_STRUCT_TYPESTRING);
+        r = sd_bus_message_enter_container(message, SD_BUS_TYPE_ARRAY, typestring);
         if (r < 0) {
                 fprintf(stderr, "Failed to read sd-bus message: %s\n", strerror(-r));
                 return r;
         }
 
-        _cleanup_unit_list_ UnitList *unit_list = new_unit_list();
-
         for (;;) {
                 _cleanup_unit_ UnitInfo *info = new_unit();
 
-                r = bus_parse_unit_info(message, info);
+                r = (*parse_unit_info)(message, info);
                 if (r < 0) {
                         fprintf(stderr, "Failed to parse unit info: %s\n", strerror(-r));
                         return r;
@@ -55,6 +45,48 @@ int list_units_on(const char *name, Client *client) {
                         break;
                 }
                 LIST_APPEND(units, unit_list->units, unit_ref(info));
+        }
+
+        return r;
+}
+
+int list_units_on_all(Client *client) {
+        int r = 0;
+        _cleanup_unit_list_ UnitList *unit_list = new_unit_list();
+
+        r = asprintf(&client->object_path, "%s", HIRTE_OBJECT_PATH);
+        if (r < 0) {
+                return r;
+        }
+
+        r = fetch_unit_list(
+                        client,
+                        MANAGER_INTERFACE,
+                        NODE_AND_UNIT_INFO_STRUCT_TYPESTRING,
+                        &bus_parse_unit_on_node_info,
+                        unit_list);
+        if (r < 0) {
+                return r;
+        }
+
+        print_nodes_unit_list(&client->printer, unit_list);
+
+        return 0;
+}
+
+int list_units_on(const char *name, Client *client) {
+        int r = 0;
+        _cleanup_unit_list_ UnitList *unit_list = new_unit_list();
+
+        r = assemble_object_path_string(NODE_OBJECT_PATH_PREFIX, name, &client->object_path);
+        if (r < 0) {
+                return r;
+        }
+
+        r = fetch_unit_list(
+                        client, NODE_INTERFACE, UNIT_INFO_STRUCT_TYPESTRING, &bus_parse_unit_info, unit_list);
+        if (r < 0) {
+                return r;
         }
 
         print_unit_list(&client->printer, unit_list);
@@ -127,37 +159,6 @@ void unit_list_unref(UnitList *unit_list) {
                 unit_unref(unit);
         }
         free(unit_list);
-}
-
-NodesUnitList *new_nodes_unit_list() {
-        _cleanup_nodes_unit_list_ NodesUnitList *nodes_unit_list = malloc0(sizeof(NodesUnitList));
-
-        if (nodes_unit_list == NULL) {
-                return NULL;
-        }
-
-        nodes_unit_list->ref_count = 1;
-        LIST_HEAD_INIT(nodes_unit_list->nodes_units);
-
-        return steal_pointer(&nodes_unit_list);
-}
-
-NodesUnitList *nodes_unit_list_ref(NodesUnitList *nodes_unit_list) {
-        nodes_unit_list->ref_count++;
-        return nodes_unit_list;
-}
-
-void nodes_unit_list_unref(NodesUnitList *nodes_unit_list) {
-        nodes_unit_list->ref_count--;
-        if (nodes_unit_list->ref_count != 0) {
-                return;
-        }
-
-        UnitList *node_unit_list = NULL, *next_node_unit_list = NULL;
-        LIST_FOREACH_SAFE(node_units, node_unit_list, next_node_unit_list, nodes_unit_list->nodes_units) {
-                unit_list_unref(node_unit_list);
-        }
-        free(nodes_unit_list);
 }
 
 int client_call_manager(Client *client) {

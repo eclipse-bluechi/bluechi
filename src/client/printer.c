@@ -14,8 +14,11 @@ void print_unit_list_simple(UnitList *unit_list) {
         }
 }
 
-void print_nodes_unit_list_simple(UNUSED NodesUnitList *nodes_unit_list) {
-        printf("Printing Nodes Unit List\n");
+void print_nodes_unit_list_simple(UnitList *unit_list) {
+        UnitInfo *unit = NULL;
+        LIST_FOREACH(units, unit, unit_list->units) {
+                printf("%s: %s\n", unit->node, unit->id);
+        }
 }
 
 Printer get_simple_printer() {
@@ -28,6 +31,6 @@ void print_unit_list(Printer *p, UnitList *unit_list) {
         (*p->print_unit_list)(unit_list);
 }
 
-void print_nodes_unit_list(Printer *p, NodesUnitList *nodes_unit_list) {
-        (*p->print_nodes_unit_list)(nodes_unit_list);
+void print_nodes_unit_list(Printer *p, UnitList *unit_list) {
+        (*p->print_nodes_unit_list)(unit_list);
 }
