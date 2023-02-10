@@ -21,6 +21,11 @@ sudo dnf config-manager --set-enabled crb
 sudo dnf install clang-tools-extra gcc make meson systemd-devel
 ```
 
+[markdownlint-cli2](https://github.com/DavidAnson/markdownlint-cli2) can be used for static analysis of
+markdown files. Unfortunately it's not available as RPM, so please check its
+[installation guide](https://github.com/DavidAnson/markdownlint-cli2#install) and use the most appropriate way of
+installation for your setup.
+
 ### Code Style
 
 [clang-format](https://clang.llvm.org/docs/ClangFormat.html) is used to enforce a unified code style. All source files
@@ -43,7 +48,10 @@ make check-fmt
 
 ### Linting
 
-[clang-tidy](https://clang.llvm.org/extra/clang-tidy/) is used for static analysis. All source files can be checked via:
+[clang-tidy](https://clang.llvm.org/extra/clang-tidy/) is used for static analysis of C source codes.
+[markdownlint-cli2](https://github.com/DavidAnson/markdownlint-cli2) is used for static analysis of markdown files.
+
+All source files can be checked via:
 
 ```bash
 make lint
