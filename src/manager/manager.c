@@ -322,10 +322,10 @@ bool manager_parse_config(Manager *manager, const char *configfile) {
 
         // set defaults for logging
         hirte_log_init();
-        // overwrite log settings read from env vars
-        hirte_log_init_from_env();
-        // overwrite log settings read from config
+        // overwrite default log settings with config
         hirte_log_init_from_config(config);
+        // overwrite config settings with env vars
+        hirte_log_init_from_env();
 
         topic = config_lookup_topic(config, "Manager");
         if (topic == NULL) {
