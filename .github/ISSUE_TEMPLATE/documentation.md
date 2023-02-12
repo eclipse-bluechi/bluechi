@@ -3,7 +3,7 @@ name: Documentation request
 about: If you think something is not well described
 title: ''
 labels: documentation
-assignees: 
+assignees:
 ---
 
 ## Please describe what information you were trying to find

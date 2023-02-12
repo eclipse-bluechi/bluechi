@@ -51,6 +51,9 @@ jobs:
         run: |
           make codespell
 
+      - name: Running markdown lint
+        uses: DavidAnson/markdownlint-cli2-action@v9
+
   rpmbuild:
     needs: lint
     runs-on: ubuntu-latest
