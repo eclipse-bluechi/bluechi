@@ -96,18 +96,20 @@ Object path: `/org/containers/hirte/monitor/$id`
 
   * UnitNew(s node, s unit, s reason)
 
-    Emitted when a new unit is loaded by systemd, for example when a
-    service is started (reason=real), or if hirte learns of an
-    already loaded unit (reason=virtual).
+     Emitted when a new unit is loaded by systemd, for example when a
+     service is started (reason=`real`), or if hirte learns of an
+     already loaded unit (reason=`virtual`).
 
     The later can happen for two reasons, either hirte knows already
     that the unit is loaded. Or, at a later time a new agent connects
     for a previously offline node and the unit was already running
     on the node.
 
-  * `UnitRemove(s node, s unit)`
+  * UnitRemove(s node, s unit, s reason)
 
-    Emitted when a unit is removed.
+    Emitted when a unit is unloaded by systemd (reason=`real`), or
+    when the agent disconnects and we previously reported the unit
+    as loaded (reason=`virtual`).
 
 ### interface org.containers.hirte.Node
 

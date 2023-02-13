@@ -41,17 +41,16 @@ def unit_property_changed(node, unit, props):
     old_value = old_values.get(node, {})
     new_value = get_native(props)
 
-    print(f"Unit {unit} on node {node} changed::")
+    print(f"Unit {unit} on node {node} changed:")
     print_dict_changes(old_value, new_value)
 
     old_values[node] = new_value;
 
-def unit_new(node, unit):
-    reason=""
+def unit_new(node, unit, reason):
     print(f"New Unit {unit} on node {node}, reason: {reason}")
 
-def unit_removed(node, unit):
-    print(f"Removed Unit {unit} on node {node}")
+def unit_removed(node, unit, reason):
+    print(f"Removed Unit {unit} on node {node}, reason: {reason}")
     if node in old_values:
         del old_values[node]
 

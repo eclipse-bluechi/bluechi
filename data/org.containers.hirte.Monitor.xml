@@ -19,10 +19,12 @@
     <signal name="UnitNew">
       <arg name="node" type="s" />
       <arg name="unit" type="s" />
+      <arg name="reason" type="s" />
     </signal>
     <signal name="UnitRemoved">
       <arg name="node" type="s" />
       <arg name="unit" type="s" />
+      <arg name="reason" type="s" />
     </signal>
   </interface>
 </node>
