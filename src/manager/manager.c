@@ -320,7 +320,12 @@ bool manager_parse_config(Manager *manager, const char *configfile) {
                 return false;
         }
 
+        // set defaults for logging
+        hirte_log_init();
+        // overwrite default log settings with config
         hirte_log_init_from_config(config);
+        // overwrite config settings with env vars
+        hirte_log_init_from_env();
 
         topic = config_lookup_topic(config, "Manager");
         if (topic == NULL) {
