@@ -330,7 +330,7 @@ by the manager to affect change on the node.
     This is emitted when a proxy is not needed anymore because the
     proxy service died.
 
-   * Heartbeat(s nodeName)
+   * `Heartbeat(s nodeName)`
 
      This is a periodic signal from the node to the manager.
 
