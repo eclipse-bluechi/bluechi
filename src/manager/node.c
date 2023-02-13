@@ -247,6 +247,24 @@ static int node_match_job_done(UNUSED sd_bus_message *m, UNUSED void *userdata, 
         return 1;
 }
 
+static int node_match_heartbeat(UNUSED sd_bus_message *m, UNUSED void *userdata, UNUSED sd_bus_error *error) {
+        char *node_name = NULL;
+
+        int r = sd_bus_message_read(m, "s", &node_name);
+        if (r < 0) {
+                hirte_log_errorf("Error reading heartbeat: %s", strerror(-r));
+                return 0;
+        }
+
+        static bool first_heartbeat_received;
+        if (!first_heartbeat_received) {
+                hirte_log_infof("First heartbeat received from %s\n", node_name);
+                first_heartbeat_received = true;
+        }
+
+        return 1;
+}
+
 bool node_set_agent_bus(Node *node, sd_bus *bus) {
         int r = 0;
 
@@ -347,6 +365,20 @@ bool node_set_agent_bus(Node *node, sd_bus *bus) {
                                 node->manager->api_bus, node->object_path, NODE_INTERFACE, "Status", NULL);
                 if (r < 0) {
                         hirte_log_errorf("Failed to emit status property changed: %s", strerror(-r));
+                }
+
+                sd_bus_match_signal(
+                                bus,
+                                NULL,
+                                NULL,
+                                INTERNAL_AGENT_OBJECT_PATH,
+                                INTERNAL_AGENT_INTERFACE,
+                                AGENT_HEARTBEAT_SIGNAL_NAME,
+                                node_match_heartbeat,
+                                NULL);
+                if (r < 0) {
+                        hirte_log_errorf("Failed to add heartbeat signal match: %s", strerror(-r));
+                        return false;
                 }
         }
 

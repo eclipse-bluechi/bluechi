@@ -4,6 +4,7 @@
 #include "libhirte/bus/bus.h"
 #include "libhirte/bus/utils.h"
 #include "libhirte/common/common.h"
+#include "libhirte/common/event-util.h"
 #include "libhirte/common/opt.h"
 #include "libhirte/common/parse-util.h"
 #include "libhirte/ini/config.h"
@@ -29,6 +30,64 @@ static bool
                                 job_tracker_callback callback,
                                 void *userdata,
                                 free_func_t free_userdata);
+
+static int agent_reset_heartbeat_timer(Agent *agent, sd_event_source **event_source);
+
+static int agent_heartbeat_timer_callback(sd_event_source *event_source, UNUSED uint64_t usec, void *userdata) {
+        Agent *agent = userdata;
+        int r = 0;
+
+        assert(event_source);
+
+        r = sd_bus_emit_signal(
+                        agent->peer_dbus,
+                        INTERNAL_AGENT_OBJECT_PATH,
+                        INTERNAL_AGENT_INTERFACE,
+                        "Heartbeat",
+                        "s",
+                        agent->name);
+        if (r < 0) {
+                hirte_log_errorf("Failed to emit heartbeat signal: %s", strerror(-r));
+                return r;
+        }
+
+        r = agent_reset_heartbeat_timer(agent, &event_source);
+        if (r < 0) {
+                hirte_log_errorf("Failed to reset agent heartbeat timer: %s", strerror(-r));
+                return r;
+        }
+
+        return 0;
+}
+
+static int agent_reset_heartbeat_timer(Agent *agent, sd_event_source **event_source) {
+        return event_reset_time_relative(
+                        agent->event,
+                        event_source,
+                        CLOCK_BOOTTIME,
+                        AGENT_HEARTBEAT_INTERVAL_USEC,
+                        0,
+                        agent_heartbeat_timer_callback,
+                        agent,
+                        0,
+                        "agent-heartbeat-timer-source",
+                        false);
+}
+
+static int agent_setup_heartbeat_timer(Agent *agent) {
+        _cleanup_(sd_event_source_unrefp) sd_event_source *event_source = NULL;
+        int r = 0;
+
+        assert(agent);
+
+        r = agent_reset_heartbeat_timer(agent, &event_source);
+        if (r < 0) {
+                hirte_log_errorf("Failed to reset agent heartbeat timer: %s", strerror(-r));
+                return r;
+        }
+
+        return sd_event_source_set_floating(event_source, true);
+}
 
 SystemdRequest *systemd_request_ref(SystemdRequest *req) {
         req->ref_count++;
@@ -650,6 +709,7 @@ static const sd_bus_vtable internal_agent_vtable[] = {
                         "UnitPropertiesChanged", "sa{sv}", SD_BUS_PARAM(unit) SD_BUS_PARAM(properties), 0),
         SD_BUS_SIGNAL_WITH_NAMES("UnitNew", "s", SD_BUS_PARAM(unit), 0),
         SD_BUS_SIGNAL_WITH_NAMES("UnitRemoved", "s", SD_BUS_PARAM(unit), 0),
+        SD_BUS_SIGNAL_WITH_NAMES("Heartbeat", "s", SD_BUS_PARAM(agent_name), 0),
         SD_BUS_VTABLE_END
 };
 
@@ -1096,6 +1156,12 @@ bool agent_start(Agent *agent) {
         r = event_loop_add_shutdown_signals(agent->event);
         if (r < 0) {
                 hirte_log_errorf("Failed to add signals to agent event loop: %s", strerror(-r));
+                return false;
+        }
+
+        r = agent_setup_heartbeat_timer(agent);
+        if (r < 0) {
+                hirte_log_errorf("Failed to set up agent heartbeat timer: %s", strerror(-r));
                 return false;
         }
 
