@@ -167,27 +167,32 @@ static bool systemd_request_start(SystemdRequest *req, sd_bus_message_handler_t 
         return true;
 }
 
-typedef struct {
-        char *object_path; /* key */
-        char *unit;
-} UnitSubscription;
+static char *make_unit_path(const char *unit) {
+        _cleanup_free_ char *escaped = bus_path_escape(unit);
 
-static void unit_subscription_clear(void *item) {
-        UnitSubscription *sub = item;
-        free(sub->object_path);
-        free(sub->unit);
+        if (escaped == NULL) {
+                return NULL;
+        }
+
+        return strcat_dup(SYSTEMD_OBJECT_PATH "/unit/", escaped);
 }
 
-static uint64_t unit_subscription_hash(const void *item, uint64_t seed0, uint64_t seed1) {
-        const UnitSubscription *sub = item;
-        return hashmap_sip(sub->object_path, strlen(sub->object_path), seed0, seed1);
+static void unit_info_clear(void *item) {
+        AgentUnitInfo *info = item;
+        free(info->object_path);
+        free(info->unit);
 }
 
-static int unit_subscription_compare(const void *a, const void *b, UNUSED void *udata) {
-        const UnitSubscription *sub_a = a;
-        const UnitSubscription *sub_b = b;
+static uint64_t unit_info_hash(const void *item, uint64_t seed0, uint64_t seed1) {
+        const AgentUnitInfo *info = item;
+        return hashmap_sip(info->object_path, strlen(info->object_path), seed0, seed1);
+}
 
-        return strcmp(sub_a->object_path, sub_b->object_path);
+static int unit_info_compare(const void *a, const void *b, UNUSED void *udata) {
+        const AgentUnitInfo *info_a = a;
+        const AgentUnitInfo *info_b = b;
+
+        return strcmp(info_a->object_path, info_b->object_path);
 }
 
 Agent *agent_new(void) {
@@ -213,16 +218,9 @@ Agent *agent_new(void) {
         LIST_HEAD_INIT(n->outstanding_requests);
         LIST_HEAD_INIT(n->tracked_jobs);
 
-        n->unit_subscriptions = hashmap_new(
-                        sizeof(UnitSubscription),
-                        0,
-                        0,
-                        0,
-                        unit_subscription_hash,
-                        unit_subscription_compare,
-                        unit_subscription_clear,
-                        NULL);
-        if (n->unit_subscriptions == NULL) {
+        n->unit_infos = hashmap_new(
+                        sizeof(AgentUnitInfo), 0, 0, 0, unit_info_hash, unit_info_compare, unit_info_clear, NULL);
+        if (n->unit_infos == NULL) {
                 return NULL;
         }
 
@@ -240,7 +238,7 @@ void agent_unref(Agent *agent) {
                 return;
         }
 
-        hashmap_free(agent->unit_subscriptions);
+        hashmap_free(agent->unit_infos);
 
         free(agent->name);
         free(agent->host);
@@ -342,6 +340,47 @@ bool agent_parse_config(Agent *agent, const char *configfile) {
         }
 
         return true;
+}
+
+static void agent_update_unit_infos_for(Agent *agent, AgentUnitInfo *info) {
+        if (!info->subscribed) {
+                AgentUnitInfo key = { info->object_path, NULL, false };
+                hashmap_delete(agent->unit_infos, &key);
+        }
+}
+
+static AgentUnitInfo *agent_get_unit_info(Agent *agent, const char *unit_path) {
+        AgentUnitInfo key = { (char *) unit_path, NULL, false };
+
+        return hashmap_get(agent->unit_infos, &key);
+}
+
+static AgentUnitInfo *agent_ensure_unit_info(Agent *agent, const char *unit) {
+        _cleanup_free_ char *unit_path = make_unit_path(unit);
+        AgentUnitInfo *info = agent_get_unit_info(agent, unit_path);
+        if (info != NULL) {
+                return info;
+        }
+
+        _cleanup_free_ char *unit_copy = strdup(unit);
+        if (unit_copy == NULL) {
+                return NULL;
+        }
+
+        AgentUnitInfo v = { unit_path, unit_copy, false };
+
+        AgentUnitInfo *replaced = hashmap_set(agent->unit_infos, &v);
+        if (replaced == NULL && hashmap_oom(agent->unit_infos)) {
+                return NULL;
+        }
+
+        info = agent_get_unit_info(agent, unit_path);
+
+        /* These are now in hashtable */
+        steal_pointer(&unit_copy);
+        steal_pointer(&unit_path);
+
+        return info;
 }
 
 /*************************************************************************
@@ -642,26 +681,17 @@ static int agent_method_subscribe(sd_bus_message *m, void *userdata, UNUSED sd_b
                 return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_INVALID_ARGS, "Invalid arguments");
         }
 
-        _cleanup_free_ char *u = strdup(unit);
-        _cleanup_free_ char *escaped = bus_path_escape(unit);
-        _cleanup_free_ char *path = NULL;
-        if (escaped) {
-                path = strcat_dup(SYSTEMD_OBJECT_PATH "/unit/", escaped);
-        }
-        if (u == NULL || escaped == NULL || path == NULL) {
+        AgentUnitInfo *info = agent_ensure_unit_info(agent, unit);
+        if (info == NULL) {
                 return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "Internal error");
         }
 
-        UnitSubscription v = { path, u };
 
-        UnitSubscription *replaced = hashmap_set(agent->unit_subscriptions, &v);
-        if (replaced == NULL && hashmap_oom(agent->unit_subscriptions)) {
-                return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "Internal error");
+        if (info->subscribed) {
+                return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "Already subscribed");
         }
 
-        /* These are now in hashtable */
-        steal_pointer(&u);
-        steal_pointer(&path);
+        info->subscribed = true;
 
         return sd_bus_reply_method_return(m, "");
 }
@@ -678,18 +708,18 @@ static int agent_method_unsubscribe(sd_bus_message *m, void *userdata, UNUSED sd
                 return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_INVALID_ARGS, "Invalid arguments");
         }
 
-        _cleanup_free_ char *escaped = bus_path_escape(unit);
-        _cleanup_free_ char *path = NULL;
-        if (escaped) {
-                path = strcat_dup(SYSTEMD_OBJECT_PATH "/unit/", escaped);
-        }
-        if (escaped == NULL || path == NULL) {
+        _cleanup_free_ char *path = make_unit_path(unit);
+        if (path == NULL) {
                 return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "Internal error");
         }
 
-        UnitSubscription key = { path, (char *) unit };
-        hashmap_delete(agent->unit_subscriptions, &key);
+        AgentUnitInfo *info = agent_get_unit_info(agent, path);
+        if (info == NULL || !info->subscribed) {
+                return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "Not subscribed");
+        }
 
+        info->subscribed = false;
+        agent_update_unit_infos_for(agent, info);
         return sd_bus_reply_method_return(m, "");
 }
 
@@ -813,11 +843,6 @@ static int agent_match_job_changed(sd_bus_message *m, void *userdata, UNUSED sd_
         return 0;
 }
 
-static UnitSubscription *agent_get_unit_subscription(Agent *agent, const char *unit_path) {
-        UnitSubscription key = { (char *) unit_path, NULL };
-
-        return hashmap_get(agent->unit_subscriptions, &key);
-}
 
 static int agent_match_unit_changed(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error) {
         Agent *agent = userdata;
@@ -833,11 +858,14 @@ static int agent_match_unit_changed(sd_bus_message *m, void *userdata, UNUSED sd
                 return 0;
         }
 
-        UnitSubscription *sub = agent_get_unit_subscription(agent, sd_bus_message_get_path(m));
-        if (sub == NULL) {
+        AgentUnitInfo *info = agent_get_unit_info(agent, sd_bus_message_get_path(m));
+        if (info == NULL) {
                 return 0;
         }
 
+        if (!info->subscribed) {
+                return 0;
+        }
         /* Forward the property changes */
         _cleanup_sd_bus_message_ sd_bus_message *sig = NULL;
         r = sd_bus_message_new_signal(
@@ -850,7 +878,7 @@ static int agent_match_unit_changed(sd_bus_message *m, void *userdata, UNUSED sd
                 return r;
         }
 
-        r = sd_bus_message_append(sig, "s", sub->unit);
+        r = sd_bus_message_append(sig, "s", info->unit);
         if (r < 0) {
                 return r;
         }
@@ -873,11 +901,15 @@ static int agent_match_unit_new(sd_bus_message *m, void *userdata, UNUSED sd_bus
                 return r;
         }
 
-        UnitSubscription *sub = agent_get_unit_subscription(agent, path);
+        AgentUnitInfo *sub = agent_get_unit_info(agent, path);
         if (sub == NULL) {
                 return 0;
         }
 
+        if (!sub->subscribed) {
+                return 0;
+        }
+        /* Forward the event */
         return sd_bus_emit_signal(
                         agent->peer_dbus,
                         INTERNAL_AGENT_OBJECT_PATH,
@@ -897,11 +929,15 @@ static int agent_match_unit_removed(sd_bus_message *m, void *userdata, UNUSED sd
                 return r;
         }
 
-        UnitSubscription *sub = agent_get_unit_subscription(agent, path);
+        AgentUnitInfo *sub = agent_get_unit_info(agent, path);
         if (sub == NULL) {
                 return 0;
         }
 
+        if (!sub->subscribed) {
+                return 0;
+        }
+        /* Forward the event */
         return sd_bus_emit_signal(
                         agent->peer_dbus,
                         INTERNAL_AGENT_OBJECT_PATH,
