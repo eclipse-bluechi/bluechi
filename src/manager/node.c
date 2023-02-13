@@ -3,6 +3,7 @@
 
 #include "job.h"
 #include "manager.h"
+#include "monitor.h"
 #include "node.h"
 
 #define DEBUG_AGENT_MESSAGES 0
@@ -51,26 +52,34 @@ static const sd_bus_vtable node_vtable[] = {
         SD_BUS_VTABLE_END
 };
 
+typedef struct UnitSubscription UnitSubscription;
+
+struct UnitSubscription {
+        Subscription *sub;
+        LIST_FIELDS(UnitSubscription, subs);
+};
+
 typedef struct {
         char *unit;
-        uint32_t num_subscriptions;
-} UnitSubscription;
+        LIST_HEAD(UnitSubscription, subs);
+} UnitSubscriptions;
 
-static void unit_subscription_clear(void *item) {
-        UnitSubscription *sub = item;
-        free(sub->unit);
+static void unit_subscriptions_clear(void *item) {
+        UnitSubscriptions *usub = item;
+        free(usub->unit);
+        assert(LIST_IS_EMPTY(usub->subs));
 }
 
-static uint64_t unit_subscription_hash(const void *item, uint64_t seed0, uint64_t seed1) {
-        const UnitSubscription *sub = item;
-        return hashmap_sip(sub->unit, strlen(sub->unit), seed0, seed1);
+static uint64_t unit_subscriptions_hash(const void *item, uint64_t seed0, uint64_t seed1) {
+        const UnitSubscriptions *usubs = item;
+        return hashmap_sip(usubs->unit, strlen(usubs->unit), seed0, seed1);
 }
 
-static int unit_subscription_compare(const void *a, const void *b, UNUSED void *udata) {
-        const UnitSubscription *sub_a = a;
-        const UnitSubscription *sub_b = b;
+static int unit_subscriptions_compare(const void *a, const void *b, UNUSED void *udata) {
+        const UnitSubscriptions *usubs_a = a;
+        const UnitSubscriptions *usubs_b = b;
 
-        return strcmp(sub_a->unit, sub_b->unit);
+        return strcmp(usubs_a->unit, usubs_b->unit);
 }
 
 Node *node_new(Manager *manager, const char *name) {
@@ -84,13 +93,13 @@ Node *node_new(Manager *manager, const char *name) {
         LIST_INIT(nodes, node);
 
         node->unit_subscriptions = hashmap_new(
-                        sizeof(UnitSubscription),
+                        sizeof(UnitSubscriptions),
                         0,
                         0,
                         0,
-                        unit_subscription_hash,
-                        unit_subscription_compare,
-                        unit_subscription_clear,
+                        unit_subscriptions_hash,
+                        unit_subscriptions_compare,
+                        unit_subscriptions_clear,
                         NULL);
         if (node->unit_subscriptions == NULL) {
                 return NULL;
@@ -915,45 +924,78 @@ static void node_send_agent_subscribe_all(Node *node) {
         size_t i = 0;
 
         while (hashmap_iter(node->unit_subscriptions, &i, &item)) {
-                UnitSubscription *sub = item;
+                UnitSubscriptions *usubs = item;
 
-                node_send_agent_subscribe(node, sub->unit);
+                node_send_agent_subscribe(node, usubs->unit);
         }
 }
 
-void node_subscribe(Node *node, const char *unit) {
-        const UnitSubscription key = { (char *) unit, 1 };
-        UnitSubscription *sub = NULL;
+void node_subscribe(Node *node, Subscription *sub) {
+        const UnitSubscriptions key = { (char *) sub->unit, NULL };
+        UnitSubscriptions *usubs = NULL;
 
-        sub = hashmap_get(node->unit_subscriptions, &key);
-        if (sub == NULL) {
-                sub = hashmap_set(node->unit_subscriptions, &key);
-                if (sub == NULL && hashmap_oom(node->unit_subscriptions)) {
+        _cleanup_free_ UnitSubscription *usub = malloc0(sizeof(UnitSubscription));
+        if (usub == NULL) {
+                hirte_log_error("Failed to subscribe to unit, OOM");
+                return;
+        }
+        usub->sub = sub;
+
+        usubs = hashmap_get(node->unit_subscriptions, &key);
+        if (usubs == NULL) {
+                UnitSubscriptions v = { NULL, NULL };
+                v.unit = strdup(key.unit);
+                if (v.unit == NULL) {
                         hirte_log_error("Failed to subscribe to unit, OOM");
                         return;
                 }
-                node_send_agent_subscribe(node, unit);
-        } else {
-                sub->num_subscriptions++;
+                usubs = hashmap_set(node->unit_subscriptions, &v);
+                if (usubs == NULL && hashmap_oom(node->unit_subscriptions)) {
+                        free(v.unit);
+                        hirte_log_error("Failed to subscribe to unit, OOM");
+                        return;
+                }
+
+                /* First sub to this unit, pass to agent */
+                node_send_agent_subscribe(node, sub->unit);
+
+                usubs = hashmap_get(node->unit_subscriptions, &key);
         }
+
+        LIST_APPEND(subs, usubs->subs, steal_pointer(&usub));
 }
 
-void node_unsubscribe(Node *node, const char *unit) {
-        UnitSubscription key = { (char *) unit, 1 };
-        UnitSubscription *sub = NULL;
+void node_unsubscribe(Node *node, Subscription *sub) {
+        UnitSubscriptions key = { (char *) sub->unit, NULL };
+        UnitSubscriptions *usubs = NULL;
+        UnitSubscription *usub = NULL;
+        UnitSubscription *found = NULL;
 
         /* NOTE: If there are errors during subscribe we may still
            call unsubscribe, so this must silently handle the
            case of too many unsubscribes. */
 
-        sub = hashmap_get(node->unit_subscriptions, &key);
-        if (sub == NULL) {
+        usubs = hashmap_get(node->unit_subscriptions, &key);
+        if (usubs == NULL) {
                 return;
         }
 
-        --sub->num_subscriptions;
-        if (sub->num_subscriptions == 0) {
-                node_send_agent_unsubscribe(node, unit);
+        LIST_FOREACH(subs, usub, usubs->subs) {
+                if (usub->sub == sub) {
+                        found = usub;
+                        break;
+                }
+        }
+
+        if (found == NULL) {
+                return;
+        }
+
+        LIST_REMOVE(subs, usubs->subs, found);
+
+        if (LIST_IS_EMPTY(usubs->subs)) {
+                /* Last subscription for this unit, tell agent */
+                node_send_agent_unsubscribe(node, sub->unit);
                 hashmap_delete(node->unit_subscriptions, &key);
         }
 }

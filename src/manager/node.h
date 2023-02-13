@@ -62,8 +62,8 @@ void node_unset_agent_bus(Node *node);
 AgentRequest *node_request_list_units(
                 Node *node, agent_request_response_t cb, void *userdata, free_func_t free_userdata);
 
-void node_subscribe(Node *node, const char *unit);
-void node_unsubscribe(Node *node, const char *unit);
+void node_subscribe(Node *node, Subscription *sub);
+void node_unsubscribe(Node *node, Subscription *sub);
 
 DEFINE_CLEANUP_FUNC(Node, node_unref)
 #define _cleanup_node_ _cleanup_(node_unrefp)

@@ -151,12 +151,12 @@ void manager_add_subscription(Manager *manager, Subscription *sub) {
 
         if (*sub->node == 0) {
                 LIST_FOREACH(nodes, node, manager->nodes) {
-                        node_subscribe(node, sub->unit);
+                        node_subscribe(node, sub);
                 }
         } else {
                 node = manager_find_node(manager, sub->node);
                 if (node) {
-                        node_subscribe(node, sub->unit);
+                        node_subscribe(node, sub);
                 } else {
                         hirte_log_errorf("Warning: Subscription to non-existing node %s", sub->node);
                 }
@@ -170,12 +170,12 @@ void manager_remove_subscription(Manager *manager, Subscription *sub) {
 
         if (*sub->node == 0) {
                 LIST_FOREACH(nodes, node, manager->nodes) {
-                        node_unsubscribe(node, sub->unit);
+                        node_unsubscribe(node, sub);
                 }
         } else {
                 node = manager_find_node(manager, sub->node);
                 if (node) {
-                        node_unsubscribe(node, sub->unit);
+                        node_unsubscribe(node, sub);
                 }
         }
 
