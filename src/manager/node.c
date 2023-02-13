@@ -202,8 +202,9 @@ static int node_match_unit_new(sd_bus_message *m, void *userdata, UNUSED sd_bus_
         Node *node = userdata;
         Manager *manager = node->manager;
         const char *unit = NULL;
+        const char *reason = NULL;
 
-        int r = sd_bus_message_read(m, "s", &unit);
+        int r = sd_bus_message_read(m, "ss", &unit, &reason);
         if (r < 0) {
                 hirte_log_error("Invalid UnitNew signal");
                 return 0;

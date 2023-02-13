@@ -692,6 +692,22 @@ static int agent_method_subscribe(sd_bus_message *m, void *userdata, UNUSED sd_b
 
         info->subscribed = true;
 
+        if (info->loaded) {
+                /* The unit was already loaded, synthesize a UnitNew */
+                r = sd_bus_emit_signal(
+                                agent->peer_dbus,
+                                INTERNAL_AGENT_OBJECT_PATH,
+                                INTERNAL_AGENT_INTERFACE,
+                                "UnitNew",
+                                "ss",
+                                info->unit,
+                                "virtual");
+                if (r < 0) {
+                        hirte_log_warn("Failed to synthesize UnitNew");
+                        return r;
+                }
+        }
+
         return sd_bus_reply_method_return(m, "");
 }
 
@@ -736,7 +752,7 @@ static const sd_bus_vtable internal_agent_vtable[] = {
         SD_BUS_SIGNAL_WITH_NAMES("JobStateChanged", "us", SD_BUS_PARAM(id) SD_BUS_PARAM(state), 0),
         SD_BUS_SIGNAL_WITH_NAMES(
                         "UnitPropertiesChanged", "sa{sv}", SD_BUS_PARAM(unit) SD_BUS_PARAM(properties), 0),
-        SD_BUS_SIGNAL_WITH_NAMES("UnitNew", "s", SD_BUS_PARAM(unit), 0),
+        SD_BUS_SIGNAL_WITH_NAMES("UnitNew", "ss", SD_BUS_PARAM(unit) SD_BUS_PARAM(reason), 0),
         SD_BUS_SIGNAL_WITH_NAMES("UnitRemoved", "s", SD_BUS_PARAM(unit), 0),
         SD_BUS_SIGNAL_WITH_NAMES("Heartbeat", "s", SD_BUS_PARAM(agent_name), 0),
         SD_BUS_VTABLE_END
@@ -914,8 +930,9 @@ static int agent_match_unit_new(sd_bus_message *m, void *userdata, UNUSED sd_bus
                                 INTERNAL_AGENT_OBJECT_PATH,
                                 INTERNAL_AGENT_INTERFACE,
                                 "UnitNew",
-                                "s",
-                                info->unit);
+                                "ss",
+                                info->unit,
+                                "real");
                 if (r < 0) {
                         hirte_log_warn("Failed to forward UnitNew");
                         return r;
