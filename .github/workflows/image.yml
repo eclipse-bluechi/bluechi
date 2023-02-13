@@ -1,0 +1,30 @@
+name: Building Base Image
+
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  hirte-builder:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install dependencies
+        run: |
+          sudo apt-get -y install podman
+
+      - name: Checkout GitHub Action
+        uses: actions/checkout@main
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v1
+        with:
+          registry: ghcr.io
+          username: ${{github.actor}}
+          password: ${{secrets.GITHUB_TOKEN}}
+
+      - name: Build hirte-builder Base Image
+        run: |
+          docker build -f tests/Containerfile-build -t \
+          ghcr.io/containers/hirte/hirte-image:1.0.0 .
+          docker push ghcr.io/containers/hirte/hirte-image:1.0.0
