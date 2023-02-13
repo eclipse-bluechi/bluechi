@@ -259,16 +259,30 @@ int monitor_emit_unit_property_changed(Monitor *monitor, const char *node, const
         return sd_bus_message_rewind(m, false);
 }
 
-int monitor_emit_unit_new(Monitor *monitor, const char *node, const char *unit) {
+int monitor_emit_unit_new(Monitor *monitor, const char *node, const char *unit, const char *reason) {
         Manager *manager = monitor->manager;
 
         return sd_bus_emit_signal(
-                        manager->api_bus, monitor->object_path, MONITOR_INTERFACE, "UnitNew", "ss", node, unit);
+                        manager->api_bus,
+                        monitor->object_path,
+                        MONITOR_INTERFACE,
+                        "UnitNew",
+                        "sss",
+                        node,
+                        unit,
+                        reason);
 }
 
-int monitor_emit_unit_removed(Monitor *monitor, const char *node, const char *unit) {
+int monitor_emit_unit_removed(Monitor *monitor, const char *node, const char *unit, const char *reason) {
         Manager *manager = monitor->manager;
 
         return sd_bus_emit_signal(
-                        manager->api_bus, monitor->object_path, MONITOR_INTERFACE, "UnitRemoved", "ss", node, unit);
+                        manager->api_bus,
+                        monitor->object_path,
+                        MONITOR_INTERFACE,
+                        "UnitRemoved",
+                        "sss",
+                        node,
+                        unit,
+                        reason);
 }

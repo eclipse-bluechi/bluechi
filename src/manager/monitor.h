@@ -46,8 +46,8 @@ void monitor_close(Monitor *monitor);
 bool monitor_export(Monitor *monitor);
 
 int monitor_emit_unit_property_changed(Monitor *monitor, const char *node, const char *unit, sd_bus_message *m);
-int monitor_emit_unit_new(Monitor *monitor, const char *node, const char *unit);
-int monitor_emit_unit_removed(Monitor *monitor, const char *node, const char *unit);
+int monitor_emit_unit_new(Monitor *monitor, const char *node, const char *unit, const char *reason);
+int monitor_emit_unit_removed(Monitor *monitor, const char *node, const char *unit, const char *reason);
 
 
 DEFINE_CLEANUP_FUNC(Monitor, monitor_unref)

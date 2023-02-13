@@ -255,7 +255,7 @@ static int node_match_unit_new(sd_bus_message *m, void *userdata, UNUSED sd_bus_
         UnitSubscription *usub = NULL;
         LIST_FOREACH(subs, usub, usubs->subs) {
                 Subscription *sub = usub->sub;
-                int r = monitor_emit_unit_new(sub->monitor, node->name, sub->unit);
+                int r = monitor_emit_unit_new(sub->monitor, node->name, sub->unit, reason);
                 if (r < 0) {
                         hirte_log_error("Failed to emit UnitNew signal");
                 }
@@ -286,7 +286,7 @@ static int node_match_unit_removed(sd_bus_message *m, void *userdata, UNUSED sd_
         UnitSubscription *usub = NULL;
         LIST_FOREACH(subs, usub, usubs->subs) {
                 Subscription *sub = usub->sub;
-                int r = monitor_emit_unit_removed(sub->monitor, node->name, sub->unit);
+                int r = monitor_emit_unit_removed(sub->monitor, node->name, sub->unit, "real");
                 if (r < 0) {
                         hirte_log_error("Failed to emit UnitNew signal");
                 }
@@ -546,6 +546,27 @@ static int node_method_register(sd_bus_message *m, void *userdata, UNUSED sd_bus
 static int node_disconnected(UNUSED sd_bus_message *message, void *userdata, UNUSED sd_bus_error *error) {
         Node *node = userdata;
         Manager *manager = node->manager;
+        void *item = NULL;
+        size_t i = 0;
+
+        /* Send virtual unit remove for any reported loaded units */
+        while (hashmap_iter(node->unit_subscriptions, &i, &item)) {
+                UnitSubscriptions *usubs = item;
+
+                if (!usubs->loaded) {
+                        continue;
+                }
+
+                usubs->loaded = false;
+                UnitSubscription *usub = NULL;
+                LIST_FOREACH(subs, usub, usubs->subs) {
+                        Subscription *sub = usub->sub;
+                        int r = monitor_emit_unit_removed(sub->monitor, node->name, sub->unit, "virtual");
+                        if (r < 0) {
+                                hirte_log_error("Failed to emit UnitRemoved signal");
+                        }
+                }
+        }
 
         if (node->name) {
                 hirte_log_infof("Node '%s' disconnected", node->name);
@@ -1018,6 +1039,15 @@ void node_subscribe(Node *node, Subscription *sub) {
         }
 
         LIST_APPEND(subs, usubs->subs, steal_pointer(&usub));
+
+        /* We know this is loaded, so we won't get virtual notify from
+           the agent, instead send a virtual event here. */
+        if (usubs->loaded) {
+                int r = monitor_emit_unit_new(sub->monitor, node->name, sub->unit, "virtual");
+                if (r < 0) {
+                        hirte_log_error("Failed to emit UnitNew signal");
+                }
+        }
 }
 
 void node_unsubscribe(Node *node, Subscription *sub) {
