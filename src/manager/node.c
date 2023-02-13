@@ -62,6 +62,7 @@ struct UnitSubscription {
 typedef struct {
         char *unit;
         LIST_HEAD(UnitSubscription, subs);
+        bool loaded;
 } UnitSubscriptions;
 
 static void unit_subscriptions_clear(void *item) {
@@ -200,16 +201,39 @@ static int node_match_job_state_changed(
 
 static int node_match_unit_properties_changed(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *error) {
         Node *node = userdata;
-        Manager *manager = node->manager;
+        const char *unit = NULL;
 
-        manager_unit_properties_changed(manager, node->name, m);
+        int r = sd_bus_message_read(m, "s", &unit);
+        if (r >= 0) {
+                r = sd_bus_message_rewind(m, false);
+        }
+        if (r < 0) {
+                hirte_log_error("Invalid UnitPropertiesChanged signal");
+                return 0;
+        }
+
+        const UnitSubscriptions key = { (char *) unit, NULL, false };
+        UnitSubscriptions *usubs = NULL;
+
+        usubs = hashmap_get(node->unit_subscriptions, &key);
+        if (usubs == NULL) {
+                return 0;
+        }
+
+        UnitSubscription *usub = NULL;
+        LIST_FOREACH(subs, usub, usubs->subs) {
+                Subscription *sub = usub->sub;
+                int r = monitor_emit_unit_property_changed(sub->monitor, node->name, sub->unit, m);
+                if (r < 0) {
+                        hirte_log_error("Failed to emit UnitPropertyChanged signal");
+                }
+        }
 
         return 1;
 }
 
 static int node_match_unit_new(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *error) {
         Node *node = userdata;
-        Manager *manager = node->manager;
         const char *unit = NULL;
         const char *reason = NULL;
 
@@ -219,14 +243,29 @@ static int node_match_unit_new(sd_bus_message *m, void *userdata, UNUSED sd_bus_
                 return 0;
         }
 
-        manager_unit_new(manager, node->name, unit);
+        const UnitSubscriptions key = { (char *) unit, NULL, false };
+        UnitSubscriptions *usubs = NULL;
+
+        usubs = hashmap_get(node->unit_subscriptions, &key);
+        if (usubs == NULL) {
+                return 0;
+        }
+        usubs->loaded = true;
+
+        UnitSubscription *usub = NULL;
+        LIST_FOREACH(subs, usub, usubs->subs) {
+                Subscription *sub = usub->sub;
+                int r = monitor_emit_unit_new(sub->monitor, node->name, sub->unit);
+                if (r < 0) {
+                        hirte_log_error("Failed to emit UnitNew signal");
+                }
+        }
 
         return 1;
 }
 
 static int node_match_unit_removed(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *error) {
         Node *node = userdata;
-        Manager *manager = node->manager;
         const char *unit = NULL;
 
         int r = sd_bus_message_read(m, "s", &unit);
@@ -235,7 +274,23 @@ static int node_match_unit_removed(sd_bus_message *m, void *userdata, UNUSED sd_
                 return 0;
         }
 
-        manager_unit_removed(manager, node->name, unit);
+        const UnitSubscriptions key = { (char *) unit, NULL, false };
+        UnitSubscriptions *usubs = NULL;
+
+        usubs = hashmap_get(node->unit_subscriptions, &key);
+        if (usubs == NULL) {
+                return 0;
+        }
+        usubs->loaded = false;
+
+        UnitSubscription *usub = NULL;
+        LIST_FOREACH(subs, usub, usubs->subs) {
+                Subscription *sub = usub->sub;
+                int r = monitor_emit_unit_removed(sub->monitor, node->name, sub->unit);
+                if (r < 0) {
+                        hirte_log_error("Failed to emit UnitNew signal");
+                }
+        }
 
         return 1;
 }
@@ -931,7 +986,7 @@ static void node_send_agent_subscribe_all(Node *node) {
 }
 
 void node_subscribe(Node *node, Subscription *sub) {
-        const UnitSubscriptions key = { (char *) sub->unit, NULL };
+        const UnitSubscriptions key = { (char *) sub->unit, NULL, false };
         UnitSubscriptions *usubs = NULL;
 
         _cleanup_free_ UnitSubscription *usub = malloc0(sizeof(UnitSubscription));
@@ -943,7 +998,7 @@ void node_subscribe(Node *node, Subscription *sub) {
 
         usubs = hashmap_get(node->unit_subscriptions, &key);
         if (usubs == NULL) {
-                UnitSubscriptions v = { NULL, NULL };
+                UnitSubscriptions v = { NULL, NULL, false };
                 v.unit = strdup(key.unit);
                 if (v.unit == NULL) {
                         hirte_log_error("Failed to subscribe to unit, OOM");
@@ -966,7 +1021,7 @@ void node_subscribe(Node *node, Subscription *sub) {
 }
 
 void node_unsubscribe(Node *node, Subscription *sub) {
-        UnitSubscriptions key = { (char *) sub->unit, NULL };
+        UnitSubscriptions key = { (char *) sub->unit, NULL, false };
         UnitSubscriptions *usubs = NULL;
         UnitSubscription *usub = NULL;
         UnitSubscription *found = NULL;
