@@ -62,6 +62,7 @@ typedef struct AgentUnitInfo {
         char *object_path; /* key */
         char *unit;
         bool subscribed;
+        bool loaded;
 } AgentUnitInfo;
 
 
