@@ -47,11 +47,13 @@ def unit_property_changed(node, unit, props):
     old_values[node] = new_value;
 
 def unit_new(node, unit):
-    print(f"New Unit {unit} on node {node}")
+    reason=""
+    print(f"New Unit {unit} on node {node}, reason: {reason}")
 
 def unit_removed(node, unit):
     print(f"Removed Unit {unit} on node {node}")
-    del old_values[node]
+    if node in old_values:
+        del old_values[node]
 
 monitor.UnitPropertiesChanged.connect(unit_property_changed)
 monitor.UnitNew.connect(unit_new)

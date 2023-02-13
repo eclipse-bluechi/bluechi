@@ -95,57 +95,6 @@ void manager_unref(Manager *manager) {
         free(manager);
 }
 
-void manager_unit_properties_changed(Manager *manager, const char *node, sd_bus_message *m) {
-        const char *unit = NULL;
-
-        int r = sd_bus_message_read(m, "s", &unit);
-        if (r >= 0) {
-                r = sd_bus_message_rewind(m, false);
-        }
-        if (r < 0) {
-                hirte_log_error("Invalid UnitPropertiesChanged signal");
-                return;
-        }
-
-        Subscription *sub = NULL;
-        LIST_FOREACH(all_subscriptions, sub, manager->all_subscriptions) {
-                if ((*sub->node == 0 || streq(sub->node, node)) && streq(sub->unit, unit)) {
-                        r = monitor_emit_unit_property_changed(sub->monitor, node, unit, m);
-                        if (r < 0) {
-                                hirte_log_error("Failed to emit UnitPropertiesChanged signal");
-                                return;
-                        }
-                }
-        }
-}
-
-void manager_unit_new(Manager *manager, const char *node, const char *unit) {
-        Subscription *sub = NULL;
-        LIST_FOREACH(all_subscriptions, sub, manager->all_subscriptions) {
-                if ((*sub->node == 0 || streq(sub->node, node)) && streq(sub->unit, unit)) {
-                        int r = monitor_emit_unit_new(sub->monitor, node, unit);
-                        if (r < 0) {
-                                hirte_log_error("Failed to emit UnitNew signal");
-                                return;
-                        }
-                }
-        }
-}
-
-void manager_unit_removed(Manager *manager, const char *node, const char *unit) {
-        Subscription *sub = NULL;
-        LIST_FOREACH(all_subscriptions, sub, manager->all_subscriptions) {
-                if ((*sub->node == 0 || streq(sub->node, node)) && streq(sub->unit, unit)) {
-                        int r = monitor_emit_unit_removed(sub->monitor, node, unit);
-                        if (r < 0) {
-                                hirte_log_error("Failed to emit UnitRemoved signal");
-                                return;
-                        }
-                }
-        }
-}
-
-
 void manager_add_subscription(Manager *manager, Subscription *sub) {
         Node *node = NULL;
 
