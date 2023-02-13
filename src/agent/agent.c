@@ -343,14 +343,14 @@ bool agent_parse_config(Agent *agent, const char *configfile) {
 }
 
 static void agent_update_unit_infos_for(Agent *agent, AgentUnitInfo *info) {
-        if (!info->subscribed) {
-                AgentUnitInfo key = { info->object_path, NULL, false };
+        if (!info->subscribed && !info->loaded) {
+                AgentUnitInfo key = { info->object_path, NULL, false, false };
                 hashmap_delete(agent->unit_infos, &key);
         }
 }
 
 static AgentUnitInfo *agent_get_unit_info(Agent *agent, const char *unit_path) {
-        AgentUnitInfo key = { (char *) unit_path, NULL, false };
+        AgentUnitInfo key = { (char *) unit_path, NULL, false, false };
 
         return hashmap_get(agent->unit_infos, &key);
 }
@@ -367,7 +367,7 @@ static AgentUnitInfo *agent_ensure_unit_info(Agent *agent, const char *unit) {
                 return NULL;
         }
 
-        AgentUnitInfo v = { unit_path, unit_copy, false };
+        AgentUnitInfo v = { unit_path, unit_copy, false, false };
 
         AgentUnitInfo *replaced = hashmap_set(agent->unit_infos, &v);
         if (replaced == NULL && hashmap_oom(agent->unit_infos)) {
@@ -686,7 +686,6 @@ static int agent_method_subscribe(sd_bus_message *m, void *userdata, UNUSED sd_b
                 return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "Internal error");
         }
 
-
         if (info->subscribed) {
                 return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "Already subscribed");
         }
@@ -893,30 +892,37 @@ static int agent_match_unit_changed(sd_bus_message *m, void *userdata, UNUSED sd
 
 static int agent_match_unit_new(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *error) {
         Agent *agent = userdata;
-        const char *id = NULL;
+        const char *unit_name = NULL;
         const char *path = NULL;
 
-        int r = sd_bus_message_read(m, "so", &id, &path);
+        int r = sd_bus_message_read(m, "so", &unit_name, &path);
         if (r < 0) {
                 return r;
         }
 
-        AgentUnitInfo *sub = agent_get_unit_info(agent, path);
-        if (sub == NULL) {
+        AgentUnitInfo *info = agent_ensure_unit_info(agent, unit_name);
+        if (info == NULL) {
                 return 0;
         }
 
-        if (!sub->subscribed) {
-                return 0;
+        info->loaded = true;
+
+        if (info->subscribed) {
+                /* Forward the event */
+                r = sd_bus_emit_signal(
+                                agent->peer_dbus,
+                                INTERNAL_AGENT_OBJECT_PATH,
+                                INTERNAL_AGENT_INTERFACE,
+                                "UnitNew",
+                                "s",
+                                info->unit);
+                if (r < 0) {
+                        hirte_log_warn("Failed to forward UnitNew");
+                        return r;
+                }
         }
-        /* Forward the event */
-        return sd_bus_emit_signal(
-                        agent->peer_dbus,
-                        INTERNAL_AGENT_OBJECT_PATH,
-                        INTERNAL_AGENT_INTERFACE,
-                        "UnitNew",
-                        "s",
-                        sub->unit);
+
+        return 0;
 }
 
 static int agent_match_unit_removed(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *error) {
@@ -929,22 +935,32 @@ static int agent_match_unit_removed(sd_bus_message *m, void *userdata, UNUSED sd
                 return r;
         }
 
-        AgentUnitInfo *sub = agent_get_unit_info(agent, path);
-        if (sub == NULL) {
+        AgentUnitInfo *info = agent_get_unit_info(agent, path);
+        if (info == NULL) {
                 return 0;
         }
 
-        if (!sub->subscribed) {
-                return 0;
+        info->loaded = false;
+
+        if (info->subscribed) {
+                /* Forward the event */
+                r = sd_bus_emit_signal(
+                                agent->peer_dbus,
+                                INTERNAL_AGENT_OBJECT_PATH,
+                                INTERNAL_AGENT_INTERFACE,
+                                "UnitRemoved",
+                                "s",
+                                info->unit);
+                if (r < 0) {
+                        hirte_log_warn("Failed to forward UnitRemoved");
+                        return r;
+                }
         }
-        /* Forward the event */
-        return sd_bus_emit_signal(
-                        agent->peer_dbus,
-                        INTERNAL_AGENT_OBJECT_PATH,
-                        INTERNAL_AGENT_INTERFACE,
-                        "UnitRemoved",
-                        "s",
-                        sub->unit);
+
+        /* Maybe remove if unloaded and no other interest in it */
+        agent_update_unit_infos_for(agent, info);
+
+        return 1;
 }
 
 
@@ -991,11 +1007,64 @@ static int debug_systemd_message_handler(
         return 0;
 }
 
+int agent_init_units(Agent *agent, sd_bus_message *m) {
+        int r = sd_bus_message_enter_container(m, SD_BUS_TYPE_ARRAY, UNIT_INFO_STRUCT_TYPESTRING);
+        if (r < 0) {
+                return r;
+        }
+
+
+        while (sd_bus_message_at_end(m, false) == 0) {
+                r = sd_bus_message_enter_container(m, SD_BUS_TYPE_STRUCT, UNIT_INFO_TYPESTRING);
+                if (r < 0) {
+                        return r;
+                }
+
+                const char *name, *desc, *load_state, *active_state, *sub_state, *follower, *object_path,
+                                *job_type, *job_object_path;
+                uint32_t job_id;
+
+                r = sd_bus_message_read(
+                                m,
+                                UNIT_INFO_TYPESTRING,
+                                &name,
+                                &desc,
+                                &load_state,
+                                &active_state,
+                                &sub_state,
+                                &follower,
+                                &object_path,
+                                &job_id,
+                                &job_type,
+                                &job_object_path);
+                if (r < 0) {
+                        return r;
+                }
+
+                AgentUnitInfo *info = agent_ensure_unit_info(agent, name);
+                if (info) {
+                        assert(streq(info->object_path, object_path));
+                        info->loaded = true;
+                }
+
+                r = sd_bus_message_exit_container(m);
+                if (r < 0) {
+                        return r;
+                }
+        }
+
+        r = sd_bus_message_exit_container(m);
+        if (r < 0) {
+                return r;
+        }
+
+        return 0;
+}
+
 bool agent_start(Agent *agent) {
         struct sockaddr_in host;
         int r = 0;
         sd_bus_error error = SD_BUS_ERROR_NULL;
-        _cleanup_sd_bus_message_ sd_bus_message *m = NULL;
 
         if (agent == NULL) {
                 return false;
@@ -1048,6 +1117,7 @@ bool agent_start(Agent *agent) {
                 return false;
         }
 
+        _cleanup_sd_bus_message_ sd_bus_message *sub_m = NULL;
         r = sd_bus_call_method(
                         agent->systemd_dbus,
                         SYSTEMD_BUS_NAME,
@@ -1055,7 +1125,7 @@ bool agent_start(Agent *agent) {
                         SYSTEMD_MANAGER_IFACE,
                         "Subscribe",
                         &error,
-                        &m,
+                        &sub_m,
                         "");
         if (r < 0) {
                 hirte_log_errorf("Failed to issue subscribe call: %s", error.message);
@@ -1127,6 +1197,27 @@ bool agent_start(Agent *agent) {
                 return false;
         }
 
+        _cleanup_sd_bus_message_ sd_bus_message *list_units_m = NULL;
+        r = sd_bus_call_method(
+                        agent->systemd_dbus,
+                        SYSTEMD_BUS_NAME,
+                        SYSTEMD_OBJECT_PATH,
+                        SYSTEMD_MANAGER_IFACE,
+                        "ListUnits",
+                        &error,
+                        &list_units_m,
+                        "");
+        if (r < 0) {
+                hirte_log_errorf("Failed to issue list_units call: %s", error.message);
+                sd_bus_error_free(&error);
+                return false;
+        }
+
+        r = agent_init_units(agent, list_units_m);
+        if (r < 0) {
+                return false;
+        }
+
         if (DEBUG_SYSTEMD_MESSAGES) {
                 sd_bus_add_filter(agent->systemd_dbus, NULL, debug_systemd_message_handler, agent);
         }
@@ -1159,6 +1250,7 @@ bool agent_start(Agent *agent) {
                 return false;
         }
 
+        _cleanup_sd_bus_message_ sd_bus_message *reg_m = NULL;
         r = sd_bus_call_method(
                         agent->peer_dbus,
                         HIRTE_DBUS_NAME,
@@ -1166,7 +1258,7 @@ bool agent_start(Agent *agent) {
                         INTERNAL_MANAGER_INTERFACE,
                         "Register",
                         &error,
-                        &m,
+                        &reg_m,
                         "s",
                         agent->name);
         if (r < 0) {
@@ -1175,7 +1267,7 @@ bool agent_start(Agent *agent) {
                 return false;
         }
 
-        r = sd_bus_message_read(m, "");
+        r = sd_bus_message_read(reg_m, "");
         if (r < 0) {
                 hirte_log_errorf("Failed to parse response message: %s", strerror(-r));
                 return false;
