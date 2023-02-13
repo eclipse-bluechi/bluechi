@@ -61,3 +61,10 @@ typedef enum JobState {
 
 const char *job_state_to_string(JobState s);
 JobState job_state_from_string(const char *s);
+
+/* Agent to Hirte heartbeat signals */
+
+// Application-level heartbeat set at 1 second.
+#define AGENT_HEARTBEAT_INTERVAL_USEC (1000000)
+
+#define AGENT_HEARTBEAT_SIGNAL_NAME "Heartbeat"
