@@ -1,6 +1,7 @@
 #include <string.h>
 
 #include "libhirte/bus/bus.h"
+#include "libhirte/bus/utils.h"
 #include "libhirte/common/common.h"
 #include "libhirte/common/parse-util.h"
 #include "libhirte/ini/config.h"
@@ -323,7 +324,12 @@ bool manager_parse_config(Manager *manager, const char *configfile) {
                 return false;
         }
 
+        // set defaults for logging
+        hirte_log_init();
+        // overwrite default log settings with config
         hirte_log_init_from_config(config);
+        // overwrite config settings with env vars
+        hirte_log_init_from_env();
 
         topic = config_lookup_topic(config, "Manager");
         if (topic == NULL) {
@@ -369,6 +375,15 @@ static int manager_accept_node_connection(
                         manager->event, "managed-node", HIRTE_DBUS_NAME, steal_fd(&nfd));
         if (dbus_server == NULL) {
                 return -1;
+        }
+
+        int r = bus_socket_set_no_delay(dbus_server);
+        if (r < 0) {
+                hirte_log_warn("Failed to set NO_DELAY on socket");
+        }
+        r = bus_socket_set_keepalive(dbus_server);
+        if (r < 0) {
+                hirte_log_warn("Failed to set KEEPALIVE on socket");
         }
 
         /* Add anonymous node */
@@ -753,7 +768,7 @@ static int manager_dbus_filter(UNUSED sd_bus_message *m, void *userdata, UNUSED 
         const char *iface = sd_bus_message_get_interface(m);
 
         if (DEBUG_MESSAGES) {
-                hirte_log_infof("Incomming public message: path: %s, iface: %s, member: %s, signature: '%s'",
+                hirte_log_infof("Incoming public message: path: %s, iface: %s, member: %s, signature: '%s'",
                                 object_path,
                                 iface,
                                 sd_bus_message_get_member(m),

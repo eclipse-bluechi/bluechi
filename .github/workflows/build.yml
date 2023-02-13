@@ -21,11 +21,15 @@ jobs:
           # CRB is required for meson
           dnf config-manager -y --set-enabled crb
 
+          # EPEL is required for codespell
+          dnf install -y epel-release
+
       - name: Install dependencies
         run: |
           dnf install \
                   clang-tools-extra \
                   systemd-devel \
+                  codespell \
               -y
 
       - name: Checkout sources
@@ -43,6 +47,12 @@ jobs:
         run: |
           make lint
 
+      - name: Running codespell checker
+        run: |
+          make codespell
+
+      - name: Running markdown lint
+        uses: DavidAnson/markdownlint-cli2-action@v9
 
   rpmbuild:
     needs: lint

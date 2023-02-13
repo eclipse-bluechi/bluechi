@@ -149,7 +149,7 @@ config *new_config(void) {
 }
 
 /* Get the file path
-    if it can't find the or cant parse the path it will return configurationOrch
+    if it can't find the or can't parse the path it will return configurationOrch
     with nulls else will return configurationOrch with all the data */
 config *parsing_ini_file(const char *file) {
         config *config = new_config();
@@ -209,4 +209,13 @@ bool is_true_value(const char *value) {
 
         return (streqi("true", value) || streqi("t", value) || streqi("yes", value) || streqi("y", value) ||
                 streqi("on", value));
+}
+
+bool is_false_value(const char *value) {
+        if (value == NULL) {
+                return false;
+        }
+
+        return (streqi("false", value) || streqi("f", value) || streqi("no", value) || streqi("n", value) ||
+                streqi("off", value));
 }

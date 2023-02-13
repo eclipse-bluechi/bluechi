@@ -1,12 +1,21 @@
 #pragma once
 
-#include <stdarg.h>
-#include <stdbool.h>
-#include <stdio.h>
 #include <systemd/sd-journal.h>
 
-#include "libhirte/common/common.h"
 #include "libhirte/ini/config.h"
+
+
+#define HIRTE_LOG_ENV_KEY_LEVEL "HIRTE_LOG_LEVEL"
+#define HIRTE_LOG_ENV_KEY_TARGET "HIRTE_LOG_TARGET"
+#define HIRTE_LOG_ENV_KEY_IS_QUIET "HIRTE_LOG_IS_QUIET"
+
+#define HIRTE_LOG_CONFIG_TOPIC "Logging"
+#define HIRTE_LOG_CONFIG_KEY_LEVEL "Level"
+#define HIRTE_LOG_CONFIG_KEY_TARGET "Target"
+#define HIRTE_LOG_CONFIG_KEY_QUIET "Quiet"
+
+#define HIRTE_LOG_TARGET_JOURNALD "journald"
+#define HIRTE_LOG_TARGET_STDERR "stderr"
 
 typedef enum LogLevel {
         LOG_LEVEL_DEBUG,
@@ -46,8 +55,11 @@ int hirte_log_to_stderr_with_location(
 void hirte_log_set_log_fn(LogFn log_fn);
 void hirte_log_set_level(LogLevel level);
 void hirte_log_set_quiet(bool is_quiet);
+
 void hirte_log_init();
+void hirte_log_init_from_env();
 int hirte_log_init_from_config(config *conf);
+
 bool shouldLog(LogLevel lvl);
 
 int hirte_log(LogLevel lvl,

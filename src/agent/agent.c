@@ -313,7 +313,12 @@ bool agent_parse_config(Agent *agent, const char *configfile) {
                 return false;
         }
 
+        // set defaults for logging
+        hirte_log_init();
+        // overwrite default log settings with config
         hirte_log_init_from_config(config);
+        // overwrite config settings with env vars
+        hirte_log_init_from_env();
 
         topic = config_lookup_topic(config, "Node");
         if (topic == NULL) {
@@ -943,7 +948,7 @@ static int agent_match_job_removed(sd_bus_message *m, void *userdata, UNUSED sd_
 
 static int debug_systemd_message_handler(
                 sd_bus_message *m, UNUSED void *userdata, UNUSED sd_bus_error *ret_error) {
-        hirte_log_infof("Incomming message from systemd: path: %s, iface: %s, member: %s, signature: '%s'",
+        hirte_log_infof("Incoming message from systemd: path: %s, iface: %s, member: %s, signature: '%s'",
                         sd_bus_message_get_path(m),
                         sd_bus_message_get_interface(m),
                         sd_bus_message_get_member(m),
@@ -1099,6 +1104,16 @@ bool agent_start(Agent *agent) {
         if (agent->peer_dbus == NULL) {
                 hirte_log_error("Failed to open peer dbus");
                 return false;
+        }
+
+        r = bus_socket_set_no_delay(agent->peer_dbus);
+        if (r < 0) {
+                hirte_log_warn("Failed to set NO_DELAY on socket");
+        }
+
+        r = bus_socket_set_keepalive(agent->peer_dbus);
+        if (r < 0) {
+                hirte_log_warn("Failed to set KEEPALIVE on socket");
         }
 
         r = sd_bus_add_object_vtable(

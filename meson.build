@@ -30,6 +30,9 @@ endif
 # Subdirectory for the shared library.
 subdir('src/libhirte')
 
+# Configuration files
+subdir('config')
+
 # build each binary
 subdir('src/manager')
 subdir('src/agent')

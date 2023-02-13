@@ -40,7 +40,7 @@ struct Node {
 
         LIST_FIELDS(Node, nodes);
 
-        char *name; /* NULL for not yet unregistred nodes */
+        char *name; /* NULL for not yet unregistered nodes */
         char *object_path;
 
         LIST_HEAD(AgentRequest, outstanding_requests);

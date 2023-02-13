@@ -1,6 +1,15 @@
 #include <errno.h>
+#include <netinet/in.h>
+#include <netinet/tcp.h>
+#include <sys/socket.h>
 
 #include "utils.h"
+
+/* Number of seconds idle before sending keepalive packets */
+#define AGENT_KEEPALIVE_SOCKET_KEEPIDLE_SECS 10
+
+/* Number of seconds idle between each keepalive packet */
+#define AGENT_KEEPALIVE_SOCKET_KEEPINTVL_SECS 10
 
 int bus_parse_property_string(sd_bus_message *m, const char *name, const char **value) {
         bool found = false;
@@ -96,6 +105,17 @@ void unit_unref(UnitInfo *unit) {
                 return;
         }
 
+        free(unit->node);
+        free(unit->id);
+        free(unit->description);
+        free(unit->load_state);
+        free(unit->active_state);
+        free(unit->sub_state);
+        free(unit->following);
+        free(unit->unit_path);
+        free(unit->job_type);
+        free(unit->job_path);
+
         free(unit);
 }
 
@@ -103,24 +123,89 @@ void unit_unref(UnitInfo *unit) {
  * Copied from systemd/bus-unit-util.c
  */
 int bus_parse_unit_info(sd_bus_message *message, UnitInfo *u) {
+        int r = 0;
+        char *id = NULL, *description = NULL, *load_state = NULL, *active_state = NULL;
+        char *sub_state = NULL, *following = NULL, *unit_path = NULL;
+        int job_id = 0;
+        char *job_type = NULL, *job_path = NULL;
+
         assert(message);
         assert(u);
 
-        u->node = NULL;
-
-        return sd_bus_message_read(
+        r = sd_bus_message_read(
                         message,
                         UNIT_INFO_STRUCT_TYPESTRING,
-                        &u->id,
-                        &u->description,
-                        &u->load_state,
-                        &u->active_state,
-                        &u->sub_state,
-                        &u->following,
-                        &u->unit_path,
-                        &u->job_id,
-                        &u->job_type,
-                        &u->job_path);
+                        &id,
+                        &description,
+                        &load_state,
+                        &active_state,
+                        &sub_state,
+                        &following,
+                        &unit_path,
+                        &job_id,
+                        &job_type,
+                        &job_path);
+
+        if (r <= 0) {
+                return r;
+        }
+
+        u->node = NULL;
+        u->id = strdup(id);
+        u->description = strdup(description);
+        u->load_state = strdup(load_state);
+        u->active_state = strdup(active_state);
+        u->sub_state = strdup(sub_state);
+        u->following = strdup(following);
+        u->unit_path = strdup(unit_path);
+        u->job_id = job_id;
+        u->job_type = strdup(job_type);
+        u->job_path = strdup(job_path);
+
+        return r;
+}
+
+int bus_parse_unit_on_node_info(sd_bus_message *message, UnitInfo *u) {
+        int r = 0;
+        char *node = NULL, *id = NULL, *description = NULL, *load_state = NULL;
+        char *active_state = NULL, *sub_state = NULL, *following = NULL, *unit_path = NULL;
+        int job_id = 0;
+        char *job_type = NULL, *job_path = NULL;
+        assert(message);
+        assert(u);
+
+        r = sd_bus_message_read(
+                        message,
+                        NODE_AND_UNIT_INFO_STRUCT_TYPESTRING,
+                        &node,
+                        &id,
+                        &description,
+                        &load_state,
+                        &active_state,
+                        &sub_state,
+                        &following,
+                        &unit_path,
+                        &job_id,
+                        &job_type,
+                        &job_path);
+
+        if (r <= 0) {
+                return r;
+        }
+
+        u->node = strdup(node);
+        u->id = strdup(id);
+        u->description = strdup(description);
+        u->load_state = strdup(load_state);
+        u->active_state = strdup(active_state);
+        u->sub_state = strdup(sub_state);
+        u->following = strdup(following);
+        u->unit_path = strdup(unit_path);
+        u->job_id = job_id;
+        u->job_type = strdup(job_type);
+        u->job_path = strdup(job_path);
+
+        return r;
 }
 
 int assemble_object_path_string(const char *prefix, const char *name, char **res) {
@@ -163,4 +248,46 @@ char *bus_path_escape(const char *s) {
         *t = 0;
 
         return r;
+}
+
+int bus_socket_set_no_delay(sd_bus *bus) {
+        int fd = sd_bus_get_fd(bus);
+        if (fd < 0) {
+                return fd;
+        }
+
+        int flag = 1;
+        int r = setsockopt(fd, SOL_TCP, TCP_NODELAY, (char *) &flag, sizeof(int));
+        if (r < 0) {
+                return -errno;
+        }
+
+        return 0;
+}
+
+int bus_socket_set_keepalive(sd_bus *bus) {
+        int fd = sd_bus_get_fd(bus);
+        if (fd < 0) {
+                return fd;
+        }
+
+        int flag = 1;
+        int r = setsockopt(fd, SOL_SOCKET, SO_KEEPALIVE, (char *) &flag, sizeof(int));
+        if (r < 0) {
+                return -errno;
+        }
+
+        int keepidle = AGENT_KEEPALIVE_SOCKET_KEEPIDLE_SECS;
+        r = setsockopt(fd, IPPROTO_TCP, TCP_KEEPIDLE, &keepidle, sizeof(int));
+        if (r < 0) {
+                return -errno;
+        }
+
+        int keepintvl = AGENT_KEEPALIVE_SOCKET_KEEPINTVL_SECS;
+        r = setsockopt(fd, IPPROTO_TCP, TCP_KEEPINTVL, &keepintvl, sizeof(int));
+        if (r < 0) {
+                return -errno;
+        }
+
+        return 0;
 }

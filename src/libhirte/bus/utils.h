@@ -12,17 +12,17 @@ typedef struct UnitInfo UnitInfo;
 struct UnitInfo {
         int ref_count;
 
-        const char *node;
-        const char *id;
-        const char *description;
-        const char *load_state;
-        const char *active_state;
-        const char *sub_state;
-        const char *following;
-        const char *unit_path;
+        char *node;
+        char *id;
+        char *description;
+        char *load_state;
+        char *active_state;
+        char *sub_state;
+        char *following;
+        char *unit_path;
         uint32_t job_id;
-        const char *job_type;
-        const char *job_path;
+        char *job_type;
+        char *job_path;
 
         LIST_FIELDS(UnitInfo, units);
 };
@@ -32,6 +32,10 @@ UnitInfo *unit_ref(UnitInfo *unit);
 void unit_unref(UnitInfo *unit);
 
 int bus_parse_unit_info(sd_bus_message *message, UnitInfo *u);
+int bus_parse_unit_on_node_info(sd_bus_message *message, UnitInfo *u);
+
+int bus_socket_set_no_delay(sd_bus *bus);
+int bus_socket_set_keepalive(sd_bus *bus);
 
 int assemble_object_path_string(const char *prefix, const char *name, char **res);
 

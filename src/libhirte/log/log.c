@@ -1,6 +1,9 @@
 #include <errno.h>
 
+#include "libhirte/common/common.h"
+
 #include "log.h"
+
 
 static const char * const log_level_strings[] = { "DEBUG", "INFO", "WARN", "ERROR" };
 
@@ -77,7 +80,7 @@ int hirte_log_to_stderr_with_location(
         timebuf[strftime(timebuf, sizeof(timebuf), "%H:%M:%S", localtime(&t))] = '\0';
 
         // clang-format off
-        fprintf(stderr, "%s %s\t%s:%s %s\t{msg: %s, data: %s}\n", 
+        fprintf(stderr, "%s %s\t%s:%s %s\tmsg=\"%s\", data=\"%s\"\n", 
                 timebuf, log_level_to_string(lvl), 
                 file, line, func,
                 msg, data);
@@ -110,6 +113,34 @@ void hirte_log_init() {
         hirte_log_set_log_fn(hirte_log_to_stderr_with_location);
 }
 
+void hirte_log_init_from_env() {
+        char *env_level = NULL;
+        char *env_target = NULL;
+        char *env_is_quiet = NULL;
+
+        env_level = getenv(HIRTE_LOG_ENV_KEY_LEVEL);
+        LogLevel level = string_to_log_level(env_level);
+        if (level != LOG_LEVEL_INVALID) {
+                hirte_log_set_level(level);
+        }
+
+        env_target = getenv(HIRTE_LOG_ENV_KEY_TARGET);
+        if (env_target != NULL) {
+                if (streqi(HIRTE_LOG_TARGET_JOURNALD, env_target)) {
+                        hirte_log_set_log_fn(hirte_log_to_journald_with_location);
+                } else if (streqi(HIRTE_LOG_TARGET_STDERR, env_target)) {
+                        hirte_log_set_log_fn(hirte_log_to_stderr_with_location);
+                }
+        }
+
+        env_is_quiet = getenv(HIRTE_LOG_ENV_KEY_IS_QUIET);
+        if (is_true_value(env_is_quiet)) {
+                hirte_log_set_quiet(true);
+        } else if (is_false_value(env_is_quiet)) {
+                hirte_log_set_quiet(false);
+        }
+}
+
 int hirte_log_init_from_config(config *conf) {
         if (conf == NULL) {
                 return -EINVAL;
@@ -119,27 +150,30 @@ int hirte_log_init_from_config(config *conf) {
         const char *target = NULL;
         const char *quiet = NULL;
 
-        logging_topic = config_lookup_topic(conf, "Logging");
+        logging_topic = config_lookup_topic(conf, HIRTE_LOG_CONFIG_TOPIC);
         if (logging_topic == NULL) {
                 return -EINVAL;
         }
 
-        LogLevel level = string_to_log_level(topic_lookup(logging_topic, "Level"));
-        if (level == LOG_LEVEL_INVALID) {
-                level = LOG_LEVEL_INFO;
-        }
-        hirte_log_set_level(level);
-
-        target = topic_lookup(logging_topic, "Target");
-        hirte_log_set_log_fn(hirte_log_to_stderr_with_location);
-        if (target && streq("journald", target)) {
-                hirte_log_set_log_fn(hirte_log_to_journald_with_location);
+        LogLevel level = string_to_log_level(topic_lookup(logging_topic, HIRTE_LOG_CONFIG_KEY_LEVEL));
+        if (level != LOG_LEVEL_INVALID) {
+                hirte_log_set_level(level);
         }
 
-        quiet = topic_lookup(logging_topic, "Quiet");
-        hirte_log_set_quiet(false);
-        if (quiet && is_true_value(quiet)) {
+        target = topic_lookup(logging_topic, HIRTE_LOG_CONFIG_KEY_TARGET);
+        if (target != NULL) {
+                if (streqi(HIRTE_LOG_TARGET_JOURNALD, target)) {
+                        hirte_log_set_log_fn(hirte_log_to_journald_with_location);
+                } else if (streqi(HIRTE_LOG_TARGET_STDERR, target)) {
+                        hirte_log_set_log_fn(hirte_log_to_stderr_with_location);
+                }
+        }
+
+        quiet = topic_lookup(logging_topic, HIRTE_LOG_CONFIG_KEY_QUIET);
+        if (is_true_value(quiet)) {
                 hirte_log_set_quiet(true);
+        } else if (is_false_value(quiet)) {
+                hirte_log_set_quiet(false);
         }
 
         return 0;
