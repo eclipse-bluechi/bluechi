@@ -55,8 +55,15 @@ struct Agent {
 
         LIST_HEAD(JobTracker, tracked_jobs);
 
-        struct hashmap *unit_subscriptions;
+        struct hashmap *unit_infos;
 };
+
+typedef struct AgentUnitInfo {
+        char *object_path; /* key */
+        char *unit;
+        bool subscribed;
+} AgentUnitInfo;
+
 
 Agent *agent_new(void);
 Agent *agent_ref(Agent *agent);
