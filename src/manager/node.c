@@ -258,7 +258,7 @@ static int node_match_heartbeat(UNUSED sd_bus_message *m, UNUSED void *userdata,
 
         static bool first_heartbeat_received;
         if (!first_heartbeat_received) {
-                hirte_log_infof("First heartbeat received from %s\n", node_name);
+                hirte_log_infof("First heartbeat received from %s", node_name);
                 first_heartbeat_received = true;
         }
 
