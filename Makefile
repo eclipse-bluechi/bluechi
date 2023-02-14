@@ -1,5 +1,19 @@
+.PHONY: build fmt check-fmt lint lint-fix codespell
+
+DESTDIR ?=
 
 ALL_SRC_FILES = 'find . -name "*.[ch]" ! -path "./src/libhirte/ini/ini.[ch]" ! -path "./src/libhirte/hashmap/*" ! -path "./src/*/test/**" ! -path "./builddir/**" -print0'
+
+build:
+	meson setup builddir
+	meson compile -C builddir
+
+test: build
+	meson compile -C builddir
+	meson test -C builddir
+
+install: build
+	meson install -C builddir --destdir "$(DESTDIR)"
 
 fmt:
 	eval $(ALL_SRC_FILES) | xargs -0 -I {} clang-format -i --sort-includes {}
@@ -20,3 +34,11 @@ lint-fix:
 
 codespell:
 	codespell -S Makefile,imgtype,copy,AUTHORS,bin,.git,CHANGELOG.md,changelog.txt,.cirrus.yml,"*.xz,*.gz,*.tar,*.tgz,*ico,*.png,*.1,*.5,*.orig,*.rej,*.xml" -L keypair,flate,uint,iff,od,ERRO -w
+
+clean:
+	find . -name \*~ -delete
+	find . -name \*# -delete
+	meson setup --wipe builddir
+
+distclean: clean
+	rm -rf builddir
