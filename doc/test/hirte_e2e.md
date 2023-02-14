@@ -11,9 +11,14 @@ Test directory contains two container files
 - Containerfile-build
 - Containerfile
 
-Containerfile-build published in quay
-quay.io/yarboa/hirte-builder
+Containerfile-build published in AutoSD registry
+registry.gitlab.com/centos/automotive/sample-images.
 It is used for hirte binary build on each PR,
 
 Containerfile create hirte-images contain systemd init to simulate
 systemd modules which are part of hirte solution
+
+Base workflows
+
+- Create and run simulated containers with systemd
+- Check Nodes registration complete
