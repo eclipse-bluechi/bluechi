@@ -16,6 +16,9 @@ struct Client {
         sd_bus *api_bus;
         char *object_path;
 
+        char *pending_job_name;
+        sd_bus_message *pending_job_result;
+
         Printer printer;
 };
 

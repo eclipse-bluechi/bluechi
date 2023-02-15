@@ -1,6 +1,7 @@
-#include "libhirte/bus/utils.h"
+#include <errno.h>
 
 #include "client.h"
+#include "libhirte/bus/utils.h"
 
 int fetch_unit_list(
                 Client *client,
@@ -50,7 +51,7 @@ int fetch_unit_list(
         return r;
 }
 
-int list_units_on_all(Client *client) {
+int method_list_units_on_all(Client *client) {
         int r = 0;
         _cleanup_unit_list_ UnitList *unit_list = new_unit_list();
 
@@ -74,7 +75,7 @@ int list_units_on_all(Client *client) {
         return 0;
 }
 
-int list_units_on(const char *name, Client *client) {
+int method_list_units_on(const char *name, Client *client) {
         int r = 0;
         _cleanup_unit_list_ UnitList *unit_list = new_unit_list();
 
@@ -161,6 +162,130 @@ void unit_list_unref(UnitList *unit_list) {
         free(unit_list);
 }
 
+static sd_bus_message *wait_for_job(Client *client, char *object_path) {
+        int r = 0;
+
+        assert(client->pending_job_name == NULL);
+        client->pending_job_name = object_path;
+
+        for (;;) {
+                /* Process requests */
+                r = sd_bus_process(client->api_bus, NULL);
+                if (r < 0) {
+                        fprintf(stderr, "Failed to process bus: %s\n", strerror(-r));
+                        return NULL;
+                }
+
+                /* Did we get the result? */
+                if (client->pending_job_result != NULL) {
+                        return steal_pointer(&client->pending_job_result);
+                }
+
+                if (r > 0) { /* request processed, try to process another one */
+                        continue;
+                }
+
+                /* Wait for the next request to process */
+                r = sd_bus_wait(client->api_bus, (uint64_t) -1);
+                if (r < 0) {
+                        fprintf(stderr, "Failed to wait on bus: %s\n", strerror(-r));
+                        return NULL;
+                }
+        }
+}
+
+static int match_job_removed_signal(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *error) {
+        const char *job_path = NULL, *result = NULL, *node = NULL, *unit = NULL;
+        uint32_t id = 0;
+        int r = 0;
+        Client *client = (Client *) userdata;
+
+        if (client->pending_job_name == NULL) {
+                return 0;
+        }
+
+        r = sd_bus_message_read(m, "uosss", &id, &job_path, &node, &unit, &result);
+        if (r < 0) {
+                fprintf(stderr, "Can't parse job result\n");
+                return 0;
+        }
+
+        (void) sd_bus_message_rewind(m, true);
+
+        if (streq(client->pending_job_name, job_path)) {
+                client->pending_job_result = sd_bus_message_ref(m);
+                return 1;
+        }
+
+        return 0;
+}
+
+int method_lifecycle_action_on(Client *client, char *node_name, char *unit, char *method) {
+        _cleanup_sd_bus_error_ sd_bus_error error = SD_BUS_ERROR_NULL;
+        _cleanup_sd_bus_message_ sd_bus_message *message = NULL;
+        _cleanup_sd_bus_message_ sd_bus_message *job_result = NULL;
+        char *job_path = NULL, *result = NULL, *node = NULL;
+        uint32_t id = 0;
+        int r = 0;
+
+        r = assemble_object_path_string(NODE_OBJECT_PATH_PREFIX, node_name, &client->object_path);
+        if (r < 0) {
+                return r;
+        }
+
+        r = sd_bus_match_signal(
+                        client->api_bus,
+                        NULL,
+                        HIRTE_INTERFACE_BASE_NAME,
+                        HIRTE_MANAGER_OBJECT_PATH,
+                        MANAGER_INTERFACE,
+                        "JobRemoved",
+                        match_job_removed_signal,
+                        client);
+
+        if (r < 0) {
+                fprintf(stderr, "Failed to match signal\n");
+                return r;
+        }
+
+        r = sd_bus_call_method(
+                        client->api_bus,
+                        HIRTE_INTERFACE_BASE_NAME,
+                        client->object_path,
+                        NODE_INTERFACE,
+                        method,
+                        &error,
+                        &message,
+                        "ss",
+                        unit,
+                        "replace");
+        if (r < 0) {
+                fprintf(stderr, "Failed to issue method call: %s\n", error.message);
+                return r;
+        }
+
+        r = sd_bus_message_read(message, "o", &job_path);
+        if (r < 0) {
+                fprintf(stderr, "Failed to parse response message: %s\n", strerror(-r));
+                return r;
+        }
+
+        job_result = wait_for_job(client, job_path);
+        if (job_result == NULL) {
+                return -EIO;
+        }
+
+        r = sd_bus_message_read(job_result, "uosss", &id, &job_path, &node, &unit, &result);
+        if (r < 0) {
+                fprintf(stderr, "Can't parse job result\n");
+                return r;
+        }
+
+        printf("Unit %s %s operation result: %s\n", unit, client->op, result);
+
+        return r;
+}
+
 int client_call_manager(Client *client) {
         int r = 0;
 
@@ -176,10 +301,30 @@ int client_call_manager(Client *client) {
 
         if (streq(client->op, "list-units")) {
                 if (client->opargc == 0) {
-                        r = list_units_on_all(client);
+                        r = method_list_units_on_all(client);
                 } else {
-                        r = list_units_on(client->opargv[0], client);
+                        r = method_list_units_on(client->opargv[0], client);
                 }
+        } else if (streq(client->op, "start")) {
+                if (client->opargc != 2) {
+                        return -EINVAL;
+                }
+                r = method_lifecycle_action_on(client, client->opargv[0], client->opargv[1], "StartUnit");
+        } else if (streq(client->op, "stop")) {
+                if (client->opargc != 2) {
+                        return -EINVAL;
+                }
+                r = method_lifecycle_action_on(client, client->opargv[0], client->opargv[1], "StopUnit");
+        } else if (streq(client->op, "restart")) {
+                if (client->opargc != 2) {
+                        return -EINVAL;
+                }
+                r = method_lifecycle_action_on(client, client->opargv[0], client->opargv[1], "RestartUnit");
+        } else if (streq(client->op, "reload")) {
+                if (client->opargc != 2) {
+                        return -EINVAL;
+                }
+                r = method_lifecycle_action_on(client, client->opargv[0], client->opargv[1], "ReloadUnit");
         }
 
         return r;
