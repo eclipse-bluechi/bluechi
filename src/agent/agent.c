@@ -16,6 +16,10 @@
 #define DEBUG_SYSTEMD_MESSAGES 0
 #define DEBUG_SYSTEMD_MESSAGES_CONTENT 0
 
+typedef struct AgentUnitInfoKey {
+        char *object_path;
+} AgentUnitInfoKey;
+
 struct JobTracker {
         char *job_object_path;
         job_tracker_callback callback;
@@ -344,13 +348,13 @@ bool agent_parse_config(Agent *agent, const char *configfile) {
 
 static void agent_update_unit_infos_for(Agent *agent, AgentUnitInfo *info) {
         if (!info->subscribed && !info->loaded) {
-                AgentUnitInfo key = { info->object_path, NULL, false, false };
+                AgentUnitInfoKey key = { info->object_path };
                 hashmap_delete(agent->unit_infos, &key);
         }
 }
 
 static AgentUnitInfo *agent_get_unit_info(Agent *agent, const char *unit_path) {
-        AgentUnitInfo key = { (char *) unit_path, NULL, false, false };
+        AgentUnitInfoKey key = { (char *) unit_path };
 
         return hashmap_get(agent->unit_infos, &key);
 }
