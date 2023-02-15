@@ -19,3 +19,26 @@ JobState job_state_from_string(const char *s) {
         }
         return JOB_INVALID;
 }
+
+static const char * const unit_active_state_table[_UNIT_ACTIVE_STATE_MAX] = {
+        [UNIT_ACTIVE] = "active",           [UNIT_RELOADING] = "reloading",
+        [UNIT_INACTIVE] = "inactive",       [UNIT_FAILED] = "failed",
+        [UNIT_ACTIVATING] = "activating",   [UNIT_DEACTIVATING] = "deactivating",
+        [UNIT_MAINTENANCE] = "maintenance",
+};
+
+const char *active_state_to_string(UnitActiveState s) {
+        if (s >= 0 && s < _UNIT_ACTIVE_STATE_MAX) {
+                return unit_active_state_table[s];
+        }
+        return "invalid";
+}
+
+UnitActiveState active_state_from_string(const char *s) {
+        for (int i = 0; i < _UNIT_ACTIVE_STATE_MAX; i++) {
+                if (streq(unit_active_state_table[i], s)) {
+                        return i;
+                }
+        }
+        return _UNIT_ACTIVE_STATE_INVALID;
+}
