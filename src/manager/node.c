@@ -65,6 +65,10 @@ typedef struct {
         bool loaded;
 } UnitSubscriptions;
 
+typedef struct {
+        char *unit;
+} UnitSubscriptionsKey;
+
 static void unit_subscriptions_clear(void *item) {
         UnitSubscriptions *usub = item;
         free(usub->unit);
@@ -212,7 +216,7 @@ static int node_match_unit_properties_changed(sd_bus_message *m, void *userdata,
                 return 0;
         }
 
-        const UnitSubscriptions key = { (char *) unit, NULL, false };
+        const UnitSubscriptionsKey key = { (char *) unit };
         UnitSubscriptions *usubs = NULL;
 
         usubs = hashmap_get(node->unit_subscriptions, &key);
@@ -243,7 +247,7 @@ static int node_match_unit_new(sd_bus_message *m, void *userdata, UNUSED sd_bus_
                 return 0;
         }
 
-        const UnitSubscriptions key = { (char *) unit, NULL, false };
+        const UnitSubscriptionsKey key = { (char *) unit };
         UnitSubscriptions *usubs = NULL;
 
         usubs = hashmap_get(node->unit_subscriptions, &key);
@@ -274,7 +278,7 @@ static int node_match_unit_removed(sd_bus_message *m, void *userdata, UNUSED sd_
                 return 0;
         }
 
-        const UnitSubscriptions key = { (char *) unit, NULL, false };
+        const UnitSubscriptionsKey key = { (char *) unit };
         UnitSubscriptions *usubs = NULL;
 
         usubs = hashmap_get(node->unit_subscriptions, &key);
@@ -1007,7 +1011,7 @@ static void node_send_agent_subscribe_all(Node *node) {
 }
 
 void node_subscribe(Node *node, Subscription *sub) {
-        const UnitSubscriptions key = { (char *) sub->unit, NULL, false };
+        const UnitSubscriptionsKey key = { sub->unit };
         UnitSubscriptions *usubs = NULL;
 
         _cleanup_free_ UnitSubscription *usub = malloc0(sizeof(UnitSubscription));
@@ -1051,7 +1055,7 @@ void node_subscribe(Node *node, Subscription *sub) {
 }
 
 void node_unsubscribe(Node *node, Subscription *sub) {
-        UnitSubscriptions key = { (char *) sub->unit, NULL, false };
+        UnitSubscriptionsKey key = { sub->unit };
         UnitSubscriptions *usubs = NULL;
         UnitSubscription *usub = NULL;
         UnitSubscription *found = NULL;
