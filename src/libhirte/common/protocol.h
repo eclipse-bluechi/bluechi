@@ -1,5 +1,7 @@
 #pragma once
 
+#include "errno.h"
+
 #define HIRTE_DEFAULT_PORT 808 /* TODO: Pick a better default */
 
 #define HIRTE_DBUS_NAME "org.containers.hirte"
@@ -61,6 +63,21 @@ typedef enum JobState {
 
 const char *job_state_to_string(JobState s);
 JobState job_state_from_string(const char *s);
+
+typedef enum UnitActiveState {
+        UNIT_ACTIVE,
+        UNIT_RELOADING,
+        UNIT_INACTIVE,
+        UNIT_FAILED,
+        UNIT_ACTIVATING,
+        UNIT_DEACTIVATING,
+        UNIT_MAINTENANCE,
+        _UNIT_ACTIVE_STATE_MAX,
+        _UNIT_ACTIVE_STATE_INVALID = -EINVAL,
+} UnitActiveState;
+
+const char *active_state_to_string(UnitActiveState s);
+UnitActiveState active_state_from_string(const char *s);
 
 /* Agent to Hirte heartbeat signals */
 
