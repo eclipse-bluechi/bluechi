@@ -235,15 +235,16 @@ static int node_match_job_done(UNUSED sd_bus_message *m, UNUSED void *userdata, 
         Node *node = userdata;
         Manager *manager = node->manager;
         uint32_t hirte_job_id = 0;
+        uint64_t job_time_millis = 0;
         const char *result = NULL;
 
-        int r = sd_bus_message_read(m, "us", &hirte_job_id, &result);
+        int r = sd_bus_message_read(m, "ust", &hirte_job_id, &result, &job_time_millis);
         if (r < 0) {
                 hirte_log_errorf("Invalid JobDone signal: %s", strerror(-r));
                 return 0;
         }
 
-        manager_finish_job(manager, hirte_job_id, result);
+        manager_finish_job(manager, hirte_job_id, result, job_time_millis);
         return 1;
 }
 

@@ -48,7 +48,7 @@ Node *manager_add_node(Manager *manager, const char *name);
 
 bool manager_add_job(Manager *manager, Job *job);
 void manager_remove_job(Manager *manager, Job *job, const char *result);
-void manager_finish_job(Manager *manager, uint32_t job_id, const char *result);
+void manager_finish_job(Manager *manager, uint32_t job_id, const char *result, uint64_t job_time_millis);
 void manager_job_state_changed(Manager *manager, uint32_t job_id, const char *state);
 
 void manager_remove_monitor(Manager *manager, Monitor *monitor);

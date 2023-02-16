@@ -2,8 +2,9 @@
 #include <limits.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 
-#include "parse-util.h"
+#include "util.h"
 
 bool parse_long(const char *in, long *ret) {
         const int base = 10;
@@ -38,4 +39,15 @@ bool parse_port(const char *in, uint16_t *ret) {
 
         *ret = (uint16_t) l;
         return true;
+}
+
+int64_t get_time_millis() {
+        struct timespec now;
+        clock_gettime(CLOCK_REALTIME, &now);
+        int64_t now_millis = now.tv_sec*1000 + now.tv_nsec*1e-6;
+        return now_millis;
+}
+
+int64_t finalize_time_interval_millis(int64_t start_time_millis) {
+        return get_time_millis() - start_time_millis;
 }

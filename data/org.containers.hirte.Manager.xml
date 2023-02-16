@@ -27,6 +27,7 @@
       <arg name="nodeName" type="s" />
       <arg name="unit" type="s" />
       <arg name="result" type="s" />
+      <arg name="job_time_millis" type="t" />
     </signal>
 
     <property name="Nodes" type="as" access="read" />

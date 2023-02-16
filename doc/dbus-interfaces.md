@@ -65,7 +65,7 @@ easily track when they change.
 
     Emitted each time a new hirte job is queued.
 
-  * `JobRemoved(u id, o job, s nodeName, s unit, s result)`
+  * `JobRemoved(u id, o job, s nodeName, s unit, s result, t job_time_millis)`
 
     Emitted each time a new job is dequeued or the underlying systemd
     job finished. `result` is one of: `done`, `failed`, `cancelled`,
@@ -299,7 +299,7 @@ by the manager to affect change on the node.
 
 * Signals:
 
-  * `JobDone(u id, s result)`
+  * `JobDone(u id, s result, t job_time_millis)`
 
     Mirrors of the job signals in the manager and used to
     forward state changes from systemd to the manager.

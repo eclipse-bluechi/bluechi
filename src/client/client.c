@@ -106,6 +106,7 @@ Client *new_client(char *op, int opargc, char **opargv) {
         client->opargc = opargc;
         client->opargv = opargv;
         client->printer = get_simple_printer();
+        client->job_time_millis = 0;
 
         return client;
 }
@@ -197,6 +198,7 @@ static sd_bus_message *wait_for_job(Client *client, char *object_path) {
 static int match_job_removed_signal(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *error) {
         const char *job_path = NULL, *result = NULL, *node = NULL, *unit = NULL;
         uint32_t id = 0;
+        uint64_t job_time_millis = 0;
         int r = 0;
         Client *client = (Client *) userdata;
 
@@ -204,7 +206,7 @@ static int match_job_removed_signal(sd_bus_message *m, void *userdata, UNUSED sd
                 return 0;
         }
 
-        r = sd_bus_message_read(m, "uosss", &id, &job_path, &node, &unit, &result);
+        r = sd_bus_message_read(m, "uossst", &id, &job_path, &node, &unit, &result, &job_time_millis);
         if (r < 0) {
                 fprintf(stderr, "Can't parse job result\n");
                 return 0;
@@ -213,6 +215,7 @@ static int match_job_removed_signal(sd_bus_message *m, void *userdata, UNUSED sd
         (void) sd_bus_message_rewind(m, true);
 
         if (streq(client->pending_job_name, job_path)) {
+                client->job_time_millis = job_time_millis;
                 client->pending_job_result = sd_bus_message_ref(m);
                 return 1;
         }
@@ -281,7 +284,7 @@ int method_lifecycle_action_on(Client *client, char *node_name, char *unit, char
                 return r;
         }
 
-        printf("Unit %s %s operation result: %s\n", unit, client->op, result);
+        printf("Unit %s %s operation result: %s, took %ld ms\n", unit, client->op, result, client->job_time_millis);
 
         return r;
 }

@@ -18,6 +18,8 @@ struct Job {
 
         sd_bus_slot *export_slot;
 
+        uint64_t job_time_millis;
+
         LIST_FIELDS(Job, jobs);
 };
 

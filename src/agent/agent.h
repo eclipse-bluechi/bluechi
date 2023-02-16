@@ -20,6 +20,9 @@ struct SystemdRequest {
 
         sd_bus_message *message;
 
+        long request_start_millis;
+        long request_end_millis;
+
         void *userdata;
         free_func_t free_userdata;
 

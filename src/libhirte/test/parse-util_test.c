@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "libhirte/common/parse-util.h"
+#include "libhirte/common/util.h"
 
 
 #ifndef __FUNCTION_NAME__

@@ -18,6 +18,7 @@ struct Client {
 
         char *pending_job_name;
         sd_bus_message *pending_job_result;
+        uint64_t job_time_millis;
 
         Printer printer;
 };

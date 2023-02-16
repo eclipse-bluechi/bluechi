@@ -43,6 +43,7 @@
     <signal name="JobDone">
       <arg name="id" type="u" />
       <arg name="result" type="s" />
+      <arg name="job_time_millis" type="t" />
     </signal>
     <signal name="JobStateChanged">
       <arg name="id" type="u" />

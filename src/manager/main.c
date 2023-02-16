@@ -3,7 +3,7 @@
 #include <stdlib.h>
 
 #include "libhirte/common/opt.h"
-#include "libhirte/common/parse-util.h"
+#include "libhirte/common/util.h"
 #include "libhirte/ini/config.h"
 #include "libhirte/service/shutdown.h"
 

@@ -20,10 +20,11 @@ node = bus.get_proxy("org.containers.hirte",  node_path)
 
 loop = EventLoop()
 
-def job_removed(id, job_path, node_name, unit, result):
+def job_removed(id, job_path, node_name, unit, result, job_time):
     if job_path == my_job_path:
         run_time = (datetime.utcnow() - start_time).total_seconds()
-        print(f"Started '{unit}' on node '{node_name}' with result '{result}' in {run_time*1000:.1f} msec")
+        print(f"Started '{unit}' on node '{node_name}' with result '{result}' in {run_time*1000:.1f} msec, " 
+                + f"systemd job net time {job_time} msec")
         loop.quit()
 
 start_time = datetime.utcnow()

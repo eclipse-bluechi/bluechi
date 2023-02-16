@@ -6,7 +6,7 @@
 #include "libhirte/common/common.h"
 #include "libhirte/common/event-util.h"
 #include "libhirte/common/opt.h"
-#include "libhirte/common/parse-util.h"
+#include "libhirte/common/util.h"
 #include "libhirte/ini/config.h"
 #include "libhirte/log/log.h"
 #include "libhirte/service/shutdown.h"
@@ -15,6 +15,15 @@
 
 #define DEBUG_SYSTEMD_MESSAGES 0
 #define DEBUG_SYSTEMD_MESSAGES_CONTENT 0
+
+typedef struct {
+        int ref_count;
+
+        Agent *agent;
+        uint32_t hirte_job_id;
+
+        uint64_t job_start_millis;
+} AgentJobOp;
 
 struct JobTracker {
         char *job_object_path;
@@ -155,6 +164,10 @@ static void systemd_request_set_userdata(SystemdRequest *req, void *userdata, fr
 
 static bool systemd_request_start(SystemdRequest *req, sd_bus_message_handler_t callback) {
         Agent *agent = req->agent;
+        AgentJobOp *op = req->userdata;
+        if (op != NULL) {
+                op->job_start_millis = get_time_millis();
+        }
 
         int r = sd_bus_call_async(
                         agent->systemd_dbus, &req->slot, req->message, callback, req, HIRTE_DEFAULT_DBUS_TIMEOUT);
@@ -475,14 +488,6 @@ static int agent_method_get_unit_properties(sd_bus_message *m, void *userdata, U
 
 /* Keep track of outstanding systemd job and connect it back to
    the originating hirte job id so we can proxy changes to it. */
-typedef struct {
-        int ref_count;
-
-        Agent *agent;
-        uint32_t hirte_job_id;
-} AgentJobOp;
-
-
 static AgentJobOp *agent_job_op_ref(AgentJobOp *op) {
         op->ref_count++;
         return op;
@@ -507,6 +512,7 @@ static AgentJobOp *agent_job_new(Agent *agent, uint32_t hirte_job_id) {
                 op->ref_count = 1;
                 op->agent = agent_ref(agent);
                 op->hirte_job_id = hirte_job_id;
+                op->job_start_millis = 0;
         }
         return op;
 }
@@ -523,9 +529,10 @@ static void agent_job_done(UNUSED sd_bus_message *m, const char *result, void *u
                         INTERNAL_AGENT_OBJECT_PATH,
                         INTERNAL_AGENT_INTERFACE,
                         "JobDone",
-                        "us",
+                        "ust",
                         op->hirte_job_id,
-                        result);
+                        result,
+                        finalize_time_interval_millis(op->job_start_millis));
         if (r < 0) {
                 hirte_log_errorf("Failed to emit JobDone: %s", strerror(-r));
         }
@@ -703,7 +710,8 @@ static const sd_bus_vtable internal_agent_vtable[] = {
         SD_BUS_METHOD("ReloadUnit", "ssu", "", agent_method_reload_unit, 0),
         SD_BUS_METHOD("Subscribe", "s", "", agent_method_subscribe, 0),
         SD_BUS_METHOD("Unsubscribe", "s", "", agent_method_unsubscribe, 0),
-        SD_BUS_SIGNAL_WITH_NAMES("JobDone", "us", SD_BUS_PARAM(id) SD_BUS_PARAM(result), 0),
+        SD_BUS_SIGNAL_WITH_NAMES(
+                        "JobDone", "ust", SD_BUS_PARAM(id) SD_BUS_PARAM(result) SD_BUS_PARAM(job_time_millis), 0),
         SD_BUS_SIGNAL_WITH_NAMES("JobStateChanged", "us", SD_BUS_PARAM(id) SD_BUS_PARAM(state), 0),
         SD_BUS_SIGNAL_WITH_NAMES(
                         "UnitPropertiesChanged", "sa{sv}", SD_BUS_PARAM(unit) SD_BUS_PARAM(properties), 0),

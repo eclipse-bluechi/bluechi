@@ -46,6 +46,7 @@ Job *job_new(Node *node, const char *unit, const char *type) {
         job->state = JOB_WAITING;
         job->id = ++next_id;
         job->node = node;
+        job->job_time_millis = 0;
         LIST_INIT(jobs, job);
 
         job->type = strdup(type);

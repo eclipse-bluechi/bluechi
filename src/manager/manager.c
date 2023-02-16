@@ -3,7 +3,7 @@
 #include "libhirte/bus/bus.h"
 #include "libhirte/bus/utils.h"
 #include "libhirte/common/common.h"
-#include "libhirte/common/parse-util.h"
+#include "libhirte/common/util.h"
 #include "libhirte/ini/config.h"
 #include "libhirte/log/log.h"
 #include "libhirte/service/shutdown.h"
@@ -247,12 +247,13 @@ void manager_remove_job(Manager *manager, Job *job, const char *result) {
                         HIRTE_MANAGER_OBJECT_PATH,
                         MANAGER_INTERFACE,
                         "JobRemoved",
-                        "uosss",
+                        "uossst",
                         job->id,
                         job->object_path,
                         job->node->name,
                         job->unit,
-                        result);
+                        result,
+                        job->job_time_millis);
         if (r < 0) {
                 hirte_log_errorf("Warning: Failed to send JobRemoved event: %s", strerror(-r));
                 /* We can't really return a failure here */
@@ -274,10 +275,11 @@ void manager_job_state_changed(Manager *manager, uint32_t job_id, const char *st
 }
 
 
-void manager_finish_job(Manager *manager, uint32_t job_id, const char *result) {
+void manager_finish_job(Manager *manager, uint32_t job_id, const char *result, uint64_t job_time_millis) {
         Job *job = NULL;
         LIST_FOREACH(jobs, job, manager->jobs) {
                 if (job->id == job_id) {
+                        job->job_time_millis = job_time_millis;
                         manager_remove_job(manager, job, result);
                         break;
                 }
@@ -752,9 +754,9 @@ static const sd_bus_vtable manager_vtable[] = {
         SD_BUS_SIGNAL_WITH_NAMES("JobNew", "uo", SD_BUS_PARAM(id) SD_BUS_PARAM(job), 0),
         SD_BUS_SIGNAL_WITH_NAMES(
                         "JobRemoved",
-                        "uosss",
+                        "uossst",
                         SD_BUS_PARAM(id) SD_BUS_PARAM(job) SD_BUS_PARAM(node) SD_BUS_PARAM(unit)
-                                        SD_BUS_PARAM(result),
+                                        SD_BUS_PARAM(result) SD_BUS_PARAM(job_time_millis),
                         0),
         SD_BUS_VTABLE_END
 };
