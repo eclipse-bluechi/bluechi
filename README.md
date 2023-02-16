@@ -1,13 +1,14 @@
 # Hirte
 
-Hirte is a service orchestrator tool intended for multi-node devices (e.g.: edge devices) clusters
-with a predefined number of nodes and with a focus on highly regulated environment such as those requiring functional
-safety (for example in cars).
+Hirte is a service orchestrator tool intended for multi-node device clusters with a predefined number of nodes and with
+a focus on highly regulated environments such as those requiring functional safety. Potential use cases can be found in
+domains such as transportation, where services need to be orchestrated across different edge devices managed in clusters
+but traditional orchestration tools are not compliant with regulatory requirements.
 
-Hirte is relying on [systemd](https://github.com/systemd/systemd) and its D-Bus API, which
-it extends for multi-node use case.
+Hirte is relying on [systemd](https://github.com/systemd/systemd) and its D-Bus API, which it extends for multi-node use
+case.
 
-Hirte can also be used to orchestrate containers using [podman](https://github.com/containers/podman/) and its ability
+Hirte can also be used to orchestrate containers using [Podman](https://github.com/containers/podman/) and its ability
 to generate systemd service configuration to run a container.
 
 ## How to contribute
@@ -16,18 +17,17 @@ to generate systemd service configuration to run a container.
 
 Patches are welcome!
 
-Please submit patches to [github.com:containers/hirte](https://github.com/containers/hirte).
-More information about the development can be found in [README.developer.md](README.developer.md).
+Please submit patches to [github.com/containers/hirte](https://github.com/containers/hirte). More information about the
+development can be found in [README.developer.md](README.developer.md).
 
-If you are not familiar with the development process you can read about it in
-[Get started with GitHub](https://docs.github.com/en/get-started).
+You can read [Get started with GitHub](https://docs.github.com/en/get-started) if you are not familiar with the
+development process to learn more about it.
 
 ### Found a bug or documentation issue?
 
-To submit a bug or suggest an enhancement for hirte please use
-[GitHub issues](https://github.com/containers/hirte/issues).
+To submit a bug or suggest an enhancement please use [GitHub issues](https://github.com/containers/hirte/issues).
 
 ## Still need help?
 
-If you have any other questions, please join
-[CentOS Automotive SIG mailing list](https://lists.centos.org/mailman/listinfo/centos-automotive-sig/) and ask there.
+Please join the [CentOS Automotive SIG mailing list](https://lists.centos.org/mailman/listinfo/centos-automotive-sig/)
+if you have any other questions.
