@@ -46,7 +46,7 @@ static const sd_bus_vtable node_vtable[] = {
         SD_BUS_METHOD("StopUnit", "ss", "o", node_method_stop_unit, 0),
         SD_BUS_METHOD("RestartUnit", "ss", "o", node_method_restart_unit, 0),
         SD_BUS_METHOD("ReloadUnit", "ss", "o", node_method_reload_unit, 0),
-        SD_BUS_METHOD("GetUnitProperties", "s", "a{sv}", node_method_get_unit_properties, 0),
+        SD_BUS_METHOD("GetUnitProperties", "ss", "a{sv}", node_method_get_unit_properties, 0),
         SD_BUS_PROPERTY("Name", "s", node_property_get_nodename, 0, SD_BUS_VTABLE_PROPERTY_CONST),
         SD_BUS_PROPERTY("Status", "s", node_property_get_status, 0, SD_BUS_VTABLE_PROPERTY_EMITS_CHANGE),
         SD_BUS_VTABLE_END
@@ -209,8 +209,9 @@ static int node_match_job_state_changed(
 static int node_match_unit_properties_changed(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *error) {
         Node *node = userdata;
         const char *unit = NULL;
+        const char *interface = NULL;
 
-        int r = sd_bus_message_read(m, "s", &unit);
+        int r = sd_bus_message_read(m, "ss", &unit, &interface);
         if (r >= 0) {
                 r = sd_bus_message_rewind(m, false);
         }
@@ -230,7 +231,7 @@ static int node_match_unit_properties_changed(sd_bus_message *m, void *userdata,
         UnitSubscription *usub = NULL;
         LIST_FOREACH(subs, usub, usubs->subs) {
                 Subscription *sub = usub->sub;
-                int r = monitor_emit_unit_property_changed(sub->monitor, node->name, sub->unit, m);
+                int r = monitor_emit_unit_property_changed(sub->monitor, node->name, sub->unit, interface, m);
                 if (r < 0) {
                         hirte_log_error("Failed to emit UnitPropertyChanged signal");
                 }
@@ -849,9 +850,10 @@ static int node_method_get_unit_properties_callback(
 
 static int node_method_get_unit_properties(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error) {
         Node *node = userdata;
+        const char *interface = NULL;
         const char *unit = NULL;
 
-        int r = sd_bus_message_read(m, "s", &unit);
+        int r = sd_bus_message_read(m, "ss", &interface, &unit);
         if (r < 0) {
                 return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "Internal Error");
         }
@@ -866,7 +868,7 @@ static int node_method_get_unit_properties(sd_bus_message *m, void *userdata, UN
                 return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "Internal error");
         }
 
-        r = sd_bus_message_append(req->message, "s", unit);
+        r = sd_bus_message_append(req->message, "ss", interface, unit);
         if (r < 0) {
                 return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "Internal error");
         }

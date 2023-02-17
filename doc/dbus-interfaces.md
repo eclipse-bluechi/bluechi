@@ -88,7 +88,7 @@ Object path: `/org/containers/hirte/monitor/$id`
 
 * Signals:
 
-  * `UnitPropertiesChanged(s node, s unit, a{sv} props)`
+  * `UnitPropertiesChanged(s node, s unit, s interface, a{sv} props)`
 
     Whenever the properties changes for any of the units that are currently subscribed to changes, this signal is
     emitted. Additionally it is emitted initially once for each matched unit. This allows you to easily monitor and get
@@ -152,7 +152,7 @@ Object path: `/org/containers/hirte/node/$name`
 
     Kill a unit on the node. Arguments and semantics are equivalent to the systemd `KillUnit()` method.
 
-  * `GetUnitProperties(in name, out a{sv} props)`
+  * `GetUnitProperties(in interface, in name, out a{sv} props)`
 
     Returns the current properties for for a named unit on the node. The returned properties are the same as you would
     get in the systemd properties apis, but filtered to the following subset: `LoadState`, `ActiveState`, `SubState`,
@@ -275,7 +275,7 @@ This is the main interface that the node implements and that is used by the mana
 
     Forwards the job state property changes from systemd to the manager.
 
-  * `UnitPropertiesChanged(s unit, a{sv} props)`
+  * `UnitPropertiesChanged(s unit, s interface, a{sv} props)`
 
     This is equivalent to the Monitor signal, but for this node only. The same set of properties described there is
     supported here.

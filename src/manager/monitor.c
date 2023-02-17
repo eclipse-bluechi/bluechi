@@ -57,8 +57,8 @@ static const sd_bus_vtable monitor_vtable[] = {
         SD_BUS_METHOD("Close", "", "", monitor_method_close, 0),
         SD_BUS_SIGNAL_WITH_NAMES(
                         "UnitPropertiesChanged",
-                        "ssa{sv}",
-                        SD_BUS_PARAM(node) SD_BUS_PARAM(unit) SD_BUS_PARAM(properties),
+                        "sssa{sv}",
+                        SD_BUS_PARAM(node) SD_BUS_PARAM(unit) SD_BUS_PARAM(interface) SD_BUS_PARAM(properties),
                         0),
         SD_BUS_SIGNAL_WITH_NAMES("UnitNew", "ss", SD_BUS_PARAM(node) SD_BUS_PARAM(unit), 0),
         SD_BUS_SIGNAL_WITH_NAMES(
@@ -233,7 +233,8 @@ static int monitor_method_unsubscribe(sd_bus_message *m, void *userdata, UNUSED 
         return sd_bus_reply_method_return(m, "");
 }
 
-int monitor_emit_unit_property_changed(Monitor *monitor, const char *node, const char *unit, sd_bus_message *m) {
+int monitor_emit_unit_property_changed(
+                Monitor *monitor, const char *node, const char *unit, const char *interface, sd_bus_message *m) {
         Manager *manager = monitor->manager;
 
         _cleanup_sd_bus_message_ sd_bus_message *sig = NULL;
@@ -243,15 +244,16 @@ int monitor_emit_unit_property_changed(Monitor *monitor, const char *node, const
                 return r;
         }
 
-        r = sd_bus_message_append(sig, "ss", node, unit);
+        r = sd_bus_message_append(sig, "sss", node, unit, interface);
         if (r < 0) {
                 return r;
         }
 
-        r = sd_bus_message_skip(m, "s"); // Skip unit
+        r = sd_bus_message_skip(m, "ss"); // Skip unit & iface
         if (r < 0) {
                 return r;
         }
+
         r = sd_bus_message_copy(sig, m, false);
         if (r < 0) {
                 return r;

@@ -10,9 +10,7 @@ def print_dict_changes(old, new):
     for key in sorted(set(old.keys()) | set(new.keys())):
         if key not in old:
             print(f" {key}: {new[key]}")
-        elif key not in new:
-            print(f" {key}: deleted")
-        else:
+        elif key in new:
             o = old[key]
             n = new[key]
             if o != n:
@@ -37,14 +35,14 @@ monitor = bus.get_proxy("org.containers.hirte",  monitor_path)
 
 old_values = {}
 
-def unit_property_changed(node, unit, props):
+def unit_property_changed(node, unit, interface, props):
     old_value = old_values.get(node, {})
     new_value = get_native(props)
 
-    print(f"Unit {unit} on node {node} changed:")
+    print(f"Unit {unit} on node {node} changed for iface {interface}:")
     print_dict_changes(old_value, new_value)
 
-    old_values[node] = new_value;
+    old_values[node] = { **old_value, **new_value};
 
 def unit_new(node, unit, reason):
     print(f"New Unit {unit} on node {node}, reason: {reason}")

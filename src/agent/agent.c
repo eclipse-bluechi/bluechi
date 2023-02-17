@@ -527,14 +527,22 @@ static int get_unit_properties_got_properties(sd_bus_message *m, void *userdata,
 static int get_unit_properties_got_unit(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error) {
         _cleanup_systemd_request_ SystemdRequest *req = userdata;
         Agent *agent = req->agent;
+        const char *interface = NULL;
+        const char *unit = NULL;
 
         if (sd_bus_message_is_method_error(m, NULL)) {
                 /* Forward error */
                 return sd_bus_reply_method_error(req->request_message, sd_bus_message_get_error(m));
         }
 
+        (void) sd_bus_message_rewind(req->request_message, true);
+        int r = sd_bus_message_read(req->request_message, "ss", &interface, &unit);
+        if (r < 0) {
+                return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "Internal Error");
+        }
+
         const char *unit_path = NULL;
-        int r = sd_bus_message_read(m, "o", &unit_path);
+        r = sd_bus_message_read(m, "o", &unit_path);
         if (r < 0) {
                 return sd_bus_reply_method_errorf(req->request_message, SD_BUS_ERROR_FAILED, "Internal Error");
         }
@@ -545,7 +553,7 @@ static int get_unit_properties_got_unit(sd_bus_message *m, void *userdata, UNUSE
                 return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "Internal error");
         }
 
-        r = sd_bus_message_append(req2->message, "s", SYSTEMD_UNIT_IFACE);
+        r = sd_bus_message_append(req2->message, "s", interface);
         if (r < 0) {
                 return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "Internal error");
         }
@@ -560,13 +568,15 @@ static int get_unit_properties_got_unit(sd_bus_message *m, void *userdata, UNUSE
 
 static int agent_method_get_unit_properties(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error) {
         Agent *agent = userdata;
+        const char *interface = NULL;
         const char *unit = NULL;
 
-        int r = sd_bus_message_read(m, "s", &unit);
+        int r = sd_bus_message_read(m, "ss", &interface, &unit);
         if (r < 0) {
                 return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "Internal Error");
         }
 
+        /* TODO: Avoid a roundtrip here by locally escaping the unit path */
         _cleanup_systemd_request_ SystemdRequest *req = agent_create_request(agent, m, "GetUnit");
         if (req == NULL) {
                 return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "Internal error");
@@ -858,7 +868,7 @@ static int agent_method_unsubscribe(sd_bus_message *m, void *userdata, UNUSED sd
 static const sd_bus_vtable internal_agent_vtable[] = {
         SD_BUS_VTABLE_START(0),
         SD_BUS_METHOD("ListUnits", "", UNIT_INFO_STRUCT_ARRAY_TYPESTRING, agent_method_list_units, 0),
-        SD_BUS_METHOD("GetUnitProperties", "s", "a{sv}", agent_method_get_unit_properties, 0),
+        SD_BUS_METHOD("GetUnitProperties", "ss", "a{sv}", agent_method_get_unit_properties, 0),
         SD_BUS_METHOD("StartUnit", "ssu", "", agent_method_start_unit, 0),
         SD_BUS_METHOD("StopUnit", "ssu", "", agent_method_stop_unit, 0),
         SD_BUS_METHOD("RestartUnit", "ssu", "", agent_method_restart_unit, 0),
@@ -868,7 +878,10 @@ static const sd_bus_vtable internal_agent_vtable[] = {
         SD_BUS_SIGNAL_WITH_NAMES("JobDone", "us", SD_BUS_PARAM(id) SD_BUS_PARAM(result), 0),
         SD_BUS_SIGNAL_WITH_NAMES("JobStateChanged", "us", SD_BUS_PARAM(id) SD_BUS_PARAM(state), 0),
         SD_BUS_SIGNAL_WITH_NAMES(
-                        "UnitPropertiesChanged", "sa{sv}", SD_BUS_PARAM(unit) SD_BUS_PARAM(properties), 0),
+                        "UnitPropertiesChanged",
+                        "ssa{sv}",
+                        SD_BUS_PARAM(unit) SD_BUS_PARAM(iface) SD_BUS_PARAM(properties),
+                        0),
         SD_BUS_SIGNAL_WITH_NAMES("UnitNew", "ss", SD_BUS_PARAM(unit) SD_BUS_PARAM(reason), 0),
         SD_BUS_SIGNAL_WITH_NAMES(
                         "UnitStateChanged",
@@ -990,19 +1003,16 @@ static int agent_match_unit_changed(sd_bus_message *m, void *userdata, UNUSED sd
                 return r;
         }
 
-        /* Only handle Unit iface changes */
-        if (!streq(interface, "org.freedesktop.systemd1.Unit")) {
-                return 0;
-        }
-
         AgentUnitInfo *info = agent_get_unit_info(agent, sd_bus_message_get_path(m));
         if (info == NULL) {
                 return 0;
         }
 
-        bool state_changed = unit_info_update_state(info, m);
-        if (state_changed && info->subscribed) {
-                agent_emit_unit_state_changed(agent, info, "real");
+        if (streq(interface, "org.freedesktop.systemd1.Unit")) {
+                bool state_changed = unit_info_update_state(info, m);
+                if (state_changed && info->subscribed) {
+                        agent_emit_unit_state_changed(agent, info, "real");
+                }
         }
 
         if (!info->subscribed) {
@@ -1028,6 +1038,11 @@ static int agent_match_unit_changed(sd_bus_message *m, void *userdata, UNUSED sd
         }
 
         r = sd_bus_message_append(sig, "s", info->unit);
+        if (r < 0) {
+                return r;
+        }
+
+        r = sd_bus_message_append(sig, "s", interface);
         if (r < 0) {
                 return r;
         }
