@@ -49,6 +49,9 @@ def unit_property_changed(node, unit, props):
 def unit_new(node, unit, reason):
     print(f"New Unit {unit} on node {node}, reason: {reason}")
 
+def unit_state_changed(node, unit, active_state, substate, reason):
+    print(f"Unit {unit} on node {node}, changed to state: {active_state} ({substate}), reason: {reason}")
+
 def unit_removed(node, unit, reason):
     print(f"Removed Unit {unit} on node {node}, reason: {reason}")
     if node in old_values:
@@ -56,6 +59,7 @@ def unit_removed(node, unit, reason):
 
 monitor.UnitPropertiesChanged.connect(unit_property_changed)
 monitor.UnitNew.connect(unit_new)
+monitor.UnitStateChanged.connect(unit_state_changed)
 monitor.UnitRemoved.connect(unit_removed)
 
 monitor.Subscribe(node_name, unit_name);
