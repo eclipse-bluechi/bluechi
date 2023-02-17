@@ -1,0 +1,142 @@
+<?xml version='1.0'?> <!--*-nxml-*-->
+<!DOCTYPE refentry PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
+
+<refentry id="hirte-config">
+
+    <refentryinfo>
+        <title>hirte configuration</title>
+        <productname>hirte config</productname>
+
+        <authorgroup>
+            <author>
+                <contrib></contrib>
+                <firstname></firstname>
+                <surname></surname>
+                <email></email>
+            </author>
+        </authorgroup>
+    </refentryinfo>
+
+    <refmeta>
+        <refentrytitle>hirte-config</refentrytitle>
+        <manvolnum>5</manvolnum>
+    </refmeta>
+
+    <refnamediv>
+        <refname>hirte-config</refname>
+        <refpurpose>Configuration file description for hirte</refpurpose>
+    </refnamediv>
+
+    <refsect1>
+        <title>Description</title>
+
+        <para>
+            The basic file definition used to bootstrap hirte.
+        </para>
+    </refsect1>
+
+    <refsect1>
+        <title>File format</title>
+
+        <para>
+            The hirte configuration file is using the .ini file format.
+        </para>
+
+        <refsect2>
+            <title>[Manager]</title>
+
+            <para>
+                All fields to bootstrap the hirte manager are contained in the [Manager] group.
+            </para>
+            <para>
+                The following keys can be present in this group:
+            </para>
+            <variablelist>
+                <varlistentry>
+                    <term><option>Port</option> (uint16_t)</term>
+                    <listitem>
+                        <para>
+                            The port the manager listens on to establish connections with the hirte-agents.
+                        </para>
+                    </listitem>
+                </varlistentry>
+
+                <varlistentry>
+                    <term><option>Nodes</option> (string)</term>
+                    <listitem>
+                        <para>
+                            A comma separated list of unique hirte-agent names. These are used as a whitelist to validate if the registering
+                            hirte-agent is allowed to connect.
+                        </para>
+                    </listitem>
+                </varlistentry>
+            </variablelist>
+        </refsect2>
+
+        <refsect2>
+            <title>[Logging]</title>
+
+            <para>
+                Fields in the [Logging] group define the logging behavior of hirte. These settings are overridden by the environment variables for
+                logging.
+            </para>
+            <para>
+                The following keys can be present in this group:
+            </para>
+            <variablelist>
+                <varlistentry>
+                    <term><option>Level</option> (string)</term>
+                    <listitem>
+                        <para> The level used for logging. Supported values are: </para>
+                        <para>
+                            <option>DEBUG</option>, <option>INFO</option>, <option>WARN</option>, <option>ERROR</option>
+                        </para>
+                    </listitem>
+                </varlistentry>
+
+                <varlistentry>
+                    <term><option>Target</option> (string)</term>
+                    <listitem>
+                        <para> The target where logs are written to. Supported values are: </para>
+                        <para>
+                            <option>stderr</option> , <option>journald</option>
+                        </para>
+                    </listitem>
+                </varlistentry>
+
+                <varlistentry>
+                    <term><option>Quiet</option> (string)</term>
+                    <listitem>
+                        <para> If true, this flag prevents any logs to be written. </para>
+                    </listitem>
+                </varlistentry>
+            </variablelist>
+        </refsect2>
+    </refsect1>
+    <refsect1>
+        <title>Example</title>
+        <programlisting>
+[Manager]
+Port=2020
+Nodes=agent-007,agent-123
+
+[Logging]
+Level=DEBUG
+Target=journald
+Quiet=false
+        </programlisting>
+    </refsect1>
+
+    <refsect1>
+        <title>See also</title>
+
+        <para>
+            <citerefentry>
+                <refentrytitle>hirte</refentrytitle>
+                <manvolnum>1</manvolnum>
+            </citerefentry>
+        </para>
+
+    </refsect1>
+
+</refentry>

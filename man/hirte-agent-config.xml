@@ -1,0 +1,151 @@
+<?xml version='1.0'?> <!--*-nxml-*-->
+<!DOCTYPE refentry PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
+
+<refentry id="hirte-agent-config">
+
+    <refentryinfo>
+        <title>hirte-agent configuration</title>
+        <productname>hirte-agent config</productname>
+
+        <authorgroup>
+            <author>
+                <contrib></contrib>
+                <firstname></firstname>
+                <surname></surname>
+                <email></email>
+            </author>
+        </authorgroup>
+    </refentryinfo>
+
+    <refmeta>
+        <refentrytitle>hirte-agent-config</refentrytitle>
+        <manvolnum>5</manvolnum>
+    </refmeta>
+
+    <refnamediv>
+        <refname>hirte-agent-config</refname>
+        <refpurpose>Configuration file description for hirte-agent</refpurpose>
+    </refnamediv>
+
+    <refsect1>
+        <title>Description</title>
+
+        <para>
+            The basic file definition used to bootstrap hirte-agent.
+        </para>
+    </refsect1>
+
+    <refsect1>
+        <title>File format</title>
+
+        <para>
+            The hirte-agent configuration file is using the .ini file format.
+        </para>
+
+        <refsect2>
+            <title>[Node]</title>
+
+            <para>
+                All fields to bootstrap the hirte-agent are contained in the [Node] group.
+            </para>
+            <para>
+                The following keys can be present in this group:
+            </para>
+            <variablelist>
+                <varlistentry>
+                    <term><option>Name</option> (string)</term>
+                    <listitem>
+                        <para>
+                            The unique name of this agent.
+                        </para>
+                    </listitem>
+                </varlistentry>
+
+                <varlistentry>
+                    <term><option>Host</option> (string)</term>
+                    <listitem>
+                        <para>
+                            The host of the hirte manager to connect to. Must be a valid IPv4 or IPv6.
+                        </para>
+                    </listitem>
+                </varlistentry>
+
+                <varlistentry>
+                    <term><option>Port</option> (uint16_t)</term>
+                    <listitem>
+                        <para>
+                            The port of the hirte manager to connect to.
+                        </para>
+                    </listitem>
+                </varlistentry>
+            </variablelist>
+        </refsect2>
+
+        <refsect2>
+            <title>[Logging]</title>
+
+            <para>
+                Fields in the [Logging] group define the logging behavior of hirte-agent. These settings are overridden by the environment variables
+                for logging.
+            </para>
+            <para>
+                The following keys can be present in this group:
+            </para>
+            <variablelist>
+                <varlistentry>
+                    <term><option>Level</option> (string)</term>
+                    <listitem>
+                        <para> The level used for logging. Supported values are: </para>
+                        <para>
+                            <option>DEBUG</option>, <option>INFO</option>, <option>WARN</option>, <option>ERROR</option>
+                        </para>
+                    </listitem>
+                </varlistentry>
+
+                <varlistentry>
+                    <term><option>Target</option> (string)</term>
+                    <listitem>
+                        <para> The target where logs are written to. Supported values are: </para>
+                        <para>
+                            <option>stderr</option> , <option>journald</option>
+                        </para>
+                    </listitem>
+                </varlistentry>
+
+                <varlistentry>
+                    <term><option>Quiet</option> (string)</term>
+                    <listitem>
+                        <para> If true, this flag prevents any logs to be written. </para>
+                    </listitem>
+                </varlistentry>
+            </variablelist>
+        </refsect2>
+    </refsect1>
+    <refsect1>
+        <title>Example</title>
+        <programlisting>
+[Node]
+Name=agent-007
+Host=127.0.0.1
+Port=2020
+
+[Logging]
+Level=DEBUG
+Target=journald
+Quiet=false
+        </programlisting>
+    </refsect1>
+
+    <refsect1>
+        <title>See also</title>
+
+        <para>
+            <citerefentry>
+                <refentrytitle>hirte-agent</refentrytitle>
+                <manvolnum>1</manvolnum>
+            </citerefentry>
+        </para>
+
+    </refsect1>
+
+</refentry>

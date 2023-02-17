@@ -1,0 +1,101 @@
+<?xml version='1.0'?> <!--*-nxml-*-->
+<!DOCTYPE refentry PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
+
+<refentry id="hirtectl">
+
+    <refentryinfo>
+        <title>hirtectl</title>
+        <productname>hirtectl</productname>
+
+        <authorgroup>
+            <author>
+                <contrib></contrib>
+                <firstname></firstname>
+                <surname></surname>
+                <email></email>
+            </author>
+        </authorgroup>
+    </refentryinfo>
+
+    <refmeta>
+        <refentrytitle>hirtectl</refentrytitle>
+        <manvolnum>1</manvolnum>
+    </refmeta>
+
+    <refnamediv>
+        <refname>hirtectl</refname>
+        <refpurpose>Command line tool to interact with hirte</refpurpose>
+    </refnamediv>
+
+    <refsynopsisdiv>
+        <cmdsynopsis>
+            <command>hirtectl</command>
+            <arg choice="opt" rep="repeat">OPTION</arg>
+            <arg choice="req">COMMAND</arg>
+        </cmdsynopsis>
+    </refsynopsisdiv>
+
+    <refsect1>
+        <title>Description</title>
+
+        <para>
+            A simple command line tool that uses the public DBus API provided by the hirte manager to manage services on all connected hirte-agents
+            and retrieve information from them.
+        </para>
+
+    </refsect1>
+
+    <refsect1>
+        <title>Options</title>
+
+        <para>
+            The following options are understood.
+        </para>
+
+        <variablelist>
+            <varlistentry>
+                <term>
+                    <option>-h</option>
+                </term>
+                <term>
+                    <option>--help</option>
+                </term>
+
+                <listitem>
+                    <para>
+                        Show help options and exit.
+                    </para>
+                </listitem>
+            </varlistentry>
+        </variablelist>
+    </refsect1>
+
+    <refsect1>
+        <title>Commands</title>
+
+        <para>Commands for interacting with hirte:</para>
+
+        <variablelist>
+            <varlistentry>
+                <term>
+                    <option>hirtectl [start|stop|restart|reload] [hirte-agent] [systemd unit]</option>
+                </term>
+
+                <listitem>
+                    <para>Performs one of the listed lifecycle operations on the hirte-agents systemd unit. </para>
+                </listitem>
+            </varlistentry>
+
+            <varlistentry>
+                <term>
+                    <option>hirtectl list-units [hirte-agent]</option>
+                </term>
+
+                <listitem>
+                    <para>Fetches information about all systemd units on the hirte-agents. If [hirte-agent] is not specified, all agents are queried. </para>
+                </listitem>
+            </varlistentry>
+        </variablelist>
+    </refsect1>
+
+</refentry>
