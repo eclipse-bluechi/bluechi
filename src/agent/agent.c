@@ -185,6 +185,7 @@ static void unit_info_clear(void *item) {
         AgentUnitInfo *info = item;
         free(info->object_path);
         free(info->unit);
+        free(info->substate);
 }
 
 static uint64_t unit_info_hash(const void *item, uint64_t seed0, uint64_t seed1) {
@@ -197,6 +198,73 @@ static int unit_info_compare(const void *a, const void *b, UNUSED void *udata) {
         const AgentUnitInfo *info_b = b;
 
         return strcmp(info_a->object_path, info_b->object_path);
+}
+
+static const char *unit_info_get_substate(AgentUnitInfo *info) {
+        return info->substate ? info->substate : "invalid";
+}
+
+struct UpdateStateData {
+        UnitActiveState active_state;
+        const char *substate;
+};
+
+
+static int unit_info_update_state_cb(const char *key, const char *value_type, sd_bus_message *m, void *userdata) {
+        struct UpdateStateData *data = userdata;
+        const char *value = NULL;
+
+        if (!streq(key, "ActiveState") && !streq(key, "SubState") && !streq(value_type, "s")) {
+                return 2; /* skip */
+        }
+
+        int r = sd_bus_message_enter_container(m, SD_BUS_TYPE_VARIANT, value_type);
+        if (r < 0) {
+                return r;
+        }
+
+        r = sd_bus_message_read_basic(m, SD_BUS_TYPE_STRING, &value);
+        if (r < 0) {
+                return r;
+        }
+
+        if (streq(key, "ActiveState")) {
+                data->active_state = active_state_from_string(value);
+        } else if (streq(key, "SubState")) {
+                data->substate = value;
+        }
+
+        r = sd_bus_message_exit_container(m);
+        if (r < 0) {
+                return r;
+        }
+
+        return 0;
+}
+
+
+/* Updates stored unit state from property change, returns true if the state changes */
+static bool unit_info_update_state(AgentUnitInfo *info, sd_bus_message *m) {
+        struct UpdateStateData data = {
+                info->active_state,
+                unit_info_get_substate(info),
+        };
+        int r = bus_parse_properties_foreach(m, unit_info_update_state_cb, &data);
+        if (r < 0) {
+                return false;
+        }
+
+        bool changed = false;
+        if (data.active_state != info->active_state) {
+                info->active_state = data.active_state;
+                changed = true;
+        }
+        if (!streq(data.substate, unit_info_get_substate(info))) {
+                info->substate = strdup(data.substate);
+                changed = true;
+        }
+
+        return changed;
 }
 
 Agent *agent_new(void) {
@@ -371,7 +439,7 @@ static AgentUnitInfo *agent_ensure_unit_info(Agent *agent, const char *unit) {
                 return NULL;
         }
 
-        AgentUnitInfo v = { unit_path, unit_copy, false, false };
+        AgentUnitInfo v = { unit_path, unit_copy, false, false, -1, NULL };
 
         AgentUnitInfo *replaced = hashmap_set(agent->unit_infos, &v);
         if (replaced == NULL && hashmap_oom(agent->unit_infos)) {
@@ -677,6 +745,49 @@ static int agent_method_reload_unit(sd_bus_message *m, void *userdata, UNUSED sd
  ********** org.containers.hirte.internal.Agent.Subscribe ****************
  ************************************************************************/
 
+static void agent_emit_unit_new(Agent *agent, AgentUnitInfo *info, const char *reason) {
+        int r = sd_bus_emit_signal(
+                        agent->peer_dbus,
+                        INTERNAL_AGENT_OBJECT_PATH,
+                        INTERNAL_AGENT_INTERFACE,
+                        "UnitNew",
+                        "ss",
+                        info->unit,
+                        reason);
+        if (r < 0) {
+                hirte_log_warn("Failed to emit UnitNew");
+        }
+}
+
+static void agent_emit_unit_removed(Agent *agent, AgentUnitInfo *info) {
+        int r = sd_bus_emit_signal(
+                        agent->peer_dbus,
+                        INTERNAL_AGENT_OBJECT_PATH,
+                        INTERNAL_AGENT_INTERFACE,
+                        "UnitRemoved",
+                        "s",
+                        info->unit);
+        if (r < 0) {
+                hirte_log_warn("Failed to emit UnitRemoved");
+        }
+}
+
+static void agent_emit_unit_state_changed(Agent *agent, AgentUnitInfo *info, const char *reason) {
+        int r = sd_bus_emit_signal(
+                        agent->peer_dbus,
+                        INTERNAL_AGENT_OBJECT_PATH,
+                        INTERNAL_AGENT_INTERFACE,
+                        "UnitStateChanged",
+                        "ssss",
+                        info->unit,
+                        active_state_to_string(info->active_state),
+                        unit_info_get_substate(info),
+                        reason);
+        if (r < 0) {
+                hirte_log_warn("Failed to emit UnitStateChanged");
+        }
+}
+
 static int agent_method_subscribe(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error) {
         Agent *agent = userdata;
         const char *unit = NULL;
@@ -698,17 +809,10 @@ static int agent_method_subscribe(sd_bus_message *m, void *userdata, UNUSED sd_b
 
         if (info->loaded) {
                 /* The unit was already loaded, synthesize a UnitNew */
-                r = sd_bus_emit_signal(
-                                agent->peer_dbus,
-                                INTERNAL_AGENT_OBJECT_PATH,
-                                INTERNAL_AGENT_INTERFACE,
-                                "UnitNew",
-                                "ss",
-                                info->unit,
-                                "virtual");
-                if (r < 0) {
-                        hirte_log_warn("Failed to synthesize UnitNew");
-                        return r;
+                agent_emit_unit_new(agent, info, "virtual");
+
+                if (info->active_state != _UNIT_ACTIVE_STATE_INVALID) {
+                        agent_emit_unit_state_changed(agent, info, "virtual");
                 }
         }
 
@@ -757,6 +861,12 @@ static const sd_bus_vtable internal_agent_vtable[] = {
         SD_BUS_SIGNAL_WITH_NAMES(
                         "UnitPropertiesChanged", "sa{sv}", SD_BUS_PARAM(unit) SD_BUS_PARAM(properties), 0),
         SD_BUS_SIGNAL_WITH_NAMES("UnitNew", "ss", SD_BUS_PARAM(unit) SD_BUS_PARAM(reason), 0),
+        SD_BUS_SIGNAL_WITH_NAMES(
+                        "UnitStateChanged",
+                        "ssss",
+                        SD_BUS_PARAM(unit) SD_BUS_PARAM(active_state) SD_BUS_PARAM(substate)
+                                        SD_BUS_PARAM(reason),
+                        0),
         SD_BUS_SIGNAL_WITH_NAMES("UnitRemoved", "s", SD_BUS_PARAM(unit), 0),
         SD_BUS_SIGNAL_WITH_NAMES("Heartbeat", "s", SD_BUS_PARAM(agent_name), 0),
         SD_BUS_VTABLE_END
@@ -862,7 +972,6 @@ static int agent_match_job_changed(sd_bus_message *m, void *userdata, UNUSED sd_
         return 0;
 }
 
-
 static int agent_match_unit_changed(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error) {
         Agent *agent = userdata;
         const char *interface = NULL;
@@ -882,9 +991,19 @@ static int agent_match_unit_changed(sd_bus_message *m, void *userdata, UNUSED sd
                 return 0;
         }
 
+        bool state_changed = unit_info_update_state(info, m);
+        if (state_changed && info->subscribed) {
+                agent_emit_unit_state_changed(agent, info, "real");
+        }
+
         if (!info->subscribed) {
                 return 0;
         }
+
+        /* Rewind and skip to copy content again */
+        (void) sd_bus_message_rewind(m, true);
+        (void) sd_bus_message_skip(m, "s"); // re-skip interface
+
         /* Forward the property changes */
         _cleanup_sd_bus_message_ sd_bus_message *sig = NULL;
         r = sd_bus_message_new_signal(
@@ -926,21 +1045,12 @@ static int agent_match_unit_new(sd_bus_message *m, void *userdata, UNUSED sd_bus
         }
 
         info->loaded = true;
+        info->active_state = _UNIT_ACTIVE_STATE_INVALID;
+        info->substate = NULL;
 
         if (info->subscribed) {
                 /* Forward the event */
-                r = sd_bus_emit_signal(
-                                agent->peer_dbus,
-                                INTERNAL_AGENT_OBJECT_PATH,
-                                INTERNAL_AGENT_INTERFACE,
-                                "UnitNew",
-                                "ss",
-                                info->unit,
-                                "real");
-                if (r < 0) {
-                        hirte_log_warn("Failed to forward UnitNew");
-                        return r;
-                }
+                agent_emit_unit_new(agent, info, "real");
         }
 
         return 0;
@@ -962,20 +1072,12 @@ static int agent_match_unit_removed(sd_bus_message *m, void *userdata, UNUSED sd
         }
 
         info->loaded = false;
+        info->active_state = _UNIT_ACTIVE_STATE_INVALID;
+        info->substate = NULL;
 
         if (info->subscribed) {
                 /* Forward the event */
-                r = sd_bus_emit_signal(
-                                agent->peer_dbus,
-                                INTERNAL_AGENT_OBJECT_PATH,
-                                INTERNAL_AGENT_INTERFACE,
-                                "UnitRemoved",
-                                "s",
-                                info->unit);
-                if (r < 0) {
-                        hirte_log_warn("Failed to forward UnitRemoved");
-                        return r;
-                }
+                agent_emit_unit_removed(agent, info);
         }
 
         /* Maybe remove if unloaded and no other interest in it */
@@ -1041,9 +1143,11 @@ int agent_init_units(Agent *agent, sd_bus_message *m) {
                         return r;
                 }
 
+                // NOLINTBEGIN(cppcoreguidelines-init-variables)
                 const char *name, *desc, *load_state, *active_state, *sub_state, *follower, *object_path,
                                 *job_type, *job_object_path;
                 uint32_t job_id;
+                // NOLINTEND(cppcoreguidelines-init-variables)
 
                 r = sd_bus_message_read(
                                 m,
@@ -1066,6 +1170,8 @@ int agent_init_units(Agent *agent, sd_bus_message *m) {
                 if (info) {
                         assert(streq(info->object_path, object_path));
                         info->loaded = true;
+                        info->active_state = active_state_from_string(active_state);
+                        info->substate = strdup(sub_state);
                 }
 
                 r = sd_bus_message_exit_container(m);

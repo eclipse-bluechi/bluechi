@@ -63,6 +63,8 @@ typedef struct AgentUnitInfo {
         char *unit;
         bool subscribed;
         bool loaded;
+        UnitActiveState active_state;
+        char *substate;
 } AgentUnitInfo;
 
 
