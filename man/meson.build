@@ -3,7 +3,7 @@ xsltproc = find_program('xsltproc', required : want_man == 'true')
 want_man = want_man != 'false' and xsltproc.found()
 
 want_html = get_option('html')
-xmlto = find_program('xmlto', required : get_option('docbook_docs'))
+xmlto = find_program('xmlto', required : want_html == 'true')
 want_html = want_html != 'false' and xmlto.found()
 
 
