@@ -80,10 +80,17 @@ int hirte_log_to_stderr_with_location(
         timebuf[strftime(timebuf, sizeof(timebuf), "%H:%M:%S", localtime(&t))] = '\0';
 
         // clang-format off
-        fprintf(stderr, "%s %s\t%s:%s %s\tmsg=\"%s\", data=\"%s\"\n", 
-                timebuf, log_level_to_string(lvl), 
-                file, line, func,
-                msg, data);
+        if (data && *data) {
+                fprintf(stderr, "%s %s\t%s:%s %s\tmsg=\"%s\", data=\"%s\"\n",
+                        timebuf, log_level_to_string(lvl),
+                        file, line, func,
+                        msg, data);
+        } else {
+                fprintf(stderr, "%s %s\t%s:%s %s\tmsg=\"%s\"\n",
+                        timebuf, log_level_to_string(lvl),
+                        file, line, func,
+                        msg);
+        }
         // clang-format on
         return 0;
 }
