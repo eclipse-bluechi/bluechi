@@ -136,6 +136,22 @@ was accepted. It does not do much more at this point.
 
 ## Documentation
 
-For further documentation please refer to the [doc](./doc/) directory.
+For further documentation please refer to the [doc](./doc/) directory.  
 
 The target architecture for this project is described in [doc/arch](./doc/arch/)
+
+### Building MAN pages
+
+For building the MAN pages `xsltproc` is required:  
+
+```bash
+sudo dnf install libxslt
+```
+
+Building the MAN pages is disabled by default. To enable it, set the option `man` in  
+[meson_options.txt](./meson_options.txt) to `true` and clean the build directory via `make clean`. After executing a
+subsequent `meson install` the MAN pages are located in the `man/man*` directories.  
+
+To build the MAN pages and convert it to an HTML file, enable the option `html`in
+[meson_options.txt](./meson_options.txt) by setting its value to `true` and follow the same process as for the plain MAN
+pages.
