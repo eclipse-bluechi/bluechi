@@ -14,6 +14,7 @@
     <signal name="UnitPropertiesChanged">
       <arg name="node" type="s" />
       <arg name="unit" type="s" />
+      <arg name="interface" type="s" />
       <arg name="props" type="a{sv}" />
     </signal>
     <signal name="UnitStateChanged">

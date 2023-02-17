@@ -27,6 +27,7 @@
       <arg name="signal" type="i" direction="in" />
     </method>
     <method name="GetUnitProperties">
+      <arg name="interface" type="s" direction="in" />
       <arg name="name" type="s" direction="in" />
       <arg name="props" type="a{sv}" direction="out" />
     </method>
@@ -63,6 +64,7 @@
     </signal>
     <signal name="UnitPropertiesChanged">
       <arg name="unit" type="s" />
+      <arg name="interface" type="s" />
       <arg name="props" type="a{sv}" />
     </signal>
     <signal name="ProxyNew">
