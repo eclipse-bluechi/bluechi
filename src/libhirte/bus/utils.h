@@ -5,6 +5,11 @@
 
 #include "libhirte/common/common.h"
 
+/* return < 0 for error, 0 to continue, 1 to stop, 2 to continue and skip (if value was not consumed) */
+typedef int (*bus_property_cb)(const char *key, const char *value_type, sd_bus_message *m, void *userdata);
+
+int bus_parse_properties_foreach(sd_bus_message *m, bus_property_cb cb, void *userdata);
+
 int bus_parse_property_string(sd_bus_message *m, const char *name, const char **value);
 char *bus_path_escape(const char *str);
 
