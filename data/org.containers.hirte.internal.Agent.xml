@@ -48,6 +48,19 @@
       <arg name="id" type="u" />
       <arg name="state" type="s" />
     </signal>
+    <signal name="UnitNew">
+      <arg name="unit" type="s" />
+      <arg name="reason" type="s" />
+    </signal>
+    <signal name="UnitRemoved">
+      <arg name="unit" type="s" />
+    </signal>
+    <signal name="UnitStateChanged">
+      <arg name="unit" type="s" />
+      <arg name="active_state" type="s" />
+      <arg name="sub_state" type="s" />
+      <arg name="reason" type="s" />
+    </signal>
     <signal name="UnitPropertiesChanged">
       <arg name="unit" type="s" />
       <arg name="props" type="a{sv}" />
