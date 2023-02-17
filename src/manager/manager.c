@@ -70,25 +70,29 @@ void manager_unref(Manager *manager) {
         sd_bus_unrefp(&manager->api_bus);
 
         Node *node = NULL;
-        LIST_FOREACH(nodes, node, manager->nodes) {
+        Node *next_node = NULL;
+        LIST_FOREACH_SAFE(nodes, node, next_node, manager->nodes) {
                 node_unref(node);
         }
-        LIST_FOREACH(nodes, node, manager->anonymous_nodes) {
+        LIST_FOREACH_SAFE(nodes, node, next_node, manager->anonymous_nodes) {
                 node_unref(node);
         }
 
         Job *job = NULL;
-        LIST_FOREACH(jobs, job, manager->jobs) {
+        Job *next_job = NULL;
+        LIST_FOREACH_SAFE(jobs, job, next_job, manager->jobs) {
                 job_unref(job);
         }
 
         Subscription *sub = NULL;
-        LIST_FOREACH(all_subscriptions, sub, manager->all_subscriptions) {
+        Subscription *next_sub = NULL;
+        LIST_FOREACH_SAFE(all_subscriptions, sub, next_sub, manager->all_subscriptions) {
                 subscription_unref(sub);
         }
 
         Monitor *monitor = NULL;
-        LIST_FOREACH(monitors, monitor, manager->monitors) {
+        Monitor *next_monitor = NULL;
+        LIST_FOREACH_SAFE(monitors, monitor, next_monitor, manager->monitors) {
                 monitor_unref(monitor);
         }
 
