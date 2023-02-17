@@ -1,1 +1,20 @@
 option('api_bus', type: 'combo', choices: ['user', 'system'], value: 'user')
+
+option('man', type : 'combo', choices : ['true', 'false'],
+    value : 'false',
+    description : 'build and install man pages')
+option('html', type : 'combo', choices : ['true', 'false'],
+    value : 'false',
+    description : 'build and install html pages')
+option('docbook_docs', type : 'feature',
+    description : 'build documentation with xmlto',
+    value : 'auto',
+)
+option('xmlto_flags', type : 'array',
+    description : 'options to pass to xmlto',
+    value : [],
+)
+option('docdir', type : 'string',
+    description : 'documentation directory [$datadir/doc/hirte]',
+    value : '',
+)

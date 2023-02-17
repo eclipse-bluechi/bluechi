@@ -1,0 +1,186 @@
+<?xml version='1.0'?> <!--*-nxml-*-->
+<!DOCTYPE refentry PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
+
+<refentry id="hirte">
+
+    <refentryinfo>
+        <title>hirte</title>
+        <productname>hirte</productname>
+
+        <authorgroup>
+            <author>
+                <contrib></contrib>
+                <firstname></firstname>
+                <surname></surname>
+                <email></email>
+            </author>
+        </authorgroup>
+    </refentryinfo>
+
+    <refmeta>
+        <refentrytitle>hirte</refentrytitle>
+        <manvolnum>1</manvolnum>
+    </refmeta>
+
+    <refnamediv>
+        <refname>hirte</refname>
+        <refpurpose>The Manager in the hirte tool box</refpurpose>
+    </refnamediv>
+
+    <refsynopsisdiv>
+        <cmdsynopsis>
+            <command>hirte</command>
+            <arg choice="opt" rep="repeat">OPTION</arg>
+        </cmdsynopsis>
+    </refsynopsisdiv>
+
+    <refsect1>
+        <title>Description</title>
+
+        <para>
+            Hirte is a service orchestrator tool intended for multi-node devices (e.g.: edge devices) clusters with a predefined number of nodes and
+            with a focus on highly regulated environment such as those requiring functional safety (for example in cars).
+        </para>
+        <para>
+            The hirte manager offers its public API on the local DBus and uses the DBus APIs provided by all connected hirte-agents to manage systemd
+            services on those remote systems.
+        </para>
+
+    </refsect1>
+
+    <refsect1>
+        <title>Options</title>
+
+        <para>
+            The following options are understood.
+        </para>
+
+        <variablelist>
+            <varlistentry>
+                <term>
+                    <option>-h</option>
+                </term>
+                <term>
+                    <option>--help</option>
+                </term>
+
+                <listitem>
+                    <para>
+                        Show help options and exit.
+                    </para>
+                </listitem>
+            </varlistentry>
+
+            <varlistentry>
+                <term>
+                    <option>-p</option>
+                </term>
+                <term>
+                    <option>--port</option>
+                </term>
+
+                <listitem>
+                    <para>
+                        The port on which hirte is listening for and setting up connections with hirte-agents. This option will overwrite the port
+                        defined in the configuration file.
+                    </para>
+                </listitem>
+            </varlistentry>
+
+            <varlistentry>
+                <term>
+                    <option>-c</option>
+                </term>
+                <term>
+                    <option>--config</option>
+                </term>
+
+                <listitem>
+                    <para>
+                        Path to the configuration file
+                    </para>
+                </listitem>
+            </varlistentry>
+        </variablelist>
+    </refsect1>
+
+    <refsect1>
+        <title>File formats</title>
+
+        <para>File formats that are used by hirte:</para>
+
+        <variablelist>
+            <varlistentry>
+                <term>
+                    <citerefentry>
+                        <refentrytitle>hirte-config</refentrytitle>
+                        <manvolnum>5</manvolnum>
+                    </citerefentry>
+                </term>
+
+                <listitem>
+                    <para>
+                        Configuration file for bootstrapping hirte.
+                    </para>
+                </listitem>
+            </varlistentry>
+        </variablelist>
+    </refsect1>
+
+    <refsect1>
+        <title>Environment</title>
+
+        <para>
+            The following environment variables are used by hirte-agent. These are overriding the settings from the configuration file as well as the
+            CLI options.
+        </para>
+
+        <variablelist>
+            <varlistentry>
+                <term>
+                    <envar>HIRTE_LOG_LEVEL</envar>
+                </term>
+
+                <listitem>
+                    <para> The level used for logging. Supported values are: </para>
+                    <para>
+                        <option>DEBUG</option>, <option>INFO</option>, <option>WARN</option>, <option>ERROR</option>
+                    </para>
+                </listitem>
+            </varlistentry>
+            <varlistentry>
+                <term>
+                    <envar>HIRTE_LOG_TARGET</envar>
+                </term>
+
+                <listitem>
+                    <para> The target where logs are written to. Supported values are: </para>
+                    <para>
+                        <option>stderr</option> , <option>journald</option>
+                    </para>
+                </listitem>
+            </varlistentry>
+            <varlistentry>
+                <term>
+                    <envar>HIRTE_LOG_IS_QUIET</envar>
+                </term>
+
+                <listitem>
+                    <para> If true, this flag prevents any logs to be written. </para>
+                </listitem>
+            </varlistentry>
+        </variablelist>
+    </refsect1>
+
+    <refsect1>
+        <title>See also</title>
+
+        <para>
+            <citerefentry>
+                <refentrytitle>hirte-config</refentrytitle>
+                <manvolnum>5</manvolnum>
+            </citerefentry>
+        </para>
+    </refsect1>
+
+</refentry>

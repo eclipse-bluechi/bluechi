@@ -40,3 +40,6 @@ subdir('src/client')
 
 # Subdirectory for the API description
 subdir('data')
+
+# Subdirectory for the man documentation
+subdir('man')
