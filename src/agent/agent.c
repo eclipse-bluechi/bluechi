@@ -627,7 +627,7 @@ static void agent_job_done(UNUSED sd_bus_message *m, const char *result, void *u
         AgentJobOp *op = userdata;
         Agent *agent = op->agent;
 
-        hirte_log_debugf("Sending notification JobDone with results: %s", result);
+        hirte_log_debugf("Sending JobDone %u, result: %s", op->hirte_job_id, result);
 
         int r = sd_bus_emit_signal(
                         agent->peer_dbus,
@@ -746,6 +746,7 @@ static int agent_method_reload_unit(sd_bus_message *m, void *userdata, UNUSED sd
  ************************************************************************/
 
 static void agent_emit_unit_new(Agent *agent, AgentUnitInfo *info, const char *reason) {
+        hirte_log_debugf("Sending UnitNew %s, reason: %s", info->unit, reason);
         int r = sd_bus_emit_signal(
                         agent->peer_dbus,
                         INTERNAL_AGENT_OBJECT_PATH,
@@ -760,6 +761,8 @@ static void agent_emit_unit_new(Agent *agent, AgentUnitInfo *info, const char *r
 }
 
 static void agent_emit_unit_removed(Agent *agent, AgentUnitInfo *info) {
+        hirte_log_debugf("Sending UnitRemoved %s", info->unit);
+
         int r = sd_bus_emit_signal(
                         agent->peer_dbus,
                         INTERNAL_AGENT_OBJECT_PATH,
@@ -773,6 +776,12 @@ static void agent_emit_unit_removed(Agent *agent, AgentUnitInfo *info) {
 }
 
 static void agent_emit_unit_state_changed(Agent *agent, AgentUnitInfo *info, const char *reason) {
+        hirte_log_debugf(
+                        "Sending UnitStateChanged %s %s(%s) reason: %s",
+                        info->unit,
+                        active_state_to_string(info->active_state),
+                        unit_info_get_substate(info),
+                        reason);
         int r = sd_bus_emit_signal(
                         agent->peer_dbus,
                         INTERNAL_AGENT_OBJECT_PATH,
@@ -1003,6 +1012,8 @@ static int agent_match_unit_changed(sd_bus_message *m, void *userdata, UNUSED sd
         /* Rewind and skip to copy content again */
         (void) sd_bus_message_rewind(m, true);
         (void) sd_bus_message_skip(m, "s"); // re-skip interface
+
+        hirte_log_debugf("Sending UnitPropertiesChanged %s", info->unit);
 
         /* Forward the property changes */
         _cleanup_sd_bus_message_ sd_bus_message *sig = NULL;
