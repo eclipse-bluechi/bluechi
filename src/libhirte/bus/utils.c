@@ -11,47 +11,33 @@
 /* Number of seconds idle between each keepalive packet */
 #define AGENT_KEEPALIVE_SOCKET_KEEPINTVL_SECS 10
 
-int bus_parse_property_string(sd_bus_message *m, const char *name, const char **value) {
-        bool found = false;
+int bus_parse_properties_foreach(sd_bus_message *m, bus_property_cb cb, void *userdata) {
+        bool stop = false;
         int r = sd_bus_message_enter_container(m, SD_BUS_TYPE_ARRAY, "{sv}");
         if (r < 0) {
                 return r;
         }
         while ((r = sd_bus_message_enter_container(m, SD_BUS_TYPE_DICT_ENTRY, "sv")) > 0) {
-                const char *member = NULL;
-                const char *contents = NULL;
+                const char *key = NULL;
 
-                r = sd_bus_message_read_basic(m, SD_BUS_TYPE_STRING, &member);
+                r = sd_bus_message_read_basic(m, SD_BUS_TYPE_STRING, &key);
                 if (r < 0) {
                         return r;
                 }
 
-                if (streq(name, member)) {
-                        r = sd_bus_message_peek_type(m, NULL, &contents);
-                        if (r < 0) {
-                                return r;
-                        }
+                char type = 0;
+                const char *value_type = NULL;
+                r = sd_bus_message_peek_type(m, &type, &value_type);
+                if (r < 0) {
+                        return r;
+                }
 
-                        if (!streq(contents, "s")) {
-                                return -EIO; /* Wrong type */
-                        }
-
-                        r = sd_bus_message_enter_container(m, SD_BUS_TYPE_VARIANT, "s");
-                        if (r < 0) {
-                                return r;
-                        }
-
-                        r = sd_bus_message_read_basic(m, SD_BUS_TYPE_STRING, value);
-                        if (r < 0) {
-                                return r;
-                        }
-
-                        found = true;
-                        r = sd_bus_message_exit_container(m);
-                        if (r < 0) {
-                                return r;
-                        }
-                } else {
+                r = (*cb)(key, value_type, m, userdata);
+                if (r < 0) {
+                        return r;
+                } else if (r == 1) {
+                        stop = true;
+                } else if (r == 2) {
                         r = sd_bus_message_skip(m, "v");
                         if (r < 0) {
                                 return r;
@@ -63,7 +49,7 @@ int bus_parse_property_string(sd_bus_message *m, const char *name, const char **
                         return r;
                 }
 
-                if (found) {
+                if (stop) {
                         break;
                 }
         }
@@ -76,10 +62,51 @@ int bus_parse_property_string(sd_bus_message *m, const char *name, const char **
                 return r;
         }
 
-        if (found) {
-                return 0;
+        return stop ? 1 : 0;
+}
+
+struct ParsePropertyData {
+        const char *name;
+        const char **value;
+};
+
+static int bus_parse_property_string_cb(
+                const char *key, const char *value_type, sd_bus_message *m, void *userdata) {
+        struct ParsePropertyData *data = userdata;
+
+        if (!streq(data->name, key)) {
+                return 2; /* skip item */
         }
-        return -ENOENT;
+
+        if (!streq(value_type, "s")) {
+                return -EIO; /* Wrong type */
+        }
+
+        int r = sd_bus_message_enter_container(m, SD_BUS_TYPE_VARIANT, value_type);
+        if (r < 0) {
+                return r;
+        }
+
+        r = sd_bus_message_read_basic(m, SD_BUS_TYPE_STRING, data->value);
+        if (r < 0) {
+                return r;
+        }
+
+        r = sd_bus_message_exit_container(m);
+        if (r < 0) {
+                return r;
+        }
+
+        return 1;
+}
+
+int bus_parse_property_string(sd_bus_message *m, const char *name, const char **value) {
+        struct ParsePropertyData data = { name, value };
+        int r = bus_parse_properties_foreach(m, bus_parse_property_string_cb, &data);
+        if (r < 0) {
+                return r;
+        }
+        return (r == 0) ? -ENOENT : 0;
 }
 
 UnitInfo *new_unit() {
