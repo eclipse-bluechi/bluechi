@@ -105,6 +105,13 @@ Object path: `/org/containers/hirte/monitor/$id`
     for a previously offline node and the unit was already running
     on the node.
 
+  * UnitStateChanged(s node, s unit, s active_state, s substate, s reason)
+
+    Emited when the active state (and substate) of a monitored unit
+    changes. Additionally, when a new subscription is added to a unit that
+    is already active, a virtual event is sent. This makes it very easy
+    to track the current active state of a unit.
+
   * UnitRemove(s node, s unit, s reason)
 
     Emitted when a unit is unloaded by systemd (reason=`real`), or

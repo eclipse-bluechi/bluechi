@@ -47,6 +47,13 @@ bool monitor_export(Monitor *monitor);
 
 int monitor_emit_unit_property_changed(Monitor *monitor, const char *node, const char *unit, sd_bus_message *m);
 int monitor_emit_unit_new(Monitor *monitor, const char *node, const char *unit, const char *reason);
+int monitor_emit_unit_state_changed(
+                Monitor *monitor,
+                const char *node,
+                const char *unit,
+                const char *active_state,
+                const char *substate,
+                const char *reason);
 int monitor_emit_unit_removed(Monitor *monitor, const char *node, const char *unit, const char *reason);
 
 

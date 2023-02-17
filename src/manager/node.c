@@ -63,6 +63,8 @@ typedef struct {
         char *unit;
         LIST_HEAD(UnitSubscription, subs);
         bool loaded;
+        UnitActiveState active_state;
+        char *substate;
 } UnitSubscriptions;
 
 typedef struct {
@@ -70,9 +72,10 @@ typedef struct {
 } UnitSubscriptionsKey;
 
 static void unit_subscriptions_clear(void *item) {
-        UnitSubscriptions *usub = item;
-        free(usub->unit);
-        assert(LIST_IS_EMPTY(usub->subs));
+        UnitSubscriptions *usubs = item;
+        free(usubs->unit);
+        free(usubs->substate);
+        assert(LIST_IS_EMPTY(usubs->subs));
 }
 
 static uint64_t unit_subscriptions_hash(const void *item, uint64_t seed0, uint64_t seed1) {
@@ -268,6 +271,43 @@ static int node_match_unit_new(sd_bus_message *m, void *userdata, UNUSED sd_bus_
         return 1;
 }
 
+static int node_match_unit_state_changed(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *error) {
+        Node *node = userdata;
+        const char *unit = NULL;
+        const char *active_state = NULL;
+        const char *substate = NULL;
+        const char *reason = NULL;
+
+        int r = sd_bus_message_read(m, "ssss", &unit, &active_state, &substate, &reason);
+        if (r < 0) {
+                hirte_log_error("Invalid UnitStateChanged signal");
+                return 0;
+        }
+
+        const UnitSubscriptionsKey key = { (char *) unit };
+        UnitSubscriptions *usubs = NULL;
+
+        usubs = hashmap_get(node->unit_subscriptions, &key);
+        if (usubs == NULL) {
+                return 0;
+        }
+        usubs->loaded = true;
+        usubs->active_state = active_state_from_string(active_state);
+        usubs->substate = strdup(substate);
+
+        UnitSubscription *usub = NULL;
+        LIST_FOREACH(subs, usub, usubs->subs) {
+                Subscription *sub = usub->sub;
+                int r = monitor_emit_unit_state_changed(
+                                sub->monitor, node->name, sub->unit, active_state, substate, reason);
+                if (r < 0) {
+                        hirte_log_error("Failed to emit UnitNew signal");
+                }
+        }
+
+        return 1;
+}
+
 static int node_match_unit_removed(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *error) {
         Node *node = userdata;
         const char *unit = NULL;
@@ -413,6 +453,20 @@ bool node_set_agent_bus(Node *node, sd_bus *bus) {
                                 node);
                 if (r < 0) {
                         hirte_log_errorf("Failed to add UnitNew peer bus match: %s", strerror(-r));
+                        return false;
+                }
+
+                r = sd_bus_match_signal(
+                                bus,
+                                NULL,
+                                NULL,
+                                INTERNAL_AGENT_OBJECT_PATH,
+                                INTERNAL_AGENT_INTERFACE,
+                                "UnitStateChanged",
+                                node_match_unit_state_changed,
+                                node);
+                if (r < 0) {
+                        hirte_log_errorf("Failed to add UnitStateChanged peer bus match: %s", strerror(-r));
                         return false;
                 }
 
@@ -1023,7 +1077,7 @@ void node_subscribe(Node *node, Subscription *sub) {
 
         usubs = hashmap_get(node->unit_subscriptions, &key);
         if (usubs == NULL) {
-                UnitSubscriptions v = { NULL, NULL, false };
+                UnitSubscriptions v = { NULL, NULL, false, _UNIT_ACTIVE_STATE_INVALID, NULL };
                 v.unit = strdup(key.unit);
                 if (v.unit == NULL) {
                         hirte_log_error("Failed to subscribe to unit, OOM");
@@ -1050,6 +1104,19 @@ void node_subscribe(Node *node, Subscription *sub) {
                 int r = monitor_emit_unit_new(sub->monitor, node->name, sub->unit, "virtual");
                 if (r < 0) {
                         hirte_log_error("Failed to emit UnitNew signal");
+                }
+
+                if (usubs->active_state >= 0) {
+                        r = monitor_emit_unit_state_changed(
+                                        sub->monitor,
+                                        node->name,
+                                        sub->unit,
+                                        active_state_to_string(usubs->active_state),
+                                        usubs->substate ? usubs->substate : "invalid",
+                                        "virtual");
+                        if (r < 0) {
+                                hirte_log_error("Failed to emit UnitNew signal");
+                        }
                 }
         }
 }
