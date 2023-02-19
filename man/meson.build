@@ -1,11 +1,16 @@
-want_man = get_option('man')
-xsltproc = find_program('xsltproc', required : want_man == 'true')
-want_man = want_man != 'false' and xsltproc.found()
+want_man = get_option('man') == 'true'
+xsltproc = find_program('xsltproc', required : false)
+if want_man and not xsltproc.found()
+  message('xsltproc not found, man page generation disabled automatically')
+endif
+want_man = want_man and xsltproc.found()
 
-want_html = get_option('html')
-xmlto = find_program('xmlto', required : want_html == 'true')
-want_html = want_html != 'false' and xmlto.found()
-
+want_html = get_option('html') == 'true'
+xmlto = find_program('xmlto', required : false)
+if want_html and not xmlto.found()
+  message('xmlto not found, man page (html) generation disabled automatically')
+endif
+want_html = want_html and xmlto.found()
 
 docdir = get_option('docdir')
 if docdir == ''
@@ -59,7 +64,7 @@ if want_man
   endforeach
 endif
 
-if want_html and xmlto.found()
+if want_html
   cdata = configuration_data()
   cdata.set('VERSION', meson.project_version())
   cdata.set('srcdir', meson.current_source_dir())

@@ -140,22 +140,19 @@ The target architecture for this project is described in [doc/arch](./doc/arch/)
 
 ### Building MAN pages
 
-For building the MAN pages `xsltproc` is required:  
+Building the MAN pages is enabled by default. However, if the necessary tools are missing, building and installing them
+will be skipped. Install them via:
 
 ```bash
-sudo dnf install libxslt
+sudo dnf install libxslt xmlto
 ```
 
-Building the MAN pages is disabled by default. To enable it, set the option `man` in  
-[meson_options.txt](./meson_options.txt) to `true` and clean the build directory via `make clean`. After executing a
-subsequent `meson install` the MAN pages are located in the `man/man*` directories.  
-
-For building the MAN pages and convert it to an HTML file, an additional tool is  
-required:  
+To disable building man pages, set the option `man` and/or `html` in [meson_options.txt](./meson_options.txt) to `false`
+and clean the build directory via `make clean`. Instead of manually changing the file, options can be configured using `meson`:
 
 ```bash
-sudo dnf install xmlto
+# disable building the plain MAN pages
+meson configure builddir -Dman=false
 ```
 
-Enable the option `html`in [meson_options.txt](./meson_options.txt) by setting its value
-to `true` and follow the same process as for the plain MAN pages.
+After executing a subsequent `meson install` the MAN pages are located in the `man/man*` directories.  
