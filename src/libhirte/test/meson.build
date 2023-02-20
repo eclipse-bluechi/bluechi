@@ -2,6 +2,17 @@
 
 # common test configuration
 
+config_src = [
+  'config_test.c'
+]
+exec_config_test = executable('config_test', config_src,
+  link_with: [
+    hirte_lib,
+  ],
+  include_directories: include_directories('../..'),
+)
+test('config_test', exec_config_test)
+
 list_src = [
   'list_test.c'
 ]
