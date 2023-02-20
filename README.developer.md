@@ -21,10 +21,9 @@ sudo dnf config-manager --set-enabled crb
 sudo dnf install clang-tools-extra gcc make meson systemd-devel
 ```
 
-[markdownlint-cli2](https://github.com/DavidAnson/markdownlint-cli2) can be used for static analysis of
-markdown files. Unfortunately it's not available as RPM, so please check its
-[installation guide](https://github.com/DavidAnson/markdownlint-cli2#install) and use the most appropriate way of
-installation for your setup.
+[markdownlint-cli2](https://github.com/DavidAnson/markdownlint-cli2) can be used for static analysis of markdown files.
+Check the [installation guide](https://github.com/DavidAnson/markdownlint-cli2#install) and use the most appropriate way
+of installation for your setup.
 
 ### Code Style
 
@@ -36,9 +35,9 @@ make fmt
 ```
 
 For the most part, this project follows systemd coding style:
-[systemd-coding-style](https://github.com/systemd/systemd/blob/main/docs/CODING_STYLE.md).
-Also, this project borrows some of the coding conventions from systemd.  For example, function names pertaining
-to D-Bus services look like `bus_service_set_property()`.
+[systemd-coding-style](https://github.com/systemd/systemd/blob/main/docs/CODING_STYLE.md). Also, this project borrows
+some of the coding conventions from systemd. For example, function names pertaining to D-Bus services look like
+`bus_service_set_property()`.
 
 A formatting check of existing files can be executed by:
 
@@ -67,7 +66,7 @@ make lint-fix
 
 The project is using [meson](https://mesonbuild.com/) build system.
 
-The binaries can be built via
+The binaries can be built via:
 
 ```bash
 meson setup builddir
@@ -89,10 +88,9 @@ meson install -C builddir --destdir bin
 
 After building, three binaries are available:
 
-- __hirte__: the orchestrator which is run on the main machine, sending commands to the agents and monitoring
-  the progress
-- __hirte-agent__: the node agent unit which connects with the orchestrator and executes commands on the node machine
-- __hirtectl__: a helper (CLI) program to send an commands to the orchestrator
+- `hirte`: the orchestrator which is run on the main machine, sending commands to the agents and monitoring the progress
+- `hirte-agent`: the node agent unit which connects with the orchestrator and executes commands on the node machine
+- `hirtectl`: a helper (CLI) program to send an commands to the orchestrator
 
 ### Unit tests
 
@@ -106,36 +104,36 @@ meson test -C builddir
 
 ### Running
 
-At the moment the hirtectl binary do only print a simple greeting and exit.
+At the moment the `hirtectl` binary does not implement any logic. It only prints a simple greeting and exit.
 
 #### hirte
 
-Hirte, the orchestrator can be run via:
+The orchestrator can be run via:
 
 ```bash
 hirte -c ./doc/example.ini
 ```
 
-It starts a tcp socket and accepts connections, but does not do much more at this point.
-This can be tested manually via
+It starts a tcp socket and accepts connections, but does not do much more at this point. This can be tested manually
+via:
 
 ```bash
 nc <host> <port>
 ```
 
-#### hirte-node
+#### hirte-agent
 
-Nodes can be run via:
+A node can be run via:
 
 ```bash
 ./bin/hirte-agent -n <agent name> -H <host> -P <port>
 ```
 
-It creates a new dbus which tries to connect to the specified host. The host will print out a message if the request
+It creates a new D-Bus which tries to connect to the specified host. The host will print out a message if the request
 was accepted. It does not do much more at this point.
 
 ## Documentation
 
 For further documentation please refer to the [doc](./doc/) directory.
 
-The target architecture for this project is described in [doc/arch](./doc/arch/)
+The target architecture for this project is described in [doc/arch](./doc/arch/).

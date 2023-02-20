@@ -1,25 +1,20 @@
-# Hirte testing e2e
+# Hirte E2E Testing
 
 ## Environment Setup
 
-E2E tests rely on containers as separate compute entities,
-containers simulate hirte functional behaviour
-on a single runner.
+E2E tests rely on containers as separate compute entities. These containers are used to simulate hirte's functional
+behavior on a single runner.
 
-Test directory contains two container files
+The [tests](./tests/) directory contains two container files.
 
-- Containerfile-build
-- Containerfile
+The `Containerfile-build` file describes the builder base image that is published to
+[registry.gitlab.com/centos/automotive/sample-images/hirte/hirte-builder](https://gitlab.com/CentOS/automotive/sample-images/container_registry/3897597).
+It contains core dependencies such as systemd and devel packages.
 
-Containerfile-build output image is published to
-[AutoSD registry](registry.gitlab.com/centos/automotive/sample-images).
-Usage: Container hirte base image (contains centosstream9 base image,
-systemd and devel packages), build hirte binaries.
+The `Containerfile` is based on the builder base image and contains compiled products and configurations for e2e
+testing.
 
-Containerfile output image, hirte-images, layered above hirte-base image installed
-with hirte compiled products and configurations for e2e testing.
+In general testing is conducted in the following way:
 
-Base workflows
-
-- Create and run simulated containers with systemd
-- Check hirte-agents registration complete
+1) Instantiate the E2E test environment by creating and running containers with systemd.
+2) Check that the registration of `hirte-agent` is complete.
