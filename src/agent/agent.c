@@ -523,71 +523,34 @@ static int get_unit_properties_got_properties(sd_bus_message *m, void *userdata,
         return sd_bus_message_send(reply);
 }
 
-
-static int get_unit_properties_got_unit(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error) {
-        _cleanup_systemd_request_ SystemdRequest *req = userdata;
-        Agent *agent = req->agent;
-        const char *interface = NULL;
-        const char *unit = NULL;
-
-        if (sd_bus_message_is_method_error(m, NULL)) {
-                /* Forward error */
-                return sd_bus_reply_method_error(req->request_message, sd_bus_message_get_error(m));
-        }
-
-        (void) sd_bus_message_rewind(req->request_message, true);
-        int r = sd_bus_message_read(req->request_message, "ss", &interface, &unit);
-        if (r < 0) {
-                return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "Internal Error");
-        }
-
-        const char *unit_path = NULL;
-        r = sd_bus_message_read(m, "o", &unit_path);
-        if (r < 0) {
-                return sd_bus_reply_method_errorf(req->request_message, SD_BUS_ERROR_FAILED, "Internal Error");
-        }
-
-        _cleanup_systemd_request_ SystemdRequest *req2 = agent_create_request_full(
-                        agent, req->request_message, unit_path, "org.freedesktop.DBus.Properties", "GetAll");
-        if (req2 == NULL) {
-                return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "Internal error");
-        }
-
-        r = sd_bus_message_append(req2->message, "s", interface);
-        if (r < 0) {
-                return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "Internal error");
-        }
-
-        if (!systemd_request_start(req2, get_unit_properties_got_properties)) {
-                return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "Internal error");
-        }
-
-        return 1;
-}
-
-
 static int agent_method_get_unit_properties(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error) {
         Agent *agent = userdata;
         const char *interface = NULL;
         const char *unit = NULL;
+        _cleanup_free_ char *unit_path = NULL;
 
         int r = sd_bus_message_read(m, "ss", &interface, &unit);
         if (r < 0) {
                 return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "Internal Error");
         }
 
-        /* TODO: Avoid a roundtrip here by locally escaping the unit path */
-        _cleanup_systemd_request_ SystemdRequest *req = agent_create_request(agent, m, "GetUnit");
+        r = assemble_object_path_string(SYSTEMD_OBJECT_PATH "/unit", unit, &unit_path);
+        if (r < 0) {
+                return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "Internal Error");
+        }
+
+        _cleanup_systemd_request_ SystemdRequest *req = agent_create_request_full(
+                        agent, m, unit_path, "org.freedesktop.DBus.Properties", "GetAll");
         if (req == NULL) {
                 return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "Internal error");
         }
 
-        r = sd_bus_message_append(req->message, "s", unit);
+        r = sd_bus_message_append(req->message, "s", interface);
         if (r < 0) {
                 return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "Internal error");
         }
 
-        if (!systemd_request_start(req, get_unit_properties_got_unit)) {
+        if (!systemd_request_start(req, get_unit_properties_got_properties)) {
                 return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "Internal error");
         }
 
