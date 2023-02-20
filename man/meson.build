@@ -1,16 +1,9 @@
 want_man = get_option('man') == 'true'
-xsltproc = find_program('xsltproc', required : false)
-if want_man and not xsltproc.found()
-  message('xsltproc not found, man page generation disabled automatically')
+md2man = find_program('go-md2man', required : false)
+if want_man and not md2man.found()
+  message('md2man not found, man page generation disabled automatically')
 endif
-want_man = want_man and xsltproc.found()
-
-want_html = get_option('html') == 'true'
-xmlto = find_program('xmlto', required : false)
-if want_html and not xmlto.found()
-  message('xmlto not found, man page (html) generation disabled automatically')
-endif
-want_html = want_html and xmlto.found()
+want_man = want_man and md2man.found()
 
 docdir = get_option('docdir')
 if docdir == ''
@@ -24,22 +17,11 @@ man1 = [
 ]
 
 man5 = [
-    'hirte-config',
-    'hirte-agent-config',
+    'hirte.conf',
+    'hirte-agent.conf',
 ]
 
 if want_man
-  manpages_xsl = 'http://docbook.sourceforge.net/release/xsl/current/manpages/docbook.xsl'
-
-  xsltproc_flags = [
-    '--nonet',
-    '--stringparam', 'man.output.quietly', '1',
-    '--stringparam', 'funcsynopsis.style', 'ansi',
-    '--stringparam', 'man.th.extra1.suppress', '1',
-    '--stringparam', 'man.authors.section.enabled', '0',
-    '--stringparam', 'man.copyright.section.enabled', '0',
-  ]
-
   foreach pair : [[man1, '1'], [man5, '5']]
     pages = pair[0]
     section = pair[1]
@@ -47,14 +29,12 @@ if want_man
     foreach man : pages
         custom_target(
           man + '.' + section,
-          input : [man + '.xml'],
+          input : [man + '.' + section + '.md'],
           output : [man + '.' + section],
           command : [
-            xsltproc,
-            '-o', '@OUTPUT@',
-          ] + xsltproc_flags + [
-            manpages_xsl,
-            '@INPUT@',
+            md2man,
+            '-in', '@INPUT@',
+            '-out', '@OUTPUT@',
           ],
           build_by_default : true,
           install : true,
@@ -62,37 +42,4 @@ if want_man
         )
     endforeach
   endforeach
-endif
-
-if want_html
-  cdata = configuration_data()
-  cdata.set('VERSION', meson.project_version())
-  cdata.set('srcdir', meson.current_source_dir())
-  hirte_docs_xml = configure_file(
-    input : 'hirte-docs.xml.in',
-    output : 'hirte-docs.xml',
-    configuration : cdata,
-  )
-  custom_target(
-    'hirte-docs.html',
-    input : [
-      hirte_docs_xml,
-      'xmlto-config.xsl',
-    ],
-    output : ['hirte-docs.html'],
-    command : [
-      xmlto,
-      '-o', meson.current_build_dir(),
-    ] + get_option('xmlto_flags') + [
-      '--skip-validation',
-      'xhtml-nochunks',
-      '-m', '@INPUT1@',
-      '@INPUT0@',
-    ],
-    build_by_default : true,
-    install : true,
-    install_dir : docdir,
-  )
-
-  install_data('docbook.css', install_dir : docdir)
 endif
