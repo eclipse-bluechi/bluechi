@@ -557,6 +557,133 @@ static int agent_method_get_unit_properties(sd_bus_message *m, void *userdata, U
         return 1;
 }
 
+/*************************************************************************
+ ******** org.containers.hirte.internal.Agent.GetUnitProperty **********
+ ************************************************************************/
+
+static int get_unit_property_got_property(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error) {
+        _cleanup_systemd_request_ SystemdRequest *req = userdata;
+
+        if (sd_bus_message_is_method_error(m, NULL)) {
+                /* Forward error */
+                return sd_bus_reply_method_error(req->request_message, sd_bus_message_get_error(m));
+        }
+
+        _cleanup_sd_bus_message_ sd_bus_message *reply = NULL;
+        int r = sd_bus_message_new_method_return(req->request_message, &reply);
+        if (r < 0) {
+                return r;
+        }
+
+        r = sd_bus_message_copy(reply, m, true);
+        if (r < 0) {
+                return r;
+        }
+
+        return sd_bus_message_send(reply);
+}
+
+static int agent_method_get_unit_property(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error) {
+        Agent *agent = userdata;
+        const char *interface = NULL;
+        const char *unit = NULL;
+        const char *property = NULL;
+        _cleanup_free_ char *unit_path = NULL;
+
+        int r = sd_bus_message_read(m, "sss", &unit, &interface, &property);
+        if (r < 0) {
+                return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "Internal Error");
+        }
+
+        r = assemble_object_path_string(SYSTEMD_OBJECT_PATH "/unit", unit, &unit_path);
+        if (r < 0) {
+                return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "Internal Error");
+        }
+
+        _cleanup_systemd_request_ SystemdRequest *req = agent_create_request_full(
+                        agent, m, unit_path, "org.freedesktop.DBus.Properties", "Get");
+        if (req == NULL) {
+                return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "Internal error");
+        }
+
+        r = sd_bus_message_append(req->message, "ss", interface, property);
+        if (r < 0) {
+                return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "Internal error");
+        }
+
+        if (!systemd_request_start(req, get_unit_property_got_property)) {
+                return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "Internal error");
+        }
+
+        return 1;
+}
+
+/*************************************************************************
+ ******** org.containers.hirte.internal.Agent.SetUnitProperties **********
+ *************************************************************************/
+
+static int set_unit_properties_cb(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error) {
+        _cleanup_systemd_request_ SystemdRequest *req = userdata;
+
+        if (sd_bus_message_is_method_error(m, NULL)) {
+                /* Forward error */
+                return sd_bus_reply_method_error(req->request_message, sd_bus_message_get_error(m));
+        }
+
+        _cleanup_sd_bus_message_ sd_bus_message *reply = NULL;
+        int r = sd_bus_message_new_method_return(req->request_message, &reply);
+        if (r < 0) {
+                return r;
+        }
+
+        r = sd_bus_message_copy(reply, m, true);
+        if (r < 0) {
+                return r;
+        }
+
+        return sd_bus_message_send(reply);
+}
+
+static int agent_method_set_unit_properties(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error) {
+        Agent *agent = userdata;
+        const char *unit = NULL;
+        int runtime = 0;
+        _cleanup_free_ char *unit_path = NULL;
+
+        int r = sd_bus_message_read(m, "sb", &unit, &runtime);
+        if (r < 0) {
+                return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "Internal Error");
+        }
+
+        r = assemble_object_path_string(SYSTEMD_OBJECT_PATH "/unit", unit, &unit_path);
+        if (r < 0) {
+                return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "Internal Error");
+        }
+
+        _cleanup_systemd_request_ SystemdRequest *req = agent_create_request_full(
+                        agent, m, unit_path, "org.freedesktop.systemd1.Unit", "SetProperties");
+        if (req == NULL) {
+                return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "Internal error");
+        }
+
+        r = sd_bus_message_append(req->message, "b", runtime);
+        if (r < 0) {
+                return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "Internal error");
+        }
+
+        r = sd_bus_message_copy(req->message, m, false);
+        if (r < 0) {
+                return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "Internal error");
+        }
+
+        if (!systemd_request_start(req, set_unit_properties_cb)) {
+                return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "Internal error");
+        }
+
+        return 1;
+}
+
+
 /* Keep track of outstanding systemd job and connect it back to
    the originating hirte job id so we can proxy changes to it. */
 typedef struct {
@@ -832,6 +959,8 @@ static const sd_bus_vtable internal_agent_vtable[] = {
         SD_BUS_VTABLE_START(0),
         SD_BUS_METHOD("ListUnits", "", UNIT_INFO_STRUCT_ARRAY_TYPESTRING, agent_method_list_units, 0),
         SD_BUS_METHOD("GetUnitProperties", "ss", "a{sv}", agent_method_get_unit_properties, 0),
+        SD_BUS_METHOD("GetUnitProperty", "sss", "v", agent_method_get_unit_property, 0),
+        SD_BUS_METHOD("SetUnitProperties", "sba(sv)", "", agent_method_set_unit_properties, 0),
         SD_BUS_METHOD("StartUnit", "ssu", "", agent_method_start_unit, 0),
         SD_BUS_METHOD("StopUnit", "ssu", "", agent_method_stop_unit, 0),
         SD_BUS_METHOD("RestartUnit", "ssu", "", agent_method_restart_unit, 0),

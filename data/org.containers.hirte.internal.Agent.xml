@@ -31,6 +31,17 @@
       <arg name="interface" type="s" direction="in" />
       <arg name="props" type="a{sv}" direction="out" />
     </method>
+    <method name="GetUnitProperty">
+      <arg name="name" type="s" direction="in" />
+      <arg name="interface" type="s" direction="in" />
+      <arg name="property" type="s" direction="in" />
+      <arg name="value" type="v" direction="out" />
+    </method>
+    <method name="SetUnitProperties">
+      <arg name="name" type="s" direction="in" />
+      <arg name="runtime" type="b" direction="in" />
+      <arg name="keyvalues" type="a(sv)" direction="in" />
+    </method>
     <method name="ListUnits">
       <arg name="units" type="a(ssssssouso)" direction="out" />
     </method>
