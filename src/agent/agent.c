@@ -5,6 +5,7 @@
 #include "libhirte/bus/bus.h"
 #include "libhirte/bus/utils.h"
 #include "libhirte/common/common.h"
+#include "libhirte/common/config.h"
 #include "libhirte/common/event-util.h"
 #include "libhirte/common/opt.h"
 #include "libhirte/common/parse-util.h"
@@ -411,21 +412,21 @@ bool agent_parse_config(Agent *agent, const char *configfile) {
                 return true;
         }
 
-        name = topic_lookup(topic, "Name");
+        name = topic_lookup(topic, CFG_NODE_NAME);
         if (name) {
                 if (!agent_set_name(agent, name)) {
                         return false;
                 }
         }
 
-        host = topic_lookup(topic, "Host");
+        host = topic_lookup(topic, CFG_MANAGER_HOST);
         if (host) {
                 if (!agent_set_host(agent, host)) {
                         return false;
                 }
         }
 
-        port = topic_lookup(topic, "Port");
+        port = topic_lookup(topic, CFG_MANAGER_PORT);
         if (port) {
                 if (!agent_set_port(agent, port)) {
                         return false;

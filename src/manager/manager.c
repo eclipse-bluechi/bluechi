@@ -4,6 +4,7 @@
 #include "libhirte/bus/bus.h"
 #include "libhirte/bus/utils.h"
 #include "libhirte/common/common.h"
+#include "libhirte/common/config.h"
 #include "libhirte/common/parse-util.h"
 #include "libhirte/ini/config.h"
 #include "libhirte/log/log.h"
@@ -287,14 +288,14 @@ bool manager_parse_config(Manager *manager, const char *configfile) {
                 return true;
         }
 
-        port = topic_lookup(topic, "Port");
+        port = topic_lookup(topic, CFG_MANAGER_PORT);
         if (port) {
                 if (!manager_set_port(manager, port)) {
                         return false;
                 }
         }
 
-        const char *expected_nodes = topic_lookup(topic, "Nodes");
+        const char *expected_nodes = topic_lookup(topic, CFG_ALLOWED_NODE_NAMES);
         if (expected_nodes) {
                 char *saveptr = NULL;
                 char *name = strtok_r((char *) expected_nodes, ",", &saveptr);

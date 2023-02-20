@@ -2,6 +2,7 @@
 #include <errno.h>
 
 #include "libhirte/common/common.h"
+#include "libhirte/common/config.h"
 
 #include "log.h"
 
@@ -163,12 +164,12 @@ int hirte_log_init_from_config(config *conf) {
                 return -EINVAL;
         }
 
-        LogLevel level = string_to_log_level(topic_lookup(logging_topic, HIRTE_LOG_CONFIG_KEY_LEVEL));
+        LogLevel level = string_to_log_level(topic_lookup(logging_topic, CFG_LOG_LEVEL));
         if (level != LOG_LEVEL_INVALID) {
                 hirte_log_set_level(level);
         }
 
-        target = topic_lookup(logging_topic, HIRTE_LOG_CONFIG_KEY_TARGET);
+        target = topic_lookup(logging_topic, CFG_LOG_TARGET);
         if (target != NULL) {
                 if (streqi(HIRTE_LOG_TARGET_JOURNALD, target)) {
                         hirte_log_set_log_fn(hirte_log_to_journald_with_location);
@@ -177,7 +178,7 @@ int hirte_log_init_from_config(config *conf) {
                 }
         }
 
-        quiet = topic_lookup(logging_topic, HIRTE_LOG_CONFIG_KEY_QUIET);
+        quiet = topic_lookup(logging_topic, CFG_LOG_IS_QUIET);
         if (is_true_value(quiet)) {
                 hirte_log_set_quiet(true);
         } else if (is_false_value(quiet)) {
