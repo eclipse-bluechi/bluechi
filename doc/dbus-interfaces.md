@@ -152,7 +152,7 @@ Object path: `/org/containers/hirte/node/$name`
 
     Kill a unit on the node. Arguments and semantics are equivalent to the systemd `KillUnit()` method.
 
-  * `GetUnitProperties(in interface, in name, out a{sv} props)`
+  * `GetUnitProperties(in name, in interface, out a{sv} props)`
 
     Returns the current properties for for a named unit on the node. The returned properties are the same as you would
     get in the systemd properties apis, but filtered to the following subset: `LoadState`, `ActiveState`, `SubState`,

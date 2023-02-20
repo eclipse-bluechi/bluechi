@@ -16,10 +16,10 @@ manager = bus.get_proxy("org.containers.hirte",  "/org/containers/hirte")
 node_path = manager.GetNode(node_name)
 node = bus.get_proxy("org.containers.hirte",  node_path)
 
-properties = node.GetUnitProperties("org.freedesktop.systemd1.Unit", unit_name)
+properties = node.GetUnitProperties(unit_name, "org.freedesktop.systemd1.Unit")
 print("Unit properties:")
 print(get_native(properties))
 
 print("Service properties:")
-properties = node.GetUnitProperties("org.freedesktop.systemd1.Service", unit_name)
+properties = node.GetUnitProperties(unit_name, "org.freedesktop.systemd1.Service")
 print(get_native(properties))

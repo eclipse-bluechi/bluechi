@@ -853,7 +853,7 @@ static int node_method_get_unit_properties(sd_bus_message *m, void *userdata, UN
         const char *interface = NULL;
         const char *unit = NULL;
 
-        int r = sd_bus_message_read(m, "ss", &interface, &unit);
+        int r = sd_bus_message_read(m, "ss", &unit, &interface);
         if (r < 0) {
                 return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "Internal Error");
         }
@@ -868,7 +868,7 @@ static int node_method_get_unit_properties(sd_bus_message *m, void *userdata, UN
                 return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "Internal error");
         }
 
-        r = sd_bus_message_append(req->message, "ss", interface, unit);
+        r = sd_bus_message_append(req->message, "ss", unit, interface);
         if (r < 0) {
                 return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "Internal error");
         }
