@@ -529,7 +529,7 @@ static int agent_method_get_unit_properties(sd_bus_message *m, void *userdata, U
         const char *unit = NULL;
         _cleanup_free_ char *unit_path = NULL;
 
-        int r = sd_bus_message_read(m, "ss", &interface, &unit);
+        int r = sd_bus_message_read(m, "ss", &unit, &interface);
         if (r < 0) {
                 return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "Internal Error");
         }
