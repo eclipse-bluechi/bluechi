@@ -33,7 +33,7 @@ if want_man
           ],
           build_by_default : true,
           install : true,
-          install_dir : get_option('datadir') / 'man' / ('man' + section),
+          install_dir : get_option('mandir') / ('man' + section),
         )
     endforeach
   endforeach

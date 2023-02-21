@@ -72,4 +72,4 @@ TBD
 
 ## SEE ALSO
 
-**[hirte-agent.conf(5)](https://github.com/containers/hirte/blob/main/man/hirte-agent.conf.5.md)**
+**[hirte-agent.conf(5)](https://github.com/containers/hirte/blob/main/doc/man/hirte-agent.conf.5.md)**

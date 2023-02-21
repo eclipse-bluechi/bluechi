@@ -9,7 +9,7 @@ Source0:	%{name}-%{version}.tar.gz
 BuildRequires:	gcc
 BuildRequires:	meson
 BuildRequires:	systemd-devel
-BuildRequires:  go-md2man
+BuildRequires:  golang-github-cpuguy83-md2man
 
 Requires:	systemd
 
@@ -57,21 +57,21 @@ This package contains the node agent.
 %license LICENSE
 %{_bindir}/hirte
 %{_bindir}/hirtectl
+%{_mandir}/man1/hirte.1
+%{_mandir}/man1/hirtectl.1
+%{_mandir}/man5/hirte.conf.5
 %{_datadir}/dbus-1/interfaces/org.containers.hirte.Job.xml
 %{_datadir}/dbus-1/interfaces/org.containers.hirte.Manager.xml
 %{_datadir}/dbus-1/interfaces/org.containers.hirte.Monitor.xml
 %{_datadir}/dbus-1/interfaces/org.containers.hirte.Node.xml
-%{_datadir}/man/man1/hirte.1
-%{_datadir}/man/man1/hirte-agent.1
-%{_datadir}/man/man1/hirtectl.1
-%{_datadir}/man/man5/hirte.conf.5
-%{_datadir}/man/man5/hirte-agent.conf.5
 
 %files agent
 %config %{_sysconfdir}/hirte-agent.conf
 %doc README.md
 %license LICENSE
 %{_bindir}/hirte-agent
+%{_mandir}/man1/hirte-agent.1
+%{_mandir}/man5/hirte-agent.conf.5
 
 
 %changelog
