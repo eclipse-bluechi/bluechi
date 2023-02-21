@@ -316,7 +316,18 @@ bool manager_parse_config(Manager *manager, const char *configfile) {
         topic *topic = NULL;
         const char *port = NULL;
 
-        config = parsing_ini_file(configfile);
+               char * default_conf = "/usr/share/hirte_default.conf";
+        config = parsing_ini_file(default_conf, NULL);
+        if (config == NULL) {
+                return false;
+        }
+
+        if( configfile == NULL) {
+                config = parsing_ini_file("/etc/hirte.conf", config);
+
+        } else {
+                config = parsing_ini_file(configfile, config);
+        }
         if (config == NULL) {
                 return false;
         }

@@ -302,8 +302,18 @@ bool agent_parse_config(Agent *agent, const char *configfile) {
         _cleanup_config_ config *config = NULL;
         topic *topic = NULL;
         const char *name = NULL, *host = NULL, *port = NULL;
+        char * default_conf = "/usr/share/hirte_default.conf";
+        config = parsing_ini_file(default_conf, NULL);
+        if (config == NULL) {
+                return false;
+        }
 
-        config = parsing_ini_file(configfile);
+        if( configfile == NULL) {
+                config = parsing_ini_file("/etc/hirte_agent.conf", config);
+
+        } else {
+                config = parsing_ini_file(configfile, config);
+        }
         if (config == NULL) {
                 return false;
         }

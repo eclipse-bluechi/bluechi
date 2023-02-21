@@ -6,7 +6,7 @@ typedef struct hashmap config;
 typedef struct topic topic;
 
 
-config *parsing_ini_file(const char *file);
+config *parsing_ini_file(const char *file, config *config);
 config *new_config(void);
 void free_config(config *config);
 void free_configp(config **configp);
