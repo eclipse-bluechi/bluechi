@@ -14,11 +14,16 @@ BuildRequires:  golang-github-cpuguy83-md2man
 Requires:	systemd
 
 
-%description
+%package hirte
+Summary:	Hirte container orchestrator
+Requires:	systemd
+
+
+%description hirte
 Hirte is a service orchestrator tool intended for multi-node devices (e.g.: edge devices) clusters with a predefined
 number of nodes and with a focus on highly regulated environment such as those requiring functional safety (for example
 in cars).
-This package contains the orchestrator, node agent and command line tool.
+This package contains the manager orchestrating all connected nodes and the CLI tool to interact with hirte.
 
 
 %package agent
@@ -50,20 +55,20 @@ This package contains the node agent.
 %meson_test
 
 
-%files
+%files hirte
 %config %{_sysconfdir}/hirte.conf
 %doc README.md
 %doc README.developer.md
 %license LICENSE
 %{_bindir}/hirte
 %{_bindir}/hirtectl
-%{_mandir}/man1/hirte.1
-%{_mandir}/man1/hirtectl.1
-%{_mandir}/man5/hirte.conf.5
 %{_datadir}/dbus-1/interfaces/org.containers.hirte.Job.xml
 %{_datadir}/dbus-1/interfaces/org.containers.hirte.Manager.xml
 %{_datadir}/dbus-1/interfaces/org.containers.hirte.Monitor.xml
 %{_datadir}/dbus-1/interfaces/org.containers.hirte.Node.xml
+%{_mandir}/man1/hirte.1
+%{_mandir}/man1/hirtectl.1
+%{_mandir}/man5/hirte.conf.5
 
 %files agent
 %config %{_sysconfdir}/hirte-agent.conf
