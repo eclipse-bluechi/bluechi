@@ -140,19 +140,11 @@ The target architecture for this project is described in [doc/arch](./doc/arch/)
 
 ### Building MAN pages
 
-Building the MAN pages is enabled by default. However, if the necessary tools are missing, building and installing them
-will be skipped. Install them via:
+The source markdown files for building the MAN pages are located in [doc/man](./doc/man/). For generating the MAN pages
+from the markdown files [go-md2man](https://github.com/cpuguy83/go-md2man) is being used. Install it via:
 
 ```bash
-sudo dnf install libxslt xmlto
+sudo dnf install golang-github-cpuguy83-md2man
 ```
 
-To disable building man pages, set the option `man` and/or `html` in [meson_options.txt](./meson_options.txt) to `false`
-and clean the build directory via `make clean`. Instead of manually changing the file, options can be configured using `meson`:
-
-```bash
-# disable building the plain MAN pages
-meson configure builddir -Dman=false
-```
-
-After executing a subsequent `meson install` the MAN pages are located in the `man/man*` directories.  
+After executing a `meson install` the MAN pages are located in the `man/man*` directories.  
