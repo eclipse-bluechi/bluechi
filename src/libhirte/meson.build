@@ -17,8 +17,6 @@ libhirte_src = [
     'common/parse-util.h',
     'hashmap/hashmap.c',
     'hashmap/hashmap.h',
-    'ini/config.c',
-    'ini/config.h',
     'ini/ini.c',
     'ini/ini.h',
     'service/service.c',
