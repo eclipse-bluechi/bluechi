@@ -9,6 +9,7 @@ Source0:	%{name}-%{version}.tar.gz
 BuildRequires:	gcc
 BuildRequires:	meson
 BuildRequires:	systemd-devel
+BuildRequires:  go-md2man
 
 Requires:	systemd
 
@@ -17,7 +18,7 @@ Requires:	systemd
 Hirte is a service orchestrator tool intended for multi-node devices (e.g.: edge devices) clusters with a predefined
 number of nodes and with a focus on highly regulated environment such as those requiring functional safety (for example
 in cars).
-This package contains the orchestrator and command line tool.
+This package contains the orchestrator, node agent and command line tool.
 
 
 %package agent
@@ -60,6 +61,11 @@ This package contains the node agent.
 %{_datadir}/dbus-1/interfaces/org.containers.hirte.Manager.xml
 %{_datadir}/dbus-1/interfaces/org.containers.hirte.Monitor.xml
 %{_datadir}/dbus-1/interfaces/org.containers.hirte.Node.xml
+%{_datadir}/man/man1/hirte.1
+%{_datadir}/man/man1/hirte-agent.1
+%{_datadir}/man/man1/hirtectl.1
+%{_datadir}/man/man5/hirte.conf.5
+%{_datadir}/man/man5/hirte-agent.conf.5
 
 %files agent
 %config %{_sysconfdir}/hirte-agent.conf

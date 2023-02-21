@@ -64,4 +64,4 @@ TBD
 
 ## SEE ALSO
 
-**[hirte.conf(5)](https://github.com/containers/hirte/blob/main/man/hirte.conf.5.md)**
+**[hirte.conf(5)](https://github.com/containers/hirte/blob/main/doc/man/hirte.conf.5.md)**

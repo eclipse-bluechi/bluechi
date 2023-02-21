@@ -42,4 +42,4 @@ subdir('src/client')
 subdir('data')
 
 # Subdirectory for the man documentation
-subdir('man')
+subdir('doc/man')

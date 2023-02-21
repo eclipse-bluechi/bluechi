@@ -68,4 +68,4 @@ Quiet=false
 
 ## SEE ALSO
 
-**[hirte-agent(1)](https://github.com/containers/hirte/blob/main/man/hirte-agent.1.md)**
+**[hirte-agent(1)](https://github.com/containers/hirte/blob/main/doc/man/hirte-agent.1.md)**

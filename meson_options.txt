@@ -3,7 +3,3 @@ option('api_bus', type: 'combo', choices: ['user', 'system'], value: 'user')
 option('man', type : 'combo', choices : ['true', 'false'],
     value : 'true',
     description : 'build and install man pages')
-option('docdir', type : 'string',
-    description : 'documentation directory [$datadir/doc/hirte]',
-    value : '',
-)

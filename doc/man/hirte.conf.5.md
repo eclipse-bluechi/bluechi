@@ -63,4 +63,4 @@ Quiet=false
 
 ## SEE ALSO
 
-**[hirte(1)](https://github.com/containers/hirte/blob/main/man/hirte.1.md)**
+**[hirte(1)](https://github.com/containers/hirte/blob/main/doc/man/hirte.1.md)**

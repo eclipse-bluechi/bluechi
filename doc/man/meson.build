@@ -1,14 +1,9 @@
 want_man = get_option('man') == 'true'
 md2man = find_program('go-md2man', required : false)
 if want_man and not md2man.found()
-  message('md2man not found, man page generation disabled automatically')
+  message('go-md2man not found, man page generation disabled automatically')
 endif
 want_man = want_man and md2man.found()
-
-docdir = get_option('docdir')
-if docdir == ''
-  docdir = get_option('datadir') / 'doc' / 'hirte'
-endif
 
 man1 = [
   'hirte',
@@ -38,7 +33,7 @@ if want_man
           ],
           build_by_default : true,
           install : true,
-          install_dir : get_option('mandir') / ('man' + section),
+          install_dir : get_option('datadir') / 'man' / ('man' + section),
         )
     endforeach
   endforeach

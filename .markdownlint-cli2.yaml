@@ -7,4 +7,4 @@ globs:
   - "**/*.md"
 
 ignores:
-  - "man/*.md"
+  - "doc/man/*.md"
