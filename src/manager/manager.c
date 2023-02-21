@@ -6,7 +6,6 @@
 #include "libhirte/common/common.h"
 #include "libhirte/common/config.h"
 #include "libhirte/common/parse-util.h"
-#include "libhirte/ini/config.h"
 #include "libhirte/log/log.h"
 #include "libhirte/service/shutdown.h"
 #include "libhirte/socket.h"
@@ -97,6 +96,8 @@ void manager_unref(Manager *manager) {
         LIST_FOREACH_SAFE(monitors, monitor, next_monitor, manager->monitors) {
                 monitor_unref(monitor);
         }
+
+        cfg_dispose(manager->config);
 
         free(manager);
 }
@@ -267,35 +268,61 @@ bool manager_set_port(Manager *manager, const char *port_s) {
 }
 
 bool manager_parse_config(Manager *manager, const char *configfile) {
-        _cleanup_config_ _config *config = NULL;
-        topic *topic = NULL;
-        const char *port = NULL;
+        int result = 0;
 
-        config = parsing_ini_file(configfile);
-        if (config == NULL) {
+        result = cfg_initialize(&manager->config);
+        if (result != 0) {
+                fprintf(stderr, "Error initializing configuration: '%s'.", strerror(result));
+                return false;
+        }
+
+        result = cfg_load_complete_configuration(
+                        manager->config,
+                        NULL, // TODO: https://github.com/containers/hirte/issues/147
+                        CFG_ETC_HIRTE_CONF,
+                        NULL); // TODO: https://github.com/containers/hirte/issues/148
+        if (result != 0) {
+                fprintf(stderr, "Error loading configuration '%s': '%s'.", CFG_ETC_HIRTE_CONF, strerror(result));
+                cfg_dispose(manager->config);
+                return false;
+        }
+
+        if (configfile != NULL) {
+                result = cfg_load_from_file(manager->config, configfile);
+                if (result != 0) {
+                        fprintf(stderr,
+                                "Error loading configuration file '%s': '%s'.",
+                                configfile,
+                                strerror(result));
+                        cfg_dispose(manager->config);
+                        return false;
+                }
+        }
+
+        result = cfg_set_default_section(manager->config, CFG_SECT_HIRTE);
+        if (result != 0) {
+                fprintf(stderr,
+                        "Error setting default section for hirte '%s', error code '%s'.",
+                        CFG_SECT_HIRTE,
+                        strerror(result));
+                cfg_dispose(manager->config);
                 return false;
         }
 
         // set defaults for logging
         hirte_log_init();
         // overwrite default log settings with config
-        hirte_log_init_from_config(config);
-        // overwrite config settings with env vars
-        hirte_log_init_from_env();
+        hirte_log_init_from_config(manager->config);
 
-        topic = config_lookup_topic(config, "Manager");
-        if (topic == NULL) {
-                return true;
-        }
-
-        port = topic_lookup(topic, CFG_MANAGER_PORT);
+        const char *port = NULL;
+        port = cfg_get_value(manager->config, CFG_MANAGER_PORT);
         if (port) {
                 if (!manager_set_port(manager, port)) {
                         return false;
                 }
         }
 
-        const char *expected_nodes = topic_lookup(topic, CFG_ALLOWED_NODE_NAMES);
+        const char *expected_nodes = cfg_get_value(manager->config, CFG_ALLOWED_NODE_NAMES);
         if (expected_nodes) {
                 char *saveptr = NULL;
                 char *name = strtok_r((char *) expected_nodes, ",", &saveptr);

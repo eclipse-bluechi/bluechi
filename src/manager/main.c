@@ -5,7 +5,6 @@
 
 #include "libhirte/common/opt.h"
 #include "libhirte/common/parse-util.h"
-#include "libhirte/ini/config.h"
 #include "libhirte/service/shutdown.h"
 
 #include "manager.h"
@@ -64,10 +63,8 @@ int main(int argc, char *argv[]) {
         }
 
         /* First load config */
-        if (opt_config) {
-                if (!manager_parse_config(manager, opt_config)) {
-                        return EXIT_FAILURE;
-                }
+        if (!manager_parse_config(manager, opt_config)) {
+                return EXIT_FAILURE;
         }
 
         /* Then override individual options */
