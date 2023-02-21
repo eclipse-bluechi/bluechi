@@ -39,6 +39,7 @@ typedef struct config config;
 
 /* Standard configuration file locations
  */
+#define CFG_ETC_HIRTE_CONF "/etc/hirte/hirte.conf"
 #define CFG_ETC_HIRTE_AGENT_CONF "/etc/hirte/agent.conf"
 
 /*

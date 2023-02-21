@@ -5,6 +5,7 @@
 #include <stdbool.h>
 
 #include "libhirte/common/common.h"
+#include "libhirte/common/config.h"
 
 #include "types.h"
 
@@ -29,6 +30,8 @@ struct Manager {
         LIST_HEAD(Job, jobs);
         LIST_HEAD(Monitor, monitors);
         LIST_HEAD(Subscription, all_subscriptions);
+
+        struct config *config;
 };
 
 Manager *manager_new(void);
