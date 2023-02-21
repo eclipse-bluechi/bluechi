@@ -61,13 +61,17 @@ This package contains the node agent.
 %{_datadir}/dbus-1/interfaces/org.containers.hirte.Manager.xml
 %{_datadir}/dbus-1/interfaces/org.containers.hirte.Monitor.xml
 %{_datadir}/dbus-1/interfaces/org.containers.hirte.Node.xml
-
+%{_mandir}/man1/hirte.*
+%{_mandir}/man1/hirtectl.*
+%{_mandir}/man5/hirte.conf.*
 
 %files agent
 %config %{_sysconfdir}/hirte-agent.conf
 %doc README.md
 %license LICENSE
 %{_bindir}/hirte-agent
+%{_mandir}/man1/hirte-agent.*
+%{_mandir}/man5/hirte-agent.conf.*
 
 
 %changelog
