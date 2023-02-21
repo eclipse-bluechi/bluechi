@@ -33,7 +33,7 @@ lint-fix:
 	eval $(ALL_SRC_FILES) | xargs -0 -I {} clang-tidy --quiet {} --fix -- -I src/ -D_GNU_SOURCE
 
 codespell:
-	codespell -S Makefile,imgtype,copy,AUTHORS,bin,.git,CHANGELOG.md,changelog.txt,.cirrus.yml,"*.xz,*.gz,*.tar,*.tgz,*ico,*.png,*.1,*.5,*.orig,*.rej,*.xml" -L keypair,flate,uint,iff,od,ERRO -w
+	codespell -S Makefile,imgtype,copy,AUTHORS,bin,.git,CHANGELOG.md,changelog.txt,.cirrus.yml,"*.xz,*.gz,*.tar,*.tgz,*ico,*.png,*.1,*.5,*.orig,*.rej,*.xml,*xsl" -L keypair,flate,uint,iff,od,ERRO -w
 
 clean:
 	find . -name \*~ -delete

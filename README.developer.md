@@ -134,6 +134,25 @@ was accepted. It does not do much more at this point.
 
 ## Documentation
 
-For further documentation please refer to the [doc](./doc/) directory.
+For further documentation please refer to the [doc](./doc/) directory.  
 
 The target architecture for this project is described in [doc/arch](./doc/arch/).
+
+### Building MAN pages
+
+Building the MAN pages is enabled by default. However, if the necessary tools are missing, building and installing them
+will be skipped. Install them via:
+
+```bash
+sudo dnf install libxslt xmlto
+```
+
+To disable building man pages, set the option `man` and/or `html` in [meson_options.txt](./meson_options.txt) to `false`
+and clean the build directory via `make clean`. Instead of manually changing the file, options can be configured using `meson`:
+
+```bash
+# disable building the plain MAN pages
+meson configure builddir -Dman=false
+```
+
+After executing a subsequent `meson install` the MAN pages are located in the `man/man*` directories.  

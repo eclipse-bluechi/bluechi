@@ -80,6 +80,7 @@ jobs:
                   rpm-build \
                   sed \
                   tar \
+                  golang-github-cpuguy83-md2man \
               -y
 
       - name: Checkout sources

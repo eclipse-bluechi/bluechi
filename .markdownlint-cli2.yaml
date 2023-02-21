@@ -5,3 +5,6 @@ config:
 
 globs:
   - "**/*.md"
+
+ignores:
+  - "doc/man/*.md"
