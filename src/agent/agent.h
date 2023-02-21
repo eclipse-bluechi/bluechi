@@ -6,6 +6,7 @@
 #include <sys/socket.h>
 
 #include "libhirte/common/common.h"
+#include "libhirte/common/config.h"
 #include "libhirte/hashmap/hashmap.h"
 
 typedef struct Agent Agent;
@@ -66,6 +67,8 @@ struct Agent {
         LIST_HEAD(JobTracker, tracked_jobs);
 
         struct hashmap *unit_infos;
+
+        struct config *config;
 };
 
 typedef struct AgentUnitInfo {

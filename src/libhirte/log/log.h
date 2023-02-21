@@ -56,7 +56,7 @@ void hirte_log_set_quiet(bool is_quiet);
 
 void hirte_log_init();
 void hirte_log_init_from_env();
-int hirte_log_init_from_config(_config *conf);
+int hirte_log_init_from_config(struct config *conf);
 
 bool shouldLog(LogLevel lvl);
 

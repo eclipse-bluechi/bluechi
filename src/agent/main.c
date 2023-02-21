@@ -75,10 +75,8 @@ int main(int argc, char *argv[]) {
         }
 
         /* First load config */
-        if (opt_config) {
-                if (!agent_parse_config(agent, opt_config)) {
-                        return EXIT_FAILURE;
-                }
+        if (!agent_parse_config(agent, opt_config)) {
+                return EXIT_FAILURE;
         }
 
         /* Then override individual options */

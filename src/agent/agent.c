@@ -1,6 +1,8 @@
 /* SPDX-License-Identifier: GPL-2.0-or-later */
 #include <arpa/inet.h>
 #include <errno.h>
+#include <stdio.h>
+#include <string.h>
 
 #include "libhirte/bus/bus.h"
 #include "libhirte/bus/utils.h"
@@ -9,7 +11,6 @@
 #include "libhirte/common/event-util.h"
 #include "libhirte/common/opt.h"
 #include "libhirte/common/parse-util.h"
-#include "libhirte/ini/config.h"
 #include "libhirte/log/log.h"
 #include "libhirte/service/shutdown.h"
 
@@ -353,6 +354,8 @@ void agent_unref(Agent *agent) {
                 sd_bus_unrefp(&agent->systemd_dbus);
         }
 
+        cfg_dispose(agent->config);
+
         free(agent);
 }
 
@@ -391,44 +394,70 @@ bool agent_set_name(Agent *agent, const char *name) {
 }
 
 bool agent_parse_config(Agent *agent, const char *configfile) {
-        _cleanup_config_ _config *config = NULL;
-        topic *topic = NULL;
-        const char *name = NULL, *host = NULL, *port = NULL;
+        int result = 0;
 
-        config = parsing_ini_file(configfile);
-        if (config == NULL) {
+        result = cfg_initialize(&agent->config);
+        if (result != 0) {
+                fprintf(stderr, "Error initializing configuration: '%s'.", strerror(result));
+                return false;
+        }
+
+        result = cfg_load_complete_configuration(
+                        agent->config,
+                        NULL, // TODO: https://github.com/containers/hirte/issues/147
+                        CFG_ETC_HIRTE_AGENT_CONF,
+                        NULL); // TODO: https://github.com/containers/hirte/issues/148
+        if (result != 0) {
+                fprintf(stderr, "Error loading configuration: '%s'.", strerror(result));
+                cfg_dispose(agent->config);
+                return false;
+        }
+
+        if (configfile != NULL) {
+                result = cfg_load_from_file(agent->config, configfile);
+                if (result != 0) {
+                        fprintf(stderr,
+                                "Error loading configuration file '%s', error code '%s'.",
+                                configfile,
+                                strerror(result));
+                        cfg_dispose(agent->config);
+                        return false;
+                }
+        }
+
+        result = cfg_set_default_section(agent->config, CFG_SECT_AGENT);
+        if (result != 0) {
+                fprintf(stderr,
+                        "Error setting default section for agent '%s', error code '%s'.",
+                        CFG_SECT_AGENT,
+                        strerror(result));
+                cfg_dispose(agent->config);
                 return false;
         }
 
         // set defaults for logging
         hirte_log_init();
         // overwrite default log settings with config
-        hirte_log_init_from_config(config);
-        // overwrite config settings with env vars
-        hirte_log_init_from_env();
+        hirte_log_init_from_config(agent->config);
 
-        topic = config_lookup_topic(config, "Node");
-        if (topic == NULL) {
-                return true;
-        }
-
-        name = topic_lookup(topic, CFG_NODE_NAME);
-        if (name) {
-                if (!agent_set_name(agent, name)) {
+        const char *value = NULL;
+        value = cfg_get_value(agent->config, CFG_NODE_NAME);
+        if (value) {
+                if (!agent_set_name(agent, value)) {
                         return false;
                 }
         }
 
-        host = topic_lookup(topic, CFG_MANAGER_HOST);
-        if (host) {
-                if (!agent_set_host(agent, host)) {
+        value = cfg_get_value(agent->config, CFG_MANAGER_HOST);
+        if (value) {
+                if (!agent_set_host(agent, value)) {
                         return false;
                 }
         }
 
-        port = topic_lookup(topic, CFG_MANAGER_PORT);
-        if (port) {
-                if (!agent_set_port(agent, port)) {
+        value = cfg_get_value(agent->config, CFG_MANAGER_PORT);
+        if (value) {
+                if (!agent_set_port(agent, value)) {
                         return false;
                 }
         }

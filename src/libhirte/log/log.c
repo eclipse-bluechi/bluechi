@@ -150,26 +150,16 @@ void hirte_log_init_from_env() {
         }
 }
 
-int hirte_log_init_from_config(_config *conf) {
-        if (conf == NULL) {
-                return -EINVAL;
-        }
-
-        topic *logging_topic = NULL;
+int hirte_log_init_from_config(struct config *config) {
         const char *target = NULL;
         const char *quiet = NULL;
 
-        logging_topic = config_lookup_topic(conf, HIRTE_LOG_CONFIG_TOPIC);
-        if (logging_topic == NULL) {
-                return -EINVAL;
-        }
-
-        LogLevel level = string_to_log_level(topic_lookup(logging_topic, CFG_LOG_LEVEL));
+        LogLevel level = string_to_log_level(cfg_get_value(config, CFG_LOG_LEVEL));
         if (level != LOG_LEVEL_INVALID) {
                 hirte_log_set_level(level);
         }
 
-        target = topic_lookup(logging_topic, CFG_LOG_TARGET);
+        target = cfg_get_value(config, CFG_LOG_TARGET);
         if (target != NULL) {
                 if (streqi(HIRTE_LOG_TARGET_JOURNALD, target)) {
                         hirte_log_set_log_fn(hirte_log_to_journald_with_location);
@@ -178,11 +168,9 @@ int hirte_log_init_from_config(_config *conf) {
                 }
         }
 
-        quiet = topic_lookup(logging_topic, CFG_LOG_IS_QUIET);
-        if (is_true_value(quiet)) {
-                hirte_log_set_quiet(true);
-        } else if (is_false_value(quiet)) {
-                hirte_log_set_quiet(false);
+        quiet = cfg_get_value(config, CFG_LOG_IS_QUIET);
+        if (quiet != NULL) {
+                hirte_log_set_quiet(cfg_get_bool_value(config, CFG_LOG_IS_QUIET));
         }
 
         return 0;
