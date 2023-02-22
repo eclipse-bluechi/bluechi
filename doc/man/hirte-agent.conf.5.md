@@ -20,7 +20,7 @@ All fields to bootstrap the hirte-agent are contained in the **Node** group. The
 
 The unique name of this agent.
 
-#### **Host** (string)
+#### **ManagerHost** (string)
 
 The host used by `hirte-agent` to connect to `hirte`. Must be a valid IPv4 or IPv6.
 
@@ -57,7 +57,7 @@ If this flag is set to `true`, no logs are written by hirte.
 ```
 [Node]
 NodeName=agent-007
-Host=127.0.0.1
+ManagerHost=127.0.0.1
 Port=2020
 
 [Logging]
