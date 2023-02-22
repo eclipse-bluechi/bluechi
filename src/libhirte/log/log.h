@@ -1,14 +1,11 @@
 /* SPDX-License-Identifier: GPL-2.0-or-later */
 #pragma once
 
+#include <stdbool.h>
+
 #include <systemd/sd-journal.h>
 
-#include "libhirte/ini/config.h"
-
-
-#define HIRTE_LOG_ENV_KEY_LEVEL "HIRTE_LOG_LEVEL"
-#define HIRTE_LOG_ENV_KEY_TARGET "HIRTE_LOG_TARGET"
-#define HIRTE_LOG_ENV_KEY_IS_QUIET "HIRTE_LOG_IS_QUIET"
+#include "libhirte/common/config.h"
 
 #define HIRTE_LOG_CONFIG_TOPIC "Logging"
 
@@ -55,8 +52,7 @@ void hirte_log_set_level(LogLevel level);
 void hirte_log_set_quiet(bool is_quiet);
 
 void hirte_log_init();
-void hirte_log_init_from_env();
-int hirte_log_init_from_config(struct config *conf);
+int hirte_log_init_from_config(struct config *config);
 
 bool shouldLog(LogLevel lvl);
 
