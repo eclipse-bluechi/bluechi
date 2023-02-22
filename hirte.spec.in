@@ -51,7 +51,7 @@ This package contains the node agent.
 
 
 %files
-%config %{_sysconfdir}/hirte.conf
+%config %{_sysconfdir}/hirte/hirte.conf
 %doc README.md
 %doc README.developer.md
 %license LICENSE
@@ -67,7 +67,7 @@ This package contains the node agent.
 %{_sysconfdir}/dbus-1/system.d/org.containers.hirte.conf
 
 %files agent
-%config %{_sysconfdir}/hirte-agent.conf
+%config %{_sysconfdir}/hirte/agent.conf
 %doc README.md
 %license LICENSE
 %{_bindir}/hirte-agent
