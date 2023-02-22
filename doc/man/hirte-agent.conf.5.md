@@ -16,7 +16,7 @@ The hirte-agent configuration file is using the .ini file format.
 
 All fields to bootstrap the hirte-agent are contained in the **Node** group. The following keys are understood by `hirte-agent`.
 
-#### **Name** (string)
+#### **NodeName** (string)
 
 The unique name of this agent.
 
@@ -56,7 +56,7 @@ If this flag is set to `true`, no logs are written by hirte.
 
 ```
 [Node]
-Name=agent-007
+NodeName=agent-007
 Host=127.0.0.1
 Port=2020
 

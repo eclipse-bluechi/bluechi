@@ -1,4 +1,4 @@
-name: Integration Testing  
+name: Integration Testing
 
 on:
   push:
@@ -9,12 +9,12 @@ on:
 
 jobs:
   test:
-    name: cs9 x86_64 e2e 
+    name: cs9 x86_64 e2e
     runs-on: ubuntu-latest
     steps:
       - name: Install dependencies
         run: |
-          sudo apt-get -y install podman 
+          sudo apt-get -y install podman
 
       - name: Checkout sources
         uses: actions/checkout@v3
@@ -52,7 +52,7 @@ jobs:
         run: |
           # Change node name in config file
           podman exec -it hirte-agent-bar \
-          sed -i "s/\(Name=\)\(.*\)/\1bar/" /hirte/example-hirte-agent.ini
+          sed -i "s/\(NodeName=\)\(.*\)/\1bar/" /hirte/example-hirte-agent.ini
           # Change manager address in config file
           podman exec -it hirte-agent-bar \
           sed -i "s/\(Host=\)\(.*\)/\1${{ env.PODMAN_NET }}/" /hirte/example-hirte-agent.ini
@@ -67,7 +67,7 @@ jobs:
         run: |
           # Change node name in config file
           podman exec -it hirte-agent-foo \
-          sed -i "s/\(Name=\)\(.*\)/\1foo/" /hirte/example-hirte-agent.ini
+          sed -i "s/\(NodeName=\)\(.*\)/\1foo/" /hirte/example-hirte-agent.ini
           # Change manager address in config file
           podman exec -it hirte-agent-foo \
           sed -i "s/\(Host=\)\(.*\)/\1${{ env.PODMAN_NET }}/" /hirte/example-hirte-agent.ini
