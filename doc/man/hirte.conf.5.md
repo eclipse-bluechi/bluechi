@@ -20,9 +20,9 @@ All fields to bootstrap the hirte manager are contained in the **Manager** group
 
 The port the manager listens on to establish connections with the `hirte-agents`.
 
-#### **Nodes** (string)
+#### **AllowedNodeNames** (string)
 
-A comma separated list of unique hirte-agent names. These are used as a whitelist to validate any register request from a `hirte-agent`.
+A comma separated list of unique hirte-agent names. Only node names mentioned in the list can connect to `hirte`.
 
 ### Logging section
 
@@ -53,7 +53,7 @@ If this flag is set to `true`, no logs are written by hirte.
 ```
 [Manager]
 ManagerPort=2020
-Nodes=agent-007,agent-123
+AllowedNodeNames=agent-007,agent-123
 
 [Logging]
 Level=DEBUG
