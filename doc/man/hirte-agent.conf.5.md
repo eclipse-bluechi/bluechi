@@ -10,11 +10,12 @@ The basic file definition used to bootstrap hirte-agent.
 
 ## Format
 
-The hirte-agent configuration file is using the .ini file format.
+The hirte-agent configuration file is using the
+[systemd configuration file format](https://www.freedesktop.org/software/systemd/man/systemd.syntax.html).
 
-### Node section
+### **hirte-agent** section
 
-All fields to bootstrap the hirte-agent are contained in the **Node** group. The following keys are understood by `hirte-agent`.
+All fields to bootstrap the hirte-agent are contained in the **hirte-agent** section. The following keys are understood by `hirte-agent`.
 
 #### **NodeName** (string)
 
@@ -27,10 +28,6 @@ The host used by `hirte-agent` to connect to `hirte`. Must be a valid IPv4 or IP
 #### **ManagerPort** (uint16_t)
 
 The port on which `hirte` is listening for connection request and the `hirte-agent` is connecting to.
-
-### Logging section
-
-Fields in the **Logging** group define the logging behavior of `hirte-agent`. These settings are overridden by the environment variables (see `hirte-agent(1)`) for logging.
 
 #### **LogLevel** (string)
 
@@ -55,12 +52,10 @@ If this flag is set to `true`, no logs are written by hirte.
 ## Example
 
 ```
-[Node]
+[hirte-agent]
 NodeName=agent-007
 ManagerHost=127.0.0.1
 ManagerPort=2020
-
-[Logging]
 LogLevel=DEBUG
 LogTarget=journald
 LogIsQuiet=false

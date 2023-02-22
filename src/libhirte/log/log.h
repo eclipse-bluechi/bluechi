@@ -7,8 +7,6 @@
 
 #include "libhirte/common/config.h"
 
-#define HIRTE_LOG_CONFIG_TOPIC "Logging"
-
 #define HIRTE_LOG_TARGET_JOURNALD "journald"
 #define HIRTE_LOG_TARGET_STDERR "stderr"
 
