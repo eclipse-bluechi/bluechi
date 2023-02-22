@@ -435,10 +435,8 @@ bool agent_parse_config(Agent *agent, const char *configfile) {
                 return false;
         }
 
-        // set defaults for logging
-        hirte_log_init();
-        // overwrite default log settings with config
-        hirte_log_init_from_config(agent->config);
+        // set logging configuration
+        hirte_log_init(agent->config);
 
         const char *value = NULL;
         value = cfg_get_value(agent->config, CFG_NODE_NAME);

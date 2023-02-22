@@ -309,10 +309,8 @@ bool manager_parse_config(Manager *manager, const char *configfile) {
                 return false;
         }
 
-        // set defaults for logging
-        hirte_log_init();
-        // overwrite default log settings with config
-        hirte_log_init_from_config(manager->config);
+        // set logging configuration
+        hirte_log_init(manager->config);
 
         const char *port = NULL;
         port = cfg_get_value(manager->config, CFG_MANAGER_PORT);
