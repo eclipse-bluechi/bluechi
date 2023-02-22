@@ -2,7 +2,6 @@
 #include <errno.h>
 
 #include "libhirte/common/common.h"
-#include "libhirte/common/config.h"
 
 #include "log.h"
 
@@ -122,33 +121,6 @@ void hirte_log_init() {
         hirte_log_set_log_fn(hirte_log_to_stderr_with_location);
 }
 
-void hirte_log_init_from_env() {
-        char *env_level = NULL;
-        char *env_target = NULL;
-        char *env_is_quiet = NULL;
-
-        env_level = getenv(HIRTE_LOG_ENV_KEY_LEVEL);
-        LogLevel level = string_to_log_level(env_level);
-        if (level != LOG_LEVEL_INVALID) {
-                hirte_log_set_level(level);
-        }
-
-        env_target = getenv(HIRTE_LOG_ENV_KEY_TARGET);
-        if (env_target != NULL) {
-                if (streqi(HIRTE_LOG_TARGET_JOURNALD, env_target)) {
-                        hirte_log_set_log_fn(hirte_log_to_journald_with_location);
-                } else if (streqi(HIRTE_LOG_TARGET_STDERR, env_target)) {
-                        hirte_log_set_log_fn(hirte_log_to_stderr_with_location);
-                }
-        }
-
-        env_is_quiet = getenv(HIRTE_LOG_ENV_KEY_IS_QUIET);
-        if (is_true_value(env_is_quiet)) {
-                hirte_log_set_quiet(true);
-        } else if (is_false_value(env_is_quiet)) {
-                hirte_log_set_quiet(false);
-        }
-}
 
 int hirte_log_init_from_config(struct config *config) {
         const char *target = NULL;
