@@ -14,7 +14,7 @@
 #define CFG_MANAGER_HOST "ManagerHost"
 #define CFG_MANAGER_PORT "ManagerPort"
 #define CFG_NODE_NAME "NodeName"
-#define CFG_ALLOWED_NODE_NAMES "Nodes"
+#define CFG_ALLOWED_NODE_NAMES "AllowedNodeNames"
 
 /*
  * Global section - this is used, when configuration options are specified in the configuration file
