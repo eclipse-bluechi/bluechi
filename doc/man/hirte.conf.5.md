@@ -44,7 +44,7 @@ The target where logs are written to. Supported values are:
 - `stderr`
 - `journald`
 
-#### **Quiet** (string)
+#### **LogIsQuiet** (string)
 
 If this flag is set to `true`, no logs are written by hirte.
 
@@ -58,7 +58,7 @@ AllowedNodeNames=agent-007,agent-123
 [Logging]
 LogLevel=DEBUG
 LogTarget=journald
-Quiet=false
+LogIsQuiet=false
 ```
 
 ## SEE ALSO

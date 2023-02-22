@@ -10,7 +10,7 @@
  */
 #define CFG_LOG_LEVEL "LogLevel"
 #define CFG_LOG_TARGET "LogTarget"
-#define CFG_LOG_IS_QUIET "Quiet"
+#define CFG_LOG_IS_QUIET "LogIsQuiet"
 #define CFG_MANAGER_HOST "ManagerHost"
 #define CFG_MANAGER_PORT "ManagerPort"
 #define CFG_NODE_NAME "NodeName"
