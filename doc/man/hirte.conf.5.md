@@ -37,7 +37,7 @@ The level used for logging. Supported values are:
 - `WARN`
 - `ERROR`
 
-#### **Target** (string)
+#### **LogTarget** (string)
 
 The target where logs are written to. Supported values are:
 
@@ -57,7 +57,7 @@ AllowedNodeNames=agent-007,agent-123
 
 [Logging]
 LogLevel=DEBUG
-Target=journald
+LogTarget=journald
 Quiet=false
 ```
 
