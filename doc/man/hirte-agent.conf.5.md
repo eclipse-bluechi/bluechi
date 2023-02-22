@@ -24,7 +24,7 @@ The unique name of this agent.
 
 The host used by `hirte-agent` to connect to `hirte`. Must be a valid IPv4 or IPv6.
 
-#### **Port** (uint16_t)
+#### **ManagerPort** (uint16_t)
 
 The port on which `hirte` is listening for connection request and the `hirte-agent` is connecting to.
 
@@ -58,7 +58,7 @@ If this flag is set to `true`, no logs are written by hirte.
 [Node]
 NodeName=agent-007
 ManagerHost=127.0.0.1
-Port=2020
+ManagerPort=2020
 
 [Logging]
 Level=DEBUG

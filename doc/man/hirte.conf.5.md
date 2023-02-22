@@ -16,7 +16,7 @@ The hirte configuration file is using the .ini file format.
 
 All fields to bootstrap the hirte manager are contained in the **Manager** group. The following keys are understood by `hirte`.
 
-#### **Port** (uint16_t)
+#### **ManagerPort** (uint16_t)
 
 The port the manager listens on to establish connections with the `hirte-agents`.
 
@@ -52,7 +52,7 @@ If this flag is set to `true`, no logs are written by hirte.
 
 ```
 [Manager]
-Port=2020
+ManagerPort=2020
 Nodes=agent-007,agent-123
 
 [Logging]
