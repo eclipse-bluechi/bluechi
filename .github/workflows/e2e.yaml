@@ -55,7 +55,7 @@ jobs:
           sed -i "s/\(NodeName=\)\(.*\)/\1bar/" /hirte/example-hirte-agent.ini
           # Change manager address in config file
           podman exec -it hirte-agent-bar \
-          sed -i "s/\(Host=\)\(.*\)/\1${{ env.PODMAN_NET }}/" /hirte/example-hirte-agent.ini
+          sed -i "s/\(ManagerHost=\)\(.*\)/\1${{ env.PODMAN_NET }}/" /hirte/example-hirte-agent.ini
           podman exec -t hirte-agent-bar \
           su - test-user -c "(/usr/local/bin/hirte-agent -c \
           /hirte/example-hirte-agent.ini > bar.log 2>&1 &)"
@@ -70,7 +70,7 @@ jobs:
           sed -i "s/\(NodeName=\)\(.*\)/\1foo/" /hirte/example-hirte-agent.ini
           # Change manager address in config file
           podman exec -it hirte-agent-foo \
-          sed -i "s/\(Host=\)\(.*\)/\1${{ env.PODMAN_NET }}/" /hirte/example-hirte-agent.ini
+          sed -i "s/\(ManagerHost=\)\(.*\)/\1${{ env.PODMAN_NET }}/" /hirte/example-hirte-agent.ini
           podman exec -t hirte-agent-foo \
           su - test-user -c  "(/usr/local/bin/hirte-agent -c \
           /hirte/example-hirte-agent.ini > foo.log 2>&1 &)"
