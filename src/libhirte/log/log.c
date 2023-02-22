@@ -115,14 +115,13 @@ void hirte_log_set_quiet(bool is_quiet) {
         HirteLogConfig.is_quiet = is_quiet;
 }
 
-void hirte_log_init() {
+int hirte_log_init(struct config *config) {
+        // initialize log defaults
         hirte_log_set_level(LOG_LEVEL_INFO);
         hirte_log_set_quiet(false);
         hirte_log_set_log_fn(hirte_log_to_stderr_with_location);
-}
 
-
-int hirte_log_init_from_config(struct config *config) {
+        // load log settings from configuration
         const char *target = NULL;
         const char *quiet = NULL;
 

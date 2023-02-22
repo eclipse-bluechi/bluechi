@@ -51,8 +51,7 @@ void hirte_log_set_log_fn(LogFn log_fn);
 void hirte_log_set_level(LogLevel level);
 void hirte_log_set_quiet(bool is_quiet);
 
-void hirte_log_init();
-int hirte_log_init_from_config(struct config *config);
+int hirte_log_init(struct config *config);
 
 bool shouldLog(LogLevel lvl);
 
