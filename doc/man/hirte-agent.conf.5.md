@@ -32,7 +32,7 @@ The port on which `hirte` is listening for connection request and the `hirte-age
 
 Fields in the **Logging** group define the logging behavior of `hirte-agent`. These settings are overridden by the environment variables (see `hirte-agent(1)`) for logging.
 
-#### **Level** (string)
+#### **LogLevel** (string)
 
 The level used for logging. Supported values are:
 
@@ -61,7 +61,7 @@ ManagerHost=127.0.0.1
 ManagerPort=2020
 
 [Logging]
-Level=DEBUG
+LogLevel=DEBUG
 Target=journald
 Quiet=false
 ```

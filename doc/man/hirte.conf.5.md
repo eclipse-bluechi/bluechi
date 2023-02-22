@@ -28,7 +28,7 @@ A comma separated list of unique hirte-agent names. Only node names mentioned in
 
 Fields in the **Logging** group define the logging behavior of `hirte`. These settings are overridden by the environment variables (see `hirte(1)`) for logging.
 
-#### **Level** (string)
+#### **LogLevel** (string)
 
 The level used for logging. Supported values are:
 
@@ -56,7 +56,7 @@ ManagerPort=2020
 AllowedNodeNames=agent-007,agent-123
 
 [Logging]
-Level=DEBUG
+LogLevel=DEBUG
 Target=journald
 Quiet=false
 ```
