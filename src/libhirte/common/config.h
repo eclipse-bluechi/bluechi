@@ -8,7 +8,7 @@
 /*
  * Existing configuration file options
  */
-#define CFG_LOG_LEVEL "Level"
+#define CFG_LOG_LEVEL "LogLevel"
 #define CFG_LOG_TARGET "Target"
 #define CFG_LOG_IS_QUIET "Quiet"
 #define CFG_MANAGER_HOST "ManagerHost"
