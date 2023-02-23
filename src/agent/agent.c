@@ -260,6 +260,7 @@ static bool unit_info_update_state(AgentUnitInfo *info, sd_bus_message *m) {
                 changed = true;
         }
         if (!streq(data.substate, unit_info_get_substate(info))) {
+                free(info->substate);
                 info->substate = strdup(data.substate);
                 changed = true;
         }
@@ -1191,6 +1192,7 @@ static int agent_match_unit_removed(sd_bus_message *m, void *userdata, UNUSED sd
 
         info->loaded = false;
         info->active_state = _UNIT_ACTIVE_STATE_INVALID;
+        free(info->substate);
         info->substate = NULL;
 
         if (info->subscribed) {
