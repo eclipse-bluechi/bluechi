@@ -612,18 +612,39 @@ static int node_disconnected(UNUSED sd_bus_message *message, void *userdata, UNU
         void *item = NULL;
         size_t i = 0;
 
-        /* Send virtual unit remove for any reported loaded units */
+        /* Send virtual unit remove and state change for any reported loaded units */
         while (hashmap_iter(node->unit_subscriptions, &i, &item)) {
                 UnitSubscriptions *usubs = item;
+                bool send_state_change = false;
 
                 if (!usubs->loaded) {
                         continue;
+                }
+
+                if (usubs->active_state >= 0 && usubs->active_state != UNIT_INACTIVE) {
+                        /* We previously reported an not-inactive valid state, send a virtual inactive state */
+                        usubs->active_state = UNIT_INACTIVE;
+                        usubs->substate = strdup("agent-offline");
+                        send_state_change = true;
                 }
 
                 usubs->loaded = false;
                 UnitSubscription *usub = NULL;
                 LIST_FOREACH(subs, usub, usubs->subs) {
                         Subscription *sub = usub->sub;
+                        if (send_state_change) {
+                                int r = monitor_emit_unit_state_changed(
+                                                sub->monitor,
+                                                node->name,
+                                                sub->unit,
+                                                active_state_to_string(usubs->active_state),
+                                                usubs->substate,
+                                                "virtual");
+                                if (r < 0) {
+                                        hirte_log_error("Failed to emit UnitRemoved signal");
+                                }
+                        }
+
                         int r = monitor_emit_unit_removed(sub->monitor, node->name, sub->unit, "virtual");
                         if (r < 0) {
                                 hirte_log_error("Failed to emit UnitRemoved signal");
