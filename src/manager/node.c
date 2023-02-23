@@ -298,6 +298,7 @@ static int node_match_unit_state_changed(sd_bus_message *m, void *userdata, UNUS
         }
         usubs->loaded = true;
         usubs->active_state = active_state_from_string(active_state);
+        free(usubs->substate);
         usubs->substate = strdup(substate);
 
         UnitSubscription *usub = NULL;
@@ -624,6 +625,7 @@ static int node_disconnected(UNUSED sd_bus_message *message, void *userdata, UNU
                 if (usubs->active_state >= 0 && usubs->active_state != UNIT_INACTIVE) {
                         /* We previously reported an not-inactive valid state, send a virtual inactive state */
                         usubs->active_state = UNIT_INACTIVE;
+                        free(usubs->substate);
                         usubs->substate = strdup("agent-offline");
                         send_state_change = true;
                 }
