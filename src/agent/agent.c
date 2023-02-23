@@ -418,7 +418,10 @@ bool agent_parse_config(Agent *agent, const char *configfile) {
 static void agent_update_unit_infos_for(Agent *agent, AgentUnitInfo *info) {
         if (!info->subscribed && !info->loaded) {
                 AgentUnitInfoKey key = { info->object_path };
-                hashmap_delete(agent->unit_infos, &key);
+                AgentUnitInfo *info = hashmap_delete(agent->unit_infos, &key);
+                if (info) {
+                        unit_info_clear(info);
+                }
         }
 }
 
