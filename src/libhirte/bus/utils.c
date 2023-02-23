@@ -6,10 +6,10 @@
 #include "utils.h"
 
 /* Number of seconds idle before sending keepalive packets */
-#define AGENT_KEEPALIVE_SOCKET_KEEPIDLE_SECS 10
+#define AGENT_KEEPALIVE_SOCKET_KEEPIDLE_SECS 1
 
 /* Number of seconds idle between each keepalive packet */
-#define AGENT_KEEPALIVE_SOCKET_KEEPINTVL_SECS 10
+#define AGENT_KEEPALIVE_SOCKET_KEEPINTVL_SECS 1
 
 int bus_parse_properties_foreach(sd_bus_message *m, bus_property_cb cb, void *userdata) {
         bool stop = false;

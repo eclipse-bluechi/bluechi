@@ -84,6 +84,20 @@ sd_bus *peer_bus_open(sd_event *event, const char *dbus_description, const char 
         return steal_pointer(&dbus);
 }
 
+int peer_bus_close(sd_bus *peer_dbus) {
+        if (peer_dbus != NULL) {
+                int r = sd_bus_detach_event(peer_dbus);
+                if (r < 0) {
+                        hirte_log_errorf("Failed to detach bus from event: %s", strerror(-r));
+                        return r;
+                }
+
+                sd_bus_flush_close_unref(peer_dbus);
+        }
+
+        return 0;
+}
+
 /* This is just some helper to make the peer connections look like a bus for e.g busctl */
 static int method_peer_hello(sd_bus_message *m, UNUSED void *userdata, UNUSED sd_bus_error *ret_error) {
         /* Reply with the response */

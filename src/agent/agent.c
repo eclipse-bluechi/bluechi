@@ -35,27 +35,43 @@ static bool
                                 void *userdata,
                                 free_func_t free_userdata);
 
+static bool agent_connect(Agent *agent);
+
+static int agent_disconnected(UNUSED sd_bus_message *message, void *userdata, UNUSED sd_bus_error *error) {
+        Agent *agent = (Agent *) userdata;
+
+        if (!agent_connect(agent)) {
+                hirte_log_errorf("Agent '%s' disconnected", agent->name);
+                agent->connection_state = AGENT_CONNECTION_STATE_RETRY;
+        }
+
+        return 0;
+}
+
 static int agent_reset_heartbeat_timer(Agent *agent, sd_event_source **event_source);
 
 static int agent_heartbeat_timer_callback(sd_event_source *event_source, UNUSED uint64_t usec, void *userdata) {
-        Agent *agent = userdata;
-        int r = 0;
+        Agent *agent = (Agent *) userdata;
 
-        assert(event_source);
-
-        r = sd_bus_emit_signal(
-                        agent->peer_dbus,
-                        INTERNAL_AGENT_OBJECT_PATH,
-                        INTERNAL_AGENT_INTERFACE,
-                        "Heartbeat",
-                        "s",
-                        agent->name);
-        if (r < 0) {
-                hirte_log_errorf("Failed to emit heartbeat signal: %s", strerror(-r));
-                return r;
+        if (agent->connection_state == AGENT_CONNECTION_STATE_CONNECTED) {
+                int r = sd_bus_emit_signal(
+                                agent->peer_dbus,
+                                INTERNAL_AGENT_OBJECT_PATH,
+                                INTERNAL_AGENT_INTERFACE,
+                                "Heartbeat",
+                                "s",
+                                agent->name);
+                if (r < 0) {
+                        hirte_log_errorf("Failed to emit heartbeat signal: %s", strerror(-r));
+                }
+        } else if (agent->connection_state == AGENT_CONNECTION_STATE_RETRY) {
+                agent->connection_retry_count++;
+                if (!agent_connect(agent)) {
+                        hirte_log_errorf("Agent '%s' disconnected", agent->name);
+                }
         }
 
-        r = agent_reset_heartbeat_timer(agent, &event_source);
+        int r = agent_reset_heartbeat_timer(agent, &event_source);
         if (r < 0) {
                 hirte_log_errorf("Failed to reset agent heartbeat timer: %s", strerror(-r));
                 return r;
@@ -283,21 +299,24 @@ Agent *agent_new(void) {
                 return NULL;
         }
 
-        _cleanup_agent_ Agent *n = malloc0(sizeof(Agent));
-        n->ref_count = 1;
-        n->event = steal_pointer(&event);
-        n->api_bus_service_name = steal_pointer(&service_name);
-        n->port = HIRTE_DEFAULT_PORT;
-        LIST_HEAD_INIT(n->outstanding_requests);
-        LIST_HEAD_INIT(n->tracked_jobs);
+        _cleanup_agent_ Agent *agent = malloc0(sizeof(Agent));
+        agent->ref_count = 1;
+        agent->event = steal_pointer(&event);
+        agent->api_bus_service_name = steal_pointer(&service_name);
+        agent->port = HIRTE_DEFAULT_PORT;
+        LIST_HEAD_INIT(agent->outstanding_requests);
+        LIST_HEAD_INIT(agent->tracked_jobs);
 
-        n->unit_infos = hashmap_new(
+        agent->unit_infos = hashmap_new(
                         sizeof(AgentUnitInfo), 0, 0, 0, unit_info_hash, unit_info_compare, unit_info_clear, NULL);
-        if (n->unit_infos == NULL) {
+        if (agent->unit_infos == NULL) {
                 return NULL;
         }
 
-        return steal_pointer(&n);
+        agent->connection_state = AGENT_CONNECTION_STATE_DISCONNECTED;
+        agent->connection_retry_count = 0;
+
+        return steal_pointer(&agent);
 }
 
 Agent *agent_ref(Agent *agent) {
@@ -1472,59 +1491,6 @@ bool agent_start(Agent *agent) {
                 sd_bus_add_filter(agent->systemd_dbus, NULL, debug_systemd_message_handler, agent);
         }
 
-        agent->peer_dbus = peer_bus_open(agent->event, "peer-bus-to-orchestrator", agent->orch_addr);
-        if (agent->peer_dbus == NULL) {
-                hirte_log_error("Failed to open peer dbus");
-                return false;
-        }
-
-        r = bus_socket_set_no_delay(agent->peer_dbus);
-        if (r < 0) {
-                hirte_log_warn("Failed to set NO_DELAY on socket");
-        }
-
-        r = bus_socket_set_keepalive(agent->peer_dbus);
-        if (r < 0) {
-                hirte_log_warn("Failed to set KEEPALIVE on socket");
-        }
-
-        r = sd_bus_add_object_vtable(
-                        agent->peer_dbus,
-                        NULL,
-                        INTERNAL_AGENT_OBJECT_PATH,
-                        INTERNAL_AGENT_INTERFACE,
-                        internal_agent_vtable,
-                        agent);
-        if (r < 0) {
-                hirte_log_errorf("Failed to add manager vtable: %s", strerror(-r));
-                return false;
-        }
-
-        _cleanup_sd_bus_message_ sd_bus_message *reg_m = NULL;
-        r = sd_bus_call_method(
-                        agent->peer_dbus,
-                        HIRTE_DBUS_NAME,
-                        INTERNAL_MANAGER_OBJECT_PATH,
-                        INTERNAL_MANAGER_INTERFACE,
-                        "Register",
-                        &error,
-                        &reg_m,
-                        "s",
-                        agent->name);
-        if (r < 0) {
-                hirte_log_errorf("Failed to issue method call: %s", error.message);
-                sd_bus_error_free(&error);
-                return false;
-        }
-
-        r = sd_bus_message_read(reg_m, "");
-        if (r < 0) {
-                hirte_log_errorf("Failed to parse response message: %s", strerror(-r));
-                return false;
-        }
-
-        hirte_log_infof("Registered to '%s' as '%s'", agent->orch_addr, agent->name);
-
         r = shutdown_service_register(agent->api_bus, agent->event);
         if (r < 0) {
                 hirte_log_errorf("Failed to register shutdown service: %s", strerror(-r));
@@ -1543,6 +1509,11 @@ bool agent_start(Agent *agent) {
                 return false;
         }
 
+        if (!agent_connect(agent)) {
+                hirte_log_errorf("Agent '%s' disconnected", agent->name);
+                agent->connection_state = AGENT_CONNECTION_STATE_RETRY;
+        }
+
         r = sd_event_loop(agent->event);
         if (r < 0) {
                 hirte_log_errorf("Starting event loop failed: %s", strerror(-r));
@@ -1554,6 +1525,87 @@ bool agent_start(Agent *agent) {
 
 bool agent_stop(Agent *agent) {
         if (agent == NULL) {
+                return false;
+        }
+
+        return true;
+}
+
+static bool agent_connect(Agent *agent) {
+        peer_bus_close(agent->peer_dbus);
+
+        agent->peer_dbus = peer_bus_open(agent->event, "peer-bus-to-orchestrator", agent->orch_addr);
+        if (agent->peer_dbus == NULL) {
+                hirte_log_error("Failed to open peer dbus");
+                return false;
+        }
+
+        int r = bus_socket_set_no_delay(agent->peer_dbus);
+        if (r < 0) {
+                hirte_log_warn("Failed to set NO_DELAY on socket");
+        }
+
+        r = bus_socket_set_keepalive(agent->peer_dbus);
+        if (r < 0) {
+                hirte_log_warn("Failed to set KEEPALIVE on socket");
+        }
+
+        r = sd_bus_add_object_vtable(
+                        agent->peer_dbus,
+                        NULL,
+                        INTERNAL_AGENT_OBJECT_PATH,
+                        INTERNAL_AGENT_INTERFACE,
+                        internal_agent_vtable,
+                        agent);
+        if (r < 0) {
+                hirte_log_errorf("Failed to add agent vtable: %s", strerror(-r));
+                return false;
+        }
+
+        _cleanup_sd_bus_message_ sd_bus_message *bus_msg = NULL;
+        sd_bus_error error = SD_BUS_ERROR_NULL;
+        r = sd_bus_call_method(
+                        agent->peer_dbus,
+                        HIRTE_DBUS_NAME,
+                        INTERNAL_MANAGER_OBJECT_PATH,
+                        INTERNAL_MANAGER_INTERFACE,
+                        "Register",
+                        &error,
+                        &bus_msg,
+                        "s",
+                        agent->name);
+        if (r < 0) {
+                hirte_log_errorf(
+                                "Agent '%s' connection attempt %d: failure",
+                                agent->name,
+                                agent->connection_retry_count);
+                sd_bus_error_free(&error);
+                return false;
+        }
+
+        r = sd_bus_message_read(bus_msg, "");
+        if (r < 0) {
+                hirte_log_errorf("Failed to parse response message: %s", strerror(-r));
+                return false;
+        }
+
+        hirte_log_infof("Agent '%s' connection attempt %d: success", agent->name, agent->connection_retry_count);
+
+        agent->connection_state = AGENT_CONNECTION_STATE_CONNECTED;
+        agent->connection_retry_count = 0;
+
+        r = sd_bus_match_signal_async(
+                        agent->peer_dbus,
+                        NULL,
+                        "org.freedesktop.DBus.Local",
+                        "/org/freedesktop/DBus/Local",
+                        "org.freedesktop.DBus.Local",
+                        "Disconnected",
+                        agent_disconnected,
+                        NULL,
+                        agent);
+        if (r < 0) {
+                hirte_log_errorf("Failed to request match for Disconnected signal: %s", strerror(-r));
                 return false;
         }
 
