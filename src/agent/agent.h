@@ -35,12 +35,21 @@ DEFINE_CLEANUP_FUNC(SystemdRequest, systemd_request_unref)
 typedef void (*job_tracker_callback)(sd_bus_message *m, const char *result, void *userdata);
 typedef struct JobTracker JobTracker;
 
+typedef enum {
+        AGENT_CONNECTION_STATE_DISCONNECTED,
+        AGENT_CONNECTION_STATE_CONNECTED,
+        AGENT_CONNECTION_STATE_RETRY
+} AgentConnectionState;
+
 struct Agent {
         int ref_count;
 
         char *name;
         char *host;
         int port;
+
+        AgentConnectionState connection_state;
+        uint64_t connection_retry_count;
 
         char *orch_addr;
         char *api_bus_service_name;

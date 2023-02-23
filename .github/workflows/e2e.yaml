@@ -61,7 +61,7 @@ jobs:
           /hirte/example-hirte-agent.ini > bar.log 2>&1 &)"
           podman exec -it hirte-agent-bar /usr/bin/pkill --signal TERM hirte-agent
           podman exec -w /home/test-user -u test-user -it hirte-agent-bar \
-          grep "Registered.* as 'bar'" bar.log
+          grep "Agent 'bar' connection attempt 0: success" bar.log
 
       - name: run hirte agent-foo
         run: |
@@ -76,5 +76,4 @@ jobs:
           /hirte/example-hirte-agent.ini > foo.log 2>&1 &)"
           podman exec -it hirte-agent-foo /usr/bin/pkill --signal TERM hirte-agent
           podman exec -w /home/test-user -u test-user -it hirte-agent-foo \
-          grep "Registered.* as 'foo'" foo.log
-
+          grep "Agent 'foo' connection attempt 0: success" foo.log
