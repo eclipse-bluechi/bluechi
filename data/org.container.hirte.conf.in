@@ -1,0 +1,16 @@
+<!DOCTYPE busconfig PUBLIC "-//freedesktop//DTD D-BUS Bus Configuration 1.0//EN"
+ "http://www.freedesktop.org/standards/dbus/1.0/busconfig.dtd">
+<busconfig>
+
+  <policy user="@dbus_srv_user@">
+    <allow own="org.containers.hirte"/>
+    <allow send_destination="org.containers.hirte"/>
+    <allow receive_sender="org.containers.hirte"/>
+  </policy>
+
+  <policy context="default">
+    <allow send_destination="org.containers.hirte"/>
+    <allow receive_sender="org.containers.hirte"/>
+  </policy>
+
+</busconfig>
