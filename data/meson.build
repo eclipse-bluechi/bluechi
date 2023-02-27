@@ -18,14 +18,14 @@ conf = configuration_data()
 conf.set('dbus_srv_user', dbus_srv_user)
 
 configure_file(
-    output: 'org.container.hirte.conf',
-    input: 'org.container.hirte.conf.in', 
+    output: 'org.containers.hirte.conf',
+    input: 'org.containers.hirte.conf.in', 
     configuration: conf,
     install_dir: dbus_service_dir,
 )
 configure_file(
-    output: 'org.container.hirte.Agent.conf',
-    input: 'org.container.hirte.Agent.conf.in', 
+    output: 'org.containers.hirte.Agent.conf',
+    input: 'org.containers.hirte.Agent.conf.in', 
     configuration: conf,
     install_dir: dbus_service_dir,
 )
