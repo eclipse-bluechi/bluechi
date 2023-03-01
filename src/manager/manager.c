@@ -267,7 +267,7 @@ bool manager_set_port(Manager *manager, const char *port_s) {
 }
 
 bool manager_parse_config(Manager *manager, const char *configfile) {
-        _cleanup_config_ config *config = NULL;
+        _cleanup_config_ _config *config = NULL;
         topic *topic = NULL;
         const char *port = NULL;
 
