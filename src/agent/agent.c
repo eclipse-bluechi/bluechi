@@ -276,6 +276,7 @@ static bool unit_info_update_state(AgentUnitInfo *info, sd_bus_message *m) {
                 changed = true;
         }
         if (!streq(data.substate, unit_info_get_substate(info))) {
+                free(info->substate);
                 info->substate = strdup(data.substate);
                 changed = true;
         }
@@ -436,7 +437,10 @@ bool agent_parse_config(Agent *agent, const char *configfile) {
 static void agent_update_unit_infos_for(Agent *agent, AgentUnitInfo *info) {
         if (!info->subscribed && !info->loaded) {
                 AgentUnitInfoKey key = { info->object_path };
-                hashmap_delete(agent->unit_infos, &key);
+                AgentUnitInfo *info = hashmap_delete(agent->unit_infos, &key);
+                if (info) {
+                        unit_info_clear(info);
+                }
         }
 }
 
@@ -1210,6 +1214,7 @@ static int agent_match_unit_removed(sd_bus_message *m, void *userdata, UNUSED sd
 
         info->loaded = false;
         info->active_state = _UNIT_ACTIVE_STATE_INVALID;
+        free(info->substate);
         info->substate = NULL;
 
         if (info->subscribed) {

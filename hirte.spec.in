@@ -38,7 +38,7 @@ This package contains the node agent.
 
 
 %build
-%meson
+%meson -Dapi_bus=system
 %meson_build
 
 
@@ -64,6 +64,7 @@ This package contains the node agent.
 %{_mandir}/man1/hirte.*
 %{_mandir}/man1/hirtectl.*
 %{_mandir}/man5/hirte.conf.*
+%{_sysconfdir}/dbus-1/system.d/org.containers.hirte.conf
 
 %files agent
 %config %{_sysconfdir}/hirte-agent.conf
@@ -72,6 +73,7 @@ This package contains the node agent.
 %{_bindir}/hirte-agent
 %{_mandir}/man1/hirte-agent.*
 %{_mandir}/man5/hirte-agent.conf.*
+%{_sysconfdir}/dbus-1/system.d/org.containers.hirte.Agent.conf
 
 
 %changelog

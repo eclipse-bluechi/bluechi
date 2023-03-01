@@ -298,6 +298,7 @@ static int node_match_unit_state_changed(sd_bus_message *m, void *userdata, UNUS
         }
         usubs->loaded = true;
         usubs->active_state = active_state_from_string(active_state);
+        free(usubs->substate);
         usubs->substate = strdup(substate);
 
         UnitSubscription *usub = NULL;
@@ -620,6 +621,7 @@ static int node_disconnected(UNUSED sd_bus_message *message, void *userdata, UNU
                 if (usubs->active_state >= 0 && usubs->active_state != UNIT_INACTIVE) {
                         /* We previously reported an not-inactive valid state, send a virtual inactive state */
                         usubs->active_state = UNIT_INACTIVE;
+                        free(usubs->substate);
                         usubs->substate = strdup("agent-offline");
                         send_state_change = true;
                 }
@@ -1268,6 +1270,7 @@ void node_unsubscribe(Node *node, Subscription *sub) {
         UnitSubscriptions *usubs = NULL;
         UnitSubscription *usub = NULL;
         UnitSubscription *found = NULL;
+        UnitSubscriptions *deleted = NULL;
 
         /* NOTE: If there are errors during subscribe we may still
            call unsubscribe, so this must silently handle the
@@ -1290,10 +1293,14 @@ void node_unsubscribe(Node *node, Subscription *sub) {
         }
 
         LIST_REMOVE(subs, usubs->subs, found);
+        free(found);
 
         if (LIST_IS_EMPTY(usubs->subs)) {
                 /* Last subscription for this unit, tell agent */
                 node_send_agent_unsubscribe(node, sub->unit);
-                hashmap_delete(node->unit_subscriptions, &key);
+                deleted = hashmap_delete(node->unit_subscriptions, &key);
+                if (deleted) {
+                        unit_subscriptions_clear(deleted);
+                }
         }
 }
