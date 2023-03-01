@@ -49,7 +49,7 @@ jobs:
 
       - name: Running codespell checker
         run: |
-          make codespell
+          make check-codespell
 
       - name: Running markdown lint
         uses: DavidAnson/markdownlint-cli2-action@v9
