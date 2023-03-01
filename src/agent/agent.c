@@ -391,7 +391,7 @@ bool agent_set_name(Agent *agent, const char *name) {
 }
 
 bool agent_parse_config(Agent *agent, const char *configfile) {
-        _cleanup_config_ config *config = NULL;
+        _cleanup_config_ _config *config = NULL;
         topic *topic = NULL;
         const char *name = NULL, *host = NULL, *port = NULL;
 

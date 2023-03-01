@@ -51,11 +51,11 @@ uint64_t topic_hash(const void *item, uint64_t seed0, uint64_t seed1) {
         return hashmap_sip(top->topic, strlen(top->topic), seed0, seed1);
 }
 
-struct topic *config_lookup_topic(config *config, const char *name) {
+struct topic *config_lookup_topic(_config *config, const char *name) {
         return hashmap_get(config, &(topic){ .topic = (char *) name });
 }
 
-struct topic *config_ensure_topic(config *config, const char *name) {
+struct topic *config_ensure_topic(_config *config, const char *name) {
         struct topic *old = config_lookup_topic(config, name);
         if (old != NULL) {
                 return old;
@@ -114,7 +114,7 @@ bool topic_set(topic *t, const char *key, const char *value) {
         return true;
 }
 
-const char *config_lookup(config *config, const char *topicname, const char *key) {
+const char *config_lookup(_config *config, const char *topicname, const char *key) {
         topic *t = config_lookup_topic(config, topicname);
         if (t == NULL) {
                 return NULL;
@@ -126,7 +126,7 @@ const char *config_lookup(config *config, const char *topicname, const char *key
  * This function will be used in ini_parse() for node ini file parsing.
  */
 static int handler(void *user, const char *section, const char *name, const char *value) {
-        config *c = (config *) user;
+        _config *c = (_config *) user;
 
         assert(section != NULL);
         assert(name != NULL);
@@ -145,15 +145,15 @@ static int handler(void *user, const char *section, const char *name, const char
         return 0;
 }
 
-config *new_config(void) {
+_config *new_config(void) {
         return hashmap_new(sizeof(topic), 0, 0, 0, topic_hash, topic_compare_topic_name, topic_free, NULL);
 }
 
 /* Get the file path
     if it can't find the or can't parse the path it will return configurationOrch
     with nulls else will return configurationOrch with all the data */
-config *parsing_ini_file(const char *file) {
-        config *config = new_config();
+_config *parsing_ini_file(const char *file) {
+        _config *config = new_config();
         if (config == NULL) {
                 return NULL; /* oom */
         }
@@ -168,7 +168,7 @@ config *parsing_ini_file(const char *file) {
         return config;
 }
 
-void print_all_topics(config *config) {
+void print_all_topics(_config *config) {
         if (config != NULL) {
                 return;
         }
@@ -193,11 +193,11 @@ void free_hashmapp(struct hashmap **hmp) {
         }
 }
 
-void free_config(config *config) {
+void free_config(_config *config) {
         hashmap_free(config);
 }
 
-void free_configp(config **configp) {
+void free_configp(_config **configp) {
         if (configp && *configp) {
                 free_config(*configp);
         }

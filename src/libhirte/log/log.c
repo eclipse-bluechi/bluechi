@@ -150,7 +150,7 @@ void hirte_log_init_from_env() {
         }
 }
 
-int hirte_log_init_from_config(config *conf) {
+int hirte_log_init_from_config(_config *conf) {
         if (conf == NULL) {
                 return -EINVAL;
         }
