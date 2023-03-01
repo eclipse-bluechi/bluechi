@@ -38,7 +38,7 @@ This package contains the node agent.
 
 
 %build
-%meson
+%meson -Dapi_bus=system
 %meson_build
 
 
