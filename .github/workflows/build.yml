@@ -39,6 +39,10 @@ jobs:
           # Use githash of a tested commit instead of merge commit
           ref: ${{ github.event.pull_request.head.sha }}
 
+      - name: Check SPDX headers
+        run: |
+          ./build-tools/spdx-header-chech.sh
+
       - name: Running source code format check
         run: |
           make check-fmt
