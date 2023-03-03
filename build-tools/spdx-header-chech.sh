@@ -1,7 +1,7 @@
 #!/usr/bin/bash -e
 
 # Checked files regex
-CHECKED_FILES="*.[c|h]"
+CHECKED_FILES=".*\.\(c\|h\|xml\)"
 
 #
 # List of licenses which are OK when found in a source code
@@ -18,7 +18,11 @@ APPROVED_LICENSES="${APPROVED_LICENSES} MIT"
 
 
 result=0
-found_files="$(find -type f -name ${CHECKED_FILES} -not -path './builddir/*')"
+found_files="
+    $(find -type f -regex ${CHECKED_FILES} \
+        -not -path './builddir/*' \
+        -not -path './doc/arch/*')
+"
 
 for f in ${found_files} ; do
     # scan for license only within the 1st 5 lines of each file
