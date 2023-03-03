@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: GPL-2.0-or-later */
 #include <errno.h>
 #include <netinet/in.h>
 #include <netinet/tcp.h>

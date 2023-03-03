@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: GPL-2.0-or-later */
 #include "common.h"
 
 const char *job_state_to_string(JobState s) {

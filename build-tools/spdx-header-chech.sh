@@ -7,6 +7,8 @@ CHECKED_FILES="*.[c|h]"
 # List of licenses which are OK when found in a source code
 #
 APPROVED_LICENSES=""
+# Used for hirte original code
+APPROVED_LICENSES="${APPROVED_LICENSES} GPL-2.0-or-later"
 
 
 result=0

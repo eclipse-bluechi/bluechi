@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: GPL-2.0-or-later */
 #include "service.h"
 #include "libhirte/common/common.h"
 #include "libhirte/log/log.h"
