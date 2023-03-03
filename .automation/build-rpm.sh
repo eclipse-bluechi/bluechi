@@ -1,4 +1,5 @@
 #!/bin/bash -xe
+# SPDX-License-Identifier: GPL-2.0-or-later
 
 source $(dirname "$(readlink -f "$0")")/build-srpm.sh
 

@@ -1,7 +1,8 @@
 #!/usr/bin/bash -e
+# SPDX-License-Identifier: GPL-2.0-or-later
 
 # Checked files regex
-CHECKED_FILES=".*\(\.c\|\.h\|\.xml\|meson\.build\)"
+CHECKED_FILES=".*\(\.c\|\.h\|\.sh\|\.xml\|meson\.build\)"
 
 #
 # List of licenses which are OK when found in a source code
