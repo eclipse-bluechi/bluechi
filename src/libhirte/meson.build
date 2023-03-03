@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: GPL-2.0-or-later
+
 libhirte_src = [
     'bus/bus.c',
     'bus/bus.h',

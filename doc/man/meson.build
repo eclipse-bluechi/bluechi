@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: GPL-2.0-or-later
+
 want_man = get_option('man') == 'true'
 md2man = find_program('go-md2man', required : false)
 if want_man and not md2man.found()
