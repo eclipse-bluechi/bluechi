@@ -1,4 +1,5 @@
 #!/bin/bash -xe
+# SPDX-License-Identifier: GPL-2.0-or-later
 
 # Package version
 VERSION="0.0.1"
