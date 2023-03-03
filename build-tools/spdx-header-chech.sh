@@ -13,6 +13,8 @@ APPROVED_LICENSES="${APPROVED_LICENSES} GPL-2.0-or-later"
 APPROVED_LICENSES="${APPROVED_LICENSES} LGPL-2.1-or-later"
 # Used in src/libhirte/ini/
 APPROVED_LICENSES="${APPROVED_LICENSES} BSD-3-Clause"
+# Used in src/libhirte/hasmap/
+APPROVED_LICENSES="${APPROVED_LICENSES} MIT"
 
 
 result=0
