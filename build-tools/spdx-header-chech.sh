@@ -11,6 +11,8 @@ APPROVED_LICENSES=""
 APPROVED_LICENSES="${APPROVED_LICENSES} GPL-2.0-or-later"
 # Used in src/libhirte/common/list.h
 APPROVED_LICENSES="${APPROVED_LICENSES} LGPL-2.1-or-later"
+# Used in src/libhirte/ini/
+APPROVED_LICENSES="${APPROVED_LICENSES} BSD-3-Clause"
 
 
 result=0
