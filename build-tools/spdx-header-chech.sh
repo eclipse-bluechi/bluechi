@@ -1,7 +1,7 @@
 #!/usr/bin/bash -e
 
 # Checked files regex
-CHECKED_FILES=".*\.\(c\|h\|xml\)"
+CHECKED_FILES=".*\(\.c\|\.h\|\.xml\|meson\.build\)"
 
 #
 # List of licenses which are OK when found in a source code
