@@ -9,6 +9,8 @@ CHECKED_FILES="*.[c|h]"
 APPROVED_LICENSES=""
 # Used for hirte original code
 APPROVED_LICENSES="${APPROVED_LICENSES} GPL-2.0-or-later"
+# Used in src/libhirte/common/list.h
+APPROVED_LICENSES="${APPROVED_LICENSES} LGPL-2.1-or-later"
 
 
 result=0
