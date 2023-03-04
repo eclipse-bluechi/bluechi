@@ -74,6 +74,7 @@ This package contains the node agent.
 %{_bindir}/hirte-proxy
 %{_datadir}/dbus-1/system.d/org.containers.hirte.Agent.conf
 %{_datadir}/hirte-agent/config/hirte-default.conf
+%{_datadir}/dbus-1/interfaces/org.containers.hirte.Agent.xml
 %{_mandir}/man1/hirte-agent.*
 %{_mandir}/man1/hirte-proxy.*
 %{_mandir}/man5/hirte-agent.conf.*
@@ -81,6 +82,8 @@ This package contains the node agent.
 %{_userunitdir}/hirte-agent.service
 %{_unitdir}/hirte-proxy@.service
 %{_userunitdir}/hirte-proxy@.service
+%{_unitdir}/hirte-dep@.service
+%{_userunitdir}/hirte-dep@.service
 
 
 %package ctl

@@ -15,6 +15,7 @@
 #include "libhirte/service/shutdown.h"
 
 #include "agent.h"
+#include "proxy.h"
 
 #ifdef USE_USER_API_BUS
 #        define ALWAYS_USER_API_BUS 1
@@ -44,6 +45,11 @@ static bool
                                 void *userdata,
                                 free_func_t free_userdata);
 
+bool agent_is_connected(Agent *agent) {
+        return agent != NULL && agent->connection_state == AGENT_CONNECTION_STATE_CONNECTED;
+}
+
+static int agent_stop_local_proxy_service(Agent *agent, ProxyService *proxy);
 static bool agent_connect(Agent *agent);
 
 static int agent_disconnected(UNUSED sd_bus_message *message, void *userdata, UNUSED sd_bus_error *error) {
@@ -317,6 +323,7 @@ Agent *agent_new(void) {
         agent->port = HIRTE_DEFAULT_PORT;
         LIST_HEAD_INIT(agent->outstanding_requests);
         LIST_HEAD_INIT(agent->tracked_jobs);
+        LIST_HEAD_INIT(agent->proxy_services);
 
         agent->unit_infos = hashmap_new(
                         sizeof(AgentUnitInfo), 0, 0, 0, unit_info_hash, unit_info_compare, unit_info_clear, NULL);
@@ -331,15 +338,65 @@ Agent *agent_new(void) {
 }
 
 Agent *agent_ref(Agent *agent) {
+        assert(agent->ref_count > 0);
+
         agent->ref_count++;
         return agent;
 }
 
+/* Emit == false on agent shutdown or proxy creation error */
+void agent_remove_proxy(Agent *agent, ProxyService *proxy, bool emit_removed) {
+        assert(proxy->agent == agent);
+
+        hirte_log_debugf("Removing proxy %s %s", proxy->node_name, proxy->unit_name);
+
+        if (emit_removed) {
+                int r = proxy_service_emit_proxy_removed(proxy);
+                if (r < 0) {
+                        hirte_log_errorf(
+                                        "Failed to emit ProxyRemoved signal for node %s and unit %s",
+                                        proxy->node_name,
+                                        proxy->unit_name);
+                }
+        }
+
+        if (proxy->request_message != NULL) {
+                int r = sd_bus_reply_method_errorf(
+                                proxy->request_message, SD_BUS_ERROR_FAILED, "Proxy service stopped");
+                if (r < 0) {
+                        hirte_log_errorf("Failed to sent ready status message to proxy: %s", strerror(-r));
+                }
+                sd_bus_message_unrefp(&proxy->request_message);
+                proxy->request_message = NULL;
+        }
+
+
+        if (proxy->sent_successful_ready) {
+                int r = agent_stop_local_proxy_service(agent, proxy);
+                if (r < 0) {
+                        hirte_log_errorf("Failed to stop proxy service: %s", strerror(-r));
+                }
+        }
+
+        proxy_service_unexport(proxy);
+
+        LIST_REMOVE(proxy_services, agent->proxy_services, proxy);
+        proxy->agent = NULL;
+        proxy_service_unref(proxy);
+}
+
 void agent_unref(Agent *agent) {
+        assert(agent->ref_count > 0);
+
         agent->ref_count--;
         if (agent->ref_count != 0) {
                 return;
         }
+
+        hirte_log_debug("Finalizing agent");
+
+        /* These are removed in agent_stop */
+        assert(agent->proxy_services == NULL);
 
         hashmap_free(agent->unit_infos);
 
@@ -785,7 +842,7 @@ static void agent_job_done(UNUSED sd_bus_message *m, const char *result, void *u
         AgentJobOp *op = userdata;
         Agent *agent = op->agent;
 
-        hirte_log_debugf("Sending JobDone %u, result: %s", op->hirte_job_id, result);
+        hirte_log_infof("Sending JobDone %u, result: %s", op->hirte_job_id, result);
 
         int r = sd_bus_emit_signal(
                         agent->peer_dbus,
@@ -857,8 +914,6 @@ static int agent_run_unit_lifecycle_method(sd_bus_message *m, Agent *agent, cons
         if (r < 0) {
                 return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "Internal error");
         }
-
-        hirte_log_debugf("Return value: %i", r);
 
         if (!systemd_request_start(req, unit_lifecycle_method_callback)) {
                 return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "Internal error");
@@ -1013,6 +1068,103 @@ static int agent_method_unsubscribe(sd_bus_message *m, void *userdata, UNUSED sd
         return sd_bus_reply_method_return(m, "");
 }
 
+/*************************************************************************
+ ********** org.containers.hirte.internal.Agent.StartDep *****************
+ ************************************************************************/
+
+static char *get_dep_unit(const char *unit_name) {
+        return strcat_dup("hirte-dep@", unit_name);
+}
+
+static int start_dep_callback(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error) {
+        _cleanup_systemd_request_ SystemdRequest *req = userdata;
+
+        if (sd_bus_message_is_method_error(m, NULL)) {
+                hirte_log_errorf("Error starting dep service: %s", sd_bus_message_get_error(m)->message);
+        }
+        return 0;
+}
+
+static int agent_method_start_dep(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error) {
+        Agent *agent = userdata;
+        const char *unit = NULL;
+
+        int r = sd_bus_message_read(m, "s", &unit);
+        if (r < 0) {
+                return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_INVALID_ARGS, "Invalid arguments");
+        }
+
+        _cleanup_free_ char *dep_unit = get_dep_unit(unit);
+        if (dep_unit == NULL) {
+                return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "Internal error");
+        }
+
+        hirte_log_infof("Starting dependency %s", dep_unit);
+
+        _cleanup_systemd_request_ SystemdRequest *req = agent_create_request(agent, m, "StartUnit");
+        if (req == NULL) {
+                return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "Internal error");
+        }
+
+        r = sd_bus_message_append(req->message, "ss", dep_unit, "replace");
+        if (r < 0) {
+                return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "Internal error");
+        }
+
+        if (!systemd_request_start(req, start_dep_callback)) {
+                return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "Internal error");
+        }
+
+        return 0;
+}
+
+/*************************************************************************
+ ********** org.containers.hirte.internal.Agent.StopDep ******************
+ ************************************************************************/
+
+static int stop_dep_callback(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error) {
+        _cleanup_systemd_request_ SystemdRequest *req = userdata;
+
+        if (sd_bus_message_is_method_error(m, NULL)) {
+                hirte_log_errorf("Error stopping dep service: %s", sd_bus_message_get_error(m)->message);
+        }
+        return 0;
+}
+
+static int agent_method_stop_dep(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error) {
+        Agent *agent = userdata;
+        const char *unit = NULL;
+
+        int r = sd_bus_message_read(m, "s", &unit);
+        if (r < 0) {
+                return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_INVALID_ARGS, "Invalid arguments");
+        }
+
+        _cleanup_free_ char *dep_unit = get_dep_unit(unit);
+        if (dep_unit == NULL) {
+                return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "Internal error");
+        }
+
+        hirte_log_infof("Stopping dependency %s", dep_unit);
+
+        _cleanup_systemd_request_ SystemdRequest *req = agent_create_request(agent, m, "StopUnit");
+        if (req == NULL) {
+                return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "Internal error");
+        }
+
+        r = sd_bus_message_append(req->message, "ss", dep_unit, "replace");
+        if (r < 0) {
+                return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "Internal error");
+        }
+
+        if (!systemd_request_start(req, stop_dep_callback)) {
+                return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "Internal error");
+        }
+
+        return 0;
+}
+
+
 static const sd_bus_vtable internal_agent_vtable[] = {
         SD_BUS_VTABLE_START(0),
         SD_BUS_METHOD("ListUnits", "", UNIT_INFO_STRUCT_ARRAY_TYPESTRING, agent_method_list_units, 0),
@@ -1041,6 +1193,109 @@ static const sd_bus_vtable internal_agent_vtable[] = {
                         0),
         SD_BUS_SIGNAL_WITH_NAMES("UnitRemoved", "s", SD_BUS_PARAM(unit), 0),
         SD_BUS_SIGNAL_WITH_NAMES("Heartbeat", "s", SD_BUS_PARAM(agent_name), 0),
+        SD_BUS_METHOD("StartDep", "s", "", agent_method_start_dep, 0),
+        SD_BUS_METHOD("StopDep", "s", "", agent_method_stop_dep, 0),
+        SD_BUS_VTABLE_END
+};
+
+/*************************************************************************
+ ********** org.containers.hirte.Agent.CreateProxy ***********************
+ ************************************************************************/
+
+static ProxyService *agent_find_proxy(
+                Agent *agent, const char *local_service_name, const char *node_name, const char *unit_name) {
+        ProxyService *proxy = NULL;
+
+        LIST_FOREACH(proxy_services, proxy, agent->proxy_services) {
+                if (streq(proxy->local_service_name, local_service_name) &&
+                    streq(proxy->node_name, node_name) && streq(proxy->unit_name, unit_name)) {
+                        return proxy;
+                }
+        }
+
+        return NULL;
+}
+
+static int agent_method_create_proxy(UNUSED sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error) {
+        Agent *agent = (Agent *) userdata;
+        _cleanup_sd_bus_message_ sd_bus_message *reply = NULL;
+        const char *local_service_name = NULL;
+        const char *node_name = NULL;
+        const char *unit_name = NULL;
+        int r = sd_bus_message_read(m, "sss", &local_service_name, &node_name, &unit_name);
+        if (r < 0) {
+                return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_INVALID_ARGS, "Invalid arguments");
+        }
+
+        hirte_log_infof("CreateProxy request from %s", local_service_name);
+
+        ProxyService *old_proxy = agent_find_proxy(agent, local_service_name, node_name, unit_name);
+        if (old_proxy) {
+                return sd_bus_reply_method_errorf(reply, SD_BUS_ERROR_ADDRESS_IN_USE, "Proxy already exists");
+        }
+
+        _cleanup_proxy_service_ ProxyService *proxy = proxy_service_new(
+                        agent, local_service_name, node_name, unit_name, m);
+        if (proxy == NULL) {
+                return sd_bus_reply_method_errorf(reply, SD_BUS_ERROR_FAILED, "Internal error");
+        }
+
+        if (!proxy_service_export(proxy)) {
+                return sd_bus_reply_method_errorf(reply, SD_BUS_ERROR_FAILED, "Internal error");
+        }
+
+        r = proxy_service_emit_proxy_new(proxy);
+        if (r < 0 && r != -ENOTCONN) {
+                hirte_log_errorf("Failed to emit ProxyNew signal: %s", strerror(-r));
+                return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "Internal error");
+        }
+
+        LIST_APPEND(proxy_services, agent->proxy_services, proxy_service_ref(proxy));
+
+        return 1;
+}
+
+/*************************************************************************
+ ********** org.containers.hirte.Agent.RemoveProxy ***********************
+ ************************************************************************/
+
+/* This is called when the proxy service is shut down, via the
+ * `ExecStop=hirte-proxy remove` command being called. This will
+ * happen when no services depends on the proxy anymore, as well as
+ * when the agent explicitly tells the proxy to stop.
+ */
+
+static int agent_method_remove_proxy(sd_bus_message *m, UNUSED void *userdata, UNUSED sd_bus_error *ret_error) {
+        Agent *agent = (Agent *) userdata;
+        const char *local_service_name = NULL;
+        const char *node_name = NULL;
+        const char *unit_name = NULL;
+        int r = sd_bus_message_read(m, "sss", &local_service_name, &node_name, &unit_name);
+        if (r < 0) {
+                return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_INVALID_ARGS, "Invalid arguments");
+        }
+
+        hirte_log_infof("RemoveProxy request from %s", local_service_name);
+
+        ProxyService *proxy = agent_find_proxy(agent, local_service_name, node_name, unit_name);
+        if (proxy == NULL) {
+                /* NOTE: This happens pretty often, when we stopped the proxy service ourselves
+                   and removed the proxy, but then the ExecStop triggers, so we sent a success here. */
+                return sd_bus_reply_method_return(m, "");
+        }
+
+        /* We got this because the proxy is shutting down, no need to manually do it */
+        proxy->dont_stop_proxy = true;
+
+        agent_remove_proxy(agent, proxy, true);
+
+        return sd_bus_reply_method_return(m, "");
+}
+
+static const sd_bus_vtable agent_vtable[] = {
+        SD_BUS_VTABLE_START(0),
+        SD_BUS_METHOD("CreateProxy", "sss", "", agent_method_create_proxy, 0),
+        SD_BUS_METHOD("RemoveProxy", "sss", "", agent_method_remove_proxy, 0),
         SD_BUS_VTABLE_END
 };
 
@@ -1422,13 +1677,20 @@ bool agent_start(Agent *agent) {
         }
 
         if (agent->api_bus == NULL) {
-                hirte_log_error("Failed to open user dbus");
+                hirte_log_error("Failed to open api dbus");
+                return false;
+        }
+
+        r = sd_bus_add_object_vtable(
+                        agent->api_bus, NULL, HIRTE_AGENT_OBJECT_PATH, AGENT_INTERFACE, agent_vtable, agent);
+        if (r < 0) {
+                hirte_log_errorf("Failed to add agent vtable: %s", strerror(-r));
                 return false;
         }
 
         r = sd_bus_request_name(agent->api_bus, agent->api_bus_service_name, SD_BUS_NAME_REPLACE_EXISTING);
         if (r < 0) {
-                hirte_log_errorf("Failed to acquire service name on user dbus: %s", strerror(-r));
+                hirte_log_errorf("Failed to acquire service name on api dbus: %s", strerror(-r));
                 return false;
         }
 
@@ -1476,7 +1738,7 @@ bool agent_start(Agent *agent) {
                         agent_match_unit_changed,
                         agent);
         if (r < 0) {
-                hirte_log_error("Failed to add match");
+                hirte_log_errorf("Failed to add match: %s", strerror(-r));
                 return false;
         }
 
@@ -1584,13 +1846,19 @@ bool agent_stop(Agent *agent) {
                 return false;
         }
 
+        ProxyService *proxy = NULL;
+        ProxyService *next_proxy = NULL;
+        LIST_FOREACH_SAFE(proxy_services, proxy, next_proxy, agent->proxy_services) {
+                agent_remove_proxy(agent, proxy, false);
+        }
+
         return true;
 }
 
 static bool agent_connect(Agent *agent) {
         peer_bus_close(agent->peer_dbus);
 
-        hirte_log_debugf("Connecting to manager on %s", agent->orch_addr);
+        hirte_log_infof("Connecting to manager on %s", agent->orch_addr);
 
         agent->peer_dbus = peer_bus_open(agent->event, "peer-bus-to-controller", agent->orch_addr);
         if (agent->peer_dbus == NULL) {
@@ -1634,10 +1902,7 @@ static bool agent_connect(Agent *agent) {
                         agent->name);
         if (r < 0) {
                 if (r != -ENOTCONN) {
-                        hirte_log_errorf(
-                                         "Registering as '%s' failed: %s",
-                                         agent->name,
-                                         error.message);
+                        hirte_log_errorf("Registering as '%s' failed: %s", agent->name, error.message);
                 }
                 sd_bus_error_free(&error);
                 return false;
@@ -1669,5 +1934,58 @@ static bool agent_connect(Agent *agent) {
                 return false;
         }
 
+        /* re-emit ProxyNew signals */
+
+        ProxyService *proxy = NULL;
+        ProxyService *next_proxy = NULL;
+        LIST_FOREACH_SAFE(proxy_services, proxy, next_proxy, agent->proxy_services) {
+                r = proxy_service_emit_proxy_new(proxy);
+                if (r < 0) {
+                        hirte_log_errorf(
+                                        "Failed to re-emit ProxyNew signal for proxy %u requesting unit %s on %s",
+                                        proxy->id,
+                                        proxy->unit_name,
+                                        proxy->node_name);
+                }
+        }
+
         return true;
+}
+
+static int stop_proxy_callback(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error) {
+        _cleanup_systemd_request_ SystemdRequest *req = userdata;
+
+        if (sd_bus_message_is_method_error(m, NULL)) {
+                hirte_log_errorf("Error stopping proxy service: %s", sd_bus_message_get_error(m)->message);
+        }
+
+        return 0;
+}
+
+/* Force stop the service via systemd */
+static int agent_stop_local_proxy_service(Agent *agent, ProxyService *proxy) {
+        if (proxy->dont_stop_proxy) {
+                return 0;
+        }
+
+        hirte_log_infof("Stopping proxy service %s", proxy->local_service_name);
+
+        /* Don't stop twice */
+        proxy->dont_stop_proxy = true;
+        _cleanup_systemd_request_ SystemdRequest *req = agent_create_request(agent, NULL, "StopUnit");
+        if (req == NULL) {
+                return -ENOMEM;
+        }
+
+        int r = sd_bus_message_append(req->message, "ss", proxy->local_service_name, "replace");
+        if (r < 0) {
+                return -ENOMEM;
+        }
+
+        if (!systemd_request_start(req, stop_proxy_callback)) {
+                return -EIO;
+        }
+
+
+        return 0;
 }
