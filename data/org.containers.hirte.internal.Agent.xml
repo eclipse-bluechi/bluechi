@@ -52,6 +52,12 @@
     <method name="Unsubscribe">
       <arg name="unit" type="s" direction="in" />
     </method>
+    <method name="StartDep">
+      <arg name="unit" type="s" direction="in" />
+    </method>
+    <method name="StopDep">
+      <arg name="unit" type="s" direction="in" />
+    </method>
 
     <signal name="JobDone">
       <arg name="id" type="u" />
@@ -87,7 +93,6 @@
     <signal name="ProxyRemoved">
       <arg name="nodeName" type="s" />
       <arg name="unitName" type="s" />
-      <arg name="proxy" type="o" />
     </signal>
     <signal name="Heartbeat">
       <arg name="agent_name" type="s" />

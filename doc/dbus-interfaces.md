@@ -217,6 +217,26 @@ Object path: `/org/containers/hirte/job/$id`
 
     The current state of the job, one of: `waiting` or `running`. Waiting is for queued jobs.
 
+## Hirte-Agent public D-Bus API
+
+The main entry point is at the `/org/containers/hirte` object path and implements the `org.containers.hirte.Agent`
+interface.
+
+### interface org.containers.hirte.Agent
+
+* Methods:
+
+  * `CreateProxy(in s service_name, in s node_name, in s unit_name)`
+
+    Whenever a service on the agent requires a service on another node it creates a proxy service and calls this method.
+    It then creates a new `org.containers.internal.Proxy` object and emits the `ProxyNew` signal on the internal bus to
+    tell the manager about it. The manager will then try to arrange that the requested unit on the specified node is
+    running and notifies the initial agent about the status by calling `Ready` on the internal bus.
+
+  * `RemoveProxy(in s service_name, in s node_name, in s unit_name)`
+
+    When a proxy is not needed anymore it is being removed on the node and a `ProxyRemoved` is emitted to notify the manager.
+
 ## Internal D-Bus APIs
 
 The above APIs are the public facing ones that users of Hirte would use. Additionally there are additional APIs that are
@@ -295,9 +315,10 @@ This is the main interface that the node implements and that is used by the mana
     will notice this and try to arrange that the requested unit is running on the requested node. If the unit is already
     running, when it is started, or when the start fails, the manager will call the `Ready()` method on it.
 
-  * `ProxyRemoved(s nodeName, s unitName, o proxy)`
+  * `ProxyRemoved(s nodeName, s unitName)`
 
-    This is emitted when a proxy is not needed anymore because the proxy service died.
+    This is emitted when a proxy is not needed anymore because the service requiring the proxy
+    service is stopped.
 
   * `Heartbeat(s nodeName)`
 

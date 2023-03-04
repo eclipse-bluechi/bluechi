@@ -4,7 +4,8 @@
 
 node_src = [
   'main.c',
-  'agent.c'
+  'agent.c',
+  'proxy.c'
 ]
 
 executable(

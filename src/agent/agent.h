@@ -9,6 +9,8 @@
 #include "libhirte/common/common.h"
 #include "libhirte/hashmap/hashmap.h"
 
+#include "types.h"
+
 typedef struct Agent Agent;
 typedef struct SystemdRequest SystemdRequest;
 
@@ -67,6 +69,8 @@ struct Agent {
 
         LIST_HEAD(JobTracker, tracked_jobs);
 
+        LIST_HEAD(ProxyService, proxy_services);
+
         struct hashmap *unit_infos;
 
         struct config *config;
@@ -95,6 +99,10 @@ bool agent_parse_config(Agent *agent, const char *configfile);
 
 bool agent_start(Agent *agent);
 bool agent_stop(Agent *agent);
+
+bool agent_is_connected(Agent *agent);
+
+void agent_remove_proxy(Agent *agent, ProxyService *proxy, bool emit);
 
 DEFINE_CLEANUP_FUNC(Agent, agent_unref)
 #define _cleanup_agent_ _cleanup_(agent_unrefp)
