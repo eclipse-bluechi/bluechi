@@ -11,6 +11,7 @@ man1 = [
   'hirte',
   'hirte-agent',
   'hirtectl',
+  'hirte-proxy',
 ]
 
 man5 = [

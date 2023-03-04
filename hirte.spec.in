@@ -71,12 +71,16 @@ This package contains the node agent.
 %doc README.md
 %license LICENSE
 %{_bindir}/hirte-agent
+%{_bindir}/hirte-proxy
 %{_datadir}/dbus-1/system.d/org.containers.hirte.Agent.conf
 %{_datadir}/hirte-agent/config/hirte-default.conf
 %{_mandir}/man1/hirte-agent.*
+%{_mandir}/man1/hirte-proxy.*
 %{_mandir}/man5/hirte-agent.conf.*
 %{_unitdir}/hirte-agent.service
 %{_userunitdir}/hirte-agent.service
+%{_unitdir}/hirte-proxy@.service
+%{_userunitdir}/hirte-proxy@.service
 
 
 %package ctl
