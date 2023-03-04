@@ -1,0 +1,15 @@
+#  SPDX-License-Identifier: GPL-2.0-or-later
+#
+#  This file is part of hirte-agent.
+#
+[Unit]
+Description=Hirte proxy service
+Documentation=man:hirte-proxy(1)
+StopWhenUnneeded=yes
+
+[Service]
+ExecStart=hirte-proxy create %i.service
+ExecStop=hirte-proxy remove %i.service
+RemainAfterExit=yes
+Type=oneshot
+KillMode=mixed

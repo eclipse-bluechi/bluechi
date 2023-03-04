@@ -55,6 +55,7 @@ subdir('config')
 subdir('src/manager')
 subdir('src/agent')
 subdir('src/client')
+subdir('src/proxy')
 
 # Subdirectory for the API description
 subdir('data')

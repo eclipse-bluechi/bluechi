@@ -2,8 +2,19 @@
 <!-- SPDX-License-Identifier: GPL-2.0-or-later -->
 <node>
   <interface name="org.containers.hirte.internal.Proxy">
-    <method name="Ready">
-      <arg name="result" type="s" direction="in" />
+    <method name="Error">
+      <arg name="message" type="s" direction="in" />
+    </method>
+    <method name="TargetNew">
+      <arg name="reason" type="s" direction="in" />
+    </method>
+    <method name="TargetStateChanged">
+      <arg name="state" type="s" direction="in" />
+      <arg name="substate" type="s" direction="in" />
+      <arg name="reason" type="s" direction="in" />
+    </method>
+    <method name="TargetRemoved">
+      <arg name="reason" type="s" direction="in" />
     </method>
   </interface>
 </node>

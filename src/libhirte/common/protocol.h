@@ -34,6 +34,7 @@
 
 #define HIRTE_BUS_ERROR_OFFLINE "org.containers.hirte.Offline"
 #define HIRTE_BUS_ERROR_NO_SUCH_SUBSCRIPTION "org.containers.hirte.NoSuchSubscription"
+#define HIRTE_BUS_ERROR_ACTIVATION_FAILED "org.containers.hirte.ActivationFailed"
 
 /* Systemd protocol */
 
