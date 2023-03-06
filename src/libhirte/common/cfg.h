@@ -42,6 +42,8 @@ typedef struct config config;
  */
 #define CFG_ETC_HIRTE_CONF CONFIG_H_SYSCONFDIR "/hirte/hirte.conf"
 #define CFG_ETC_HIRTE_AGENT_CONF CONFIG_H_SYSCONFDIR "/hirte/agent.conf"
+#define CFG_AGENT_DEFAULT_CONFIG CONFIG_H_DATADIR "/hirte-agent/config/hirte-default.conf"
+#define CFG_HIRTE_DEFAULT_CONFIG CONFIG_H_DATADIR "/hirte/config/hirte-default.conf"
 
 /*
  * An item in a configuration map

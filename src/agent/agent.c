@@ -393,7 +393,7 @@ bool agent_parse_config(Agent *agent, const char *configfile) {
 
         result = cfg_load_complete_configuration(
                         agent->config,
-                        NULL, // TODO: https://github.com/containers/hirte/issues/147
+                        CFG_AGENT_DEFAULT_CONFIG,
                         CFG_ETC_HIRTE_AGENT_CONF,
                         NULL); // TODO: https://github.com/containers/hirte/issues/148
         if (result != 0) {
