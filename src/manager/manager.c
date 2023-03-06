@@ -279,7 +279,7 @@ bool manager_parse_config(Manager *manager, const char *configfile) {
 
         result = cfg_load_complete_configuration(
                         manager->config,
-                        NULL, // TODO: https://github.com/containers/hirte/issues/147
+                        CFG_HIRTE_DEFAULT_CONFIG,
                         CFG_ETC_HIRTE_CONF,
                         NULL); // TODO: https://github.com/containers/hirte/issues/148
         if (result != 0) {
