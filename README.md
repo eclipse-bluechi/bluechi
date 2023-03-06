@@ -1,5 +1,7 @@
 # Hirte
 
+[![Copr build status](https://copr.fedorainfracloud.org/coprs/mperina/hirte-snapshot/package/hirte/status_image/last_build.png)](https://copr.fedorainfracloud.org/coprs/mperina/hirte-snapshot/package/hirte/)
+
 Hirte is a service orchestrator tool intended for multi-node device clusters with a predefined number of nodes and with
 a focus on highly regulated environments such as those requiring functional safety. Potential use cases can be found in
 domains such as transportation, where services need to be orchestrated across different edge devices managed in clusters
@@ -12,6 +14,22 @@ Hirte can also be used to orchestrate containers using [Podman](https://github.c
 to generate systemd service configuration to run a container.
 
 ## How to contribute
+
+### Testing
+
+RPM packages for the Hirte project are available on
+[hirte-snapshot](https://copr.fedorainfracloud.org/coprs/mperina/hirte-snapshot/) COPR repo. To install hirte packages
+on your system please add that repo using:
+
+```bash
+dnf copr enable mperina/hirte-snapshot
+```
+
+When done you can install relevant hirte packages using:
+
+```bash
+dnf install hirte hirte-agent
+```
 
 ### Submitting patches
 
