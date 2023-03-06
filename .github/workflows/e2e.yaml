@@ -29,7 +29,7 @@ jobs:
           -v  ${PWD}:/hirte:Z -it \
           registry.gitlab.com/centos/automotive/sample-images/hirte/hirte-builder:1.0.0 \
           /bin/bash -c "rm -rf builddir; meson setup builddir -Dapi_bus=user; \
-          meson install -C builddir --destdir bin"
+          meson install -C builddir"
           podman build -f tests/Containerfile -t hirte-image .
 
       - name: run hirte containers
