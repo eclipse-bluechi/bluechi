@@ -44,10 +44,12 @@ codespell:
 check-codespell:
 	codespell  $(CODESPELL_PARAMS)
 
-clean:
+delete-tmp-files:
 	find . -name \*~ -delete
 	find . -name \*# -delete
+
+clean: delete-tmp-files
 	meson setup --wipe builddir
 
-distclean: clean
+distclean: delete-tmp-files
 	rm -rf builddir
