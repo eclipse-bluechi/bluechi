@@ -57,6 +57,7 @@ const char *node_get_status(Node *node);
 
 bool node_export(Node *node);
 bool node_has_agent(Node *node);
+bool node_is_online(Node *node);
 bool node_set_agent_bus(Node *node, sd_bus *bus);
 void node_unset_agent_bus(Node *node);
 
