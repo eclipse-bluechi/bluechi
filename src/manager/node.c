@@ -194,6 +194,10 @@ bool node_has_agent(Node *node) {
         return node->agent_bus != NULL;
 }
 
+bool node_is_online(Node *node) {
+        return node && node->name && node_has_agent(node);
+}
+
 static int node_match_job_state_changed(
                 UNUSED sd_bus_message *m, UNUSED void *userdata, UNUSED sd_bus_error *error) {
         Node *node = userdata;
