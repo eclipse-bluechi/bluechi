@@ -29,16 +29,13 @@ jobs:
             -v  ${PWD}:/hirte:Z -it \
             registry.gitlab.com/centos/automotive/sample-images/hirte/hirte-builder:1.0.0 \
             /bin/bash -c "API_BUS=user DESTDIR=bin make distclean install"
-          podman build -f tests/Containerfile -t hirte-image .
+          podman build -f tests/Containerfile -t localhost/hirte-image:${{ github.event.pull_request.head.sha }} .
 
       - name: run hirte containers
         run: |
-          podman run -d --net podman --rm -p 2020:2020 --name hirte-mgr \
-          $(podman images *hirte-image --format {{.ID}})
-          podman run -d --net podman --rm --name hirte-agent-foo \
-          $(podman images *hirte-image --format {{.ID}})
-          podman run -d --net podman --rm --name hirte-agent-bar \
-          $(podman images *hirte-image --format {{.ID}})
+          podman run -d --net podman --rm -p 2020:2020 --name hirte-mgr localhost/hirte-image:${{ github.event.pull_request.head.sha }}
+          podman run -d --net podman --rm --name hirte-agent-foo localhost/hirte-image:${{ github.event.pull_request.head.sha }}
+          podman run -d --net podman --rm --name hirte-agent-bar localhost/hirte-image:${{ github.event.pull_request.head.sha }}
           PODMAN_NET=$(hostname -I | awk '{print $1}')
           echo "PODMAN_NET=$PODMAN_NET" >> $GITHUB_ENV
 
