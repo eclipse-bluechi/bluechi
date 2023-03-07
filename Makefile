@@ -8,8 +8,10 @@ CODESPELL_PARAMS=\
 	-S Makefile,imgtype,copy,AUTHORS,bin,.git,CHANGELOG.md,changelog.txt,.cirrus.yml,"*.xz,*.gz,*.tar,*.tgz,*ico,*.png,*.1,*.5,*.orig,*.rej,*.xml,*xsl" \
 	-L keypair,flate,uint,iff,od,ERRO
 
+API_BUS ?= system
+
 setup:
-	meson setup builddir
+	meson setup builddir -Dapi_bus=$(API_BUS)
 
 build: setup
 	meson compile -C builddir
