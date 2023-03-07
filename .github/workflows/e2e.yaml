@@ -48,28 +48,28 @@ jobs:
         run: |
           # Change node name in config file
           podman exec -it hirte-agent-bar \
-          sed -i "s/\(NodeName=\)\(.*\)/\1bar/" /hirte/example-hirte-agent.ini
+            sed -i "s/\(NodeName=\)\(.*\)/\1bar/" /hirte/example-hirte-agent.ini
           # Change manager address in config file
           podman exec -it hirte-agent-bar \
-          sed -i "s/\(ManagerHost=\)\(.*\)/\1${{ env.HIRTE_SERVICE_ADDRESS }}/" /hirte/example-hirte-agent.ini
+            sed -i "s/\(ManagerHost=\)\(.*\)/\1${{ env.HIRTE_SERVICE_ADDRESS }}/" /hirte/example-hirte-agent.ini
           podman exec -t hirte-agent-bar \
-          su - test-user -c "(/usr/local/bin/hirte-agent -c \
-          /hirte/example-hirte-agent.ini > bar.log 2>&1 &)"
+            su - test-user -c "(/usr/local/bin/hirte-agent -c \
+              /hirte/example-hirte-agent.ini > bar.log 2>&1 &)"
           podman exec -it hirte-agent-bar /usr/bin/pkill --signal TERM hirte-agent
           podman exec -w /home/test-user -u test-user -it hirte-agent-bar \
-          grep "Agent 'bar' connection attempt 0: success" bar.log
+            grep "Agent 'bar' connection attempt 0: success" bar.log
 
       - name: run hirte agent-foo
         run: |
           # Change node name in config file
           podman exec -it hirte-agent-foo \
-          sed -i "s/\(NodeName=\)\(.*\)/\1foo/" /hirte/example-hirte-agent.ini
+            sed -i "s/\(NodeName=\)\(.*\)/\1foo/" /hirte/example-hirte-agent.ini
           # Change manager address in config file
           podman exec -it hirte-agent-foo \
-          sed -i "s/\(ManagerHost=\)\(.*\)/\1${{ env.HIRTE_SERVICE_ADDRESS }}/" /hirte/example-hirte-agent.ini
+            sed -i "s/\(ManagerHost=\)\(.*\)/\1${{ env.HIRTE_SERVICE_ADDRESS }}/" /hirte/example-hirte-agent.ini
           podman exec -t hirte-agent-foo \
-          su - test-user -c  "(/usr/local/bin/hirte-agent -c \
-          /hirte/example-hirte-agent.ini > foo.log 2>&1 &)"
+            su - test-user -c  "(/usr/local/bin/hirte-agent -c \
+              /hirte/example-hirte-agent.ini > foo.log 2>&1 &)"
           podman exec -it hirte-agent-foo /usr/bin/pkill --signal TERM hirte-agent
           podman exec -w /home/test-user -u test-user -it hirte-agent-foo \
           grep "Agent 'foo' connection attempt 0: success" foo.log
