@@ -26,10 +26,9 @@ jobs:
       - name: build hirte tests containers
         run: |
           podman run --rm --name hirte-builder \
-          -v  ${PWD}:/hirte:Z -it \
-          registry.gitlab.com/centos/automotive/sample-images/hirte/hirte-builder:1.0.0 \
-          /bin/bash -c "rm -rf builddir; meson setup builddir -Dapi_bus=user; \
-          meson install -C builddir --destdir bin"
+            -v  ${PWD}:/hirte:Z -it \
+            registry.gitlab.com/centos/automotive/sample-images/hirte/hirte-builder:1.0.0 \
+            /bin/bash -c "API_BUS=user DESTDIR=bin make distclean install"
           podman build -f tests/Containerfile -t hirte-image .
 
       - name: run hirte containers
