@@ -31,6 +31,8 @@ This package contains the controller and command line tool.
 
 %files
 %config(noreplace) %{_sysconfdir}/hirte/hirte.conf
+%dir %{_sysconfdir}/hirte
+%dir %{_sysconfdir}/hirte/hirte.conf.d
 %doc README.md
 %doc README.developer.md
 %license LICENSE
@@ -43,6 +45,7 @@ This package contains the controller and command line tool.
 %{_datadir}/hirte/config/hirte-default.conf
 %{_mandir}/man1/hirte.*
 %{_mandir}/man5/hirte.conf.*
+%{_sysconfdir}/hirte/hirte.conf.d/README.md
 %{_unitdir}/hirte.service
 %{_unitdir}/hirte.socket
 
@@ -68,6 +71,8 @@ This package contains the node agent.
 
 %files agent
 %config(noreplace) %{_sysconfdir}/hirte/agent.conf
+%dir %{_sysconfdir}/hirte
+%dir %{_sysconfdir}/hirte/agent.conf.d
 %doc README.md
 %license LICENSE
 %{_bindir}/hirte-agent
@@ -78,6 +83,7 @@ This package contains the node agent.
 %{_mandir}/man1/hirte-agent.*
 %{_mandir}/man1/hirte-proxy.*
 %{_mandir}/man5/hirte-agent.conf.*
+%{_sysconfdir}/hirte/agent.conf.d/README.md
 %{_unitdir}/hirte-agent.service
 %{_userunitdir}/hirte-agent.service
 %{_unitdir}/hirte-proxy@.service
@@ -122,4 +128,3 @@ This package contains the service controller command line tool.
 %changelog
 * Tue Mar 21 2023 Martin Perina <mperina@redhat.com> - 0.1.0-1
 - Initial release
-

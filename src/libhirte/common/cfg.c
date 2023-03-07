@@ -2,11 +2,13 @@
 
 #include <asm-generic/errno-base.h>
 #include <assert.h>
+#include <dirent.h>
 #include <errno.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 
+#include "libhirte/common/list.h"
 #include "libhirte/hashmap/hashmap.h"
 #include "libhirte/ini/ini.h"
 
@@ -20,7 +22,6 @@ struct config {
         struct hashmap *cfg_store;
         char *default_section;
 };
-
 
 static int option_compare(const void *a, const void *b, UNUSED void *udata) {
         const struct config_option *option_a = a;
@@ -119,7 +120,10 @@ int cfg_load_complete_configuration(
         }
 
         if (custom_config_directory != NULL) {
-                // TODO: https://github.com/containers/hirte/issues/148
+                result = cfg_load_from_dir(config, custom_config_directory);
+                if (result != 0) {
+                        return result;
+                }
         }
 
         result = cfg_load_from_env(config);
@@ -135,6 +139,32 @@ int cfg_load_from_file(struct config *config, const char *config_file) {
                 return -ENOENT;
         }
         return ini_parse(config_file, parsing_handler, config);
+}
+
+int is_file_name_ending_with_conf(const struct dirent *entry) {
+        if (strstr(entry->d_name, ".conf") != NULL) {
+                return true;
+        }
+        return false;
+}
+
+int cfg_load_from_dir(struct config *config, const char *custom_config_directory) {
+        struct dirent **all_files_in_dir = NULL;
+        int number_of_files = 0;
+
+        number_of_files = scandir(
+                        custom_config_directory, &all_files_in_dir, &is_file_name_ending_with_conf, alphasort);
+        if (number_of_files < 0) {
+                return -errno;
+        }
+
+        for (int i = 0; i < number_of_files; i++) {
+                char *file_name = all_files_in_dir[i]->d_name;
+                cfg_load_from_file(config, file_name);
+                free(all_files_in_dir[i]);
+        }
+        free(all_files_in_dir);
+        return 0;
 }
 
 int cfg_load_from_env(struct config *config) {

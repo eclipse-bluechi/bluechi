@@ -14,3 +14,13 @@ install_data(
   'hirte/hirte-default.conf',
   install_dir : join_paths(get_option('datadir'), 'hirte', 'config')
 )
+
+install_data(
+  'agent.conf.d/README.md',
+  install_dir :  join_paths(get_option('sysconfdir') / 'hirte' / 'agent.conf.d')
+)
+
+install_data(
+  'hirte.conf.d/README.md',
+  install_dir :  join_paths(get_option('sysconfdir') / 'hirte' / 'hirte.conf.d')
+)
