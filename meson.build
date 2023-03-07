@@ -45,3 +45,6 @@ subdir('data')
 
 # Subdirectory for the man documentation
 subdir('doc/man')
+
+# systemd unit files
+subdir('systemd-units')

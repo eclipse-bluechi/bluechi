@@ -9,10 +9,19 @@ Source0:	%{name}-%{version}.tar.gz
 BuildRequires:	gcc
 BuildRequires:	meson
 BuildRequires:	systemd-devel
-BuildRequires:  golang-github-cpuguy83-md2man
+BuildRequires:	systemd-rpm-macros
+BuildRequires:	golang-github-cpuguy83-md2man
 
 Requires:	systemd
 
+%post
+%systemd_post hirte.service
+
+%preun
+%systemd_preun hirte.service
+
+%postun
+%systemd_postun_with_restart hirte.service
 
 %description
 Hirte is a service orchestrator tool intended for multi-node devices (e.g.: edge devices) clusters with a predefined
@@ -25,6 +34,14 @@ This package contains the orchestrator and command line tool.
 Summary:	Hirte container orchestrator agent
 Requires:	systemd
 
+%post agent
+%systemd_post hirte-agent.service
+
+%preun agent
+%systemd_preun hirte-agent.service
+
+%postun agent
+%systemd_postun_with_restart hirte-agent.service
 
 %description agent
 Hirte is a service orchestrator tool intended for multi-node devices (e.g.: edge devices) clusters with a predefined
@@ -65,6 +82,7 @@ This package contains the node agent.
 %{_mandir}/man1/hirtectl.*
 %{_mandir}/man5/hirte.conf.*
 %{_sysconfdir}/dbus-1/system.d/org.containers.hirte.conf
+%{_unitdir}/hirte.service
 
 %files agent
 %config %{_sysconfdir}/hirte/agent.conf
@@ -74,6 +92,7 @@ This package contains the node agent.
 %{_mandir}/man1/hirte-agent.*
 %{_mandir}/man5/hirte-agent.conf.*
 %{_sysconfdir}/dbus-1/system.d/org.containers.hirte.Agent.conf
+%{_unitdir}/hirte-agent.service
 
 
 %changelog
