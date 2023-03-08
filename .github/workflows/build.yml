@@ -109,3 +109,17 @@ jobs:
         with:
           name: rpm-artifacts
           path: ${{ env.ARTIFACTS_DIR}}
+
+  e2e:
+    needs: rpmbuild 
+    runs-on: ubuntu-latest
+    env:
+      ARTIFACTS_DIR: exported-artifacts
+
+    steps:
+      - name: Download artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: rpm-artifacts
+          path: ${{ env.ARTIFACTS_DIR}}
+
