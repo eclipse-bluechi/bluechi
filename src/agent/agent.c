@@ -6,8 +6,8 @@
 
 #include "libhirte/bus/bus.h"
 #include "libhirte/bus/utils.h"
+#include "libhirte/common/cfg.h"
 #include "libhirte/common/common.h"
-#include "libhirte/common/config.h"
 #include "libhirte/common/event-util.h"
 #include "libhirte/common/opt.h"
 #include "libhirte/common/parse-util.h"

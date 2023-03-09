@@ -5,7 +5,7 @@
 
 #include <systemd/sd-journal.h>
 
-#include "libhirte/common/config.h"
+#include "libhirte/common/cfg.h"
 
 #define HIRTE_LOG_TARGET_JOURNALD "journald"
 #define HIRTE_LOG_TARGET_STDERR "stderr"

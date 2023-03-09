@@ -4,8 +4,8 @@
 #include <inttypes.h>
 #include <stdbool.h>
 
+#include "libhirte/common/cfg.h"
 #include "libhirte/common/common.h"
-#include "libhirte/common/config.h"
 
 #include "types.h"
 
