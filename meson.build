@@ -13,9 +13,6 @@ project(
   ]
 )
 
-# Enable GNU extensions.
-add_global_arguments('-D_GNU_SOURCE', language : 'c')
-
 test_cflags = [ '-Wno-cast-function-type' ]
 
 cc = meson.get_compiler('c')
@@ -31,6 +28,9 @@ endif
 
 # Build time configuration header file
 conf = configuration_data()
+
+# Enable GNU extensions.
+conf.set('_GNU_SOURCE', true)
 
 prefixdir = get_option('prefix')
 
