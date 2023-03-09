@@ -28,6 +28,8 @@ jobs:
         run: |
           dnf install \
                   clang-tools-extra \
+                  gcc \
+                  meson \
                   systemd-devel \
                   codespell \
               -y
