@@ -3,8 +3,8 @@
 
 #include "libhirte/bus/bus.h"
 #include "libhirte/bus/utils.h"
+#include "libhirte/common/cfg.h"
 #include "libhirte/common/common.h"
-#include "libhirte/common/config.h"
 #include "libhirte/common/parse-util.h"
 #include "libhirte/log/log.h"
 #include "libhirte/service/shutdown.h"

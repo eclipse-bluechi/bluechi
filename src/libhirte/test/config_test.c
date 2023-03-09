@@ -7,7 +7,7 @@
 #include <string.h>
 #include <unistd.h>
 
-#include "libhirte/common/config.h"
+#include "libhirte/common/cfg.h"
 
 void _config_set_and_get(
                 struct config *config,

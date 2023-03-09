@@ -10,8 +10,8 @@
 #include "libhirte/hashmap/hashmap.h"
 #include "libhirte/ini/ini.h"
 
+#include "cfg.h"
 #include "common.h"
-#include "config.h"
 
 /*
  * Structure holding the configuration is just hiding that it uses a hashmap structure internally
