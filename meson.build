@@ -29,6 +29,22 @@ if api_bus == 'user'
    common_cflags += '-DUSE_USER_API_BUS'
 endif
 
+# Build time configuration header file
+conf = configuration_data()
+
+prefixdir = get_option('prefix')
+
+conf.set_quoted('CONFIG_H_SYSCONFDIR', join_paths(prefixdir, get_option('sysconfdir')))
+conf.set_quoted('CONFIG_H_DATADIR', join_paths(prefixdir, get_option('datadir')))
+
+config_h = configure_file(
+        output : 'config.h',
+        configuration : conf)
+
+# For lint to work properly the same include needs to be added manually to clang-tidy arguments
+add_project_arguments('-include', 'config.h', language : 'c')
+
+
 # Subdirectory for the shared library.
 subdir('src/libhirte')
 
