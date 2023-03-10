@@ -19,11 +19,11 @@ All fields to bootstrap the hirte manager are contained in the **hirte** section
 
 #### **ManagerPort** (uint16_t)
 
-The port the manager listens on to establish connections with the `hirte-agents`.
+The port the manager listens on to establish connections with the `hirte-agent`.
 
 #### **AllowedNodeNames** (string)
 
-A comma separated list of unique hirte-agent names. Only node names mentioned in the list can connect to `hirte`.
+A comma separated list of unique hirte-agent names. Only nodes with names mentioned in the list can connect to `hirte` manager. These names are defined in the agent's configuration file under `NodeName` option (see `hirte-agent.conf(5)`).
 
 #### **LogLevel** (string)
 
