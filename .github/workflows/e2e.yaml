@@ -26,54 +26,75 @@ jobs:
       - name: build hirte tests containers
         run: |
           podman run --rm --name hirte-builder \
-          -v  ${PWD}:/hirte:Z -it \
-          registry.gitlab.com/centos/automotive/sample-images/hirte/hirte-builder:1.0.0 \
-          /bin/bash -c "rm -rf builddir; meson setup builddir -Dapi_bus=user; \
-          meson install -C builddir --destdir bin"
+              -v  ${PWD}:/hirte:Z -it \
+              registry.gitlab.com/centos/automotive/sample-images/hirte/hirte-builder:1.0.0 \
+              /bin/bash -c "rm -rf builddir; meson setup builddir -Dapi_bus=system; \
+              meson install -C builddir --destdir bin"
           podman build -f tests/Containerfile -t hirte-image .
 
       - name: run hirte containers
         run: |
           podman run -d --net podman --rm -p 2020:2020 --name hirte-mgr \
-          $(podman images *hirte-image --format {{.ID}})
+              $(podman images *hirte-image --format {{.ID}})
           podman run -d --net podman --rm --name hirte-agent-foo \
-          $(podman images *hirte-image --format {{.ID}})
+              $(podman images *hirte-image --format {{.ID}})
           podman run -d --net podman --rm --name hirte-agent-bar \
-          $(podman images *hirte-image --format {{.ID}})
+              $(podman images *hirte-image --format {{.ID}})
           PODMAN_NET=$(hostname -I | awk '{print $1}')
           echo "PODMAN_NET=$PODMAN_NET" >> $GITHUB_ENV
 
       - name: run hirte orchestrator
         run: |
+          # For some unknown reason /usr/local/etc/hirte directory is created with 644 permission
+          podman exec -it hirte-mgr \
+              chmod a+x /usr/local/etc/hirte
+          # Allow nodes foo and bar to connect
+          podman exec -it hirte-mgr \
+              sed -i "s/\(AllowedNodeNames=\)\(.*\)/\1foo,bar/" /usr/local/etc/hirte/hirte.conf
+          # Change LogLevel to DEBUG
+          podman exec -it hirte-mgr \
+              sh -c 'echo "LogLevel=DEBUG" >> /usr/local/etc/hirte/hirte.conf'
           podman exec -t  hirte-mgr \
-          su - test-user -c  "(/usr/local/bin/hirte -c /hirte/example-hirte.ini > mgr.log 2>&1 &)"
+              sh -c '/usr/local/bin/hirte &'
 
       - name: run hirte agent-bar
         run: |
+          # For some unknown reason /usr/local/etc/hirte directory is created with 644 permission
+          podman exec -it hirte-agent-bar \
+              chmod a+x /usr/local/etc/hirte
           # Change node name in config file
           podman exec -it hirte-agent-bar \
-          sed -i "s/\(NodeName=\)\(.*\)/\1bar/" /hirte/example-hirte-agent.ini
+              sed -i "s/\(NodeName=\)\(.*\)/\1bar/" /usr/local/etc/hirte/agent.conf
           # Change manager address in config file
           podman exec -it hirte-agent-bar \
-          sed -i "s/\(ManagerHost=\)\(.*\)/\1${{ env.PODMAN_NET }}/" /hirte/example-hirte-agent.ini
+              sed -i "s/\(ManagerHost=\)\(.*\)/\1${{ env.PODMAN_NET }}/" /usr/local/etc/hirte/agent.conf
+          # Change LogLevel to DEBUG
+          podman exec -it hirte-agent-bar \
+              sh -c 'echo "LogLevel=DEBUG" >> /usr/local/etc/hirte/hirte.conf'
           podman exec -t hirte-agent-bar \
-          su - test-user -c "(/usr/local/bin/hirte-agent -c \
-          /hirte/example-hirte-agent.ini > bar.log 2>&1 &)"
+              sh -c '/usr/local/bin/hirte-agent &'
           podman exec -it hirte-agent-bar /usr/bin/pkill --signal TERM hirte-agent
-          podman exec -w /home/test-user -u test-user -it hirte-agent-bar \
-          grep "Agent 'bar' connection attempt 0: success" bar.log
+          podman exec -it hirte-agent-bar \
+              sh -c '(journalctl | grep hirte)'
+          podman exec -it hirte-agent-bar \
+              sh -c '(journalctl | grep "Agent 'bar' connection attempt 0: success")'
 
       - name: run hirte agent-foo
         run: |
+          # For some unknown reason /usr/local/etc/hirte directory is created with 644 permission
+          podman exec -it hirte-agent-foo \
+              chmod a+x /usr/local/etc/hirte
           # Change node name in config file
           podman exec -it hirte-agent-foo \
-          sed -i "s/\(NodeName=\)\(.*\)/\1foo/" /hirte/example-hirte-agent.ini
+              sed -i "s/\(NodeName=\)\(.*\)/\1foo/" /usr/local/etc/hirte/agent.conf
           # Change manager address in config file
           podman exec -it hirte-agent-foo \
-          sed -i "s/\(ManagerHost=\)\(.*\)/\1${{ env.PODMAN_NET }}/" /hirte/example-hirte-agent.ini
+              sed -i "s/\(ManagerHost=\)\(.*\)/\1${{ env.PODMAN_NET }}/" /usr/local/etc/hirte/agent.conf
+          # Change LogLevel to DEBUG
+          podman exec -it hirte-agent-bar \
+              sh -c 'echo "LogLevel=DEBUG" >> /usr/local/etc/hirte/hirte.conf'
           podman exec -t hirte-agent-foo \
-          su - test-user -c  "(/usr/local/bin/hirte-agent -c \
-          /hirte/example-hirte-agent.ini > foo.log 2>&1 &)"
+              sh -c '/usr/local/bin/hirte-agent &'
           podman exec -it hirte-agent-foo /usr/bin/pkill --signal TERM hirte-agent
           podman exec -w /home/test-user -u test-user -it hirte-agent-foo \
-          grep "Agent 'foo' connection attempt 0: success" foo.log
+              sh -c '(journalctl | grep "Agent 'foo' connection attempt 0: success")'

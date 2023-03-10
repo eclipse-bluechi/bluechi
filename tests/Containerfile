@@ -1,12 +1,20 @@
 FROM registry.gitlab.com/centos/automotive/sample-images/hirte/hirte-builder:1.0.0
-COPY ./builddir/bin/usr/local/bin/* /usr/local/bin
+
+COPY ./builddir/bin/usr/local/bin/* \
+                   /usr/local/bin/
+
+CMD mkdir -p /usr/local/etc/dbus-1/system.d
+COPY ./builddir/bin/usr/local/etc/dbus-1/system.d/* \
+                   /usr/local/etc/dbus-1/system.d/
+
+CMD mkdir -p /usr/local/etc/hirte
+COPY ./builddir/bin/usr/local/etc/hirte/* \
+                   /usr/local/etc/hirte/
 
 CMD mkdir -p /usr/local/share/dbus-1/interfaces/
 COPY ./builddir/bin/usr/local/share/dbus-1/interfaces/* \
-     /usr/local/share/dbus-1/interfaces/
-COPY ./doc/example-hirte*.ini /hirte/
+                   /usr/local/share/dbus-1/interfaces/
 
 CMD [ "/sbin/init" ]
 
 WORKDIR /hirte
-
