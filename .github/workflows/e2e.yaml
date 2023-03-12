@@ -33,43 +33,29 @@ jobs:
 
       - name: run hirte containers
         run: |
-          podman run -d --net podman --rm --name hirte-mgr localhost/hirte-image:${{ github.event.pull_request.head.sha }}
-          podman run -d --net podman --rm --name hirte-agent-foo localhost/hirte-image:${{ github.event.pull_request.head.sha }}
-          podman run -d --net podman --rm --name hirte-agent-bar localhost/hirte-image:${{ github.event.pull_request.head.sha }}
-          HIRTE_SERVICE_ADDRESS=$(podman inspect hirte-mgr --format {{.NetworkSettings.Networks.podman.IPAddress}})
-          echo "HIRTE_SERVICE_ADDRESS=$HIRTE_SERVICE_ADDRESS" >> $GITHUB_ENV
+          podman network create --subnet 172.18.0.0/24 hirte-test
+          podman run -d --rm --network hirte-test --ip 172.18.0.2 --name hirte-mgr -v ${PWD}/tests/e2e/manager.ini:/hirte/manager.ini:Z localhost/hirte-image:${{ github.event.pull_request.head.sha }}
+          podman run -d --rm --network hirte-test --name hirte-agent-foo -v ${PWD}/tests/e2e/foo.ini:/hirte/agent.ini:Z localhost/hirte-image:${{ github.event.pull_request.head.sha }}
+          podman run -d --rm --network hirte-test --name hirte-agent-bar -v ${PWD}/tests/e2e/bar.ini:/hirte/agent.ini:Z localhost/hirte-image:${{ github.event.pull_request.head.sha }}
 
       - name: run hirte orchestrator
         run: |
           podman exec -t  hirte-mgr \
-          su - test-user -c  "(/usr/local/bin/hirte -c /hirte/example-hirte.ini > mgr.log 2>&1 &)"
+            su - test-user -c  "(/usr/local/bin/hirte -c /hirte/manager.ini > mgr.log 2>&1 &)"
 
       - name: run hirte agent-bar
         run: |
           # Change node name in config file
-          podman exec -it hirte-agent-bar \
-            sed -i "s/\(NodeName=\)\(.*\)/\1bar/" /hirte/example-hirte-agent.ini
-          # Change manager address in config file
-          podman exec -it hirte-agent-bar \
-            sed -i "s/\(ManagerHost=\)\(.*\)/\1${{ env.HIRTE_SERVICE_ADDRESS }}/" /hirte/example-hirte-agent.ini
           podman exec -t hirte-agent-bar \
-            su - test-user -c "(/usr/local/bin/hirte-agent -c \
-              /hirte/example-hirte-agent.ini > bar.log 2>&1 &)"
+            su - test-user -c "(/usr/local/bin/hirte-agent -c /hirte/agent.ini > bar.log 2>&1 &)"
           podman exec -it hirte-agent-bar /usr/bin/pkill --signal TERM hirte-agent
           podman exec -w /home/test-user -u test-user -it hirte-agent-bar \
             grep "Agent 'bar' connection attempt 0: success" bar.log
 
       - name: run hirte agent-foo
         run: |
-          # Change node name in config file
-          podman exec -it hirte-agent-foo \
-            sed -i "s/\(NodeName=\)\(.*\)/\1foo/" /hirte/example-hirte-agent.ini
-          # Change manager address in config file
-          podman exec -it hirte-agent-foo \
-            sed -i "s/\(ManagerHost=\)\(.*\)/\1${{ env.HIRTE_SERVICE_ADDRESS }}/" /hirte/example-hirte-agent.ini
           podman exec -t hirte-agent-foo \
-            su - test-user -c  "(/usr/local/bin/hirte-agent -c \
-              /hirte/example-hirte-agent.ini > foo.log 2>&1 &)"
+            su - test-user -c  "(/usr/local/bin/hirte-agent -c /hirte/agent.ini > foo.log 2>&1 &)"
           podman exec -it hirte-agent-foo /usr/bin/pkill --signal TERM hirte-agent
           podman exec -w /home/test-user -u test-user -it hirte-agent-foo \
-          grep "Agent 'foo' connection attempt 0: success" foo.log
+            grep "Agent 'foo' connection attempt 0: success" foo.log
