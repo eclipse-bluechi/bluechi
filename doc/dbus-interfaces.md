@@ -41,7 +41,7 @@ Note that all properties also come with change events, so you can easily track w
 
   * `ListNodes(out a(sos) nodes)`
 
-    Returns information (name, object_path and status) of all know nodes.
+    Returns information (name, object_path and status) of all known nodes.
 
   * `GetNode(in s name, out o path)`
 
@@ -63,7 +63,7 @@ Note that all properties also come with change events, so you can easily track w
 
   * `Nodes` - `as`
 
-    A list with the names of all configured nodes managed by Hirte. Each name listed here also have a corresponding
+    A list with the names of all configured nodes managed by Hirte. Each name listed here also has a corresponding
     object under `/org/containers/hirte/node/$name` which implements the `org.containers.hirte.Node` interface.
 
 ### interface org.containers.hirte.Monitor
@@ -100,9 +100,9 @@ Object path: `/org/containers/hirte/monitor/$id`
      service is started (reason=`real`), or if hirte learns of an
      already loaded unit (reason=`virtual`).
 
-    The later can happen for two reasons, either hirte knows already
+    The latter can happen for two reasons, either hirte already knows
     that the unit is loaded. Or, at a later time a new agent connects
-    for a previously offline node and the unit was already running
+    to a previously offline node and the unit was already running
     on the node.
 
   * UnitStateChanged(s node, s unit, s active_state, s substate, s reason)
@@ -120,7 +120,7 @@ Object path: `/org/containers/hirte/monitor/$id`
 
 ### interface org.containers.hirte.Node
 
-Each node object represents a configured node in the system, independent on whether that node is connected to the
+Each node object represents a configured node in the system, independent of whether that node is connected to the
 manager or not, and the status can change over time.
 
 Object path: `/org/containers/hirte/node/$name`
@@ -154,7 +154,7 @@ Object path: `/org/containers/hirte/node/$name`
 
   * `GetUnitProperties(in s name, in s interface, out a{sv} props)`
 
-    Returns the current properties for for a named unit on the node. The returned properties are the same as you would
+    Returns the current properties for a named unit on the node. The returned properties are the same as you would
     get in the systemd properties apis.
 
   * `GetUnitProperty(in s name, in s interface, in property, out v value)`

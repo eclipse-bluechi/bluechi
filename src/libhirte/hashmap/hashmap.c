@@ -74,7 +74,7 @@ static uint64_t get_hash(struct hashmap *map, const void *key) {
 }
 
 // hashmap_new_with_allocator returns a new hash map using a custom allocator.
-// See hashmap_new for more information information
+// See hashmap_new for more information.
 struct hashmap *hashmap_new_with_allocator(
                 void *(*_malloc)(size_t),
                 void *(*_realloc)(void *, size_t),
@@ -193,7 +193,7 @@ static void free_elements(struct hashmap *map) {
 // Every item is called with the element-freeing function given in hashmap_new,
 // if present, to free any data referenced in the elements of the hashmap.
 // When the update_cap is provided, the map's capacity will be updated to match
-// the currently number of allocated buckets. This is an optimization to ensure
+// the current number of allocated buckets. This is an optimization to ensure
 // that this operation does not perform any allocations.
 void hashmap_clear(struct hashmap *map, bool update_cap) {
         map->count = 0;
