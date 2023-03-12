@@ -1,0 +1,98 @@
+name: Integration Testing
+
+on:
+  workflow_call:
+  workflow_dispatch:
+
+jobs:
+  test:
+    name: cs9 x86_64 e2e
+    runs-on: ubuntu-latest
+    env:
+      ARTIFACTS_DIR: exported-artifacts
+    steps:
+      - name: Install dependencies
+        run: |
+          sudo apt-get -y install podman
+
+      - name: Checkout sources
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          # Use githash of a tested commit instead of merge commit
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      - name: Download artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: rpm-artifacts
+          path: ${{ env.ARTIFACTS_DIR}}
+
+      - name: build hirte tests containers
+        run: |
+          podman build -f tests/Containerfile -t hirte-image .
+
+      - name: run hirte containers
+        run: |
+          podman run -d --net podman --rm -p 2020:2020 --name hirte-mgr \
+          $(podman images *hirte-image --format {{.ID}})
+          podman run -d --net podman --rm --name hirte-node-bar \
+          $(podman images *hirte-image --format {{.ID}})
+          podman run -d --net podman --rm --name hirte-node-foo \
+          $(podman images *hirte-image --format {{.ID}})
+          PODMAN_NET=$(hostname -I | awk '{print $1}')
+          echo "PODMAN_NET=$PODMAN_NET" >> $GITHUB_ENV
+
+      - name: run hirte manager 
+        run: |
+          podman exec -it hirte-mgr \
+               bash -c "cat <<EOF>> /etc/hirte/hirte.conf
+               ManagerPort=2020
+               AllowedNodeNames=foo,bar
+               LogLevel=DEBUG
+               LogTarget=journald
+               LogIsQuiet=false
+               EOF"
+          podman exec -d  hirte-mgr \
+               bash -c "hirte &"
+
+      - name: run hirte agent-bar
+        run: |
+          podman exec -it hirte-node-bar bash -c \
+               "sed -i \"s/\(ManagerHost=\)\(.*\)/\1${{ env.PODMAN_NET }}/\" /etc/hirte/agent.conf"
+          podman exec -it hirte-node-bar bash -c \
+               "sed -i \"s/\(NodeName=\)\(.*\)/\1bar/\" /etc/hirte/agent.conf"
+          podman exec -it hirte-node-foo \
+               bash -c "cat <<EOF>> /etc/hirte/agent.conf
+               ManagerPort=2020
+               LogLevel=DEBUG
+               LogTarget=journald
+               LogIsQuiet=false
+               EOF"
+          podman exec -d hirte-node-bar \
+               bash -c "hirte-agent &"
+          podman exec -d hirte-node-bar \
+               bash -c "pkill --signal TERM hirte-agent"
+          podman exec -it hirte-node-bar bash -c \
+               "journalctl | grep \"Agent 'bar' connection attempt 0: success\""
+
+      - name: run hirte agent-foo
+        run: |
+          podman exec -it hirte-node-foo bash -c \
+               "sed -i \"s/\(ManagerHost=\)\(.*\)/\1${{ env.PODMAN_NET }}/\" /etc/hirte/agent.conf"
+          podman exec -it hirte-node-foo bash -c \
+               "sed -i \"s/\(NodeName=\)\(.*\)/\1foo/\" /etc/hirte/agent.conf"
+          podman exec -it hirte-node-foo \
+               bash -c "cat <<EOF>> /etc/hirte/agent.conf
+               ManagerPort=2020
+               LogLevel=DEBUG
+               LogTarget=journald
+               LogIsQuiet=false
+               EOF"
+          podman exec -d hirte-node-foo \
+               bash -c "hirte-agent &"
+          podman exec -d hirte-node-foo \
+               bash -c "pkill --signal TERM hirte-agent"
+          podman exec -it hirte-node-foo bash -c \
+               "journalctl | grep \"Agent 'foo' connection attempt 0: success\""
+
