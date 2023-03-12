@@ -1,9 +1,9 @@
 FROM registry.gitlab.com/centos/automotive/sample-images/hirte/hirte-builder:1.0.0
 RUN mkdir -p /tmp/rpms
-COPY ./exported-artifacts/*.rpm /tmp/rpms/
-RUN /usr/bin/find /tmp/rpms -name hirte-[0-9].*.x86_64.rpm -o \
-                            -name hirte-agent-[0-9].*.x86_64.rpm | \
-                            xargs  dnf install -y
+COPY ./exported-artifacts/ /tmp/rpms/
+RUN dnf install -y --repo local-hirte-snapshot \
+    --repofrompath local-hirte-snapshot,file:///tmp/rpms \
+    --nogpgcheck hirte hirte-agent
 CMD [ "/sbin/init" ]
 
 WORKDIR /hirte
