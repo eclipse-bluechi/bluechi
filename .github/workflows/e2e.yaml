@@ -83,4 +83,4 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: all_logs
-          path: *.log
+          path: .*.log
