@@ -43,7 +43,7 @@ jobs:
 
       - name: Check SPDX headers
         run: |
-          ./build-tools/spdx-header-chech.sh
+          ./build-scripts/spdx-header-chech.sh
 
       - name: Running source code format check
         run: |
