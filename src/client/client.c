@@ -328,6 +328,8 @@ int client_call_manager(Client *client) {
                         return -EINVAL;
                 }
                 r = method_lifecycle_action_on(client, client->opargv[0], client->opargv[1], "ReloadUnit");
+        } else {
+                return -EINVAL;
         }
 
         return r;
