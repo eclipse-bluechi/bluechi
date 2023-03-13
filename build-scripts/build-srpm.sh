@@ -1,8 +1,8 @@
 #!/bin/bash -xe
 # SPDX-License-Identifier: GPL-2.0-or-later
 
-# Package version
-VERSION="0.0.1"
+# Package version - loaded from version.sh
+VERSION="$("$(dirname "$(readlink -f "$0")")"/version.sh)"
 
 # Mark current directory as safe for git to be able to parse git hash
 git config --global --add safe.directory $(pwd)
