@@ -40,6 +40,7 @@ UnitList *unit_list_ref(UnitList *unit_list);
 void unit_list_unref(UnitList *unit_list);
 
 int client_call_manager(Client *client);
+int print_client_usage(char *argv);
 
 DEFINE_CLEANUP_FUNC(Client, client_unref)
 #define _cleanup_client_ _cleanup_(client_unrefp)

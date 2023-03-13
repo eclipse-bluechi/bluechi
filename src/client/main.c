@@ -18,7 +18,7 @@ static int opargc;
 static bool no_action = false;
 
 static void usage(char *argv[]) {
-        printf("Usage: %s COMMAND ... \n", argv[0]);
+        print_client_usage(argv[0]);
 }
 
 static int get_opts(int argc, char *argv[]) {
