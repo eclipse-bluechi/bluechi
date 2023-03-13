@@ -833,7 +833,7 @@ static int agent_run_unit_lifecycle_method(sd_bus_message *m, Agent *agent, cons
                 return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_INVALID_ARGS, "Invalid arguments");
         }
 
-        hirte_log_debugf("Request to %s unit: %s - Action: %s", method, name, mode);
+        hirte_log_infof("Request to %s unit: %s - Action: %s", method, name, mode);
 
         _cleanup_systemd_request_ SystemdRequest *req = agent_create_request(agent, m, method);
         if (req == NULL) {
