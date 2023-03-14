@@ -13,7 +13,6 @@ rpm_spec_conf = configuration_data()
 rpm_spec_conf.set('VERSION', meson.project_version())
 rpm_spec_conf.set('RELEASE', release.strip())
 
-
 configure_file(
     output: 'hirte.spec',
     input: 'hirte.spec.in',

@@ -102,6 +102,7 @@ jobs:
       
       - name: Perform build
         run: |
+          git config --global --add safe.directory *
           meson setup builddir
           ./rpm/build-rpm.sh $ARTIFACTS_DIR builddir/rpm/hirte.spec
 
