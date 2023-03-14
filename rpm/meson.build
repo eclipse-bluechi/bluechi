@@ -1,5 +1,7 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
 
+run_command(['git', 'config', '--global', '--add', 'safe.directory', meson.source_root().strip()], capture: true, check: true)
+
 # Create RPM spec
 githashcmd = run_command(['git', 'rev-parse', '--verify', '--short', 'HEAD'], capture : true, check : true)
 githash = githashcmd.stdout()
@@ -10,6 +12,7 @@ release = '0.' + date.strip() + '.git' + githash
 rpm_spec_conf = configuration_data()
 rpm_spec_conf.set('VERSION', meson.project_version())
 rpm_spec_conf.set('RELEASE', release.strip())
+
 
 configure_file(
     output: 'hirte.spec',

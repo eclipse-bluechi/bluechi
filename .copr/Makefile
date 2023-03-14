@@ -4,5 +4,5 @@ installdeps:
 	dnf -y install git
 
 srpm: installdeps
-	./build-scripts/build-srpm.sh
+	./rpm/build-srpm.sh
 	cp rpmbuild/SRPMS/*.src.rpm $(outdir)
