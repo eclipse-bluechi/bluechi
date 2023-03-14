@@ -46,53 +46,44 @@ jobs:
       - name: run hirte manager 
         run: |
           podman exec -it hirte-mgr \
-               bash -c "cat <<EOF>> /etc/hirte/hirte.conf
-               ManagerPort=2020
-               AllowedNodeNames=foo,bar
-               LogLevel=DEBUG
-               LogTarget=journald
-               LogIsQuiet=false
-               EOF"
-          podman exec -d  hirte-mgr \
-               bash -c "hirte &"
+               bash -c   "sed -i \"s/\(AllowedNodeNames=\)\(.*\)/\1foo,bar/\" /etc/hirte/hirte.conf"
+          podman exec -it hirte-mgr \
+               bash -c "cat >> /etc/hirte/hirte.conf << _EOF
+          ManagerPort=2020
+          LogLevel=DEBUG
+          _EOF"
+          podman exec -it hirte-mgr \
+               bash -c "systemctl start hirte.service"
 
       - name: run hirte agent-bar
         run: |
           podman exec -it hirte-node-bar bash -c \
                "sed -i \"s/\(ManagerHost=\)\(.*\)/\1${{ env.PODMAN_NET }}/\" /etc/hirte/agent.conf"
-          podman exec -it hirte-node-bar bash -c \
-               "sed -i \"s/\(NodeName=\)\(.*\)/\1bar/\" /etc/hirte/agent.conf"
-          podman exec -it hirte-node-foo \
-               bash -c "cat <<EOF>> /etc/hirte/agent.conf
-               ManagerPort=2020
-               LogLevel=DEBUG
-               LogTarget=journald
-               LogIsQuiet=false
-               EOF"
+          podman exec -it hirte-node-bar \
+               bash -c "sed -i \"s/\(NodeName=\)\(.*\)/\1bar/\" /etc/hirte/agent.conf"
+          podman exec -it hirte-node-bar \
+               bash -c "cat >> /etc/hirte/agent.conf << _EOF
+          ManagerPort=2020
+          LogLevel=DEBUG
+          _EOF"
           podman exec -d hirte-node-bar \
-               bash -c "hirte-agent &"
-          podman exec -d hirte-node-bar \
-               bash -c "pkill --signal TERM hirte-agent"
-          podman exec -it hirte-node-bar bash -c \
-               "journalctl | grep \"Agent 'bar' connection attempt 0: success\""
+               bash -c "systemctl start hirte-agent.service"
+          podman exec -it hirte-node-bar \
+               bash -c "journalctl -b | grep \"Agent 'bar' connection attempt 0: success\""
 
       - name: run hirte agent-foo
         run: |
           podman exec -it hirte-node-foo bash -c \
                "sed -i \"s/\(ManagerHost=\)\(.*\)/\1${{ env.PODMAN_NET }}/\" /etc/hirte/agent.conf"
-          podman exec -it hirte-node-foo bash -c \
-               "sed -i \"s/\(NodeName=\)\(.*\)/\1foo/\" /etc/hirte/agent.conf"
           podman exec -it hirte-node-foo \
-               bash -c "cat <<EOF>> /etc/hirte/agent.conf
-               ManagerPort=2020
-               LogLevel=DEBUG
-               LogTarget=journald
-               LogIsQuiet=false
-               EOF"
+               bash -c "sed -i \"s/\(NodeName=\)\(.*\)/\1foo/\" /etc/hirte/agent.conf"
+          podman exec -it hirte-node-foo \
+               bash -c "cat >> /etc/hirte/agent.conf << _EOF
+          ManagerPort=2020
+          LogLevel=DEBUG
+          _EOF"
           podman exec -d hirte-node-foo \
-               bash -c "hirte-agent &"
-          podman exec -d hirte-node-foo \
-               bash -c "pkill --signal TERM hirte-agent"
-          podman exec -it hirte-node-foo bash -c \
-               "journalctl | grep \"Agent 'foo' connection attempt 0: success\""
+               bash -c "systemctl start hirte-agent.service"
+          podman exec -it hirte-node-foo \
+               bash -c "journalctl -b | grep \"Agent 'foo' connection attempt 0: success\""
 
