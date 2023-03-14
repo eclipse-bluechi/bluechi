@@ -3,7 +3,7 @@
 project(
   'hirte',
   'c',
-  version: '0.0.1',
+  version: '0.1.0',
   license: 'GPL-2.0-or-later',
   default_options: [
     'c_std=gnu17',     # Adds "-std=gnu17".  Includes GNU 17 extensions.

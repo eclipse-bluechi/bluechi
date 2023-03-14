@@ -81,10 +81,14 @@ jobs:
           dnf install \
                   createrepo_c \
                   dnf-utils \
+                  gcc \
                   git \
                   gzip \
+                  jq \
+                  meson \
                   rpm-build \
                   sed \
+                  systemd-devel \
                   tar \
                   golang-github-cpuguy83-md2man \
               -y

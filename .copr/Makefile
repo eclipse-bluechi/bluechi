@@ -1,7 +1,7 @@
 .PHONY: installdeps srpm
 
 installdeps:
-	dnf -y install git
+	dnf -y install gcc git jq meson
 
 srpm: installdeps
 	./build-scripts/build-srpm.sh
