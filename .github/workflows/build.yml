@@ -52,6 +52,7 @@ jobs:
 
       - name: Running static analysis
         run: |
+          git config --global --add safe.directory $(pwd)
           make lint
 
       - name: Running codespell checker
