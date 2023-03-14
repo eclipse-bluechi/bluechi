@@ -49,7 +49,6 @@ githash = githashcmd.stdout()
 datecmd = run_command(['date', '+%04Y%02m%02d%02H%02M'], capture : true, check : true)
 date = datecmd.stdout()
 release = '0.' + date.strip() + '.git' + githash
-message(release)
 
 rpm_spec_conf = configuration_data()
 rpm_spec_conf.set('VERSION', meson.project_version())

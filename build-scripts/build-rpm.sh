@@ -1,7 +1,7 @@
 #!/bin/bash -xe
 # SPDX-License-Identifier: GPL-2.0-or-later
 
-source $(dirname "$(readlink -f "$0")")/build-srpm.sh
+source $(dirname "$(readlink -f "$0")")/build-srpm.sh $2
 
 # Install build dependencies
 dnf builddep -y rpmbuild/SRPMS/*src.rpm
