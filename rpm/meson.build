@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: GPL-2.0-or-later
+
 # Create RPM spec
 githashcmd = run_command(['git', 'rev-parse', '--verify', '--short', 'HEAD'], capture : true, check : true)
 githash = githashcmd.stdout()
