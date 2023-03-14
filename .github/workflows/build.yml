@@ -29,6 +29,7 @@ jobs:
           dnf install \
                   clang-tools-extra \
                   gcc \
+                  git \
                   meson \
                   systemd-devel \
                   codespell \
