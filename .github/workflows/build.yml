@@ -100,12 +100,9 @@ jobs:
           # Use githash of a tested commit instead of merge commit
           ref: ${{ github.event.pull_request.head.sha }}
       
-      - name: Build hirte.spec
-        run: |
-          meson setup builddir
-
       - name: Perform build
         run: |
+          meson setup builddir
           ./rpm/build-rpm.sh $ARTIFACTS_DIR builddir/rpm/hirte.spec
 
       - name: Create DNF repository
