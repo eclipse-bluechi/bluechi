@@ -102,11 +102,12 @@ jobs:
       
       - name: Build hirte.spec
         run: |
+          git config --global --add safe.directory $(pwd)
           meson setup builddir
 
       - name: Perform build
         run: |
-          ./build-scripts/build-rpm.sh $ARTIFACTS_DIR builddir/hirte.spec
+          ./build-scripts/build-rpm.sh $ARTIFACTS_DIR builddir/rpm/hirte.spec
 
       - name: Create DNF repository
         run: |

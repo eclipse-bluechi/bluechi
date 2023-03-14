@@ -43,15 +43,6 @@ config_h = configure_file(
 # For lint to work properly the same include needs to be added manually to clang-tidy arguments
 add_project_arguments('-include', 'config.h', language : 'c')
 
-# Create RPM spec
-rpm_spec_conf = configuration_data()
-rpm_spec_conf.set('VERSION', meson.project_version())
-configure_file(
-    output: 'hirte.spec',
-    input: 'hirte.spec.in',
-    configuration: rpm_spec_conf
-)
-
 # Subdirectory for the shared library.
 subdir('src/libhirte')
 
@@ -71,3 +62,6 @@ subdir('doc/man')
 
 # systemd unit files
 subdir('systemd-units')
+
+# rpm build
+subdir('rpm')
