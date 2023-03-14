@@ -10,6 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       ARTIFACTS_DIR: exported-artifacts
+      LOGS_DIR: exported-logs
     steps:
       - name: Install dependencies
         run: |
@@ -43,7 +44,7 @@ jobs:
           PODMAN_NET=$(hostname -I | awk '{print $1}')
           echo "PODMAN_NET=$PODMAN_NET" >> $GITHUB_ENV
 
-      - name: run hirte manager 
+      - name: run hirte manager
         run: |
           podman exec -it hirte-mgr \
                bash -c   "sed -i \"s/\(AllowedNodeNames=\)\(.*\)/\1foo,bar/\" /etc/hirte/hirte.conf"
@@ -86,4 +87,28 @@ jobs:
                bash -c "systemctl start hirte-agent.service"
           podman exec -it hirte-node-foo \
                bash -c "journalctl -b | grep \"Agent 'foo' connection attempt 0: success\""
+
+      - name: Download logs from containers
+        if: always()
+        run: |
+          mkdir -p ${{ env.LOGS_DIR }}
+          podman exec -it hirte-mgr \
+               bash -c 'journalctl --no-pager > /tmp/hirte-mgr.log'
+          podman cp hirte-mgr:/tmp/hirte-mgr.log ${{ env.LOGS_DIR }}
+
+          podman exec -it hirte-node-bar \
+               bash -c 'journalctl --no-pager > /tmp/hirte-node-bar.log'
+          podman cp hirte-node-bar:/tmp/hirte-node-bar.log ${{ env.LOGS_DIR }}
+
+          podman exec -it hirte-node-foo \
+               bash -c 'journalctl --no-pager > /tmp/hirte-node-foo.log'
+          podman cp hirte-node-foo:/tmp/hirte-node-foo.log ${{ env.LOGS_DIR }}
+
+      - name: Export logs from containers
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: test-logs
+          path: ${{ env.LOGS_DIR }}
+
 
