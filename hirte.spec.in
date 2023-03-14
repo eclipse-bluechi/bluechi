@@ -83,6 +83,7 @@ This package contains the node agent.
 %{_mandir}/man5/hirte.conf.*
 %{_sysconfdir}/dbus-1/system.d/org.containers.hirte.conf
 %{_unitdir}/hirte.service
+%{_unitdir}/hirte.socket
 
 %files agent
 %config %{_sysconfdir}/hirte/agent.conf

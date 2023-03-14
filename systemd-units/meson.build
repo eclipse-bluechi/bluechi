@@ -8,6 +8,11 @@ install_data(
 )
 
 install_data(
+  'hirte.socket',
+  install_dir : systemd_unit_dir
+)
+
+install_data(
   'hirte-agent.service',
   install_dir : systemd_unit_dir
 )

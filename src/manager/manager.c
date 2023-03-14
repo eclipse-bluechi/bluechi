@@ -1,5 +1,6 @@
 /* SPDX-License-Identifier: GPL-2.0-or-later */
 #include <string.h>
+#include <systemd/sd-daemon.h>
 
 #include "libhirte/bus/bus.h"
 #include "libhirte/bus/utils.h"
@@ -379,12 +380,25 @@ static int manager_accept_node_connection(
 
 static bool manager_setup_node_connection_handler(Manager *manager) {
         int r = 0;
+        int accept_fd = -1;
+        _cleanup_fd_ int tcp_fd = -1;
         _cleanup_sd_event_source_ sd_event_source *event_source = NULL;
 
-        _cleanup_fd_ int accept_fd = create_tcp_socket(manager->port);
-        if (accept_fd < 0) {
-                hirte_log_errorf("Failed to create TCP socket: %s", strerror(-r));
+        int n = sd_listen_fds(0);
+        if (n > 1) {
+                hirte_log_errorf("Received too many file descriptors - %d", n);
                 return false;
+        }
+
+        if (n == 1) {
+                accept_fd = SD_LISTEN_FDS_START;
+        } else {
+                tcp_fd = create_tcp_socket(manager->port);
+                if (tcp_fd < 0) {
+                        hirte_log_errorf("Failed to create TCP socket: %s", strerror(errno));
+                        return false;
+                }
+                accept_fd = tcp_fd;
         }
 
         r = sd_event_add_io(
@@ -400,7 +414,7 @@ static bool manager_setup_node_connection_handler(Manager *manager) {
         }
 
         // sd_event_set_io_fd_own takes care of closing accept_fd
-        steal_fd(&accept_fd);
+        steal_fd(&tcp_fd);
 
         (void) sd_event_source_set_description(event_source, "node-accept-socket");
 
