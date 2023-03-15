@@ -21,6 +21,11 @@ All fields to bootstrap the hirte-agent are contained in the **hirte-agent** sec
 
 The unique name of this agent.
 
+#### **ManagerAddress** (string)
+
+SD Bus address used by `hirte-agent` to connect to `hirte`. See `man sd_bus_set_address` for its format.
+Overrides any setting of `ManagerHost` or `ManagerPort` defined in the configuration file as well as the respective CLI options.
+
 #### **ManagerHost** (string)
 
 The host used by `hirte-agent` to connect to `hirte`. Must be a valid IPv4 or IPv6.

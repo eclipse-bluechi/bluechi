@@ -30,6 +30,11 @@ The host used by `hirte-agent` to connect to `hirte`. Must be a valid IPv4 or IP
 
 The port on which `hirte` is listening for connection request and the `hirte-agent` is connecting to. This option will overwrite the port defined in the configuration file.
 
+#### **--address**, **-a**
+
+DBus address used by `hirte-agent` to connect to `hirte`. See `man sd_bus_set_address` for its format.
+Overrides any setting of `ManagerHost` or `ManagerPort` defined in the configuration file as well as the respective CLI options.
+
 #### **--name**, **-n**
 
 The unique name of this `hirte-agent` used for registering at `hirte`. This option will overwrite the port defined in the configuration file.

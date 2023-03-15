@@ -13,6 +13,7 @@
 #define CFG_LOG_IS_QUIET "LogIsQuiet"
 #define CFG_MANAGER_HOST "ManagerHost"
 #define CFG_MANAGER_PORT "ManagerPort"
+#define CFG_MANAGER_ADDRESS "ManagerAddress"
 #define CFG_NODE_NAME "NodeName"
 #define CFG_ALLOWED_NODE_NAMES "AllowedNodeNames"
 

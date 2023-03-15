@@ -370,27 +370,16 @@ bool agent_set_port(Agent *agent, const char *port_s) {
         return true;
 }
 
+bool agent_set_orch_address(Agent *agent, const char *address) {
+        return copy_str(&agent->orch_addr, address);
+}
+
 bool agent_set_host(Agent *agent, const char *host) {
-        char *dup = strdup(host);
-        if (dup == NULL) {
-                hirte_log_error("Out of memory");
-                return false;
-        }
-        free(agent->host);
-        agent->host = dup;
-        return true;
+        return copy_str(&agent->host, host);
 }
 
 bool agent_set_name(Agent *agent, const char *name) {
-        char *dup = strdup(name);
-        if (dup == NULL) {
-                hirte_log_error("Out of memory");
-                return false;
-        }
-
-        free(agent->name);
-        agent->name = dup;
-        return true;
+        return copy_str(&agent->name, name);
 }
 
 bool agent_parse_config(Agent *agent, const char *configfile) {
@@ -456,6 +445,13 @@ bool agent_parse_config(Agent *agent, const char *configfile) {
         value = cfg_get_value(agent->config, CFG_MANAGER_PORT);
         if (value) {
                 if (!agent_set_port(agent, value)) {
+                        return false;
+                }
+        }
+
+        value = cfg_get_value(agent->config, CFG_MANAGER_ADDRESS);
+        if (value) {
+                if (!agent_set_orch_address(agent, value)) {
                         return false;
                 }
         }
@@ -1359,23 +1355,17 @@ int agent_init_units(Agent *agent, sd_bus_message *m) {
         return 0;
 }
 
-bool agent_start(Agent *agent) {
+static bool ensure_orch_address(Agent *agent) {
         struct sockaddr_in host;
         int r = 0;
-        sd_bus_error error = SD_BUS_ERROR_NULL;
 
-        if (agent == NULL) {
-                return false;
+        if (agent->orch_addr != NULL) {
+                return true;
         }
 
         memset(&host, 0, sizeof(host));
         host.sin_family = AF_INET;
         host.sin_port = htons(agent->port);
-
-        if (agent->name == NULL) {
-                hirte_log_error("No agent name specified");
-                return false;
-        }
 
         if (agent->host == NULL) {
                 hirte_log_errorf("No manager host specified for agent '%s'", agent->name);
@@ -1389,7 +1379,24 @@ bool agent_start(Agent *agent) {
         }
 
         agent->orch_addr = assemble_tcp_address(&host);
-        if (agent->orch_addr == NULL) {
+
+        return agent->orch_addr != NULL;
+}
+
+bool agent_start(Agent *agent) {
+        int r = 0;
+        sd_bus_error error = SD_BUS_ERROR_NULL;
+
+        if (agent == NULL) {
+                return false;
+        }
+
+        if (agent->name == NULL) {
+                hirte_log_error("No agent name specified");
+                return false;
+        }
+
+        if (!ensure_orch_address(agent)) {
                 return false;
         }
 

@@ -7,6 +7,7 @@ libhirte_src = [
     'bus/utils.h',
     'common/cfg.c',
     'common/cfg.h',
+    'common/common.c',
     'common/common.h',
     'common/event-util.c',
     'common/event-util.h',
