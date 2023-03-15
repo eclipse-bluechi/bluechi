@@ -104,3 +104,5 @@ static inline char *strcat_dup(const char *a, const char *b) {
 #define _cleanup_sd_bus_slot_ _cleanup_(sd_bus_slot_unrefp)
 #define _cleanup_sd_bus_message_ _cleanup_(sd_bus_message_unrefp)
 #define _cleanup_sd_bus_error_ _cleanup_(sd_bus_error_free)
+
+bool copy_str(char **p, const char *s);

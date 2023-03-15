@@ -278,10 +278,23 @@ char *bus_path_escape(const char *s) {
         return r;
 }
 
+static bool is_socket_tcp(int fd) {
+        int type = 0;
+        socklen_t length = sizeof(int);
+
+        getsockopt(fd, SOL_SOCKET, SO_DOMAIN, &type, &length);
+
+        return type == AF_INET || type == AF_INET6;
+}
+
 int bus_socket_set_no_delay(sd_bus *bus) {
         int fd = sd_bus_get_fd(bus);
         if (fd < 0) {
                 return fd;
+        }
+
+        if (!is_socket_tcp(fd)) {
+                return 0;
         }
 
         int flag = 1;
@@ -297,6 +310,10 @@ int bus_socket_set_keepalive(sd_bus *bus) {
         int fd = sd_bus_get_fd(bus);
         if (fd < 0) {
                 return fd;
+        }
+
+        if (!is_socket_tcp(fd)) {
+                return 0;
         }
 
         int flag = 1;
