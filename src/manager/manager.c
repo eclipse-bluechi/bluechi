@@ -284,8 +284,11 @@ bool manager_parse_config(Manager *manager, const char *configfile) {
                         CFG_HIRTE_DEFAULT_CONFIG,
                         CFG_ETC_HIRTE_CONF,
                         NULL); // TODO: https://github.com/containers/hirte/issues/148
-        if (result != 0) {
-                fprintf(stderr, "Error loading configuration '%s': '%s'.\n", CFG_ETC_HIRTE_CONF, strerror(-result));
+        if (result != 0 && result != -ENOENT) {
+                fprintf(stderr,
+                        "Error loading configuration '%s': '%s'.\n",
+                        CFG_ETC_HIRTE_CONF,
+                        strerror(-result));
                 return false;
         }
 

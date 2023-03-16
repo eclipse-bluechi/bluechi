@@ -397,7 +397,7 @@ bool agent_parse_config(Agent *agent, const char *configfile) {
                         CFG_AGENT_DEFAULT_CONFIG,
                         CFG_ETC_HIRTE_AGENT_CONF,
                         NULL); // TODO: https://github.com/containers/hirte/issues/148
-        if (result != 0) {
+        if (result != 0 && result != -ENOENT) {
                 fprintf(stderr, "Error loading configuration: '%s'.\n", strerror(-result));
                 return false;
         }
