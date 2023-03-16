@@ -14,7 +14,7 @@ Hirte is a service orchestrator tool intended for multi-node devices (e.g.: edge
 
 A `hirte-agent` establishes a peer-to-peer connection to `hirte` and exposes its API to manage systemd units on it.
 
-**hirte [OPTIONS]**
+**hirte-agent [OPTIONS]**
 
 ## OPTIONS
 
