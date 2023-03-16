@@ -354,8 +354,9 @@ void agent_unref(Agent *agent) {
                 sd_bus_unrefp(&agent->systemd_dbus);
         }
 
-        cfg_dispose(agent->config);
-
+        if (agent->config) {
+                cfg_dispose(agent->config);
+        }
         free(agent);
 }
 
@@ -387,7 +388,7 @@ bool agent_parse_config(Agent *agent, const char *configfile) {
 
         result = cfg_initialize(&agent->config);
         if (result != 0) {
-                fprintf(stderr, "Error initializing configuration: '%s'.", strerror(result));
+                fprintf(stderr, "Error initializing configuration: '%s'.\n", strerror(-result));
                 return false;
         }
 
@@ -397,8 +398,7 @@ bool agent_parse_config(Agent *agent, const char *configfile) {
                         CFG_ETC_HIRTE_AGENT_CONF,
                         NULL); // TODO: https://github.com/containers/hirte/issues/148
         if (result != 0) {
-                fprintf(stderr, "Error loading configuration: '%s'.", strerror(result));
-                cfg_dispose(agent->config);
+                fprintf(stderr, "Error loading configuration: '%s'.\n", strerror(-result));
                 return false;
         }
 
@@ -406,10 +406,9 @@ bool agent_parse_config(Agent *agent, const char *configfile) {
                 result = cfg_load_from_file(agent->config, configfile);
                 if (result != 0) {
                         fprintf(stderr,
-                                "Error loading configuration file '%s', error code '%s'.",
+                                "Error loading configuration file '%s', error code '%s'.\n",
                                 configfile,
-                                strerror(result));
-                        cfg_dispose(agent->config);
+                                strerror(-result));
                         return false;
                 }
         }
@@ -417,10 +416,9 @@ bool agent_parse_config(Agent *agent, const char *configfile) {
         result = cfg_set_default_section(agent->config, CFG_SECT_AGENT);
         if (result != 0) {
                 fprintf(stderr,
-                        "Error setting default section for agent '%s', error code '%s'.",
+                        "Error setting default section for agent '%s', error code '%s'.\n",
                         CFG_SECT_AGENT,
-                        strerror(result));
-                cfg_dispose(agent->config);
+                        strerror(-result));
                 return false;
         }
 
