@@ -98,7 +98,9 @@ void manager_unref(Manager *manager) {
                 monitor_unref(monitor);
         }
 
-        cfg_dispose(manager->config);
+        if (manager->config) {
+                cfg_dispose(manager->config);
+        }
 
         free(manager);
 }
@@ -273,7 +275,7 @@ bool manager_parse_config(Manager *manager, const char *configfile) {
 
         result = cfg_initialize(&manager->config);
         if (result != 0) {
-                fprintf(stderr, "Error initializing configuration: '%s'.", strerror(result));
+                fprintf(stderr, "Error initializing configuration: '%s'.\n", strerror(-result));
                 return false;
         }
 
@@ -283,8 +285,7 @@ bool manager_parse_config(Manager *manager, const char *configfile) {
                         CFG_ETC_HIRTE_CONF,
                         NULL); // TODO: https://github.com/containers/hirte/issues/148
         if (result != 0) {
-                fprintf(stderr, "Error loading configuration '%s': '%s'.", CFG_ETC_HIRTE_CONF, strerror(result));
-                cfg_dispose(manager->config);
+                fprintf(stderr, "Error loading configuration '%s': '%s'.\n", CFG_ETC_HIRTE_CONF, strerror(-result));
                 return false;
         }
 
@@ -292,10 +293,9 @@ bool manager_parse_config(Manager *manager, const char *configfile) {
                 result = cfg_load_from_file(manager->config, configfile);
                 if (result != 0) {
                         fprintf(stderr,
-                                "Error loading configuration file '%s': '%s'.",
+                                "Error loading configuration file '%s': '%s'.\n",
                                 configfile,
-                                strerror(result));
-                        cfg_dispose(manager->config);
+                                strerror(-result));
                         return false;
                 }
         }
@@ -303,10 +303,9 @@ bool manager_parse_config(Manager *manager, const char *configfile) {
         result = cfg_set_default_section(manager->config, CFG_SECT_HIRTE);
         if (result != 0) {
                 fprintf(stderr,
-                        "Error setting default section for hirte '%s', error code '%s'.",
+                        "Error setting default section for hirte '%s', error code '%s'.\n",
                         CFG_SECT_HIRTE,
-                        strerror(result));
-                cfg_dispose(manager->config);
+                        strerror(-result));
                 return false;
         }
 
