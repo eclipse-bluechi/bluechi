@@ -9,6 +9,7 @@
 
 #define HIRTE_LOG_TARGET_JOURNALD "journald"
 #define HIRTE_LOG_TARGET_STDERR "stderr"
+#define HIRTE_LOG_TARGET_STDERR_FULL "stderr-full"
 
 typedef enum LogLevel {
         LOG_LEVEL_DEBUG,
@@ -31,6 +32,13 @@ typedef int (*LogFn)(
                 const char *data);
 
 int hirte_log_to_journald_with_location(
+                LogLevel lvl,
+                const char *file,
+                const char *line,
+                const char *func,
+                const char *msg,
+                const char *data);
+int hirte_log_to_stderr_full_with_location(
                 LogLevel lvl,
                 const char *file,
                 const char *line,
