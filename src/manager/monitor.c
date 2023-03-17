@@ -6,14 +6,13 @@
 #include "monitor.h"
 #include "node.h"
 
-Subscription *subscription_new(Monitor *monitor, const char *node, const char *unit) {
+Subscription *subscription_new(const char *node, const char *unit) {
         _cleanup_subscription_ Subscription *subscription = malloc0(sizeof(Subscription));
         if (subscription == NULL) {
                 return NULL;
         }
 
         subscription->ref_count = 1;
-        subscription->monitor = monitor_ref(monitor);
         LIST_INIT(subscriptions, subscription);
         LIST_INIT(all_subscriptions, subscription);
 
@@ -30,6 +29,23 @@ Subscription *subscription_new(Monitor *monitor, const char *node, const char *u
         return steal_pointer(&subscription);
 }
 
+Subscription *create_monitor_subscription(Monitor *monitor, const char *node, const char *unit) {
+        Subscription *subscription = subscription_new(node, unit);
+        if (subscription == NULL) {
+                return NULL;
+        }
+
+        subscription->monitor = monitor_ref(monitor);
+        subscription->free_monitor = (free_func_t) monitor_unref;
+
+        subscription->handle_unit_new = monitor_on_unit_new;
+        subscription->handle_unit_removed = monitor_on_unit_removed;
+        subscription->handle_unit_state_changed = monitor_on_unit_state_changed;
+        subscription->handle_unit_property_changed = monitor_on_unit_property_changed;
+
+        return subscription;
+}
+
 Subscription *subscription_ref(Subscription *subscription) {
         subscription->ref_count++;
         return subscription;
@@ -41,11 +57,18 @@ void subscription_unref(Subscription *subscription) {
                 return;
         }
 
-        monitor_unrefp(&subscription->monitor);
+        if (subscription->free_monitor) {
+                subscription->free_monitor(subscription->monitor);
+        }
         free(subscription->unit);
         free(subscription->node);
         free(subscription);
 }
+
+
+/***********************************
+ ********** Monitor ****************
+ ***********************************/
 
 static int monitor_method_close(sd_bus_message *m, void *userdata, sd_bus_error *ret_error);
 static int monitor_method_subscribe(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error);
@@ -182,7 +205,7 @@ static int monitor_method_subscribe(sd_bus_message *m, void *userdata, UNUSED sd
                 return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_INVALID_ARGS, "Invalid arguments");
         }
 
-        _cleanup_subscription_ Subscription *sub = subscription_new(monitor, node, unit);
+        _cleanup_subscription_ Subscription *sub = create_monitor_subscription(monitor, node, unit);
         if (sub == NULL) {
                 return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "Internal error");
         }
@@ -234,8 +257,9 @@ static int monitor_method_unsubscribe(sd_bus_message *m, void *userdata, UNUSED 
         return sd_bus_reply_method_return(m, "");
 }
 
-int monitor_emit_unit_property_changed(
-                Monitor *monitor, const char *node, const char *unit, const char *interface, sd_bus_message *m) {
+int monitor_on_unit_property_changed(
+                void *userdata, const char *node, const char *unit, const char *interface, sd_bus_message *m) {
+        Monitor *monitor = (Monitor *) userdata;
         Manager *manager = monitor->manager;
 
         _cleanup_sd_bus_message_ sd_bus_message *sig = NULL;
@@ -268,7 +292,8 @@ int monitor_emit_unit_property_changed(
         return sd_bus_message_rewind(m, false);
 }
 
-int monitor_emit_unit_new(Monitor *monitor, const char *node, const char *unit, const char *reason) {
+int monitor_on_unit_new(void *userdata, const char *node, const char *unit, const char *reason) {
+        Monitor *monitor = (Monitor *) userdata;
         Manager *manager = monitor->manager;
 
         return sd_bus_emit_signal(
@@ -282,13 +307,14 @@ int monitor_emit_unit_new(Monitor *monitor, const char *node, const char *unit, 
                         reason);
 }
 
-int monitor_emit_unit_state_changed(
-                Monitor *monitor,
+int monitor_on_unit_state_changed(
+                void *userdata,
                 const char *node,
                 const char *unit,
                 const char *active_state,
                 const char *substate,
                 const char *reason) {
+        Monitor *monitor = (Monitor *) userdata;
         Manager *manager = monitor->manager;
 
         return sd_bus_emit_signal(
@@ -304,7 +330,8 @@ int monitor_emit_unit_state_changed(
                         reason);
 }
 
-int monitor_emit_unit_removed(Monitor *monitor, const char *node, const char *unit, const char *reason) {
+int monitor_on_unit_removed(void *userdata, const char *node, const char *unit, const char *reason) {
+        Monitor *monitor = (Monitor *) userdata;
         Manager *manager = monitor->manager;
 
         return sd_bus_emit_signal(
