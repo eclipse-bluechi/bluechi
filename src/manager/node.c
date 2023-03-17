@@ -376,8 +376,6 @@ static int node_match_heartbeat(UNUSED sd_bus_message *m, UNUSED void *userdata,
                 return 0;
         }
 
-        hirte_log_debugf("Heartbeat received from %s", node_name);
-
         return 1;
 }
 
