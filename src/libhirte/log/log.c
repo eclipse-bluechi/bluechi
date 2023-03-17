@@ -67,7 +67,7 @@ int hirte_log_to_journald_with_location(
         return 0;
 }
 
-int hirte_log_to_stderr_with_location(
+int hirte_log_to_stderr_full_with_location(
                 LogLevel lvl,
                 const char *file,
                 const char *line,
@@ -93,6 +93,17 @@ int hirte_log_to_stderr_with_location(
                         msg);
         }
         // clang-format on
+        return 0;
+}
+
+int hirte_log_to_stderr_with_location(
+                LogLevel lvl,
+                UNUSED const char *file,
+                UNUSED const char *line,
+                UNUSED const char *func,
+                const char *msg,
+                UNUSED const char *data) {
+        fprintf(stderr, "%s\t: %s\n", log_level_to_string(lvl), msg);
         return 0;
 }
 
@@ -136,6 +147,8 @@ int hirte_log_init(struct config *config) {
                         hirte_log_set_log_fn(hirte_log_to_journald_with_location);
                 } else if (streqi(HIRTE_LOG_TARGET_STDERR, target)) {
                         hirte_log_set_log_fn(hirte_log_to_stderr_with_location);
+                } else if (streqi(HIRTE_LOG_TARGET_STDERR_FULL, target)) {
+                        hirte_log_set_log_fn(hirte_log_to_stderr_full_with_location);
                 }
         }
 

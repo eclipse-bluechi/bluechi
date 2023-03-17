@@ -39,6 +39,7 @@ The level used for logging. Supported values are:
 The target where logs are written to. Supported values are:
 
 - `stderr`
+- `stderr-full`
 - `journald`
 
 #### **LogIsQuiet** (string)
