@@ -46,6 +46,7 @@ typedef enum {
 struct Agent {
         int ref_count;
 
+        bool systemd_user;
         char *name;
         char *host;
         int port;
@@ -89,6 +90,7 @@ bool agent_set_port(Agent *agent, const char *port);
 bool agent_set_host(Agent *agent, const char *host);
 bool agent_set_orch_address(Agent *agent, const char *address);
 bool agent_set_name(Agent *agent, const char *name);
+void agent_set_systemd_user(Agent *agent, bool systemd_user);
 bool agent_parse_config(Agent *agent, const char *configfile);
 
 bool agent_start(Agent *agent);

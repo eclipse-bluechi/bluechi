@@ -96,7 +96,7 @@ This package contains the node agent.
 %{_mandir}/man5/hirte-agent.conf.*
 %{_sysconfdir}/dbus-1/system.d/org.containers.hirte.Agent.conf
 %{_unitdir}/hirte-agent.service
-
+%{_userunitdir}/hirte-agent.service
 
 %changelog
 # TODO: Fix the date when we perform the first official release

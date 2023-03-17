@@ -16,6 +16,12 @@
 
 #include "agent.h"
 
+#ifdef USE_USER_API_BUS
+#        define ALWAYS_USER_API_BUS 1
+#else
+#        define ALWAYS_USER_API_BUS 0
+#endif
+
 #define DEBUG_SYSTEMD_MESSAGES 0
 #define DEBUG_SYSTEMD_MESSAGES_CONTENT 0
 
@@ -381,6 +387,10 @@ bool agent_set_host(Agent *agent, const char *host) {
 
 bool agent_set_name(Agent *agent, const char *name) {
         return copy_str(&agent->name, name);
+}
+
+void agent_set_systemd_user(Agent *agent, bool systemd_user) {
+        agent->systemd_user = systemd_user;
 }
 
 bool agent_parse_config(Agent *agent, const char *configfile) {
@@ -1398,11 +1408,13 @@ bool agent_start(Agent *agent) {
                 return false;
         }
 
-#ifdef USE_USER_API_BUS
-        agent->api_bus = user_bus_open(agent->event);
-#else
-        agent->api_bus = system_bus_open(agent->event);
-#endif
+        /* If systemd --user, we need to be on the user bus for the proxy to work */
+        if (agent->systemd_user || ALWAYS_USER_API_BUS) {
+                agent->api_bus = user_bus_open(agent->event);
+        } else {
+                agent->api_bus = system_bus_open(agent->event);
+        }
+
         if (agent->api_bus == NULL) {
                 hirte_log_error("Failed to open user dbus");
                 return false;
@@ -1414,7 +1426,11 @@ bool agent_start(Agent *agent) {
                 return false;
         }
 
-        agent->systemd_dbus = systemd_bus_open(agent->event);
+        if (agent->systemd_user) {
+                agent->systemd_dbus = user_bus_open(agent->event);
+        } else {
+                agent->systemd_dbus = systemd_bus_open(agent->event);
+        }
         if (agent->systemd_dbus == NULL) {
                 hirte_log_error("Failed to open systemd dbus");
                 return false;
