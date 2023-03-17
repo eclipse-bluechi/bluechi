@@ -6,10 +6,13 @@
 #include "manager.h"
 #include "monitor.h"
 #include "node.h"
+#include "proxy_monitor.h"
 
 #define DEBUG_AGENT_MESSAGES 0
 
 static void node_send_agent_subscribe_all(Node *node);
+static void node_start_proxy_dependency_all(Node *node);
+static int node_run_unit_lifecycle_method(sd_bus_message *m, Node *node, const char *job_type, const char *method);
 
 static int node_method_register(sd_bus_message *m, void *userdata, sd_bus_error *ret_error);
 static int node_disconnected(sd_bus_message *message, void *userdata, sd_bus_error *error);
@@ -56,6 +59,17 @@ static const sd_bus_vtable node_vtable[] = {
         SD_BUS_PROPERTY("Status", "s", node_property_get_status, 0, SD_BUS_VTABLE_PROPERTY_EMITS_CHANGE),
         SD_BUS_VTABLE_END
 };
+
+struct ProxyDependency {
+        char *unit_name;
+        int n_deps;
+        LIST_FIELDS(ProxyDependency, deps);
+};
+
+static void proxy_dependency_free(struct ProxyDependency *dep) {
+        free(dep->unit_name);
+        free(dep);
+}
 
 typedef struct UnitSubscription UnitSubscription;
 
@@ -104,6 +118,9 @@ Node *node_new(Manager *manager, const char *name) {
         node->ref_count = 1;
         node->manager = manager;
         LIST_INIT(nodes, node);
+        LIST_HEAD_INIT(node->outstanding_requests);
+        LIST_HEAD_INIT(node->proxy_monitors);
+        LIST_HEAD_INIT(node->proxy_dependencies);
 
         node->unit_subscriptions = hashmap_new(
                         sizeof(UnitSubscriptions),
@@ -143,10 +160,23 @@ void node_unref(Node *node) {
         if (node->ref_count != 0) {
                 return;
         }
+
+        ProxyMonitor *proxy_monitor = NULL;
+        ProxyMonitor *next_proxy_monitor = NULL;
+        LIST_FOREACH_SAFE(monitors, proxy_monitor, next_proxy_monitor, node->proxy_monitors) {
+                node_remove_proxy_monitor(node, proxy_monitor);
+        }
+
+
+        ProxyDependency *dep = NULL;
+        ProxyDependency *next_dep = NULL;
+        LIST_FOREACH_SAFE(deps, dep, next_dep, node->proxy_dependencies) {
+                proxy_dependency_free(dep);
+        }
+
         sd_bus_slot_unrefp(&node->export_slot);
 
         node_unset_agent_bus(node);
-
         hashmap_free(node->unit_subscriptions);
 
         free(node->name);
@@ -354,7 +384,6 @@ static int node_match_unit_removed(sd_bus_message *m, void *userdata, UNUSED sd_
         return 1;
 }
 
-
 static int node_match_job_done(UNUSED sd_bus_message *m, UNUSED void *userdata, UNUSED sd_bus_error *error) {
         Node *node = userdata;
         Manager *manager = node->manager;
@@ -381,6 +410,111 @@ static int node_match_heartbeat(UNUSED sd_bus_message *m, UNUSED void *userdata,
         }
 
         return 1;
+}
+
+static ProxyMonitor *node_find_proxy_monitor(Node *node, const char *target_node_name, const char *unit_name) {
+        ProxyMonitor *proxy_monitor = NULL;
+        LIST_FOREACH(monitors, proxy_monitor, node->proxy_monitors) {
+                if (streq(proxy_monitor->target_node->name, target_node_name) &&
+                    streq(proxy_monitor->unit_name, unit_name)) {
+                        return proxy_monitor;
+                }
+        }
+
+        return NULL;
+}
+
+static int node_on_match_proxy_new(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *error) {
+        Node *node = userdata;
+        Manager *manager = node->manager;
+
+        const char *target_node_name = NULL;
+        const char *unit_name = NULL;
+        const char *proxy_object_path = NULL;
+
+        int r = sd_bus_message_read(m, "sso", &target_node_name, &unit_name, &proxy_object_path);
+        if (r < 0) {
+                hirte_log_errorf("Invalid arguments in ProxyNew signal: %s", strerror(-r));
+                return r;
+        }
+        hirte_log_infof("Node '%s' registered new proxy for unit '%s' on node '%s'",
+                        node->name,
+                        unit_name,
+                        target_node_name);
+
+        _cleanup_proxy_monitor_ ProxyMonitor *monitor = proxy_monitor_new(
+                        node, target_node_name, unit_name, proxy_object_path);
+        if (monitor == NULL) {
+                hirte_log_error("Failed to create proxy monitor, OOM");
+                return -ENOMEM;
+        }
+
+        Node *target_node = manager_find_node(manager, target_node_name);
+        if (target_node == NULL) {
+                hirte_log_error("Proxy requested for non-existing node");
+                proxy_monitor_send_error(monitor, "No such node");
+                return 0;
+        }
+
+        ProxyMonitor *old_monitor = node_find_proxy_monitor(node, target_node_name, unit_name);
+        if (old_monitor != NULL) {
+                hirte_log_warnf("Proxy for '%s' (on '%s') requested, but old proxy already exists, removing it",
+                                unit_name,
+                                target_node_name);
+                node_remove_proxy_monitor(node, old_monitor);
+        }
+
+        r = proxy_monitor_set_target_node(monitor, target_node);
+        if (r < 0) {
+                hirte_log_errorf("Failed to add proxy dependency: %s", strerror(-r));
+                proxy_monitor_send_error(monitor, "Failed to add proxy dependency");
+                return 0;
+        }
+
+        /* We now have a valid monitor, add it to the list and enable monitor.
+           From this point we should not send errors. */
+        manager_add_subscription(manager, monitor->subscription);
+        LIST_APPEND(monitors, node->proxy_monitors, proxy_monitor_ref(monitor));
+
+        /* TODO: What about !!node_is_online(target_node) ? Tell now or wait for it to connect? */
+
+        return 0;
+}
+
+void node_remove_proxy_monitor(Node *node, ProxyMonitor *monitor) {
+        Manager *manager = node->manager;
+
+        proxy_monitor_close(monitor);
+
+        manager_remove_subscription(manager, monitor->subscription);
+        LIST_REMOVE(monitors, node->proxy_monitors, monitor);
+
+        proxy_monitor_unref(monitor);
+}
+
+static int node_on_match_proxy_removed(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *error) {
+        Node *node = userdata;
+        const char *target_node_name = NULL;
+        const char *unit_name = NULL;
+
+        int r = sd_bus_message_read(m, "ss", &target_node_name, &unit_name);
+        if (r < 0) {
+                hirte_log_errorf("Invalid arguments in ProxyRemoved signal: %s", strerror(-r));
+                return r;
+        }
+        hirte_log_infof("Node '%s' unregistered proxy for unit '%s' on node '%s'",
+                        node->name,
+                        unit_name,
+                        target_node_name);
+
+        ProxyMonitor *proxy_monitor = node_find_proxy_monitor(node, target_node_name, unit_name);
+        if (proxy_monitor == NULL) {
+                hirte_log_error("Got ProxyRemoved for unknown monitor");
+                return 0;
+        }
+
+        node_remove_proxy_monitor(node, proxy_monitor);
+        return 0;
 }
 
 bool node_set_agent_bus(Node *node, sd_bus *bus) {
@@ -493,6 +627,34 @@ bool node_set_agent_bus(Node *node, sd_bus *bus) {
                         return false;
                 }
 
+                r = sd_bus_match_signal(
+                                bus,
+                                NULL,
+                                NULL,
+                                INTERNAL_AGENT_OBJECT_PATH,
+                                INTERNAL_AGENT_INTERFACE,
+                                "ProxyNew",
+                                node_on_match_proxy_new,
+                                node);
+                if (r < 0) {
+                        hirte_log_errorf("Failed to add ProxyNew peer bus match: %s", strerror(-r));
+                        return false;
+                }
+
+                r = sd_bus_match_signal(
+                                bus,
+                                NULL,
+                                NULL,
+                                INTERNAL_AGENT_OBJECT_PATH,
+                                INTERNAL_AGENT_INTERFACE,
+                                "ProxyRemoved",
+                                node_on_match_proxy_removed,
+                                node);
+                if (r < 0) {
+                        hirte_log_errorf("Failed to add ProxyNew peer bus match: %s", strerror(-r));
+                        return false;
+                }
+
                 r = sd_bus_emit_properties_changed(
                                 node->manager->api_bus, node->object_path, NODE_INTERFACE, "Status", NULL);
                 if (r < 0) {
@@ -537,6 +699,9 @@ bool node_set_agent_bus(Node *node, sd_bus *bus) {
 
         /* Register any active subscriptions with new agent */
         node_send_agent_subscribe_all(node);
+
+        /* Register any active dependencies with new agent */
+        node_start_proxy_dependency_all(node);
 
         return true;
 }
@@ -635,9 +800,11 @@ static int node_disconnected(UNUSED sd_bus_message *message, void *userdata, UNU
 
                 usubs->loaded = false;
                 UnitSubscription *usub = NULL;
-                LIST_FOREACH(subs, usub, usubs->subs) {
-                        Subscription *sub = usub->sub;
-                        if (send_state_change) {
+                UnitSubscription *next_usub = NULL;
+
+                if (send_state_change) {
+                        LIST_FOREACH_SAFE(subs, usub, next_usub, usubs->subs) {
+                                Subscription *sub = usub->sub;
                                 int r = sub->handle_unit_state_changed(
                                                 sub->monitor,
                                                 node->name,
@@ -649,12 +816,22 @@ static int node_disconnected(UNUSED sd_bus_message *message, void *userdata, UNU
                                         hirte_log_error("Failed to emit UnitRemoved signal");
                                 }
                         }
+                }
+
+                LIST_FOREACH_SAFE(subs, usub, next_usub, usubs->subs) {
+                        Subscription *sub = usub->sub;
 
                         int r = sub->handle_unit_removed(sub->monitor, node->name, sub->unit, "virtual");
                         if (r < 0) {
                                 hirte_log_error("Failed to emit UnitRemoved signal");
                         }
                 }
+        }
+
+        ProxyMonitor *proxy_monitor = NULL;
+        ProxyMonitor *next_proxy_monitor = NULL;
+        LIST_FOREACH_SAFE(monitors, proxy_monitor, next_proxy_monitor, node->proxy_monitors) {
+                node_remove_proxy_monitor(node, proxy_monitor);
         }
 
         if (node->name) {
@@ -731,7 +908,8 @@ void agent_request_unref(AgentRequest *req) {
         free(req);
 }
 
-static AgentRequest *node_create_request(
+int node_create_request(
+                AgentRequest **ret,
                 Node *node,
                 const char *method,
                 agent_request_response_t cb,
@@ -739,7 +917,7 @@ static AgentRequest *node_create_request(
                 free_func_t free_userdata) {
         _cleanup_agent_request_ AgentRequest *req = malloc0(sizeof(AgentRequest));
         if (req == NULL) {
-                return NULL;
+                return -ENOMEM;
         }
 
         req->ref_count = 1;
@@ -759,11 +937,11 @@ static AgentRequest *node_create_request(
                         INTERNAL_AGENT_INTERFACE,
                         method);
         if (r < 0) {
-                hirte_log_errorf("Failed to create new bus message: %s", strerror(-r));
-                return NULL;
+                return r;
         }
 
-        return steal_pointer(&req);
+        *ret = steal_pointer(&req);
+        return 0;
 }
 
 static int agent_request_callback(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error) {
@@ -772,7 +950,7 @@ static int agent_request_callback(sd_bus_message *m, void *userdata, UNUSED sd_b
         return req->cb(req, m, ret_error);
 }
 
-static bool agent_request_start(AgentRequest *req) {
+int agent_request_start(AgentRequest *req) {
         Node *node = req->node;
 
         int r = sd_bus_call_async(
@@ -783,12 +961,11 @@ static bool agent_request_start(AgentRequest *req) {
                         req,
                         HIRTE_DEFAULT_DBUS_TIMEOUT);
         if (r < 0) {
-                hirte_log_errorf("Failed to call async: %s", strerror(-r));
-                return false;
+                return r;
         }
 
         agent_request_ref(req); /* Keep alive while operation is outstanding */
-        return true;
+        return 1;
 }
 
 AgentRequest *node_request_list_units(
@@ -797,13 +974,13 @@ AgentRequest *node_request_list_units(
                 return false;
         }
 
-        _cleanup_agent_request_ AgentRequest *req = node_create_request(
-                        node, "ListUnits", cb, userdata, free_userdata);
+        _cleanup_agent_request_ AgentRequest *req = NULL;
+        node_create_request(&req, node, "ListUnits", cb, userdata, free_userdata);
         if (req == NULL) {
                 return false;
         }
 
-        if (!agent_request_start(req)) {
+        if (agent_request_start(req) < 0) {
                 return false;
         }
 
@@ -888,7 +1065,9 @@ static int node_method_get_unit_properties(sd_bus_message *m, void *userdata, UN
                 return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "Internal Error");
         }
 
-        _cleanup_agent_request_ AgentRequest *req = node_create_request(
+        _cleanup_agent_request_ AgentRequest *req = NULL;
+        node_create_request(
+                        &req,
                         node,
                         "GetUnitProperties",
                         node_method_get_unit_properties_callback,
@@ -903,7 +1082,7 @@ static int node_method_get_unit_properties(sd_bus_message *m, void *userdata, UN
                 return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "Internal error");
         }
 
-        if (!agent_request_start(req)) {
+        if (agent_request_start(req) < 0) {
                 return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "Internal error");
         }
 
@@ -948,7 +1127,9 @@ static int node_method_get_unit_property(sd_bus_message *m, void *userdata, UNUS
                 return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "Internal Error");
         }
 
-        _cleanup_agent_request_ AgentRequest *req = node_create_request(
+        _cleanup_agent_request_ AgentRequest *req = NULL;
+        node_create_request(
+                        &req,
                         node,
                         "GetUnitProperty",
                         node_method_get_unit_property_callback,
@@ -963,7 +1144,7 @@ static int node_method_get_unit_property(sd_bus_message *m, void *userdata, UNUS
                 return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "Internal error");
         }
 
-        if (!agent_request_start(req)) {
+        if (agent_request_start(req) < 0) {
                 return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "Internal error");
         }
 
@@ -1002,7 +1183,9 @@ static int node_method_set_unit_properties(sd_bus_message *m, void *userdata, UN
                 return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "Internal Error");
         }
 
-        _cleanup_agent_request_ AgentRequest *req = node_create_request(
+        _cleanup_agent_request_ AgentRequest *req = NULL;
+        node_create_request(
+                        &req,
                         node,
                         "SetUnitProperties",
                         node_method_set_unit_properties_callback,
@@ -1022,7 +1205,7 @@ static int node_method_set_unit_properties(sd_bus_message *m, void *userdata, UN
                 return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "Internal error");
         }
 
-        if (!agent_request_start(req)) {
+        if (agent_request_start(req) < 0) {
                 return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "Internal error");
         }
 
@@ -1089,7 +1272,6 @@ static int unit_lifecycle_method_callback(AgentRequest *req, sd_bus_message *m, 
 
 static int node_run_unit_lifecycle_method(
                 sd_bus_message *m, Node *node, const char *job_type, const char *method) {
-        _cleanup_agent_request_ AgentRequest *req = NULL;
         const char *unit = NULL;
         const char *mode = NULL;
 
@@ -1103,7 +1285,9 @@ static int node_run_unit_lifecycle_method(
                 return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "Out of memory");
         }
 
-        req = node_create_request(
+        _cleanup_agent_request_ AgentRequest *req = NULL;
+        node_create_request(
+                        &req,
                         node,
                         method,
                         unit_lifecycle_method_callback,
@@ -1118,7 +1302,7 @@ static int node_run_unit_lifecycle_method(
                 return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "Internal error");
         }
 
-        if (!agent_request_start(req)) {
+        if (agent_request_start(req) < 0) {
                 return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "Internal error");
         }
 
@@ -1310,4 +1494,101 @@ void node_unsubscribe(Node *node, Subscription *sub) {
                         unit_subscriptions_clear(deleted);
                 }
         }
+}
+
+static void node_start_proxy_dependency(Node *node, ProxyDependency *dep) {
+        if (!node_has_agent(node)) {
+                return;
+        }
+
+        hirte_log_infof("Starting dependency %s on node %s", dep->unit_name, node->name);
+
+        int r = send_agent_simple_message(node, "StartDep", dep->unit_name);
+        if (r < 0) {
+                hirte_log_error("Failed to send StartDep to agent");
+        }
+}
+
+static void node_start_proxy_dependency_all(Node *node) {
+        ProxyDependency *dep = NULL;
+        LIST_FOREACH(deps, dep, node->proxy_dependencies) {
+                node_start_proxy_dependency(node, dep);
+        }
+}
+
+static void node_stop_proxy_dependency(Node *node, ProxyDependency *dep) {
+        if (!node_has_agent(node)) {
+                return;
+        }
+
+        hirte_log_infof("Stopping dependency %s on node %s", dep->unit_name, node->name);
+
+        int r = send_agent_simple_message(node, "StopDep", dep->unit_name);
+        if (r < 0) {
+                hirte_log_error("Failed to send StopDep to agent");
+        }
+}
+
+static struct ProxyDependency *node_find_proxy_dependency(Node *node, const char *unit_name) {
+        ProxyDependency *dep = NULL;
+        LIST_FOREACH(deps, dep, node->proxy_dependencies) {
+                if (streq(dep->unit_name, unit_name)) {
+                        return dep;
+                }
+        }
+
+        return NULL;
+}
+
+int node_add_proxy_dependency(Node *node, const char *unit_name) {
+        ProxyDependency *dep = NULL;
+
+        dep = node_find_proxy_dependency(node, unit_name);
+        if (dep) {
+                dep->n_deps++;
+                /* Always start, if the dep service was stopped by
+                   the target service stopping */
+                node_start_proxy_dependency(node, dep);
+                return 0;
+        }
+
+        _cleanup_free_ char *unit_name_copy = strdup(unit_name);
+        if (unit_name_copy == NULL) {
+                return -ENOMEM;
+        }
+
+        dep = malloc0(sizeof(ProxyDependency));
+        if (dep == NULL) {
+                return -ENOMEM;
+        }
+
+        dep->unit_name = steal_pointer(&unit_name_copy);
+        dep->n_deps = 1;
+        LIST_APPEND(deps, node->proxy_dependencies, dep);
+
+        node_start_proxy_dependency(node, dep);
+
+        return 0;
+}
+
+int node_remove_proxy_dependency(Node *node, const char *unit_name) {
+        ProxyDependency *dep = NULL;
+        _cleanup_free_ char *unit_name_copy = NULL;
+
+        dep = node_find_proxy_dependency(node, unit_name);
+        if (!dep) {
+                return -ENOENT;
+        }
+
+        dep->n_deps--;
+
+        if (dep->n_deps == 0) {
+                /* Only stop on the last dep */
+                node_stop_proxy_dependency(node, dep);
+
+                LIST_REMOVE(deps, node->proxy_dependencies, dep);
+                proxy_dependency_free(dep);
+        }
+
+        return 0;
 }

@@ -11,6 +11,8 @@ orch_src = [
     'job.c',
     'monitor.h',
     'monitor.c',
+    'proxy_monitor.c',
+    'proxy_monitor.h',
     'main.c',
 ]
 
