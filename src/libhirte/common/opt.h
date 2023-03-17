@@ -17,6 +17,10 @@
 #define ARG_CONFIG_SHORT 'c'
 #define ARG_CONFIG_SHORT_S "c:"
 
+#define ARG_USER "user"
+#define ARG_USER_SHORT 'u'
+#define ARG_USER_SHORT_S "u"
+
 #define ARG_NAME "name"
 #define ARG_NAME_SHORT 'n'
 #define ARG_NAME_SHORT_S "n:"

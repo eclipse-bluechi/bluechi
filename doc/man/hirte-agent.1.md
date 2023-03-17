@@ -43,6 +43,10 @@ The unique name of this `hirte-agent` used for registering at `hirte`. This opti
 
 Path to the configuration file, see `hirte-agent.conf(5)`.
 
+#### **--user**
+
+Connect to the user systemd instance instead of the system one.
+
 ## Environment Variables
 
 `hirte-agent` understands the following environment variables that can be used to override the settings from the configuration file (see `hirte-agent.conf(5)`).

@@ -15,20 +15,23 @@ const struct option options[] = { { ARG_HOST, required_argument, 0, ARG_HOST_SHO
                                   { ARG_ADDRESS, required_argument, 0, ARG_ADDRESS_SHORT },
                                   { ARG_NAME, required_argument, 0, ARG_NAME_SHORT },
                                   { ARG_CONFIG, required_argument, 0, ARG_CONFIG_SHORT },
+                                  { ARG_USER, no_argument, 0, ARG_USER_SHORT },
                                   { ARG_HELP, no_argument, 0, ARG_HELP_SHORT },
                                   { NULL, 0, 0, '\0' } };
 
-#define OPTIONS_STR \
-        ARG_PORT_SHORT_S ARG_HOST_SHORT_S ARG_ADDRESS_SHORT_S ARG_HELP_SHORT_S ARG_CONFIG_SHORT_S ARG_NAME_SHORT_S
+#define OPTIONS_STR                                                                               \
+        ARG_PORT_SHORT_S ARG_HOST_SHORT_S ARG_ADDRESS_SHORT_S ARG_HELP_SHORT_S ARG_CONFIG_SHORT_S \
+                        ARG_NAME_SHORT_S ARG_USER_SHORT_S
 
 static const char *opt_port = 0;
 static const char *opt_host = NULL;
 static const char *opt_address = NULL;
 static const char *opt_name = NULL;
 static const char *opt_config = NULL;
+static bool opt_user = false;
 
 static void usage(char *argv[]) {
-        printf("Usage: %s [-H host] [-p port] [-a address] [-c config] [-n name]\n", argv[0]);
+        printf("Usage: %s [-H host] [-p port] [-a address] [-c config] [-n name] [--user]\n", argv[0]);
 }
 
 static int get_opts(int argc, char *argv[]) {
@@ -60,6 +63,10 @@ static int get_opts(int argc, char *argv[]) {
                         opt_port = optarg;
                         break;
 
+                case ARG_USER_SHORT:
+                        opt_user = true;
+                        break;
+
                 default:
                         fprintf(stderr, "Unsupported option %c\n", opt);
                         usage(argv);
@@ -87,6 +94,7 @@ int main(int argc, char *argv[]) {
         }
 
         /* Then override individual options */
+        agent_set_systemd_user(agent, opt_user);
 
         if (opt_port && !agent_set_port(agent, opt_port)) {
                 return EXIT_FAILURE;
