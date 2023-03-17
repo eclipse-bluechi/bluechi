@@ -26,6 +26,8 @@ struct AgentRequest {
 AgentRequest *agent_request_ref(AgentRequest *req);
 void agent_request_unref(AgentRequest *req);
 
+int agent_request_start(AgentRequest *req);
+
 struct Node {
         int ref_count;
 
@@ -41,10 +43,12 @@ struct Node {
 
         LIST_FIELDS(Node, nodes);
 
-        char *name; /* NULL for not yet unregistered nodes */
+        char *name; /* NULL for not yet registered nodes */
         char *object_path;
 
         LIST_HEAD(AgentRequest, outstanding_requests);
+        LIST_HEAD(ProxyMonitor, proxy_monitors);
+        LIST_HEAD(ProxyDependency, proxy_dependencies);
 
         struct hashmap *unit_subscriptions;
 };
@@ -66,6 +70,19 @@ AgentRequest *node_request_list_units(
 
 void node_subscribe(Node *node, Subscription *sub);
 void node_unsubscribe(Node *node, Subscription *sub);
+
+int node_add_proxy_dependency(Node *node, const char *unit_name);
+int node_remove_proxy_dependency(Node *node, const char *unit_name);
+
+int node_create_request(
+                AgentRequest **ret,
+                Node *node,
+                const char *method,
+                agent_request_response_t cb,
+                void *userdata,
+                free_func_t free_userdata);
+
+void node_remove_proxy_monitor(Node *node, ProxyMonitor *proxy_monitor);
 
 DEFINE_CLEANUP_FUNC(Node, node_unref)
 #define _cleanup_node_ _cleanup_(node_unrefp)
