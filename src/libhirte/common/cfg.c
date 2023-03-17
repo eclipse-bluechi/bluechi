@@ -22,14 +22,18 @@ struct config {
 };
 
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wunused-parameter"
-static int option_compare(const void *a, const void *b, void *udata) { // NOLINT
+static int option_compare(const void *a, const void *b, UNUSED void *udata) {
         const struct config_option *option_a = a;
         const struct config_option *option_b = b;
         return !(streq(option_a->section, option_b->section) && streq(option_a->name, option_b->name));
 }
-#pragma GCC diagnostic pop
+
+static void option_destroy(void *item) {
+        struct config_option *option = item;
+        free(option->section);
+        free(option->name);
+        free(option->value);
+}
 
 static uint64_t option_hash(const void *item, uint64_t seed0, uint64_t seed1) {
         const struct config_option *option_a = item;
@@ -67,7 +71,7 @@ int cfg_initialize(struct config **config) {
                 return -ENOMEM;
         }
         new_cfg->cfg_store = hashmap_new(
-                        sizeof(struct config_option), 0, 0, 0, option_hash, option_compare, NULL, NULL);
+                        sizeof(struct config_option), 0, 0, 0, option_hash, option_compare, option_destroy, NULL);
         if (new_cfg->cfg_store == NULL) {
                 // error during hashmap initialization
                 free(new_cfg);
