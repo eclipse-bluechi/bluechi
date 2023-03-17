@@ -827,7 +827,7 @@ bool manager_start(Manager *manager) {
         manager->api_bus = system_bus_open(manager->event);
 #endif
         if (manager->api_bus == NULL) {
-                hirte_log_error("Failed to open user dbus");
+                hirte_log_error("Failed to open api dbus");
                 return false;
         }
 
