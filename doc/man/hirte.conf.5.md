@@ -50,7 +50,7 @@ If this flag is set to `true`, no logs are written by hirte.
 
 ```
 [hirte]
-ManagerPort=2020
+ManagerPort=842
 AllowedNodeNames=agent-007,agent-123
 LogLevel=DEBUG
 LogTarget=journald
