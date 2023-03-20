@@ -61,7 +61,7 @@ If this flag is set to `true`, no logs are written by hirte.
 [hirte-agent]
 NodeName=agent-007
 ManagerHost=127.0.0.1
-ManagerPort=2020
+ManagerPort=842
 LogLevel=DEBUG
 LogTarget=journald
 LogIsQuiet=false

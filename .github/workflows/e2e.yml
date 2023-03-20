@@ -35,7 +35,7 @@ jobs:
 
       - name: run hirte containers
         run: |
-          podman run -d --net podman --rm -p 2020:2020 --name hirte-mgr \
+          podman run -d --net podman --rm -p 8420:8420 --name hirte-mgr \
           $(podman images *hirte-image --format {{.ID}})
           podman run -d --net podman --rm --name hirte-node-bar \
           $(podman images *hirte-image --format {{.ID}})
@@ -50,7 +50,7 @@ jobs:
                bash -c   "sed -i \"s/\(AllowedNodeNames=\)\(.*\)/\1foo,bar/\" /etc/hirte/hirte.conf"
           podman exec -it hirte-mgr \
                bash -c "cat >> /etc/hirte/hirte.conf << _EOF
-          ManagerPort=2020
+          ManagerPort=8420
           LogLevel=DEBUG
           _EOF"
           podman exec -it hirte-mgr \
@@ -64,7 +64,7 @@ jobs:
                bash -c "sed -i \"s/\(NodeName=\)\(.*\)/\1bar/\" /etc/hirte/agent.conf"
           podman exec -it hirte-node-bar \
                bash -c "cat >> /etc/hirte/agent.conf << _EOF
-          ManagerPort=2020
+          ManagerPort=8420
           LogLevel=DEBUG
           _EOF"
           # TODO: Remove when journald logging is fixed
@@ -83,7 +83,7 @@ jobs:
                bash -c "sed -i \"s/\(NodeName=\)\(.*\)/\1foo/\" /etc/hirte/agent.conf"
           podman exec -it hirte-node-foo \
                bash -c "cat >> /etc/hirte/agent.conf << _EOF
-          ManagerPort=2020
+          ManagerPort=8420
           LogLevel=DEBUG
           _EOF"
           # TODO: Remove when journald logging is fixed

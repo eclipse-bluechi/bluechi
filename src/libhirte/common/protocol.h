@@ -3,7 +3,7 @@
 
 #include "errno.h"
 
-#define HIRTE_DEFAULT_PORT 808 /* TODO: Pick a better default */
+#define HIRTE_DEFAULT_PORT 842
 
 #define HIRTE_DBUS_NAME "org.containers.hirte"
 #define HIRTE_AGENT_DBUS_NAME "org.containers.hirte.Agent"
