@@ -67,9 +67,6 @@ jobs:
           ManagerPort=8420
           LogLevel=DEBUG
           _EOF"
-          # TODO: Remove when journald logging is fixed
-          podman exec -it hirte-node-bar \
-               bash -c 'echo "LogTarget=stderr" >> /etc/hirte/agent.conf'
           podman exec -d hirte-node-bar \
                bash -c "systemctl start hirte-agent.service"
           podman exec -it hirte-node-bar \
@@ -86,9 +83,6 @@ jobs:
           ManagerPort=8420
           LogLevel=DEBUG
           _EOF"
-          # TODO: Remove when journald logging is fixed
-          podman exec -it hirte-node-foo \
-               bash -c 'echo "LogTarget=stderr" >> /etc/hirte/agent.conf'
           podman exec -d hirte-node-foo \
                bash -c "systemctl start hirte-agent.service"
           podman exec -it hirte-node-foo \
