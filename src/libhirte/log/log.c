@@ -33,6 +33,14 @@ LogLevel string_to_log_level(const char *l) {
         return LOG_LEVEL_INVALID;
 }
 
+static int log_level_syslog[] = { LOG_DEBUG, LOG_INFO, LOG_WARNING, LOG_ERR };
+
+static int log_level_to_syslog(LogLevel l) {
+        if (l > LOG_LEVEL_ERROR) {
+                l = LOG_LEVEL_ERROR;
+        }
+        return log_level_syslog[l];
+}
 
 int hirte_log_to_journald_with_location(
                 LogLevel lvl,
@@ -56,13 +64,21 @@ int hirte_log_to_journald_with_location(
                 return r;
         }
 
+        int syslog_prio = log_level_to_syslog(lvl);
+
         // clang-format off
-        sd_journal_send_with_location(
-                file_info, line_info, func,
-                "HIRTE_LOG_LEVEL=%s", log_level_to_string(lvl),
-                "HIRTE_MESSAGE=%s", msg,
-                "HIRTE_DATA=%s", data,
-                NULL);
+        if (data && *data != 0) {
+                sd_journal_send_with_location(file_info, line_info, func,
+                                              "MESSAGE=%s", msg,
+                                              "PRIORITY=%i", syslog_prio,
+                                              "DATA=%s", data,
+                                              NULL);
+        } else {
+                sd_journal_send_with_location(file_info, line_info, func,
+                                              "MESSAGE=%s", msg,
+                                              "PRIORITY=%i", syslog_prio,
+                                              NULL);
+        }
         // clang-format on
         return 0;
 }
