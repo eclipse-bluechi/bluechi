@@ -24,9 +24,10 @@ Requires:	systemd
 %systemd_postun_with_restart hirte.service
 
 %description
-Hirte is a service orchestrator tool intended for multi-node devices (e.g.: edge devices) clusters with a predefined
-number of nodes and with a focus on highly regulated environment such as those requiring functional safety (for example
-in cars).
+Hirte is a service orchestrator tool intended for multi-node devices (e.g.:
+edge devices) clusters with a predefined number of nodes and with a focus on
+highly regulated environment such as those requiring functional safety (for
+example in cars).
 This package contains the orchestrator and command line tool.
 
 
@@ -44,9 +45,10 @@ Requires:	systemd
 %systemd_postun_with_restart hirte-agent.service
 
 %description agent
-Hirte is a service orchestrator tool intended for multi-node devices (e.g.: edge devices) clusters with a predefined
-number of nodes and with a focus on highly regulated environment such as those requiring functional safety (for example
-in cars).
+Hirte is a service orchestrator tool intended for multi-node devices (e.g.:
+edge devices) clusters with a predefined number of nodes and with a focus on
+highly regulated environment such as those requiring functional safety (for
+example in cars).
 This package contains the node agent.
 
 
