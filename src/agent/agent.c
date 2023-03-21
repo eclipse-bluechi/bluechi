@@ -1221,8 +1221,12 @@ static int agent_match_unit_new(sd_bus_message *m, void *userdata, UNUSED sd_bus
         }
 
         info->loaded = true;
-        info->active_state = _UNIT_ACTIVE_STATE_INVALID;
-        info->substate = NULL;
+        /* Systemd services start in inactive(dead) state, so use this as the first
+         * state. This way we can detect when the state changed without sporadic
+         * changes to "dead".
+         */
+        info->active_state = UNIT_INACTIVE;
+        info->substate = strdup("dead");
 
         if (info->subscribed) {
                 /* Forward the event */
