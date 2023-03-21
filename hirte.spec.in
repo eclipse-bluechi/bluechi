@@ -99,7 +99,6 @@ This package contains the node agent.
 %{_userunitdir}/hirte-agent.service
 
 %changelog
-# TODO: Fix the date when we perform the first official release
-* Tue Jan 31 2023 Martin Perina <mperina@redhat.com> - 0.0.1-1
+* Tue Mar 21 2023 Martin Perina <mperina@redhat.com> - 0.1.0-1
 - Initial release
 
