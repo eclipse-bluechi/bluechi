@@ -15,15 +15,18 @@ The hirte configuration file is using the
 
 ### **hirte** section
 
-All fields to bootstrap the hirte manager are contained in the **hirte** section. The following keys are understood by `hirte`.
+All fields to bootstrap the hirte manager are contained in the **hirte** section. The following keys are understood by
+`hirte`.
 
 #### **ManagerPort** (uint16_t)
 
-The port the manager listens on to establish connections with the `hirte-agent`.
+The port the manager listens on to establish connections with the `hirte-agent`. By default port `842` is used.
 
 #### **AllowedNodeNames** (string)
 
-A comma separated list of unique hirte-agent names. Only nodes with names mentioned in the list can connect to `hirte` manager. These names are defined in the agent's configuration file under `NodeName` option (see `hirte-agent.conf(5)`).
+A comma separated list of unique hirte-agent names. It's mandatory to set the option, only nodes with names mentioned
+in the list can connect to `hirte` manager. These names are defined in the agent's configuration file under `NodeName`
+option (see `hirte-agent.conf(5)`).
 
 #### **LogLevel** (string)
 
@@ -34,6 +37,8 @@ The level used for logging. Supported values are:
 - `WARN`
 - `ERROR`
 
+By default `INFO` level is used for logging.
+
 #### **LogTarget** (string)
 
 The target where logs are written to. Supported values are:
@@ -42,9 +47,11 @@ The target where logs are written to. Supported values are:
 - `stderr-full`
 - `journald`
 
+By default `journald` is used as the target.
+
 #### **LogIsQuiet** (string)
 
-If this flag is set to `true`, no logs are written by hirte.
+If this flag is set to `true`, no logs are written by hirte. By default the flag is set to `false`.
 
 ## Example
 
