@@ -1,7 +1,7 @@
 Name:		hirte
 Version:	@VERSION@
 Release:	@RELEASE@%{?dist}
-Summary:	Hirte is a service orchestrator tool intended for multi-node devices (e.g.: edge devices) clusters
+Summary:	A service orchestrator tool for multi-node devices (e.g.: edge devices)
 License:	GPLv2
 URL:		https://github.com/containers/hirte
 Source0:	%{name}-%{version}.tar.gz
@@ -31,7 +31,7 @@ This package contains the orchestrator and command line tool.
 
 
 %package agent
-Summary:	Hirte container orchestrator agent
+Summary:	Hirte service orchestrator agent
 Requires:	systemd
 
 %post agent
