@@ -49,8 +49,9 @@ static bool agent_connect(Agent *agent);
 static int agent_disconnected(UNUSED sd_bus_message *message, void *userdata, UNUSED sd_bus_error *error) {
         Agent *agent = (Agent *) userdata;
 
+        hirte_log_error("Disconnected from manager");
+
         if (!agent_connect(agent)) {
-                hirte_log_errorf("Agent '%s' disconnected", agent->name);
                 agent->connection_state = AGENT_CONNECTION_STATE_RETRY;
         }
 
@@ -75,8 +76,9 @@ static int agent_heartbeat_timer_callback(sd_event_source *event_source, UNUSED 
                 }
         } else if (agent->connection_state == AGENT_CONNECTION_STATE_RETRY) {
                 agent->connection_retry_count++;
+                hirte_log_infof("Trying to connect to manager (try %d)", agent->connection_retry_count);
                 if (!agent_connect(agent)) {
-                        hirte_log_errorf("Agent '%s' disconnected", agent->name);
+                        hirte_log_debugf("Connection retry %d failed", agent->connection_retry_count);
                 }
         }
 
@@ -1560,7 +1562,7 @@ bool agent_start(Agent *agent) {
         }
 
         if (!agent_connect(agent)) {
-                hirte_log_errorf("Agent '%s' disconnected", agent->name);
+                hirte_log_error("Initial manager connection failed, retrying");
                 agent->connection_state = AGENT_CONNECTION_STATE_RETRY;
         }
 
@@ -1583,6 +1585,8 @@ bool agent_stop(Agent *agent) {
 
 static bool agent_connect(Agent *agent) {
         peer_bus_close(agent->peer_dbus);
+
+        hirte_log_debugf("Connecting to manager on %s", agent->orch_addr);
 
         agent->peer_dbus = peer_bus_open(agent->event, "peer-bus-to-controller", agent->orch_addr);
         if (agent->peer_dbus == NULL) {
@@ -1625,10 +1629,12 @@ static bool agent_connect(Agent *agent) {
                         "s",
                         agent->name);
         if (r < 0) {
-                hirte_log_errorf(
-                                "Agent '%s' connection attempt %d: failure",
-                                agent->name,
-                                agent->connection_retry_count);
+                if (r != -ENOTCONN) {
+                        hirte_log_errorf(
+                                         "Registering as '%s' failed: %s",
+                                         agent->name,
+                                         error.message);
+                }
                 sd_bus_error_free(&error);
                 return false;
         }
@@ -1639,7 +1645,7 @@ static bool agent_connect(Agent *agent) {
                 return false;
         }
 
-        hirte_log_infof("Agent '%s' connection attempt %d: success", agent->name, agent->connection_retry_count);
+        hirte_log_infof("Connected to manager as '%s'", agent->name);
 
         agent->connection_state = AGENT_CONNECTION_STATE_CONNECTED;
         agent->connection_retry_count = 0;

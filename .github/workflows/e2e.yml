@@ -70,7 +70,7 @@ jobs:
           podman exec -d hirte-node-bar \
                bash -c "systemctl start hirte-agent.service"
           podman exec -it hirte-node-bar \
-               bash -c "journalctl -b | grep \"Agent 'bar' connection attempt 0: success\""
+               bash -c "journalctl -b | grep \"Connected to manager as 'bar'\""
 
       - name: run hirte agent-foo
         run: |
@@ -86,7 +86,7 @@ jobs:
           podman exec -d hirte-node-foo \
                bash -c "systemctl start hirte-agent.service"
           podman exec -it hirte-node-foo \
-               bash -c "journalctl -b | grep \"Agent 'foo' connection attempt 0: success\""
+               bash -c "journalctl -b | grep \"Connected to manager as 'foo'\""
 
       - name: Download logs from containers
         if: always()
