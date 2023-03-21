@@ -70,7 +70,7 @@ This package contains the node agent.
 
 
 %files
-%config %{_sysconfdir}/hirte/hirte.conf
+%config(noreplace) %{_sysconfdir}/hirte/hirte.conf
 %doc README.md
 %doc README.developer.md
 %license LICENSE
@@ -89,7 +89,7 @@ This package contains the node agent.
 %{_unitdir}/hirte.socket
 
 %files agent
-%config %{_sysconfdir}/hirte/agent.conf
+%config(noreplace) %{_sysconfdir}/hirte/agent.conf
 %doc README.md
 %license LICENSE
 %{_bindir}/hirte-agent
