@@ -111,11 +111,11 @@ At the moment the `hirtectl` binary does not implement any logic. It only prints
 The orchestrator can be run via:
 
 ```bash
-hirte -c ./doc/example.ini
+hirte
 ```
 
-It starts a tcp socket and accepts connections, but does not do much more at this point. This can be tested manually
-via:
+It starts a tcp socket on all network interfaces on port `842` and accepts connections, but does not do much more at
+this point. This can be tested manually via:
 
 ```bash
 nc <host> <port>
@@ -126,7 +126,7 @@ nc <host> <port>
 A node can be run via:
 
 ```bash
-./bin/hirte-agent -n <agent name> -H <host> -P <port>
+./bin/hirte-agent -n <agent name> -H <host>
 ```
 
 It creates a new D-Bus which tries to connect to the specified host. The host will print out a message if the request
@@ -134,7 +134,7 @@ was accepted. It does not do much more at this point.
 
 ## Documentation
 
-For further documentation please refer to the [doc](./doc/) directory.  
+For further documentation please refer to the [doc](./doc/) directory.
 
 The target architecture for this project is described in [doc/arch](./doc/arch/).
 
@@ -147,4 +147,4 @@ from the markdown files [go-md2man](https://github.com/cpuguy83/go-md2man) is be
 sudo dnf install golang-github-cpuguy83-md2man
 ```
 
-After executing a `meson install` the MAN pages are located in the `man/man*` directories.  
+After executing a `meson install` the MAN pages are located in the `man/man*` directories.
