@@ -14,6 +14,13 @@ BuildRequires:	golang-github-cpuguy83-md2man
 
 Requires:	systemd
 
+%description
+Hirte is a service orchestrator tool intended for multi-node devices (e.g.:
+edge devices) clusters with a predefined number of nodes and with a focus on
+highly regulated environment such as those requiring functional safety (for
+example in cars).
+This package contains the orchestrator and command line tool.
+
 %post
 %systemd_post hirte.service
 
@@ -22,52 +29,6 @@ Requires:	systemd
 
 %postun
 %systemd_postun_with_restart hirte.service
-
-%description
-Hirte is a service orchestrator tool intended for multi-node devices (e.g.:
-edge devices) clusters with a predefined number of nodes and with a focus on
-highly regulated environment such as those requiring functional safety (for
-example in cars).
-This package contains the orchestrator and command line tool.
-
-
-%package agent
-Summary:	Hirte service orchestrator agent
-Requires:	systemd
-
-%post agent
-%systemd_post hirte-agent.service
-
-%preun agent
-%systemd_preun hirte-agent.service
-
-%postun agent
-%systemd_postun_with_restart hirte-agent.service
-
-%description agent
-Hirte is a service orchestrator tool intended for multi-node devices (e.g.:
-edge devices) clusters with a predefined number of nodes and with a focus on
-highly regulated environment such as those requiring functional safety (for
-example in cars).
-This package contains the node agent.
-
-
-%prep
-%setup -c -q
-
-
-%build
-%meson -Dapi_bus=system
-%meson_build
-
-
-%install
-%meson_install
-
-
-%check
-%meson_test
-
 
 %files
 %config(noreplace) %{_sysconfdir}/hirte/hirte.conf
@@ -88,6 +49,27 @@ This package contains the node agent.
 %{_unitdir}/hirte.service
 %{_unitdir}/hirte.socket
 
+
+%package agent
+Summary:	Hirte service orchestrator agent
+Requires:	systemd
+
+%description agent
+Hirte is a service orchestrator tool intended for multi-node devices (e.g.:
+edge devices) clusters with a predefined number of nodes and with a focus on
+highly regulated environment such as those requiring functional safety (for
+example in cars).
+This package contains the node agent.
+
+%post agent
+%systemd_post hirte-agent.service
+
+%preun agent
+%systemd_preun hirte-agent.service
+
+%postun agent
+%systemd_postun_with_restart hirte-agent.service
+
 %files agent
 %config(noreplace) %{_sysconfdir}/hirte/agent.conf
 %doc README.md
@@ -99,6 +81,24 @@ This package contains the node agent.
 %{_sysconfdir}/dbus-1/system.d/org.containers.hirte.Agent.conf
 %{_unitdir}/hirte-agent.service
 %{_userunitdir}/hirte-agent.service
+
+
+%prep
+%setup -c -q
+
+
+%build
+%meson -Dapi_bus=system
+%meson_build
+
+
+%install
+%meson_install
+
+
+%check
+%meson_test
+
 
 %changelog
 * Tue Mar 21 2023 Martin Perina <mperina@redhat.com> - 0.1.0-1
