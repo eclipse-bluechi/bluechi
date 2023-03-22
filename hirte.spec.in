@@ -35,14 +35,12 @@ This package contains the controller and command line tool.
 %doc README.developer.md
 %license LICENSE
 %{_bindir}/hirte
-%{_bindir}/hirtectl
 %{_datadir}/dbus-1/interfaces/org.containers.hirte.Job.xml
 %{_datadir}/dbus-1/interfaces/org.containers.hirte.Manager.xml
 %{_datadir}/dbus-1/interfaces/org.containers.hirte.Monitor.xml
 %{_datadir}/dbus-1/interfaces/org.containers.hirte.Node.xml
 %{_datadir}/hirte/config/hirte-default.conf
 %{_mandir}/man1/hirte.*
-%{_mandir}/man1/hirtectl.*
 %{_mandir}/man5/hirte.conf.*
 %{_sysconfdir}/dbus-1/system.d/org.containers.hirte.conf
 %{_unitdir}/hirte.service
@@ -80,6 +78,22 @@ This package contains the node agent.
 %{_unitdir}/hirte-agent.service
 %{_userunitdir}/hirte-agent.service
 
+
+%package ctl
+Summary:	Hirte service controller command line tool
+Requires:	%{name} = %{version}-%{release}
+
+%description ctl
+Hirte is a systemd service controller for multi-nodes environements with a
+predefined number of nodes and with a focus on highly regulated environment
+such as those requiring functional safety (for example in cars).
+This package contains the service controller command line tool.
+
+%files ctl
+%doc README.md
+%license LICENSE
+%{_bindir}/hirtectl
+%{_mandir}/man1/hirtectl.*
 
 %prep
 %setup -c -q

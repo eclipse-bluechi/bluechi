@@ -32,7 +32,7 @@ dnf copr enable mperina/hirte-snapshot
 When done you can install relevant hirte packages using:
 
 ```bash
-dnf install hirte hirte-agent
+dnf install hirte hirte-agent hirte-ctl
 ```
 
 ### Submitting patches
