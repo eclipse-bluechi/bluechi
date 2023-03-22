@@ -3,7 +3,7 @@ RUN mkdir -p /tmp/rpms
 COPY ./exported-artifacts/ /tmp/rpms/
 RUN dnf install -y --repo local-hirte-snapshot \
     --repofrompath local-hirte-snapshot,file:///tmp/rpms \
-    --nogpgcheck hirte hirte-agent
+    --nogpgcheck hirte hirte-agent hirte-ctl
 CMD [ "/sbin/init" ]
 
 WORKDIR /hirte
