@@ -39,10 +39,10 @@ This package contains the controller and command line tool.
 %{_datadir}/dbus-1/interfaces/org.containers.hirte.Manager.xml
 %{_datadir}/dbus-1/interfaces/org.containers.hirte.Monitor.xml
 %{_datadir}/dbus-1/interfaces/org.containers.hirte.Node.xml
+%{_datadir}/dbus-1/system.d/org.containers.hirte.conf
 %{_datadir}/hirte/config/hirte-default.conf
 %{_mandir}/man1/hirte.*
 %{_mandir}/man5/hirte.conf.*
-%{_sysconfdir}/dbus-1/system.d/org.containers.hirte.conf
 %{_unitdir}/hirte.service
 %{_unitdir}/hirte.socket
 
@@ -71,10 +71,10 @@ This package contains the node agent.
 %doc README.md
 %license LICENSE
 %{_bindir}/hirte-agent
+%{_datadir}/dbus-1/system.d/org.containers.hirte.Agent.conf
 %{_datadir}/hirte-agent/config/hirte-default.conf
 %{_mandir}/man1/hirte-agent.*
 %{_mandir}/man5/hirte-agent.conf.*
-%{_sysconfdir}/dbus-1/system.d/org.containers.hirte.Agent.conf
 %{_unitdir}/hirte-agent.service
 %{_userunitdir}/hirte-agent.service
 
