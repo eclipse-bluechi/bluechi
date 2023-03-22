@@ -10,7 +10,7 @@ install_data(
 )
 
 # Installing the DBus permission configuration files
-dbus_service_dir = join_paths(get_option('sysconfdir'), 'dbus-1', 'system.d')
+dbus_service_dir = join_paths(get_option('datadir'), 'dbus-1', 'system.d')
 dbus_srv_user = get_option('dbus-srv-user')
 if dbus_srv_user == ''
     dbus_srv_user = 'root'
