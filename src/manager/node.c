@@ -38,7 +38,7 @@ static int node_property_get_status(
                 void *userdata,
                 sd_bus_error *ret_error);
 
-static const sd_bus_vtable internal_manager_orchestrator_vtable[] = {
+static const sd_bus_vtable internal_manager_controller_vtable[] = {
         SD_BUS_VTABLE_START(0), SD_BUS_METHOD("Register", "s", "", node_method_register, 0), SD_BUS_VTABLE_END
 };
 
@@ -396,7 +396,7 @@ bool node_set_agent_bus(Node *node, sd_bus *bus) {
                                 &node->internal_manager_slot,
                                 INTERNAL_MANAGER_OBJECT_PATH,
                                 INTERNAL_MANAGER_INTERFACE,
-                                internal_manager_orchestrator_vtable,
+                                internal_manager_controller_vtable,
                                 node);
                 if (r < 0) {
                         node_unset_agent_bus(node);

@@ -1,7 +1,7 @@
 Name:		hirte
 Version:	@VERSION@
 Release:	@RELEASE@%{?dist}
-Summary:	A service orchestrator tool for multi-node devices (e.g.: edge devices)
+Summary:	A systemd service controller for multi-nodes environments
 License:	GPLv2
 URL:		https://github.com/containers/hirte
 Source0:	https://github.com/containers/hirte/archive/refs/tags/%{name}-%{version}.tar.gz
@@ -15,11 +15,10 @@ BuildRequires:	golang-github-cpuguy83-md2man
 Requires:	systemd
 
 %description
-Hirte is a service orchestrator tool intended for multi-node devices (e.g.:
-edge devices) clusters with a predefined number of nodes and with a focus on
-highly regulated environment such as those requiring functional safety (for
-example in cars).
-This package contains the orchestrator and command line tool.
+Hirte is a systemd service controller for multi-nodes environements with a
+predefined number of nodes and with a focus on highly regulated environment
+such as those requiring functional safety (for example in cars).
+This package contains the controller and command line tool.
 
 %post
 %systemd_post hirte.service
@@ -51,14 +50,13 @@ This package contains the orchestrator and command line tool.
 
 
 %package agent
-Summary:	Hirte service orchestrator agent
+Summary:	Hirte service controller agent
 Requires:	systemd
 
 %description agent
-Hirte is a service orchestrator tool intended for multi-node devices (e.g.:
-edge devices) clusters with a predefined number of nodes and with a focus on
-highly regulated environment such as those requiring functional safety (for
-example in cars).
+Hirte is a systemd service controller for multi-nodes environements with a
+predefined number of nodes and with a focus on highly regulated environment
+such as those requiring functional safety (for example in cars).
 This package contains the node agent.
 
 %post agent

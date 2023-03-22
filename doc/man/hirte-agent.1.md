@@ -10,7 +10,7 @@ hirte-agent - Agent managing services on the local machine
 
 ## DESCRIPTION
 
-Hirte is a service orchestrator tool intended for multi-node devices (e.g.: edge devices) clusters with a predefined number of nodes and with a focus on highly regulated environment such as those requiring functional safety (for example in cars).
+Hirte is a systemd service controller intended for multi-node environment with a predefined number of nodes and with a focus on highly regulated environment such as those requiring functional safety (for example in cars).
 
 A `hirte-agent` establishes a peer-to-peer connection to `hirte` and exposes its API to manage systemd units on it.
 
