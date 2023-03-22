@@ -25,7 +25,8 @@ sed \
 
 # Prepare source archive
 [[ -d rpmbuild/SOURCES ]] || mkdir -p rpmbuild/SOURCES
-git archive --format=tar --add-file=hirte.spec HEAD | gzip -9 > rpmbuild/SOURCES/hirte-$VERSION.tar.gz
+git archive --format=tar --prefix=hirte-$VERSION/ --add-file=hirte.spec HEAD \
+    | gzip -9 > rpmbuild/SOURCES/hirte-$VERSION.tar.gz
 
 # Build source package
 rpmbuild \
