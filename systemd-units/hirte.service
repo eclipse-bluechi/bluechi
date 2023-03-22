@@ -3,7 +3,7 @@
 #  This file is part of hirte.
 #
 [Unit]
-Description=Hirte service orchestrator manager daemon
+Description=Hirte systemd service controller manager daemon
 Documentation=man:hirte(1) man:hirte.conf(5)
 After=network.target
 

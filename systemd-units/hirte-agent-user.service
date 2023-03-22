@@ -3,7 +3,7 @@
 #  This file is part of hirte-agent.
 #
 [Unit]
-Description=Hirte service orchestrator agent daemon
+Description=Hirte systemd service controller agent daemon
 Documentation=man:hirte-agent(1) man:hirte-agent.conf(5)
 After=network.target
 

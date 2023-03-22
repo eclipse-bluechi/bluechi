@@ -88,9 +88,10 @@ meson install -C builddir --destdir bin
 
 After building, three binaries are available:
 
-- `hirte`: the orchestrator which is run on the main machine, sending commands to the agents and monitoring the progress
-- `hirte-agent`: the node agent unit which connects with the orchestrator and executes commands on the node machine
-- `hirtectl`: a helper (CLI) program to send an commands to the orchestrator
+- `hirte`: the systemd service controller which is run on the main machine, sending commands to the agents and
+  monitoring the progress
+- `hirte-agent`: the node agent unit which connects with the controller and executes commands on the node machine
+- `hirtectl`: a helper (CLI) program to send an commands to the controller
 
 ### Unit tests
 
@@ -108,7 +109,7 @@ At the moment the `hirtectl` binary does not implement any logic. It only prints
 
 #### hirte
 
-The orchestrator can be run via:
+The controller can be run via:
 
 ```bash
 hirte

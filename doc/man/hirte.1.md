@@ -10,7 +10,7 @@ hirte - Manager of services across agents
 
 ## DESCRIPTION
 
-Hirte is a service orchestrator tool intended for multi-node devices (e.g.: edge devices) clusters with a predefined number of nodes and with a focus on highly regulated environment such as those requiring functional safety (for example in cars).
+Hirte is a systemd service controller intended for multi-nodes environments with a predefined number of nodes and with a focus on highly regulated environment such as those requiring functional safety (for example in cars).
 
 The hirte manager offers its public API on the local DBus and uses the DBus APIs provided by all connected `hirte-agents` to manage systemd services on those remote systems.
 
