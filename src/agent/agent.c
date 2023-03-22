@@ -1584,7 +1584,7 @@ bool agent_stop(Agent *agent) {
 static bool agent_connect(Agent *agent) {
         peer_bus_close(agent->peer_dbus);
 
-        agent->peer_dbus = peer_bus_open(agent->event, "peer-bus-to-orchestrator", agent->orch_addr);
+        agent->peer_dbus = peer_bus_open(agent->event, "peer-bus-to-controller", agent->orch_addr);
         if (agent->peer_dbus == NULL) {
                 hirte_log_error("Failed to open peer dbus");
                 return false;
