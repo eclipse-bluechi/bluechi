@@ -2,7 +2,7 @@ Name:    hirte
 Version: @VERSION@
 Release: @RELEASE@%{?dist}
 Summary: A systemd service controller for multi-nodes environments
-License: GPLv2
+License: GPLv2+
 URL:     https://github.com/containers/hirte
 Source0: %{url}/archive/%{name}-%{version}.tar.gz
 
