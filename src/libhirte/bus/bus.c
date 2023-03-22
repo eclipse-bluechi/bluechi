@@ -43,10 +43,10 @@ static sd_bus *peer_bus_new(sd_event *event, const char *dbus_description) {
         }
         (void) sd_bus_set_description(dbus, dbus_description);
 
-        // trust everything to/from the orchestrator
+        // trust everything to/from the controller
         r = sd_bus_set_trusted(dbus, true);
         if (r < 0) {
-                hirte_log_errorf("Failed to trust orchestrator: %s", strerror(-r));
+                hirte_log_errorf("Failed to trust controller: %s", strerror(-r));
                 return NULL;
         }
 
