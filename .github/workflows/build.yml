@@ -2,9 +2,9 @@ name: Build
 
 on:
   push:
-    branches: [main]
+    branches: [main, hirte-0.1.z]
   pull_request:
-    branches: [main]
+    branches: [main, hirte-0.1.z]
   workflow_dispatch:
 
 jobs:
