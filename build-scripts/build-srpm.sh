@@ -11,9 +11,9 @@ git config --global --add safe.directory $(pwd)
 # Package release
 #
 # Use following for official releases
-RELEASE="1"
+#RELEASE="1"
 # Use following for nightly builds
-#RELEASE="0.$(date +%04Y%02m%02d%02H%02M).git$(git rev-parse --short ${GITHUB_SHA:-HEAD})"
+RELEASE="0.$(date +%04Y%02m%02d%02H%02M).git$(git rev-parse --short ${GITHUB_SHA:-HEAD})"
 
 
 # Set version and release
