@@ -113,6 +113,9 @@ This package contains the service controller command line tool.
 
 
 %changelog
+* Thu Mar 23 2023 Martin Perina <mperina@redhat.com> - 0.1.1-1
+- Packaging fixes and documentation improvements
+
 * Tue Mar 21 2023 Martin Perina <mperina@redhat.com> - 0.1.0-1
 - Initial release
 
