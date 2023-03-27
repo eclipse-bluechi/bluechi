@@ -16,6 +16,7 @@
 #define CFG_MANAGER_ADDRESS "ManagerAddress"
 #define CFG_NODE_NAME "NodeName"
 #define CFG_ALLOWED_NODE_NAMES "AllowedNodeNames"
+#define CFG_HEARTBEAT_INTERVAL "HeartbeatInterval"
 
 /*
  * Global section - this is used, when configuration options are specified in the configuration file

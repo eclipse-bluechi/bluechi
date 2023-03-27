@@ -14,6 +14,7 @@ const struct option options[] = { { ARG_HOST, required_argument, 0, ARG_HOST_SHO
                                   { ARG_PORT, required_argument, 0, ARG_PORT_SHORT },
                                   { ARG_ADDRESS, required_argument, 0, ARG_ADDRESS_SHORT },
                                   { ARG_NAME, required_argument, 0, ARG_NAME_SHORT },
+                                  { ARG_HEARTBEAT_INTERVAL, required_argument, 0, ARG_HEARTBEAT_INTERVAL_SHORT },
                                   { ARG_CONFIG, required_argument, 0, ARG_CONFIG_SHORT },
                                   { ARG_USER, no_argument, 0, ARG_USER_SHORT },
                                   { ARG_HELP, no_argument, 0, ARG_HELP_SHORT },
@@ -21,7 +22,7 @@ const struct option options[] = { { ARG_HOST, required_argument, 0, ARG_HOST_SHO
 
 #define OPTIONS_STR                                                                               \
         ARG_PORT_SHORT_S ARG_HOST_SHORT_S ARG_ADDRESS_SHORT_S ARG_HELP_SHORT_S ARG_CONFIG_SHORT_S \
-                        ARG_NAME_SHORT_S ARG_USER_SHORT_S
+                        ARG_NAME_SHORT_S ARG_USER_SHORT_S ARG_HEARTBEAT_INTERVAL_SHORT_S
 
 static const char *opt_port = 0;
 static const char *opt_host = NULL;
@@ -29,9 +30,11 @@ static const char *opt_address = NULL;
 static const char *opt_name = NULL;
 static const char *opt_config = NULL;
 static bool opt_user = false;
+static const char *opt_heartbeat_interval = 0;
 
 static void usage(char *argv[]) {
-        printf("Usage: %s [-H host] [-p port] [-a address] [-c config] [-n name] [--user]\n", argv[0]);
+        printf("Usage: %s [-H host] [-p port] [-a address] [-c config] [-n name] [-i heartbeat-interval] [--user]\n",
+               argv[0]);
 }
 
 static int get_opts(int argc, char *argv[]) {
@@ -53,6 +56,10 @@ static int get_opts(int argc, char *argv[]) {
 
                 case ARG_ADDRESS_SHORT:
                         opt_address = optarg;
+                        break;
+
+                case ARG_HEARTBEAT_INTERVAL_SHORT:
+                        opt_heartbeat_interval = optarg;
                         break;
 
                 case ARG_CONFIG_SHORT:
@@ -112,8 +119,12 @@ int main(int argc, char *argv[]) {
                 return EXIT_FAILURE;
         }
 
-        if (!agent_start(agent)) {
+        if (opt_heartbeat_interval && !agent_set_heartbeat_interval(agent, opt_heartbeat_interval)) {
                 return EXIT_FAILURE;
+        }
+
+        if (agent_start(agent)) {
+                return EXIT_SUCCESS;
         }
 
         agent_stop(agent);

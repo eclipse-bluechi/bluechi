@@ -29,7 +29,6 @@ SD Bus address used by `hirte-agent` to connect to `hirte`. See `man sd_bus_set_
 Overrides any setting of `ManagerHost` or `ManagerPort` defined in the configuration file as well as the respective CLI
 options. The option doesn't have a default value.
 
-
 #### **ManagerHost** (string)
 
 The host used by `hirte-agent` to connect to `hirte`. Must be a valid IPv4 or IPv6. The option doesn't have a default
@@ -39,6 +38,10 @@ value, it's mandatory to set this option for each hirte-agent.
 
 The port on which `hirte` is listening for connection request and the `hirte-agent` is connecting to. By default port
 `842` is used.
+
+#### **HeartbeatInterval** (long)
+
+The interval between two heartbeat signals sent to hirte in milliseconds. This option will overwrite the heartbeat interval defined in the configuration file. 
 
 #### **LogLevel** (string)
 

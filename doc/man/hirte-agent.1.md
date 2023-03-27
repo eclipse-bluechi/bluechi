@@ -39,6 +39,10 @@ Overrides any setting of `ManagerHost` or `ManagerPort` defined in the configura
 
 The unique name of this `hirte-agent` used for registering at `hirte`. This option will overwrite the port defined in the configuration file.
 
+#### **--interval**, **-i**
+
+The interval between two heartbeat signals sent to hirte in milliseconds. This option will overwrite the heartbeat interval defined in the configuration file. 
+
 #### **--config**, **-c**
 
 Path to the configuration file, see `hirte-agent.conf(5)`.
@@ -77,9 +81,5 @@ If this flag is set to `true`, no logs are written by hirte.
 TBD
 
 ## CONFIGURATION FILES
-
-TBD
-
-## SEE ALSO
 
 **[hirte-agent.conf(5)](https://github.com/containers/hirte/blob/main/doc/man/hirte-agent.conf.5.md)**
