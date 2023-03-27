@@ -15,11 +15,11 @@ bool parse_long(const char *in, long *ret) {
         }
 
         errno = 0;
-        *ret = strtol(in, &x, base);
-
+        long r = strtol(in, &x, base);
         if (errno > 0 || !x || x == in || *x != 0) {
                 return false;
         }
+        *ret = r;
 
         return true;
 }
