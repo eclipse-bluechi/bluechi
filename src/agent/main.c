@@ -33,8 +33,34 @@ static bool opt_user = false;
 static const char *opt_heartbeat_interval = 0;
 
 static void usage(char *argv[]) {
-        printf("Usage: %s [-H host] [-p port] [-a address] [-c config] [-n name] [-i heartbeat-interval] [--user]\n",
-               argv[0]);
+        printf("Usage:\n"
+               "\t%s [options...] \n"
+               "Available options are:\n"
+               "\t-%c %s\t\t Print this help message.\n"
+               "\t-%c %s\t\t The host of hirte to connect to. Must be a valid IPv4 or IPv6.\n"
+               "\t-%c %s\t\t The port of hirte to connect to.\n"
+               "\t-%c %s\t The DBus address of hirte to connect to. Overrides host and port.\n"
+               "\t-%c %s\t\t The unique name of this hirte-agent used to register at hirte.\n"
+               "\t-%c %s\t The interval between two heartbeat signals in milliseconds.\n"
+               "\t-%c %s\t A path to a config file used to bootstrap hirte-agent.\n"
+               "\t-%c %s\t\t Connect to the user systemd instance instead of the system one.\n",
+               argv[0],
+               ARG_HELP_SHORT,
+               ARG_HELP,
+               ARG_HOST_SHORT,
+               ARG_HOST,
+               ARG_PORT_SHORT,
+               ARG_PORT,
+               ARG_ADDRESS_SHORT,
+               ARG_ADDRESS,
+               ARG_NAME_SHORT,
+               ARG_NAME,
+               ARG_HEARTBEAT_INTERVAL_SHORT,
+               ARG_HEARTBEAT_INTERVAL,
+               ARG_CONFIG_SHORT,
+               ARG_CONFIG,
+               ARG_USER_SHORT,
+               ARG_USER);
 }
 
 static int get_opts(int argc, char *argv[]) {
@@ -44,7 +70,7 @@ static int get_opts(int argc, char *argv[]) {
                 switch (opt) {
                 case ARG_HELP_SHORT:
                         usage(argv);
-                        return 0;
+                        return 1;
 
                 case ARG_NAME_SHORT:
                         opt_name = optarg;
@@ -88,6 +114,8 @@ int main(int argc, char *argv[]) {
         int r = get_opts(argc, argv);
         if (r < 0) {
                 return EXIT_FAILURE;
+        } else if (r > 0) {
+                return EXIT_SUCCESS;
         }
 
         _cleanup_agent_ Agent *agent = agent_new();

@@ -71,7 +71,7 @@ static int get_opts(int argc, char *argv[]) {
                 switch (opt) {
                 case ARG_HELP_SHORT:
                         usage(argv);
-                        return 0;
+                        return 1;
                 case ARG_USER_SHORT:
                         opt_user = true;
                         break;
@@ -143,6 +143,8 @@ int main(int argc, char *argv[]) {
         int r = get_opts(argc, argv);
         if (r < 0) {
                 return EXIT_FAILURE;
+        } else if (r > 0) {
+                return EXIT_SUCCESS;
         }
 
         _cleanup_free_ char *node_name = NULL;
