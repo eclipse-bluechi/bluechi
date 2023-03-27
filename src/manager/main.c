@@ -20,7 +20,19 @@ static const char *opt_port = 0;
 static const char *opt_config = NULL;
 
 static void usage(char *argv[]) {
-        printf("Usage: %s [-p port] [-c config]\n", argv[0]);
+        printf("Usage:\n"
+               "\t%s [options...] \n"
+               "Available options are:\n"
+               "\t-%c %s\t\t Print this help message.\n"
+               "\t-%c %s\t\t The port of hirte to connect to.\n"
+               "\t-%c %s\t A path to a config file used to bootstrap hirte-agent.\n",
+               argv[0],
+               ARG_HELP_SHORT,
+               ARG_HELP,
+               ARG_PORT_SHORT,
+               ARG_PORT,
+               ARG_CONFIG_SHORT,
+               ARG_CONFIG);
 }
 
 static int get_opts(int argc, char *argv[]) {
@@ -30,7 +42,7 @@ static int get_opts(int argc, char *argv[]) {
                 switch (opt) {
                 case ARG_HELP_SHORT:
                         usage(argv);
-                        return 0;
+                        return 1;
 
                 case ARG_PORT_SHORT:
                         opt_port = optarg;
@@ -55,6 +67,8 @@ int main(int argc, char *argv[]) {
         int r = get_opts(argc, argv);
         if (r < 0) {
                 return EXIT_FAILURE;
+        } else if (r > 0) {
+                return EXIT_SUCCESS;
         }
 
         _cleanup_manager_ Manager *manager = manager_new();
