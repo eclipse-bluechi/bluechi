@@ -102,7 +102,7 @@ static int agent_reset_heartbeat_timer(Agent *agent, sd_event_source **event_sou
                         agent->event,
                         event_source,
                         CLOCK_BOOTTIME,
-                        AGENT_HEARTBEAT_INTERVAL_USEC,
+                        agent->heartbeat_interval_msec * USEC_PER_MSEC,
                         0,
                         agent_heartbeat_timer_callback,
                         agent,
@@ -321,6 +321,7 @@ Agent *agent_new(void) {
         agent->event = steal_pointer(&event);
         agent->api_bus_service_name = steal_pointer(&service_name);
         agent->port = HIRTE_DEFAULT_PORT;
+        agent->heartbeat_interval_msec = AGENT_HEARTBEAT_INTERVAL_MSEC;
         LIST_HEAD_INIT(agent->outstanding_requests);
         LIST_HEAD_INIT(agent->tracked_jobs);
         LIST_HEAD_INIT(agent->proxy_services);
@@ -448,6 +449,18 @@ bool agent_set_name(Agent *agent, const char *name) {
         return copy_str(&agent->name, name);
 }
 
+bool agent_set_heartbeat_interval(Agent *agent, const char *interval_msec) {
+        long interval = 0;
+
+        if (!parse_long(interval_msec, &interval)) {
+                hirte_log_errorf("Invalid heartbeat interval format '%s'", interval_msec);
+                return false;
+        }
+        agent->heartbeat_interval_msec = interval;
+        return true;
+}
+
+
 void agent_set_systemd_user(Agent *agent, bool systemd_user) {
         agent->systemd_user = systemd_user;
 }
@@ -519,6 +532,13 @@ bool agent_parse_config(Agent *agent, const char *configfile) {
         value = cfg_get_value(agent->config, CFG_MANAGER_ADDRESS);
         if (value) {
                 if (!agent_set_orch_address(agent, value)) {
+                        return false;
+                }
+        }
+
+        value = cfg_get_value(agent->config, CFG_HEARTBEAT_INTERVAL);
+        if (value) {
+                if (!agent_set_heartbeat_interval(agent, value)) {
                         return false;
                 }
         }

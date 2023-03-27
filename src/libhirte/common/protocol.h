@@ -48,6 +48,7 @@
 #define SYSTEMD_UNIT_IFACE "org.freedesktop.systemd1.Unit"
 
 #define USEC_PER_SEC 1000000
+#define USEC_PER_MSEC 1000
 #define HIRTE_DEFAULT_DBUS_TIMEOUT ((uint64_t) (USEC_PER_SEC * 30))
 
 /* Typestrings */
@@ -88,6 +89,5 @@ UnitActiveState active_state_from_string(const char *s);
 /* Agent to Hirte heartbeat signals */
 
 // Application-level heartbeat set at 2 seconds.
-#define AGENT_HEARTBEAT_INTERVAL_USEC (2000000)
-
+#define AGENT_HEARTBEAT_INTERVAL_MSEC (2000)
 #define AGENT_HEARTBEAT_SIGNAL_NAME "Heartbeat"

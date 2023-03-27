@@ -61,8 +61,4 @@ TBD
 
 ## CONFIGURATION FILES
 
-TBD
-
-## SEE ALSO
-
 **[hirte.conf(5)](https://github.com/containers/hirte/blob/main/doc/man/hirte.conf.5.md)**
