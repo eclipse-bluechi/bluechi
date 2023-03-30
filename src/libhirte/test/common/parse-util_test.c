@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "libhirte/common/common.h"
 #include "libhirte/common/parse-util.h"
 
 
@@ -12,7 +13,7 @@
 #endif
 
 bool test_parse_long(const char *input, bool expectedReturn, long expectedResult) {
-        char *msg = NULL;
+        _cleanup_free_ char *msg = NULL;
 
         long res = 0;
         int ret = parse_long(input, &res);
@@ -35,7 +36,7 @@ bool test_parse_long(const char *input, bool expectedReturn, long expectedResult
 }
 
 bool test_parse_port(const char *input, bool expected_return, uint16_t expected_result) {
-        char *msg = NULL;
+        _cleanup_free_ char *msg = NULL;
 
         uint16_t res = 0;
         bool ret = parse_port(input, &res);

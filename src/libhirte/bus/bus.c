@@ -12,14 +12,21 @@
  *** peer dbus ***
  *****************/
 
+static char *typesafe_inet_ntop4(const struct sockaddr_in *addr) {
+        char *dst = malloc0_array(0, sizeof(char), INET_ADDRSTRLEN);
+        inet_ntop(AF_INET, &addr->sin_addr, dst, INET_ADDRSTRLEN);
+        return dst;
+}
+
 char *assemble_tcp_address(const struct sockaddr_in *addr) {
         if (addr == NULL) {
                 hirte_log_error("Can not assemble an empty address");
                 return NULL;
         }
 
+        _cleanup_free_ char *host = typesafe_inet_ntop4(addr);
         char *dbus_addr = NULL;
-        int r = asprintf(&dbus_addr, "tcp:host=%s,port=%d", inet_ntoa(addr->sin_addr), ntohs(addr->sin_port));
+        int r = asprintf(&dbus_addr, "tcp:host=%s,port=%d", host, ntohs(addr->sin_port));
         if (r < 0) {
                 hirte_log_error("Out of memory");
                 return NULL;
