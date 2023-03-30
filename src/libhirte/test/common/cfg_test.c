@@ -28,22 +28,18 @@ void _config_set_and_get(
 }
 
 void test_config_set_get() {
-    struct config *config = NULL;
-    cfg_initialize(&config);
+        struct config *config = NULL;
+        cfg_initialize(&config);
 
-    _config_set_and_get(config, "key1", "value1", "value1", false);
-    _config_set_and_get(config, "key2", NULL, NULL, true);
-    _config_set_and_get(config, "key1", "value3", "value3", false);
-    _config_set_and_get(config, "key2", "value4", "value4", false);
+        _config_set_and_get(config, "key1", "value1", "value1", false);
+        _config_set_and_get(config, "key2", NULL, NULL, true);
+        _config_set_and_get(config, "key1", "value3", "value3", false);
+        _config_set_and_get(config, "key2", "value4", "value4", false);
 
-    cfg_dispose(config);
+        cfg_dispose(config);
 }
 
-void _config_set_get_bool(
-                    struct config *config,
-                    const char *option,
-                    const char *value,
-                    bool expected_value) {
+void _config_set_get_bool(struct config *config, const char *option, const char *value, bool expected_value) {
         assert(option != NULL);
 
         assert(cfg_set_value(config, option, value) == 0);
@@ -139,11 +135,11 @@ void test_non_existent_option() {
 
 void test_parse_config_from_file() {
         const char *cfg_file_content =
-                "key1 = value1\n"
-                "key2 = value 2\n"
-                "# key3 = ignored\n"
-                "key4 = value 4\n"
-                "key5=\n";
+                        "key1 = value1\n"
+                        "key2 = value 2\n"
+                        "# key3 = ignored\n"
+                        "key4 = value 4\n"
+                        "key5=\n";
 
 
         // check if tmp file was created and filled-in successfully
@@ -176,13 +172,13 @@ void test_parse_config_from_file() {
 
 void test_parse_sectioned_config_from_file() {
         const char *cfg_file_content =
-                "key = value1\n"
-                "[section2]\n"
-                "key = value 2\n"
-                "# key = ignored\n"
-                "[section 3]\n"
-                "# [ignored section]\n"
-                "key = value 3\n";
+                        "key = value1\n"
+                        "[section2]\n"
+                        "key = value 2\n"
+                        "# key = ignored\n"
+                        "[section 3]\n"
+                        "# [ignored section]\n"
+                        "key = value 3\n";
 
 
         // check if tmp file was created and filled-in successfully
@@ -245,7 +241,8 @@ void test_default_section() {
         assert(strcmp(cfg_s_get_value(config, old_default_section, KEY), OLD_SECTION_VALUE1) == 0);
 
         // Change value in old_default_section and check the value didn't change in NEW_DEFAULT_SECTION
-        _config_section_set_and_get(config, old_default_section, KEY, OLD_SECTION_VALUE2, OLD_SECTION_VALUE2, false);
+        _config_section_set_and_get(
+                        config, old_default_section, KEY, OLD_SECTION_VALUE2, OLD_SECTION_VALUE2, false);
         assert(strcmp(cfg_s_get_value(config, NEW_DEFAULT_SECTION, KEY), NEW_SECTION_VALUE) == 0);
 
         free(old_default_section);
@@ -253,9 +250,9 @@ void test_default_section() {
 }
 
 void test_parse_config_from_env() {
-        const char* LOG_LEVEL_DEBUG = "DEBUG";
-        const char* LOG_TARGET_STDERR = "stderr";
-        const char* LOG_IS_QUIET_OFF = "false";
+        const char *LOG_LEVEL_DEBUG = "DEBUG";
+        const char *LOG_TARGET_STDERR = "stderr";
+        const char *LOG_IS_QUIET_OFF = "false";
 
         struct config *config = NULL;
         cfg_initialize(&config);
@@ -287,10 +284,10 @@ void test_parse_config_from_env() {
 }
 
 void test_env_override_config() {
-        const char* LOG_LEVEL_DEBUG = "DEBUG";
-        const char* LOG_LEVEL_INFO = "INFO";
-        const char* LOG_TARGET_STDERR = "stderr";
-        const char* LOG_IS_QUIET_ON = "on";
+        const char *LOG_LEVEL_DEBUG = "DEBUG";
+        const char *LOG_LEVEL_INFO = "INFO";
+        const char *LOG_TARGET_STDERR = "stderr";
+        const char *LOG_IS_QUIET_ON = "on";
 
         struct config *config = NULL;
         cfg_initialize(&config);
