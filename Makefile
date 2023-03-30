@@ -13,8 +13,10 @@ build:
 	meson compile -C builddir
 
 test: build
-	meson compile -C builddir
 	meson test -C builddir
+
+test-with-valgrind: build
+	meson test --wrap='valgrind --leak-check=full --error-exitcode=1' -C builddir
 
 install: build
 	meson install -C builddir --destdir "$(DESTDIR)"
