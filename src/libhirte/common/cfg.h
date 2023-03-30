@@ -45,6 +45,8 @@ typedef struct config config;
 #define CFG_ETC_HIRTE_AGENT_CONF CONFIG_H_SYSCONFDIR "/hirte/agent.conf"
 #define CFG_AGENT_DEFAULT_CONFIG CONFIG_H_DATADIR "/hirte-agent/config/hirte-default.conf"
 #define CFG_HIRTE_DEFAULT_CONFIG CONFIG_H_DATADIR "/hirte/config/hirte-default.conf"
+#define CFG_ETC_AGENT_CONF_DIR CONFIG_H_SYSCONFDIR "/hirte/agent.conf.d"
+#define CFG_ETC_HIRTE_CONF_DIR CONFIG_H_SYSCONFDIR "/hirte/hirte.conf.d"
 
 /*
  * An item in a configuration map
@@ -92,6 +94,14 @@ int cfg_load_complete_configuration(
  * Returns 0 if successful, otherwise standard error code.
  */
 int cfg_load_from_file(struct config *config, const char *config_file);
+
+
+/*
+ * Load the application configuration from files inside the specified directory and override any existing options values.
+ *
+ * Returns 0 if successful, otherwise standard error code.
+ */
+int cfg_load_from_dir(struct config *config, const char *custom_config_directory);
 
 /*
  * Load the application configuration from the predefined environment variables and override any existing
