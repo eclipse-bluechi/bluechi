@@ -16,7 +16,7 @@ test: build
 	meson test -C builddir
 
 test-with-valgrind: build
-	meson test --wrap='valgrind --leak-check=full --error-exitcode=1' -C builddir
+	meson test --wrap='valgrind --leak-check=full --error-exitcode=1 --track-origins=yes' -C builddir
 
 install: build
 	meson install -C builddir --destdir "$(DESTDIR)"
