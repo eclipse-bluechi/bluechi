@@ -9,6 +9,7 @@ on:
 
 jobs:
   lint:
+    name: Lint and Test
     runs-on: ubuntu-latest
     container:
       image: quay.io/centos/centos:stream9
@@ -32,6 +33,7 @@ jobs:
                   meson \
                   systemd-devel \
                   codespell \
+                  valgrind \
               -y
 
       - name: Checkout sources
@@ -59,6 +61,20 @@ jobs:
 
       - name: Running markdown lint
         uses: DavidAnson/markdownlint-cli2-action@v9
+      
+      - name: Building hirte
+        run: |
+          make build
+
+      - name: Running unit tests
+        run: |
+          make test-with-valgrind
+
+      - name: Upload unit test logs
+        uses: actions/upload-artifact@v3
+        with:
+          name: unit-test-logs
+          path: ./builddir/meson-logs/testlog-valgrind.txt
 
   rpmbuild:
     needs: lint
