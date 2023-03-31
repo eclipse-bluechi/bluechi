@@ -480,7 +480,6 @@ bool agent_parse_config(Agent *agent, const char *configfile) {
                         CFG_ETC_HIRTE_AGENT_CONF,
                         CFG_ETC_AGENT_CONF_DIR);
         if (result != 0) {
-                fprintf(stderr, "Error loading configuration: '%s'.", strerror(-result));
                 cfg_dispose(agent->config);
                 return false;
         }
@@ -543,6 +542,9 @@ bool agent_parse_config(Agent *agent, const char *configfile) {
                         return false;
                 }
         }
+
+        _cleanup_free_ const char *dumped_cfg = cfg_dump(agent->config);
+        hirte_log_debug_with_data("Final configuration used", "\n%s", dumped_cfg);
 
         return true;
 }

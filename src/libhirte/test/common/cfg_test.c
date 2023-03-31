@@ -8,6 +8,7 @@
 #include <unistd.h>
 
 #include "libhirte/common/cfg.h"
+#include "libhirte/common/common.h"
 
 void _config_set_and_get(
                 struct config *config,
@@ -325,6 +326,21 @@ void test_env_override_config() {
         dispose_env();
 }
 
+void test_config_dump() {
+        struct config *config = NULL;
+        cfg_initialize(&config);
+
+        _config_set_and_get(config, "key1", "value1", "value1", false);
+        _config_set_and_get(config, "key2", "value4", "value4", false);
+
+        const char *expected_cfg_dump = "key1=value1\nkey2=value4\n";
+
+        _cleanup_free_ const char *cfg = cfg_dump(config);
+        assert(streq(cfg, expected_cfg_dump));
+
+        cfg_dispose(config);
+}
+
 int main() {
         test_config_set_get();
         test_config_set_get_bool();
@@ -335,5 +351,7 @@ int main() {
         test_default_section();
         test_parse_config_from_env();
         test_env_override_config();
+        test_config_dump();
+
         return EXIT_SUCCESS;
 }

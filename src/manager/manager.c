@@ -282,7 +282,6 @@ bool manager_parse_config(Manager *manager, const char *configfile) {
         result = cfg_load_complete_configuration(
                         manager->config, CFG_HIRTE_DEFAULT_CONFIG, CFG_ETC_HIRTE_CONF, CFG_ETC_HIRTE_CONF_DIR);
         if (result != 0) {
-                fprintf(stderr, "Error loading configuration '%s'.", strerror(result));
                 cfg_dispose(manager->config);
                 return false;
         }
@@ -330,6 +329,9 @@ bool manager_parse_config(Manager *manager, const char *configfile) {
                         name = strtok_r(NULL, ",", &saveptr);
                 }
         }
+
+        _cleanup_free_ const char *dumped_cfg = cfg_dump(manager->config);
+        hirte_log_debug_with_data("Final configuration used", "\n%s", dumped_cfg);
 
         /* TODO: Handle per-node-name option section */
 
@@ -837,7 +839,7 @@ bool manager_start(Manager *manager) {
         int r = sd_bus_request_name(
                         manager->api_bus, manager->api_bus_service_name, SD_BUS_NAME_REPLACE_EXISTING);
         if (r < 0) {
-                hirte_log_errorf("Failed to acquire service name on user dbus: %s", strerror(-r));
+                hirte_log_errorf("Failed to acquire service name on api dbus: %s", strerror(-r));
                 return false;
         }
 
