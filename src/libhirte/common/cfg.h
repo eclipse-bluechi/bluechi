@@ -176,15 +176,9 @@ bool cfg_get_bool_value(struct config *config, const char *option_name);
 bool cfg_s_get_bool_value(struct config *config, const char *section, const char *option_name);
 
 /*
- * Iterate over configuration and for each item execute the iter function.
- * For example using following iterator method would print the whole configuration:
+ * Dump all key-value pairs in the config to a string.
  *
- *     bool config_option_iterator(const void *item, void *udata) {
- *         const struct config_option *option = item;
- *         printf("%s = %s\n", option->name, option->value);
- *         return true;
- *     }
- *
- * WARNING: configuration items are accessed directly, DO NOT modify them during iteration!!!
+ * Returns a string containing all key-value pairs in the configuration separated by new lines.
+ * The caller is responsible for freeing the returned string.
  */
-void cfg_iterate(struct config *config, bool (*iter)(const void *item, void *udata), void *udata);
+const char *cfg_dump(struct config *config);

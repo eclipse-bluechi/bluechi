@@ -46,14 +46,12 @@ static uint64_t option_hash(const void *item, uint64_t seed0, uint64_t seed1) {
         return hash;
 }
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wunused-parameter"
 /*
  * Handle used to store option parsed from a file into a configuration.
  *
  * Returns 1 on success, 0 on error as per ini library requirements.
  */
-static int parsing_handler(void *user, const char *section, const char *name, const char *value) { // NOLINT
+static int parsing_handler(void *user, const char *section, const char *name, const char *value) {
         if (user == NULL) {
                 return 0;
         }
@@ -63,24 +61,20 @@ static int parsing_handler(void *user, const char *section, const char *name, co
         }
         return 1;
 }
-#pragma GCC diagnostic pop
 
 int cfg_initialize(struct config **config) {
         struct config *new_cfg = malloc(sizeof(struct config));
         if (new_cfg == NULL) {
-                // error during configuration structure initialization
                 return -ENOMEM;
         }
         new_cfg->cfg_store = hashmap_new(
                         sizeof(struct config_option), 0, 0, 0, option_hash, option_compare, option_destroy, NULL);
         if (new_cfg->cfg_store == NULL) {
-                // error during hashmap initialization
                 free(new_cfg);
                 return -ENOMEM;
         }
         char *section_copy = strdup(CFG_SECT_GLOBAL);
         if (section_copy == NULL) {
-                // error during default section initialization
                 hashmap_free(new_cfg->cfg_store);
                 free(new_cfg);
                 return -ENOMEM;
@@ -106,22 +100,35 @@ int cfg_load_complete_configuration(
 
         if (default_config_file != NULL) {
                 result = cfg_load_from_file(config, default_config_file);
-                if (result != 0) {
+                if (result < 0) {
+                        fprintf(stderr,
+                                "Error loading default configuration file '%s': '%s'.\n",
+                                default_config_file,
+                                strerror(-result));
                         return result;
                 }
         }
 
         if (custom_config_file != NULL) {
                 result = cfg_load_from_file(config, custom_config_file);
-                // if custom config file doesn't exist, continue
-                if (result != 0 && result != -ENOENT) {
-                        return result;
+                if (result < 0) {
+                        fprintf(stderr,
+                                "Error loading custom configuration file '%s': '%s'.\n",
+                                custom_config_file,
+                                strerror(-result));
+                        if (result != -ENOENT) {
+                                return result;
+                        }
                 }
         }
 
         if (custom_config_directory != NULL) {
                 result = cfg_load_from_dir(config, custom_config_directory);
-                if (result != 0) {
+                if (result < 0) {
+                        fprintf(stderr,
+                                "Error loading configuration from conf.d dir '%s': '%s'.\n",
+                                custom_config_directory,
+                                strerror(-result));
                         return result;
                 }
         }
@@ -135,8 +142,8 @@ int cfg_load_from_file(struct config *config, const char *config_file) {
         if (config_file == NULL) {
                 return -EINVAL;
         }
-        if (access(config_file, F_OK) != 0) {
-                return -ENOENT;
+        if (access(config_file, R_OK) != 0) {
+                return -errno;
         }
         return ini_parse(config_file, parsing_handler, config);
 }
@@ -152,6 +159,10 @@ int cfg_load_from_dir(struct config *config, const char *custom_config_directory
         struct dirent **all_files_in_dir = NULL;
         int number_of_files = 0;
 
+        if (access(custom_config_directory, F_OK) != 0) {
+                // consider a missing confd directory as no error
+                return 0;
+        }
         number_of_files = scandir(
                         custom_config_directory, &all_files_in_dir, &is_file_name_ending_with_conf, alphasort);
         if (number_of_files < 0) {
@@ -160,7 +171,11 @@ int cfg_load_from_dir(struct config *config, const char *custom_config_directory
 
         for (int i = 0; i < number_of_files; i++) {
                 char *file_name = all_files_in_dir[i]->d_name;
-                cfg_load_from_file(config, file_name);
+                int r = cfg_load_from_file(config, file_name);
+                if (r < 0) {
+                        fprintf(stderr, "Error loading confd file '%s': '%s'.\n", file_name, strerror(-r));
+                        return r;
+                }
                 free(all_files_in_dir[i]);
         }
         free(all_files_in_dir);
@@ -176,9 +191,12 @@ int cfg_load_from_env(struct config *config) {
         for (int i = 0; i < length; i++) {
                 char *value = getenv(env_vars[i]);
                 if (value != NULL && strlen(value) > 0) {
-                        // environment variable is defined and has a non-empty value, so store it to the configuration
                         int result = cfg_set_value(config, option_names[i], value);
-                        if (result != 0) {
+                        if (result < 0) {
+                                fprintf(stderr,
+                                        "Error setting env value for '%s': '%s'.\n",
+                                        option_names[i],
+                                        strerror(-result));
                                 return result;
                         }
                 }
@@ -229,7 +247,6 @@ int cfg_s_set_value(
 
         char *value_copy = NULL;
         if (option_value != NULL && strlen(option_value) > 0) {
-                // storing non NULL value, so copy is needed
                 value_copy = strdup(option_value);
                 if (value_copy == NULL) {
                         free(section_copy);
@@ -242,7 +259,6 @@ int cfg_s_set_value(
                         &(struct config_option){
                                         .section = section_copy, .name = name_copy, .value = value_copy });
         if (hashmap_oom(config->cfg_store)) {
-                // OOM during hashmap set operation
                 free(section_copy);
                 free(name_copy);
                 free(value_copy);
@@ -250,7 +266,6 @@ int cfg_s_set_value(
         }
 
         if (replaced != NULL) {
-                // option has been replaced with the new one, we need to deallocate the old one
                 free(replaced->section);
                 free(replaced->name);
                 free(replaced->value);
@@ -288,6 +303,25 @@ bool cfg_s_get_bool_value(struct config *config, const char *section_name, const
         return result;
 }
 
-void config_iterate(struct config *config, bool (*iter)(const void *item, void *udata), void *udata) {
-        hashmap_scan(config->cfg_store, iter, udata);
+const char *cfg_dump(struct config *config) {
+        if (config == NULL) {
+                return NULL;
+        }
+
+        int r = 0;
+        char *cfg_info = "";
+        void *item = NULL;
+        size_t i = 0;
+        while (hashmap_iter(config->cfg_store, &i, &item)) {
+                struct config_option *opt = item;
+                char *tmp = cfg_info;
+                r = asprintf(&cfg_info, "%s%s=%s\n", cfg_info, opt->name, opt->value);
+                if (!streq(tmp, "")) {
+                        free(tmp);
+                }
+                if (r < 0) {
+                        return NULL;
+                }
+        }
+        return cfg_info;
 }
