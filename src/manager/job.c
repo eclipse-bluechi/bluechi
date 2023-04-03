@@ -65,6 +65,9 @@ Job *job_new(Node *node, const char *unit, const char *type) {
                 return NULL;
         }
 
+        job->job_start_micros = 0;
+        job->job_end_micros = 0;
+
         return steal_pointer(&job);
 }
 

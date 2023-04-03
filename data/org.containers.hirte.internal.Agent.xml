@@ -52,6 +52,8 @@
     <method name="Unsubscribe">
       <arg name="unit" type="s" direction="in" />
     </method>
+    <method name="EnableMetrics" />
+    <method name="DisableMetrics" />
     <method name="StartDep">
       <arg name="unit" type="s" direction="in" />
     </method>

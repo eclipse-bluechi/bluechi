@@ -7,12 +7,14 @@
 #include "libhirte/common/cfg.h"
 #include "libhirte/common/common.h"
 #include "libhirte/common/parse-util.h"
+#include "libhirte/common/time-util.h"
 #include "libhirte/log/log.h"
 #include "libhirte/service/shutdown.h"
 #include "libhirte/socket.h"
 
 #include "job.h"
 #include "manager.h"
+#include "metrics.h"
 #include "monitor.h"
 #include "node.h"
 
@@ -39,6 +41,7 @@ Manager *manager_new(void) {
                 manager->port = HIRTE_DEFAULT_PORT;
                 manager->api_bus_service_name = steal_pointer(&service_name);
                 manager->event = steal_pointer(&event);
+                manager->metrics_enabled = false;
                 LIST_HEAD_INIT(manager->nodes);
                 LIST_HEAD_INIT(manager->anonymous_nodes);
                 LIST_HEAD_INIT(manager->jobs);
@@ -69,6 +72,7 @@ void manager_unref(Manager *manager) {
         sd_bus_slot_unrefp(&manager->name_owner_changed_slot);
         sd_bus_slot_unrefp(&manager->filter_slot);
         sd_bus_slot_unrefp(&manager->manager_slot);
+        sd_bus_slot_unrefp(&manager->metrics_slot);
         sd_bus_unrefp(&manager->api_bus);
 
         Job *job = NULL;
@@ -202,7 +206,6 @@ bool manager_add_job(Manager *manager, Job *job) {
 }
 
 void manager_remove_job(Manager *manager, Job *job, const char *result) {
-
         int r = sd_bus_emit_signal(
                         manager->api_bus,
                         HIRTE_MANAGER_OBJECT_PATH,
@@ -220,6 +223,9 @@ void manager_remove_job(Manager *manager, Job *job, const char *result) {
         }
 
         LIST_REMOVE(jobs, manager->jobs, job);
+        if (manager->metrics_enabled && streq(job->type, "start")) {
+                metrics_produce_job_report(job);
+        }
         job_unref(job);
 }
 
@@ -239,6 +245,9 @@ void manager_finish_job(Manager *manager, uint32_t job_id, const char *result) {
         Job *job = NULL;
         LIST_FOREACH(jobs, job, manager->jobs) {
                 if (job->id == job_id) {
+                        if (manager->metrics_enabled) {
+                                job->job_end_micros = get_time_micros();
+                        }
                         manager_remove_job(manager, job, result);
                         break;
                 }
@@ -736,6 +745,50 @@ static int manager_method_create_monitor(sd_bus_message *m, void *userdata, UNUS
         return 1;
 }
 
+/*************************************************************************
+ ************** org.containers.hirte.Manager.EnableMetrics ***************
+ ************************************************************************/
+static int manager_method_metrics_enable(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error) {
+        Manager *manager = userdata;
+        Node *node = NULL;
+        int r = 0;
+        if (manager->metrics_enabled) {
+                return sd_bus_reply_method_errorf(
+                                m, SD_BUS_ERROR_INCONSISTENT_MESSAGE, "Metrics already enabled");
+        }
+        r = metrics_export(manager);
+        if (r < 0) {
+                return sd_bus_reply_method_errorf(
+                                m, SD_BUS_ERROR_FAILED, "Failed to register metrics service: %s", strerror(-r));
+        }
+        manager->metrics_enabled = true;
+        LIST_FOREACH(nodes, node, manager->nodes) {
+                node_enable_metrics(node);
+        }
+        hirte_log_debug("Metrics enabled");
+        return sd_bus_reply_method_return(m, "");
+}
+
+/*************************************************************************
+ ************** org.containers.hirte.Manager.DisableMetrics **************
+ ************************************************************************/
+static int manager_method_metrics_disable(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error) {
+        Manager *manager = userdata;
+        Node *node = NULL;
+        if (!manager->metrics_enabled) {
+                return sd_bus_reply_method_errorf(
+                                m, SD_BUS_ERROR_INCONSISTENT_MESSAGE, "Metrics already disabled");
+        }
+        sd_bus_slot_unrefp(&manager->metrics_slot);
+        manager->metrics_slot = NULL;
+        manager->metrics_enabled = false;
+        LIST_FOREACH(nodes, node, manager->nodes) {
+                node_disable_metrics(node);
+        }
+        hirte_log_debug("Metrics disabled");
+        return sd_bus_reply_method_return(m, "");
+}
+
 static const sd_bus_vtable manager_vtable[] = {
         SD_BUS_VTABLE_START(0),
         SD_BUS_METHOD("Ping", "s", "s", manager_method_ping, 0),
@@ -743,6 +796,8 @@ static const sd_bus_vtable manager_vtable[] = {
         SD_BUS_METHOD("ListNodes", "", "a(sos)", manager_method_list_nodes, 0),
         SD_BUS_METHOD("GetNode", "s", "o", manager_method_get_node, 0),
         SD_BUS_METHOD("CreateMonitor", "", "o", manager_method_create_monitor, 0),
+        SD_BUS_METHOD("EnableMetrics", "", "", manager_method_metrics_enable, 0),
+        SD_BUS_METHOD("DisableMetrics", "", "", manager_method_metrics_disable, 0),
         SD_BUS_SIGNAL_WITH_NAMES("JobNew", "uo", SD_BUS_PARAM(id) SD_BUS_PARAM(job), 0),
         SD_BUS_SIGNAL_WITH_NAMES(
                         "JobRemoved",

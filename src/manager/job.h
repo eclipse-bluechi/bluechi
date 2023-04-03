@@ -19,6 +19,9 @@ struct Job {
 
         sd_bus_slot *export_slot;
 
+        uint64_t job_start_micros;
+        uint64_t job_end_micros;
+
         LIST_FIELDS(Job, jobs);
 };
 

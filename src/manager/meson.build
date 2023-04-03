@@ -9,6 +9,8 @@ orch_src = [
     'node.c',
     'job.h',
     'job.c',
+    'metrics.c',
+    'metrics.h',
     'monitor.h',
     'monitor.c',
     'proxy_monitor.c',

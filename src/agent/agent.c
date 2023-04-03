@@ -11,6 +11,7 @@
 #include "libhirte/common/event-util.h"
 #include "libhirte/common/opt.h"
 #include "libhirte/common/parse-util.h"
+#include "libhirte/common/time-util.h"
 #include "libhirte/log/log.h"
 #include "libhirte/service/shutdown.h"
 
@@ -44,6 +45,52 @@ static bool
                                 job_tracker_callback callback,
                                 void *userdata,
                                 free_func_t free_userdata);
+
+/* Keep track of outstanding systemd job and connect it back to
+   the originating hirte job id so we can proxy changes to it. */
+typedef struct {
+        int ref_count;
+
+        Agent *agent;
+        uint32_t hirte_job_id;
+        uint64_t job_start_micros;
+        char *unit;
+        char *method;
+} AgentJobOp;
+
+
+static AgentJobOp *agent_job_op_ref(AgentJobOp *op) {
+        op->ref_count++;
+        return op;
+}
+
+static void agent_job_op_unref(AgentJobOp *op) {
+        op->ref_count--;
+        if (op->ref_count != 0) {
+                return;
+        }
+
+        agent_unref(op->agent);
+        free(op->unit);
+        free(op->method);
+        free(op);
+}
+
+DEFINE_CLEANUP_FUNC(AgentJobOp, agent_job_op_unref)
+#define _cleanup_agent_job_op_ _cleanup_(agent_job_op_unrefp)
+
+static AgentJobOp *agent_job_new(Agent *agent, uint32_t hirte_job_id, const char *unit, const char *method) {
+        AgentJobOp *op = malloc0(sizeof(AgentJobOp));
+        if (op) {
+                op->ref_count = 1;
+                op->agent = agent_ref(agent);
+                op->hirte_job_id = hirte_job_id;
+                op->job_start_micros = 0;
+                op->unit = strdup(unit);
+                op->method = strdup(method);
+        }
+        return op;
+}
 
 bool agent_is_connected(Agent *agent) {
         return agent != NULL && agent->connection_state == AGENT_CONNECTION_STATE_CONNECTED;
@@ -192,6 +239,10 @@ static void systemd_request_set_userdata(SystemdRequest *req, void *userdata, fr
 
 static bool systemd_request_start(SystemdRequest *req, sd_bus_message_handler_t callback) {
         Agent *agent = req->agent;
+        AgentJobOp *op = req->userdata;
+        if (op != NULL) {
+                op->job_start_micros = get_time_micros();
+        }
 
         int r = sd_bus_call_async(
                         agent->systemd_dbus, &req->slot, req->message, callback, req, HIRTE_DEFAULT_DBUS_TIMEOUT);
@@ -337,6 +388,7 @@ Agent *agent_new(void) {
         agent->connection_retry_count = 0;
         agent->wildcard_subscription_active = false;
         agent->name = get_hostname();
+        agent->metrics_enabled = false;
 
         return steal_pointer(&agent);
 }
@@ -411,6 +463,10 @@ void agent_unref(Agent *agent) {
 
         if (agent->event != NULL) {
                 sd_event_unrefp(&agent->event);
+        }
+
+        if (agent->metrics_slot != NULL) {
+                sd_bus_slot_unrefp(&agent->metrics_slot);
         }
 
         if (agent->peer_dbus != NULL) {
@@ -824,49 +880,18 @@ static int agent_method_set_unit_properties(sd_bus_message *m, void *userdata, U
         return 1;
 }
 
-
-/* Keep track of outstanding systemd job and connect it back to
-   the originating hirte job id so we can proxy changes to it. */
-typedef struct {
-        int ref_count;
-
-        Agent *agent;
-        uint32_t hirte_job_id;
-} AgentJobOp;
-
-
-static AgentJobOp *agent_job_op_ref(AgentJobOp *op) {
-        op->ref_count++;
-        return op;
-}
-
-static void agent_job_op_unref(AgentJobOp *op) {
-        op->ref_count--;
-        if (op->ref_count != 0) {
-                return;
-        }
-
-        agent_unref(op->agent);
-        free(op);
-}
-
-DEFINE_CLEANUP_FUNC(AgentJobOp, agent_job_op_unref)
-#define _cleanup_agent_job_op_ _cleanup_(agent_job_op_unrefp)
-
-static AgentJobOp *agent_job_new(Agent *agent, uint32_t hirte_job_id) {
-        AgentJobOp *op = malloc0(sizeof(AgentJobOp));
-        if (op) {
-                op->ref_count = 1;
-                op->agent = agent_ref(agent);
-                op->hirte_job_id = hirte_job_id;
-        }
-        return op;
-}
-
-
 static void agent_job_done(UNUSED sd_bus_message *m, const char *result, void *userdata) {
         AgentJobOp *op = userdata;
         Agent *agent = op->agent;
+
+        if (agent->metrics_enabled) {
+                agent_send_job_metrics(
+                                agent,
+                                op->unit,
+                                op->method,
+                                // NOLINTNEXTLINE(bugprone-narrowing-conversions, cppcoreguidelines-narrowing-conversions)
+                                finalize_time_interval_micros(op->job_start_micros));
+        }
 
         hirte_log_infof("Sending JobDone %u, result: %s", op->hirte_job_id, result);
 
@@ -929,7 +954,7 @@ static int agent_run_unit_lifecycle_method(sd_bus_message *m, Agent *agent, cons
                 return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "Internal error");
         }
 
-        _cleanup_agent_job_op_ AgentJobOp *op = agent_job_new(agent, job_id);
+        _cleanup_agent_job_op_ AgentJobOp *op = agent_job_new(agent, job_id, name, method);
         if (op == NULL) {
                 return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "Internal error");
         }
@@ -1213,6 +1238,60 @@ static int agent_method_stop_dep(sd_bus_message *m, void *userdata, UNUSED sd_bu
 }
 
 
+/***************************************************************************
+ ********** org.containers.hirte.internal.Agent.EnableMetrics **************
+ **************************************************************************/
+
+static const sd_bus_vtable agent_metrics_vtable[] = {
+        SD_BUS_VTABLE_START(0),
+        SD_BUS_SIGNAL_WITH_NAMES(
+                        "AgentJobMetrics",
+                        "sst",
+                        SD_BUS_PARAM(unit) SD_BUS_PARAM(method) SD_BUS_PARAM(systemd_job_time_micros),
+                        0),
+        SD_BUS_VTABLE_END
+};
+
+static int agent_method_enable_metrics(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error) {
+        Agent *agent = userdata;
+        int r = 0;
+
+        if (agent->metrics_enabled) {
+                return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_INVALID_ARGS, "Metrics already enabled");
+        }
+        agent->metrics_enabled = true;
+        r = sd_bus_add_object_vtable(
+                        agent->peer_dbus,
+                        &agent->metrics_slot,
+                        INTERNAL_AGENT_METRICS_OBJECT_PATH,
+                        INTERNAL_AGENT_METRICS_INTERFACE,
+                        agent_metrics_vtable,
+                        NULL);
+        if (r < 0) {
+                hirte_log_errorf("Failed to add metrics vtable: %s", strerror(-r));
+                return r;
+        }
+        hirte_log_debug("Metrics enabled");
+        return sd_bus_reply_method_return(m, "");
+}
+
+/****************************************************************************
+ ********** org.containers.hirte.internal.Agent.DisableMetrics **************
+ ***************************************************************************/
+
+static int agent_method_disable_metrics(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error) {
+        Agent *agent = userdata;
+
+        if (!agent->metrics_enabled) {
+                return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_INVALID_ARGS, "Metrics already disabled");
+        }
+        agent->metrics_enabled = false;
+        sd_bus_slot_unrefp(&agent->metrics_slot);
+        hirte_log_debug("Metrics disabled");
+        return sd_bus_reply_method_return(m, "");
+}
+
+
 static const sd_bus_vtable internal_agent_vtable[] = {
         SD_BUS_VTABLE_START(0),
         SD_BUS_METHOD("ListUnits", "", UNIT_INFO_STRUCT_ARRAY_TYPESTRING, agent_method_list_units, 0),
@@ -1225,6 +1304,8 @@ static const sd_bus_vtable internal_agent_vtable[] = {
         SD_BUS_METHOD("ReloadUnit", "ssu", "", agent_method_reload_unit, 0),
         SD_BUS_METHOD("Subscribe", "s", "", agent_method_subscribe, 0),
         SD_BUS_METHOD("Unsubscribe", "s", "", agent_method_unsubscribe, 0),
+        SD_BUS_METHOD("EnableMetrics", "", "", agent_method_enable_metrics, 0),
+        SD_BUS_METHOD("DisableMetrics", "", "", agent_method_disable_metrics, 0),
         SD_BUS_SIGNAL_WITH_NAMES("JobDone", "us", SD_BUS_PARAM(id) SD_BUS_PARAM(result), 0),
         SD_BUS_SIGNAL_WITH_NAMES("JobStateChanged", "us", SD_BUS_PARAM(id) SD_BUS_PARAM(state), 0),
         SD_BUS_SIGNAL_WITH_NAMES(
@@ -2032,6 +2113,24 @@ static int agent_stop_local_proxy_service(Agent *agent, ProxyService *proxy) {
                 return -EIO;
         }
 
+
+        return 0;
+}
+
+int agent_send_job_metrics(Agent *agent, char *unit, char *method, uint64_t systemd_job_time) {
+        hirte_log_debugf("Sending agent %s job metrics on unit %s: %ldus", unit, method, systemd_job_time);
+        int r = sd_bus_emit_signal(
+                        agent->peer_dbus,
+                        INTERNAL_AGENT_METRICS_OBJECT_PATH,
+                        INTERNAL_AGENT_METRICS_INTERFACE,
+                        "AgentJobMetrics",
+                        "sst",
+                        unit,
+                        method,
+                        systemd_job_time);
+        if (r < 0) {
+                hirte_log_errorf("Failed to emit metric signal: %s", strerror(-r));
+        }
 
         return 0;
 }

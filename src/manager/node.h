@@ -40,6 +40,7 @@ struct Node {
         sd_bus *agent_bus;
         sd_bus_slot *internal_manager_slot;
         sd_bus_slot *disconnect_slot;
+        sd_bus_slot *metrics_matching_slot;
 
         LIST_FIELDS(Node, nodes);
 
@@ -83,6 +84,10 @@ int node_create_request(
                 free_func_t free_userdata);
 
 void node_remove_proxy_monitor(Node *node, ProxyMonitor *proxy_monitor);
+
+int node_method_get_unit_uint64_property_sync(Node *node, char *unit, char *property, uint64_t *value);
+void node_enable_metrics(Node *node);
+void node_disable_metrics(Node *node);
 
 DEFINE_CLEANUP_FUNC(Node, node_unref)
 #define _cleanup_node_ _cleanup_(node_unrefp)
