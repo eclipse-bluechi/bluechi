@@ -2,6 +2,7 @@
 #include <errno.h>
 
 #include "libhirte/bus/utils.h"
+#include "libhirte/common/time-util.h"
 #include "libhirte/service/shutdown.h"
 
 #include "client.h"
@@ -289,6 +290,137 @@ int method_lifecycle_action_on(Client *client, char *node_name, char *unit, char
         return r;
 }
 
+int method_metrics_toggle(Client *client, char *method) {
+        _cleanup_sd_bus_error_ sd_bus_error error = SD_BUS_ERROR_NULL;
+        _cleanup_sd_bus_message_ sd_bus_message *message = NULL;
+        int r = 0;
+
+        r = sd_bus_call_method(
+                        client->api_bus,
+                        HIRTE_INTERFACE_BASE_NAME,
+                        HIRTE_OBJECT_PATH,
+                        MANAGER_INTERFACE,
+                        method,
+                        &error,
+                        &message,
+                        "");
+        if (r < 0) {
+                fprintf(stderr, "Failed to issue method call: %s\n", error.message);
+                return r;
+        }
+
+        printf("Done\n");
+        return r;
+}
+
+static int match_start_unit_job_metrics_signal(
+                sd_bus_message *m, UNUSED void *userdata, UNUSED sd_bus_error *error) {
+        const char *job_path = NULL;
+        const uint64_t job_measured_time = 0;
+        const uint64_t unit_net_start_time = 0;
+        const char *node_name = NULL;
+        const char *unit = NULL;
+        int r = 0;
+
+        r = sd_bus_message_read(
+                        m, "ssstt", &node_name, &job_path, &unit, &job_measured_time, &unit_net_start_time);
+        if (r < 0) {
+                fprintf(stderr, "Can't parse job result: %s", strerror(-r));
+                return r;
+        }
+
+        printf("[%s] Job %s to start unit %s:\n\t"
+               "Hirte job gross measured time: %.1lfms\n\t"
+               "Unit net start time (from properties): %.1lfms\n",
+               node_name,
+               job_path,
+               unit,
+               micros_to_millis(job_measured_time),
+               micros_to_millis(unit_net_start_time));
+
+        return 0;
+}
+
+static int match_agent_job_metrics_signal(sd_bus_message *m, UNUSED void *userdata, UNUSED sd_bus_error *error) {
+        const char *node_name = NULL;
+        char *unit = NULL;
+        char *method = NULL;
+        uint64_t systemd_job_time = 0;
+        int r = 0;
+        r = sd_bus_message_read(m, "ssst", &node_name, &unit, &method, &systemd_job_time);
+        if (r < 0) {
+                fprintf(stderr, "Can't parse metric: %s", strerror(-r));
+                return r;
+        }
+
+        printf("[%s] Agent systemd %s job on %s net measured time: %.1lfms\n",
+               node_name,
+               method,
+               unit,
+               micros_to_millis(systemd_job_time));
+        return 0;
+}
+
+int method_metrics_listen(Client *client) {
+        int r = 0;
+
+        _cleanup_sd_event_ sd_event *event = NULL;
+        r = sd_event_default(&event);
+        if (r < 0) {
+                fprintf(stderr, "Failed to create event loop: %s", strerror(-r));
+                return r;
+        }
+
+        r = sd_bus_attach_event(client->api_bus, event, SD_EVENT_PRIORITY_NORMAL);
+        if (r < 0) {
+                fprintf(stderr, "Failed to attach bus to event: %s", strerror(-r));
+                return r;
+        }
+
+        r = sd_bus_match_signal(
+                        client->api_bus,
+                        NULL,
+                        HIRTE_INTERFACE_BASE_NAME,
+                        METRICS_OBJECT_PATH,
+                        METRICS_INTERFACE,
+                        "StartUnitJobMetrics",
+                        match_start_unit_job_metrics_signal,
+                        client);
+        if (r < 0) {
+                fprintf(stderr, "Failed to add StartUnitJobMetrics api bus match: %s", strerror(-r));
+                return r;
+        }
+
+        r = sd_bus_match_signal(
+                        client->api_bus,
+                        NULL,
+                        HIRTE_INTERFACE_BASE_NAME,
+                        METRICS_OBJECT_PATH,
+                        METRICS_INTERFACE,
+                        "AgentJobMetrics",
+                        match_agent_job_metrics_signal,
+                        client);
+        if (r < 0) {
+                fprintf(stderr, "Failed to add AgentJobMetrics api bus match: %s", strerror(-r));
+                return r;
+        }
+
+        r = event_loop_add_shutdown_signals(event);
+        if (r < 0) {
+                fprintf(stderr, "Failed to add signals to agent event loop: %s", strerror(-r));
+                return r;
+        }
+
+        printf("Waiting for metrics signals...\n");
+        r = sd_event_loop(event);
+        if (r < 0) {
+                fprintf(stderr, "Starting event loop failed: %s", strerror(-r));
+                return r;
+        }
+
+        return r;
+}
+
 int client_call_manager(Client *client) {
         int r = 0;
 
@@ -335,6 +467,16 @@ int client_call_manager(Client *client) {
                         return -EINVAL;
                 }
                 r = method_monitor_units_on_nodes(client->api_bus, client->opargv[0], client->opargv[1]);
+        } else if (streq(client->op, "metrics")) {
+                if (client->opargc != 1) {
+                        return -EINVAL;
+                } else if (streq(client->opargv[0], "enable")) {
+                        method_metrics_toggle(client, "EnableMetrics");
+                } else if (streq(client->opargv[0], "disable")) {
+                        method_metrics_toggle(client, "DisableMetrics");
+                } else if (streq(client->opargv[0], "listen")) {
+                        method_metrics_listen(client);
+                }
         } else {
                 return -EINVAL;
         }
@@ -358,5 +500,9 @@ int print_client_usage(char *argv) {
         printf("    usage: reload nodename unitname\n");
         printf("  - restart: restarts a specific systemd service (or timer, or slice) on a specific node\n");
         printf("    usage: restart nodename unitname\n");
+        printf("  - metrics [enable|disable]: enables/disables metrics reporting\n");
+        printf("    usage: metrics [enable|disable]\n");
+        printf("  - metrics listen: listen and print incoming metrics reports\n");
+        printf("    usage: metrics listen\n");
         return 0;
 }

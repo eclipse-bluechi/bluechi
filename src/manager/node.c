@@ -1,9 +1,12 @@
 /* SPDX-License-Identifier: GPL-2.0-or-later */
 #include "libhirte/bus/utils.h"
+#include "libhirte/common/parse-util.h"
+#include "libhirte/common/time-util.h"
 #include "libhirte/log/log.h"
 
 #include "job.h"
 #include "manager.h"
+#include "metrics.h"
 #include "monitor.h"
 #include "node.h"
 #include "proxy_monitor.h"
@@ -786,6 +789,9 @@ void node_unset_agent_bus(Node *node) {
         sd_bus_slot_unrefp(&node->internal_manager_slot);
         node->internal_manager_slot = NULL;
 
+        sd_bus_slot_unrefp(&node->metrics_matching_slot);
+        node->metrics_matching_slot = NULL;
+
         sd_bus_unrefp(&node->agent_bus);
         node->agent_bus = NULL;
 
@@ -837,6 +843,10 @@ static int node_method_register(sd_bus_message *m, void *userdata, UNUSED sd_bus
         if (!node_set_agent_bus(named_node, agent_bus)) {
                 return sd_bus_reply_method_errorf(
                                 m, SD_BUS_ERROR_FAILED, "Internal error: Couldn't set agent bus");
+        }
+
+        if (manager->metrics_enabled) {
+                node_enable_metrics(named_node);
         }
 
         node_unset_agent_bus(node);
@@ -1373,6 +1383,7 @@ static int node_run_unit_lifecycle_method(
                 sd_bus_message *m, Node *node, const char *job_type, const char *method) {
         const char *unit = NULL;
         const char *mode = NULL;
+        uint64_t start_time = get_time_micros();
 
         int r = sd_bus_message_read(m, "ss", &unit, &mode);
         if (r < 0) {
@@ -1382,6 +1393,10 @@ static int node_run_unit_lifecycle_method(
         _cleanup_job_setup_ JobSetup *setup = job_setup_new(m, node, unit, job_type);
         if (setup == NULL) {
                 return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "Out of memory");
+        }
+
+        if (node->manager->metrics_enabled) {
+                setup->job->job_start_micros = start_time;
         }
 
         _cleanup_agent_request_ AgentRequest *req = NULL;
@@ -1455,9 +1470,11 @@ static int send_agent_simple_message(Node *node, const char *method, const char 
                 return r;
         }
 
-        r = sd_bus_message_append(m, "s", arg);
-        if (r < 0) {
-                return r;
+        if (arg != NULL) {
+                r = sd_bus_message_append(m, "s", arg);
+                if (r < 0) {
+                        return r;
+                }
         }
 
         return sd_bus_send(node->agent_bus, m, NULL);
@@ -1698,4 +1715,76 @@ int node_remove_proxy_dependency(Node *node, const char *unit_name) {
         }
 
         return 0;
+}
+
+int node_method_get_unit_uint64_property_sync(Node *node, char *unit, char *property, uint64_t *value) {
+        int r = 0;
+        _cleanup_sd_bus_message_ sd_bus_message *message = NULL;
+        sd_bus_error error = SD_BUS_ERROR_NULL;
+        r = sd_bus_call_method(
+                        node->agent_bus,
+                        HIRTE_AGENT_DBUS_NAME,
+                        INTERNAL_AGENT_OBJECT_PATH,
+                        INTERNAL_AGENT_INTERFACE,
+                        "GetUnitProperty",
+                        &error,
+                        &message,
+                        "sss",
+                        unit,
+                        "org.freedesktop.systemd1.Unit",
+                        property);
+        if (r < 0) {
+                hirte_log_errorf("Failed to issue GetUnitProperty call: %s", error.message);
+                sd_bus_error_free(&error);
+                return r;
+        }
+
+        r = sd_bus_message_enter_container(message, SD_BUS_TYPE_VARIANT, "t");
+        if (r < 0) {
+                hirte_log_errorf("Failed to parse response message: %s", strerror(-r));
+                return r;
+        }
+
+        r = sd_bus_message_read_basic(message, SD_BUS_TYPE_UINT64, value);
+        if (r < 0) {
+                hirte_log_errorf("Failed to parse response message: %s", strerror(-r));
+                return r;
+        }
+
+        r = sd_bus_message_exit_container(message);
+        if (r < 0) {
+                hirte_log_errorf("Failed to parse response message: %s", strerror(-r));
+                return r;
+        }
+
+        return 0;
+}
+
+void node_enable_metrics(Node *node) {
+        if (!node_has_agent(node)) {
+                return;
+        }
+
+        int r = send_agent_simple_message(node, "EnableMetrics", NULL);
+        if (r < 0) {
+                hirte_log_error("Failed to enable metrics on agent");
+        }
+
+        if (!metrics_node_signal_matching_register(node)) {
+                hirte_log_error("Failed to enable metrics on agent");
+        }
+}
+
+void node_disable_metrics(Node *node) {
+        if (!node_has_agent(node)) {
+                return;
+        }
+
+        int r = send_agent_simple_message(node, "DisableMetrics", NULL);
+        if (r < 0) {
+                hirte_log_error("Failed to disable metrics on agent");
+        }
+
+        sd_bus_slot_unrefp(&node->metrics_matching_slot);
+        node->metrics_matching_slot = NULL;
 }

@@ -22,6 +22,9 @@ struct Manager {
         sd_bus_slot *manager_slot;
         sd_bus_slot *filter_slot;
         sd_bus_slot *name_owner_changed_slot;
+        sd_bus_slot *metrics_slot;
+
+        bool metrics_enabled;
 
         int n_nodes;
         LIST_HEAD(Node, nodes);

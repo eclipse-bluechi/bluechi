@@ -60,11 +60,15 @@ struct Agent {
         char *orch_addr;
         char *api_bus_service_name;
 
+        bool metrics_enabled;
+
         sd_event *event;
 
         sd_bus *api_bus;
         sd_bus *systemd_dbus;
         sd_bus *peer_dbus;
+
+        sd_bus_slot *metrics_slot;
 
         LIST_HEAD(SystemdRequest, outstanding_requests);
         LIST_HEAD(JobTracker, tracked_jobs);
@@ -104,6 +108,8 @@ bool agent_stop(Agent *agent);
 bool agent_is_connected(Agent *agent);
 
 void agent_remove_proxy(Agent *agent, ProxyService *proxy, bool emit);
+
+int agent_send_job_metrics(Agent *agent, char *unit, char *method, uint64_t systemd_job_time);
 
 DEFINE_CLEANUP_FUNC(Agent, agent_unref)
 #define _cleanup_agent_ _cleanup_(agent_unrefp)

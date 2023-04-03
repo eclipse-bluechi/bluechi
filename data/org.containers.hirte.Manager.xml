@@ -15,6 +15,8 @@
     <method name="CreateMonitor">
       <arg name="monitor" type="o" direction="out" />
     </method>
+    <method name="EnableMetrics" />
+    <method name="DisableMetrics" />
 
     <signal name="JobNew">
       <arg name="id" type="u" />

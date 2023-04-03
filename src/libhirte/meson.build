@@ -15,6 +15,8 @@ libhirte_src = [
     'common/opt.h',
     'common/parse-util.c',
     'common/parse-util.h',
+    'common/time-util.c',
+    'common/time-util.h',
     'hashmap/hashmap.c',
     'hashmap/hashmap.h',
     'ini/ini.c',
