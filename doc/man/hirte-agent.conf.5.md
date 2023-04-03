@@ -92,6 +92,9 @@ LogLevel=DEBUG
 LogTarget=journald
 LogIsQuiet=false
 ```
+## FILES
+
+Distributions provide the __/usr/share/hirte-agent/config/hirte-default.conf__ file which defines hirte-agent configuration defaults. Administrators can copy this file to __/etc/hirte/agent.conf__ and specify their own configuration.
 
 ## SEE ALSO
 

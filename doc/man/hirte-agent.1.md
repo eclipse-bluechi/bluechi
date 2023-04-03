@@ -28,7 +28,7 @@ The host used by `hirte-agent` to connect to `hirte`. Must be a valid IPv4 or IP
 
 #### **--port**, **-p**
 
-The port on which `hirte` is listening for connection request and the `hirte-agent` is connecting to. This option will overwrite the port defined in the configuration file.
+The port on which `hirte` is listening for connection request and the `hirte-agent` is connecting to. This option will overwrite the port defined in the configuration file. (default: 842)
 
 #### **--address**, **-a**
 
@@ -45,7 +45,7 @@ The interval between two heartbeat signals sent to hirte in milliseconds. This o
 
 #### **--config**, **-c**
 
-Path to the configuration file, see `hirte-agent.conf(5)`.
+Path to the configuration file, see `hirte-agent.conf(5)`. (default: /etc/hirte/agent.conf)
 
 #### **--user**
 
