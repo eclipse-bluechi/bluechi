@@ -15,7 +15,6 @@ all: ${TARGETS:=.pp.bz2}
 clean:
 	rm -f *~  *.tc *.pp *.pp.bz2
 	rm -rf tmp *.tar.gz
-	rm -rf *8
 
 man: install-policy
 	sepolicy manpage --path . --domain ${TARGETS}_t
