@@ -13,6 +13,7 @@ BuildRequires: systemd-rpm-macros
 BuildRequires: golang-github-cpuguy83-md2man
 
 Requires: systemd
+Recommends: hirte-selinux
 
 %description
 Hirte is a systemd service controller for multi-nodes environements with a
@@ -49,10 +50,10 @@ This package contains the controller and command line tool.
 %{_unitdir}/hirte.service
 %{_unitdir}/hirte.socket
 
-
 %package agent
 Summary:  Hirte service controller agent
 Requires: systemd
+Recommends: hirte-selinux
 
 %description agent
 Hirte is a systemd service controller for multi-nodes environements with a
@@ -91,6 +92,30 @@ This package contains the node agent.
 %{_unitdir}/hirte-dep@.service
 %{_userunitdir}/hirte-dep@.service
 
+%package selinux
+Summary:  Hirte SELinux policy
+Requires(post): selinux-policy-targeted >= %_selinux_policy_version
+Requires(post): policycoreutils
+
+%description selinux
+SELinux policy associated with the hirte and hirte-agent daemons
+
+%files selinux
+%{_datadir}/selinux/devel/include/services/hirte.if
+
+%post selinux
+%selinux_modules_install -s %{selinuxtype} %{_datadir}/selinux/packages/hirte.pp.bz2
+restorecon -R %{_bindir}/hirte* &> /dev/null || :
+semanage port -a -t hirte_port_t -p udp 842 || true
+semanage port -a -t hirte_port_t -p tcp 842 || true
+
+%postun selinux
+if [ $1 -eq 0 ]; then
+   %selinux_modules_uninstall -s %{selinuxtype} hirte
+   semanage port -d -p udp 842 || true
+   semanage port -d -p tcp 842 || true
+   restorecon -R %{_bindir}/hirte* &> /dev/null || :
+fi
 
 %package ctl
 Summary:  Hirte service controller command line tool
