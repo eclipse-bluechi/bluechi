@@ -19,3 +19,10 @@ install_data(
   'hirte.if',
   install_dir : join_paths(get_option('datadir'), 'selinux', 'devel', 'include', 'services'),
 )
+
+install_data(
+  ['hirte_agent_selinux.8', 'hirte_selinux.8'],
+  install_dir : join_paths(get_option('mandir'), ('man8')),
+)
+
+
