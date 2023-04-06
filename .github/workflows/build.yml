@@ -29,10 +29,12 @@ jobs:
         run: |
           dnf install \
                   clang-tools-extra \
+                  codespell \
+                  bzip2 \
                   gcc \
                   meson \
+                  selinux-policy-devel \
                   systemd-devel \
-                  codespell \
                   valgrind \
               -y
 
@@ -61,7 +63,7 @@ jobs:
 
       - name: Running markdown lint
         uses: DavidAnson/markdownlint-cli2-action@v9
-      
+
       - name: Building hirte
         run: |
           make build
