@@ -94,7 +94,13 @@ This package contains the node agent.
 
 %package selinux
 Summary:  Hirte SELinux policy
-Requires(post): selinux-policy-targeted >= %_selinux_policy_version
+BuildRequires: checkpolicy
+BuildRequires: selinux-policy-devel
+
+%if "%{_selinux_policy_version}" != ""
+Requires: selinux-policy >= %{_selinux_policy_version}
+%endif
+
 Requires(post): policycoreutils
 
 %description selinux
@@ -102,6 +108,8 @@ SELinux policy associated with the hirte and hirte-agent daemons
 
 %files selinux
 %{_datadir}/selinux/devel/include/services/hirte.if
+%{_datadir}/selinux/packages/hirte.pp.bz2
+%{_mandir}/man8/hirte*selinux.*
 
 %post selinux
 %selinux_modules_install -s %{selinuxtype} %{_datadir}/selinux/packages/hirte.pp.bz2
