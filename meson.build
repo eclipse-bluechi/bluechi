@@ -51,6 +51,9 @@ subdir('src/libhirte')
 # Configuration files
 subdir('config')
 
+# selinux
+subdir('selinux')
+
 # build each binary
 subdir('src/manager')
 subdir('src/agent')
