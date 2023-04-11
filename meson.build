@@ -68,3 +68,11 @@ subdir('doc/man')
 
 # systemd unit files
 subdir('systemd-units')
+
+# add custom clang-tidy target since default auto-generated ninja target doesn't support passing compilation options
+# overrides the auto-generated ninja target clang-tidy
+clangtidy = find_program('clang-tidy', required : false)
+if clangtidy.found()
+  run_target('clang-tidy', command : ['build-scripts/clang-tidy-all.sh'])
+  run_target('clang-tidy-fix', command : ['build-scripts/clang-tidy-all.sh', '--fix'])
+endif

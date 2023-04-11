@@ -36,6 +36,7 @@ jobs:
                   selinux-policy-devel \
                   systemd-devel \
                   valgrind \
+                  git-all \
               -y
 
       - name: Checkout sources
@@ -49,14 +50,6 @@ jobs:
         run: |
           ./build-scripts/spdx-header-chech.sh
 
-      - name: Running source code format check
-        run: |
-          make check-fmt
-
-      - name: Running static analysis
-        run: |
-          make lint
-
       - name: Running codespell checker
         run: |
           make check-codespell
@@ -67,6 +60,14 @@ jobs:
       - name: Building hirte
         run: |
           make build
+
+      - name: Running source code format check
+        run: |
+          make check-fmt
+
+      - name: Running static analysis
+        run: |
+          make lint-c
 
       - name: Running unit tests
         run: |

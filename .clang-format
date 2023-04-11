@@ -118,6 +118,7 @@ PenaltyBreakString: 0
 PenaltyExcessCharacter: 10
 PenaltyReturnTypeOnItsOwnLine: 100
 PointerAlignment: Right
+SortIncludes: CaseSensitive
 SpaceAfterCStyleCast: true
 SpaceAroundPointerQualifiers: Both
 SpaceBeforeParens: ControlStatementsExceptForEachMacros
