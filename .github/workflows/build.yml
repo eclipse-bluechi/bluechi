@@ -36,7 +36,6 @@ jobs:
                   selinux-policy-devel \
                   systemd-devel \
                   valgrind \
-                  git-all \
               -y
 
       - name: Checkout sources
