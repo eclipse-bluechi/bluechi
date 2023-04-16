@@ -4,7 +4,9 @@
 source $(dirname "$(readlink -f "$0")")/build-srpm.sh
 
 # Install build dependencies
-dnf builddep -y rpmbuild/SRPMS/*src.rpm
+if [ "${SKIP_BUILDDEP}" != "yes" ]; then
+    dnf builddep -y rpmbuild/SRPMS/*src.rpm
+fi
 
 # Build binary package
 rpmbuild \
