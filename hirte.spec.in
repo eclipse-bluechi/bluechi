@@ -103,6 +103,8 @@ Requires: selinux-policy >= %{_selinux_policy_version}
 
 Requires(post): policycoreutils
 
+%global selinuxtype	targeted
+
 %description selinux
 SELinux policy associated with the hirte and hirte-agent daemons
 
