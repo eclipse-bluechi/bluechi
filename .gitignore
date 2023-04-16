@@ -2,3 +2,6 @@
 
 builddir
 tags
+
+hirte.spec
+rpmbuild/
