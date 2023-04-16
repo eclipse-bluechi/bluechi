@@ -18,7 +18,7 @@ sudo dnf config-manager --set-enabled crb
 #### Dependencies installation
 
 ```bash
-sudo dnf install clang-tools-extra gcc make meson systemd-devel
+sudo dnf install clang-tools-extra gcc make meson systemd-devel selinux-policy-devel
 ```
 
 [markdownlint-cli2](https://github.com/DavidAnson/markdownlint-cli2) can be used for static analysis of markdown files.
