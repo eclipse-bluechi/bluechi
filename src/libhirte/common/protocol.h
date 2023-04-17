@@ -94,3 +94,6 @@ char *get_hostname();
 // Application-level heartbeat set at 2 seconds.
 #define AGENT_HEARTBEAT_INTERVAL_MSEC (2000)
 #define AGENT_HEARTBEAT_SIGNAL_NAME "Heartbeat"
+
+/* Constants */
+#define SYMBOL_WILDCARD "*"

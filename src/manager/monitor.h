@@ -18,21 +18,31 @@ typedef int(unit_state_changed_handler_func_t)(
 typedef int(unit_removed_handler_func_t)(void *monitor, const char *node, const char *unit, const char *reason);
 
 
+struct SubscribedUnit {
+        char *name;
+        LIST_FIELDS(SubscribedUnit, units);
+};
+
 struct Subscription {
         int ref_count;
+        uint32_t id;
 
         void *monitor;
         free_func_t free_monitor;
 
         char *node;
-        char *unit;
+        LIST_HEAD(SubscribedUnit, subscribed_units);
 
         LIST_FIELDS(Subscription, subscriptions);     /* List in Monitor */
         LIST_FIELDS(Subscription, all_subscriptions); /* List in Manager */
 };
 
-Subscription *subscription_new(const char *node, const char *unit);
-Subscription *create_monitor_subscription(Monitor *monitor, const char *node, const char *unit);
+Subscription *subscription_new(const char *node);
+Subscription *create_monitor_subscription(Monitor *monitor, const char *node);
+
+bool subscription_add_unit(Subscription *sub, const char *unit);
+bool subscription_has_node_wildcard(Subscription *sub);
+
 Subscription *subscription_ref(Subscription *subscription);
 void subscription_unref(Subscription *subscription);
 

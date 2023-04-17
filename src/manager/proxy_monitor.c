@@ -7,8 +7,8 @@
 #include "node.h"
 #include "proxy_monitor.h"
 
-Subscription *create_proxy_monitor_subscription(ProxyMonitor *monitor, const char *node, const char *unit) {
-        Subscription *subscription = subscription_new(node, unit);
+Subscription *create_proxy_monitor_subscription(ProxyMonitor *monitor, const char *node) {
+        Subscription *subscription = subscription_new(node);
         if (subscription == NULL) {
                 return NULL;
         }
@@ -39,8 +39,12 @@ ProxyMonitor *proxy_monitor_new(
                 return NULL;
         }
 
-        monitor->subscription = create_proxy_monitor_subscription(monitor, target_node_name, unit_name);
+        monitor->subscription = create_proxy_monitor_subscription(monitor, target_node_name);
         if (monitor->subscription == NULL) {
+                return NULL;
+        }
+
+        if (!subscription_add_unit(monitor->subscription, unit_name)) {
                 return NULL;
         }
 

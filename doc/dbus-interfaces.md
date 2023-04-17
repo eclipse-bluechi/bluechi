@@ -76,15 +76,23 @@ Object path: `/org/containers/hirte/monitor/$id`
 
     Stop monitoring and delete the Monitor object, removing any outstanding subscriptions.
 
-  * `Subscribe(in node s, in unit s)`
+  * `Subscribe(in node s, in unit s, out id u)`
 
-    Subscribe to changes in properties of a given unit on a given node, or all nodes if the node name is empty. This
-    will emit the signal `UnitChanged` for all matching units in the system, and then again whenever one of the
-    properties of the unit changes.
+    Subscribe to changes in properties of a given unit on a given node. Passing a wildcard `*` to either `node` or
+    `unit` will subscribe to all nodes or all units on the given node. This will emit the signal `UnitChanged` for all
+    matching units in the system, and then again whenever one of the properties of the unit changes. Returns an
+    identifier `id` used for a subsequent `Unsubscribe`.
 
-  * `Unsubscribe(in node s, in unit s)`
+  * `Unsubscribe(in id u)`
 
     Remove an earlier added subscription.
+
+  * `SubscribeList(in targets a(ss))`
+
+    Subscribe to changes in properties of the given targets, consisting of node-unit-pairs. A wildcard `*` can be used
+    to subscribe to changes on all nodes or all units on the given node. This will emit the signal `UnitChanged`
+    for all matching units in the system, and then again whenever one of the properties of the unit changes. Returns an
+    identifier `id` used for a subsequent `Unsubscribe`.
 
 * Signals:
 

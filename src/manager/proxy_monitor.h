@@ -27,7 +27,7 @@ struct ProxyMonitor {
         LIST_FIELDS(ProxyMonitor, monitors);
 };
 
-Subscription *create_proxy_monitor_subscription(ProxyMonitor *monitor, const char *node, const char *unit);
+Subscription *create_proxy_monitor_subscription(ProxyMonitor *monitor, const char *node);
 
 ProxyMonitor *proxy_monitor_new(
                 Node *node, const char *target_node_name, const char *unit_name, const char *proxy_object_path);

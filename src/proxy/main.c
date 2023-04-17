@@ -39,7 +39,7 @@ static void usage(char *argv[]) {
                OPT_OPERATION_REMOVE);
 }
 
-int parse_node_unit_opt(const char *opt_node_unit, UNUSED char **ret_node_name, UNUSED char **ret_unit_name) {
+int parse_node_unit_opt(const char *opt_node_unit, char **ret_node_name, char **ret_unit_name) {
         if (opt_node_unit == NULL || ret_node_name == NULL || ret_unit_name == NULL) {
                 return -EINVAL;
         }
