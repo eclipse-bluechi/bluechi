@@ -6,31 +6,30 @@
 #include "monitor.h"
 #include "node.h"
 
-Subscription *subscription_new(const char *node, const char *unit) {
+Subscription *subscription_new(const char *node) {
+        static uint32_t next_id = 0;
+
         _cleanup_subscription_ Subscription *subscription = malloc0(sizeof(Subscription));
         if (subscription == NULL) {
                 return NULL;
         }
 
         subscription->ref_count = 1;
+        subscription->id = ++next_id;
         LIST_INIT(subscriptions, subscription);
         LIST_INIT(all_subscriptions, subscription);
+        LIST_HEAD_INIT(subscription->subscribed_units);
 
         subscription->node = strdup(node);
         if (subscription->node == NULL) {
                 return NULL;
         }
 
-        subscription->unit = strdup(unit);
-        if (subscription->unit == NULL) {
-                return NULL;
-        }
-
         return steal_pointer(&subscription);
 }
 
-Subscription *create_monitor_subscription(Monitor *monitor, const char *node, const char *unit) {
-        Subscription *subscription = subscription_new(node, unit);
+Subscription *create_monitor_subscription(Monitor *monitor, const char *node) {
+        Subscription *subscription = subscription_new(node);
         if (subscription == NULL) {
                 return NULL;
         }
@@ -39,6 +38,27 @@ Subscription *create_monitor_subscription(Monitor *monitor, const char *node, co
         subscription->free_monitor = (free_func_t) monitor_unref;
 
         return subscription;
+}
+
+bool subscription_add_unit(Subscription *sub, const char *unit) {
+        char *unit_copy = NULL;
+        if (!copy_str(&unit_copy, unit)) {
+                return false;
+        }
+
+        SubscribedUnit *su = malloc0(sizeof(SubscribedUnit));
+        if (su == NULL) {
+                free(unit_copy);
+                return false;
+        }
+        su->name = unit_copy;
+        LIST_APPEND(units, sub->subscribed_units, su);
+
+        return true;
+}
+
+bool subscription_has_node_wildcard(Subscription *sub) {
+        return sub->node != NULL && streq(sub->node, SYMBOL_WILDCARD);
 }
 
 Subscription *subscription_ref(Subscription *subscription) {
@@ -55,7 +75,15 @@ void subscription_unref(Subscription *subscription) {
         if (subscription->free_monitor) {
                 subscription->free_monitor(subscription->monitor);
         }
-        free(subscription->unit);
+
+        SubscribedUnit *su = NULL;
+        SubscribedUnit *next_su = NULL;
+        LIST_FOREACH_SAFE(units, su, next_su, subscription->subscribed_units) {
+                LIST_REMOVE(units, subscription->subscribed_units, su);
+                free(su->name);
+                free(su);
+        }
+
         free(subscription->node);
         free(subscription);
 }
@@ -67,12 +95,14 @@ void subscription_unref(Subscription *subscription) {
 
 static int monitor_method_close(sd_bus_message *m, void *userdata, sd_bus_error *ret_error);
 static int monitor_method_subscribe(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error);
+static int monitor_method_subscribe_list(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error);
 static int monitor_method_unsubscribe(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error);
 
 static const sd_bus_vtable monitor_vtable[] = {
         SD_BUS_VTABLE_START(0),
-        SD_BUS_METHOD("Subscribe", "ss", "", monitor_method_subscribe, 0),
-        SD_BUS_METHOD("Unsubscribe", "ss", "", monitor_method_unsubscribe, 0),
+        SD_BUS_METHOD("Subscribe", "ss", "u", monitor_method_subscribe, 0),
+        SD_BUS_METHOD("SubscribeList", "sas", "u", monitor_method_subscribe_list, 0),
+        SD_BUS_METHOD("Unsubscribe", "u", "", monitor_method_unsubscribe, 0),
         SD_BUS_METHOD("Close", "", "", monitor_method_close, 0),
         SD_BUS_SIGNAL_WITH_NAMES(
                         "UnitPropertiesChanged",
@@ -202,30 +232,99 @@ static int monitor_method_subscribe(sd_bus_message *m, void *userdata, UNUSED sd
 
         int r = sd_bus_message_read(m, "ss", &node, &unit);
         if (r < 0) {
-                return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_INVALID_ARGS, "Invalid arguments");
+                return sd_bus_reply_method_errorf(
+                                m, SD_BUS_ERROR_INVALID_ARGS, "Invalid arguments: %s", strerror(-r));
         }
 
-        _cleanup_subscription_ Subscription *sub = create_monitor_subscription(monitor, node, unit);
+        _cleanup_subscription_ Subscription *sub = create_monitor_subscription(monitor, node);
         if (sub == NULL) {
-                return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "Internal error");
+                return sd_bus_reply_method_errorf(
+                                m,
+                                SD_BUS_ERROR_FAILED,
+                                "Internal error when creating subscription: %s",
+                                strerror(-r));
+        }
+
+        if (!subscription_add_unit(sub, unit)) {
+                return sd_bus_reply_method_errorf(
+                                m, SD_BUS_ERROR_FAILED, "Internal error when adding unit to subscription");
         }
 
         LIST_APPEND(subscriptions, monitor->subscriptions, subscription_ref(sub));
-
         manager_add_subscription(manager, sub);
 
-        return sd_bus_reply_method_return(m, "");
+        return sd_bus_reply_method_return(m, "u", sub->id);
+}
+
+/*************************************************************************
+ **************** org.containers.hirte.Monitor.SubscribeList *************
+ ************************************************************************/
+
+static int monitor_method_subscribe_list(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error) {
+        Monitor *monitor = userdata;
+        Manager *manager = monitor->manager;
+
+        const char *node = NULL;
+        int r = sd_bus_message_read(m, "s", &node);
+        if (r < 0) {
+                return sd_bus_reply_method_errorf(
+                                m, SD_BUS_ERROR_INVALID_ARGS, "Invalid arguments: %s", strerror(-r));
+        }
+
+        _cleanup_subscription_ Subscription *sub = create_monitor_subscription(monitor, node);
+        if (sub == NULL) {
+                return sd_bus_reply_method_errorf(
+                                m,
+                                SD_BUS_ERROR_FAILED,
+                                "Internal error when creating subscription: %s",
+                                strerror(-r));
+        }
+
+        r = sd_bus_message_enter_container(m, SD_BUS_TYPE_ARRAY, "s");
+        if (r < 0) {
+                return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_INVALID_ARGS, "Invalid arguments");
+        }
+
+        while (sd_bus_message_at_end(m, false) == 0) {
+                const char *unit = NULL;
+                r = sd_bus_message_read(m, "s", &unit);
+                if (r < 0) {
+                        return sd_bus_reply_method_errorf(
+                                        m,
+                                        SD_BUS_ERROR_INVALID_ARGS,
+                                        "Invalid arguments for units: %s",
+                                        strerror(-r));
+                }
+
+                if (!subscription_add_unit(sub, unit)) {
+                        return sd_bus_reply_method_errorf(
+                                        m,
+                                        SD_BUS_ERROR_FAILED,
+                                        "Internal error when adding unit '%s' to subscription",
+                                        unit);
+                }
+        }
+
+        r = sd_bus_message_exit_container(m);
+        if (r < 0) {
+                return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "Internal error: %s", strerror(-r));
+        }
+
+        LIST_APPEND(subscriptions, monitor->subscriptions, subscription_ref(sub));
+        manager_add_subscription(manager, sub);
+
+        return sd_bus_reply_method_return(m, "u", sub->id);
 }
 
 /*************************************************************************
  **************** org.containers.hirte.Monitor.Unsubscribe ***************
  ************************************************************************/
 
-static Subscription *monitor_find_subscription(Monitor *monitor, const char *node, const char *unit) {
+static Subscription *monitor_find_subscription(Monitor *monitor, uint32_t sub_id) {
         Subscription *sub = NULL;
-
-        LIST_FOREACH(subscriptions, sub, monitor->subscriptions) {
-                if (streq(sub->node, node) && streq(sub->unit, unit)) {
+        Subscription *next_sub = NULL;
+        LIST_FOREACH_SAFE(subscriptions, sub, next_sub, monitor->subscriptions) {
+                if (sub->id == sub_id) {
                         return sub;
                 }
         }
@@ -236,18 +335,17 @@ static Subscription *monitor_find_subscription(Monitor *monitor, const char *nod
 static int monitor_method_unsubscribe(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error) {
         Monitor *monitor = userdata;
         Manager *manager = monitor->manager;
-        const char *node = NULL;
-        const char *unit = NULL;
+        const uint32_t sub_id = 0;
 
-        int r = sd_bus_message_read(m, "ss", &node, &unit);
+        int r = sd_bus_message_read(m, "u", &sub_id);
         if (r < 0) {
-                return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_INVALID_ARGS, "Invalid arguments");
+                return sd_bus_reply_method_errorf(
+                                m, SD_BUS_ERROR_INVALID_ARGS, "Invalid arguments: %s", strerror(-r));
         }
 
-        Subscription *sub = monitor_find_subscription(monitor, node, unit);
+        Subscription *sub = monitor_find_subscription(monitor, sub_id);
         if (sub == NULL) {
-                return sd_bus_reply_method_errorf(
-                                m, HIRTE_BUS_ERROR_NO_SUCH_SUBSCRIPTION, "No such subscription");
+                return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "Internal error: %s", strerror(-r));
         }
 
         manager_remove_subscription(manager, sub);

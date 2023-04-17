@@ -109,34 +109,36 @@ void manager_unref(Manager *manager) {
 void manager_add_subscription(Manager *manager, Subscription *sub) {
         Node *node = NULL;
 
-        if (*sub->node == 0) {
+        LIST_APPEND(all_subscriptions, manager->all_subscriptions, subscription_ref(sub));
+
+        if (subscription_has_node_wildcard(sub)) {
                 LIST_FOREACH(nodes, node, manager->nodes) {
                         node_subscribe(node, sub);
                 }
-        } else {
-                node = manager_find_node(manager, sub->node);
-                if (node) {
-                        node_subscribe(node, sub);
-                } else {
-                        hirte_log_errorf("Warning: Subscription to non-existing node %s", sub->node);
-                }
+                return;
         }
 
-        LIST_APPEND(all_subscriptions, manager->all_subscriptions, subscription_ref(sub));
+        node = manager_find_node(manager, sub->node);
+        if (node) {
+                node_subscribe(node, sub);
+        } else {
+                hirte_log_errorf("Warning: Subscription to non-existing node %s", sub->node);
+        }
 }
 
 void manager_remove_subscription(Manager *manager, Subscription *sub) {
         Node *node = NULL;
 
-        if (*sub->node == 0) {
+        if (subscription_has_node_wildcard(sub)) {
                 LIST_FOREACH(nodes, node, manager->nodes) {
                         node_unsubscribe(node, sub);
                 }
-        } else {
-                node = manager_find_node(manager, sub->node);
-                if (node) {
-                        node_unsubscribe(node, sub);
-                }
+                return;
+        }
+
+        node = manager_find_node(manager, sub->node);
+        if (node) {
+                node_unsubscribe(node, sub);
         }
 
         LIST_REMOVE(all_subscriptions, manager->all_subscriptions, sub);
@@ -900,7 +902,7 @@ bool manager_start(Manager *manager) {
         return true;
 }
 
-bool manager_stop(UNUSED Manager *manager) {
+bool manager_stop(Manager *manager) {
         if (manager == NULL) {
                 return false;
         }

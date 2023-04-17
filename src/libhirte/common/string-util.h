@@ -5,6 +5,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "protocol.h"
+
 #define streq(a, b) (strcmp((a), (b)) == 0)
 #define strneq(a, b, n) (strncmp((a), (b), (n)) == 0)
 
@@ -41,4 +43,8 @@ static inline bool copy_str(char **p, const char *s) {
         free(*p);
         *p = dup;
         return true;
+}
+
+static inline bool is_wildcard(const char *in) {
+        return streq(in, SYMBOL_WILDCARD);
 }

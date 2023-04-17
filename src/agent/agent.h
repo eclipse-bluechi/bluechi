@@ -67,12 +67,11 @@ struct Agent {
         sd_bus *peer_dbus;
 
         LIST_HEAD(SystemdRequest, outstanding_requests);
-
         LIST_HEAD(JobTracker, tracked_jobs);
-
         LIST_HEAD(ProxyService, proxy_services);
 
         struct hashmap *unit_infos;
+        bool wildcard_subscription_active;
 
         struct config *config;
 };

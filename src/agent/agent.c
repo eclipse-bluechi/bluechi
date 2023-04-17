@@ -335,8 +335,9 @@ Agent *agent_new(void) {
 
         agent->connection_state = AGENT_CONNECTION_STATE_DISCONNECTED;
         agent->connection_retry_count = 0;
-
+        agent->wildcard_subscription_active = false;
         agent->name = get_hostname();
+
         return steal_pointer(&agent);
 }
 
@@ -1043,6 +1044,19 @@ static int agent_method_subscribe(sd_bus_message *m, void *userdata, UNUSED sd_b
                 return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_INVALID_ARGS, "Invalid arguments");
         }
 
+        if (is_wildcard(unit)) {
+                if (agent->wildcard_subscription_active) {
+                        return sd_bus_reply_method_errorf(
+                                        m, SD_BUS_ERROR_FAILED, "Already wildcard subscribed");
+                }
+                agent->wildcard_subscription_active = true;
+
+                AgentUnitInfo info = { NULL, (char *) unit, true, true, -1, NULL };
+                agent_emit_unit_new(agent, &info, "virtual");
+
+                return sd_bus_reply_method_return(m, "");
+        }
+
         AgentUnitInfo *info = agent_ensure_unit_info(agent, unit);
         if (info == NULL) {
                 return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "Internal error");
@@ -1076,6 +1090,15 @@ static int agent_method_unsubscribe(sd_bus_message *m, void *userdata, UNUSED sd
         int r = sd_bus_message_read(m, "s", &unit);
         if (r < 0) {
                 return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_INVALID_ARGS, "Invalid arguments");
+        }
+
+        if (is_wildcard(unit)) {
+                if (!agent->wildcard_subscription_active) {
+                        return sd_bus_reply_method_errorf(
+                                        m, SD_BUS_ERROR_FAILED, "No wildcard subscription active");
+                }
+                agent->wildcard_subscription_active = false;
+                return sd_bus_reply_method_return(m, "");
         }
 
         _cleanup_free_ char *path = make_unit_path(unit);
@@ -1440,12 +1463,12 @@ static int agent_match_unit_changed(sd_bus_message *m, void *userdata, UNUSED sd
 
         if (streq(interface, "org.freedesktop.systemd1.Unit")) {
                 bool state_changed = unit_info_update_state(info, m);
-                if (state_changed && info->subscribed) {
+                if (state_changed && (info->subscribed || agent->wildcard_subscription_active)) {
                         agent_emit_unit_state_changed(agent, info, "real");
                 }
         }
 
-        if (!info->subscribed) {
+        if (!info->subscribed && !agent->wildcard_subscription_active) {
                 return 0;
         }
 
@@ -1508,7 +1531,7 @@ static int agent_match_unit_new(sd_bus_message *m, void *userdata, UNUSED sd_bus
         info->active_state = UNIT_INACTIVE;
         info->substate = strdup("dead");
 
-        if (info->subscribed) {
+        if (info->subscribed || agent->wildcard_subscription_active) {
                 /* Forward the event */
                 agent_emit_unit_new(agent, info, "real");
         }
@@ -1536,7 +1559,7 @@ static int agent_match_unit_removed(sd_bus_message *m, void *userdata, UNUSED sd
         free(info->substate);
         info->substate = NULL;
 
-        if (info->subscribed) {
+        if (info->subscribed || agent->wildcard_subscription_active) {
                 /* Forward the event */
                 agent_emit_unit_removed(agent, info);
         }

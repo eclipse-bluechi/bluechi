@@ -21,7 +21,7 @@ if len(sys.argv) < 2:
     sys.exit(1)
 
 unit_name = sys.argv[1]
-node_name = "" # Match all
+node_name = "*" # Match all
 
 if len(sys.argv) > 2:
     node_name = sys.argv[2]
