@@ -1,7 +1,7 @@
 /* SPDX-License-Identifier: GPL-2.0-or-later */
 #pragma once
 
-#include "errno.h"
+#include <errno.h>
 
 #define HIRTE_DEFAULT_PORT 842
 #define HIRTE_DEFAULT_HOST "127.0.0.1"
