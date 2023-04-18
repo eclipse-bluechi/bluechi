@@ -86,6 +86,8 @@ typedef enum UnitActiveState {
 const char *active_state_to_string(UnitActiveState s);
 UnitActiveState active_state_from_string(const char *s);
 
+char *get_hostname();
+
 /* Agent to Hirte heartbeat signals */
 
 // Application-level heartbeat set at 2 seconds.

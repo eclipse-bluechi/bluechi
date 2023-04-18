@@ -20,8 +20,7 @@ by `hirte-agent`.
 
 #### **NodeName** (string)
 
-The unique name of this agent. The option doesn't have a default value, it's mandatory to set this option for each
-`hirte-agent`.
+The unique name of this agent. The option defaults to the system's hostname.
 
 #### **ManagerAddress** (string)
 
