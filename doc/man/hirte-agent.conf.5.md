@@ -31,8 +31,7 @@ options. The option doesn't have a default value.
 
 #### **ManagerHost** (string)
 
-The host used by `hirte-agent` to connect to `hirte`. Must be a valid IPv4 or IPv6. The option doesn't have a default
-value, it's mandatory to set this option for each hirte-agent.
+The host used by `hirte-agent` to connect to `hirte`. Must be a valid IPv4 or IPv6. ManagerHost defaults to localhost 127.0.0.1. It's mandatory to set this field if the hirte agent is on a remote system.
 
 #### **ManagerPort** (uint16_t)
 
