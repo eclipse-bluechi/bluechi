@@ -47,6 +47,8 @@ kernel_dgram_send(hirte_t)
 logging_send_syslog_msg(hirte_t)
 logging_read_syslog_pid(hirte_t)
 
+allow haproxy_t hirte_t:unix_stream_socket connectto;
+
 ########################################
 #
 # hirte_agent local policy
