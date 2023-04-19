@@ -9,7 +9,7 @@
   </policy>
 
   <policy context="default">
-    <deny send_destination="org.freedesktop.systemd1"/>
+    <deny send_destination="org.containers.hirte.Agent"/>
 
     <!-- Completely open to anyone: org.freedesktop.DBus.* introspaction  -->
     <allow send_destination="org.containers.hirte.Agent"
