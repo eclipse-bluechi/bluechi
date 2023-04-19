@@ -4,6 +4,7 @@
 #include "libhirte/bus/utils.h"
 #include "libhirte/common/common.h"
 
+#include "method_monitor.h"
 #include "printer.h"
 #include "types.h"
 
