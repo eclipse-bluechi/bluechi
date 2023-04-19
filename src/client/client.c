@@ -1,8 +1,10 @@
 /* SPDX-License-Identifier: GPL-2.0-or-later */
 #include <errno.h>
 
-#include "client.h"
 #include "libhirte/bus/utils.h"
+#include "libhirte/service/shutdown.h"
+
+#include "client.h"
 
 int fetch_unit_list(
                 Client *client,
@@ -296,7 +298,7 @@ int client_call_manager(Client *client) {
         r = sd_bus_open_system(&(client->api_bus));
 #endif
         if (r < 0) {
-                fprintf(stderr, "Failed to connect to system bus: %s\n", strerror(-r));
+                fprintf(stderr, "Failed to connect to api bus: %s\n", strerror(-r));
                 return r;
         }
 
@@ -328,6 +330,11 @@ int client_call_manager(Client *client) {
                         return -EINVAL;
                 }
                 r = method_lifecycle_action_on(client, client->opargv[0], client->opargv[1], "ReloadUnit");
+        } else if (streq(client->op, "monitor")) {
+                if (client->opargc != 2) {
+                        return -EINVAL;
+                }
+                r = method_monitor_units_on_nodes(client->api_bus, client->opargv[0], client->opargv[1]);
         } else {
                 return -EINVAL;
         }

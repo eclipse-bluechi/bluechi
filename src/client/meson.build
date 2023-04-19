@@ -5,7 +5,8 @@
 client_src = [
   'main.c',
   'client.c',
-  'printer.c'
+  'printer.c',
+  'method_monitor.c'
 ]
 
 executable(
