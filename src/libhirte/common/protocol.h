@@ -4,6 +4,7 @@
 #include "errno.h"
 
 #define HIRTE_DEFAULT_PORT 842
+#define HIRTE_DEFAULT_HOST "127.0.0.1"
 
 #define HIRTE_DBUS_NAME "org.containers.hirte"
 #define HIRTE_AGENT_DBUS_NAME "org.containers.hirte.Agent"
