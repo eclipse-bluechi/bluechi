@@ -100,6 +100,7 @@ void manager_unref(Manager *manager) {
 
         if (manager->config) {
                 cfg_dispose(manager->config);
+                manager->config = NULL;
         }
 
         free(manager);
@@ -283,6 +284,7 @@ bool manager_parse_config(Manager *manager, const char *configfile) {
                         manager->config, CFG_HIRTE_DEFAULT_CONFIG, CFG_ETC_HIRTE_CONF, CFG_ETC_HIRTE_CONF_DIR);
         if (result != 0) {
                 cfg_dispose(manager->config);
+                manager->config = NULL;
                 return false;
         }
 
