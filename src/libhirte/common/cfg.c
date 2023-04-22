@@ -169,17 +169,32 @@ int cfg_load_from_dir(struct config *config, const char *custom_config_directory
                 return -errno;
         }
 
+        int r = 0;
+        /* load each conf.d file and on any error exit loop and clean-up afterwards */
         for (int i = 0; i < number_of_files; i++) {
                 char *file_name = all_files_in_dir[i]->d_name;
-                int r = cfg_load_from_file(config, file_name);
+
+                _cleanup_free_ char *file = NULL;
+                r = asprintf(&file, "%s/%s", custom_config_directory, file_name);
                 if (r < 0) {
-                        fprintf(stderr, "Error loading confd file '%s': '%s'.\n", file_name, strerror(-r));
-                        return r;
+                        r = -ENOMEM;
+                        break;
                 }
+
+                r = cfg_load_from_file(config, file);
+                if (r < 0) {
+                        fprintf(stderr, "Error loading confd file '%s': '%s'.\n", file, strerror(-r));
+                        break;
+                }
+        }
+
+        /* free allocated memory */
+        for (int i = 0; i < number_of_files; i++) {
                 free(all_files_in_dir[i]);
         }
         free(all_files_in_dir);
-        return 0;
+
+        return r;
 }
 
 int cfg_load_from_env(struct config *config) {
