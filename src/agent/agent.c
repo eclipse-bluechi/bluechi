@@ -423,6 +423,7 @@ void agent_unref(Agent *agent) {
 
         if (agent->config) {
                 cfg_dispose(agent->config);
+                agent->config = NULL;
         }
         free(agent);
 }
@@ -481,8 +482,6 @@ bool agent_parse_config(Agent *agent, const char *configfile) {
                         CFG_ETC_HIRTE_AGENT_CONF,
                         CFG_ETC_AGENT_CONF_DIR);
         if (result != 0) {
-                cfg_dispose(agent->config);
-                agent->config = NULL;
                 return false;
         }
 
