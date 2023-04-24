@@ -336,6 +336,7 @@ Agent *agent_new(void) {
         agent->connection_state = AGENT_CONNECTION_STATE_DISCONNECTED;
         agent->connection_retry_count = 0;
 
+        agent->name = get_hostname();
         return steal_pointer(&agent);
 }
 
