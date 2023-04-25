@@ -8,107 +8,52 @@ jobs:
   test:
     name: cs9 x86_64 e2e
     runs-on: ubuntu-latest
-    env:
-      ARTIFACTS_DIR: exported-artifacts
-      LOGS_DIR: exported-logs
     steps:
+      - name: Install Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
       - name: Install dependencies
         run: |
-          sudo apt-get -y install podman
+          sudo apt-get update
+          sudo apt-get install \
+                  genisoimage \
+                  libkrb5-dev \
+                  libvirt-daemon-system \
+                  libvirt-dev \
+                  pkg-config \
+                  podman \
+                  qemu-kvm \
+              -y
 
-      - name: Checkout sources
+      - name: Install unpackaged python libraries from PyPi
+        run: |
+          pip install "tmt[provision]" "tmt[report-junit]" podman pytest
+
+      - name: Checkout hirte-tests sources
         uses: actions/checkout@v3
         with:
+          repository: 'mwperina/hirte-tests'
+          path: 'hirte-tests'
           fetch-depth: 0
-          # Use githash of a tested commit instead of merge commit
-          ref: ${{ github.event.pull_request.head.sha }}
 
       - name: Download artifact
         uses: actions/download-artifact@v3
         with:
           name: rpm-artifacts
-          path: ${{ env.ARTIFACTS_DIR}}
+          path: 'hirte-tests/hirte-rpms'
 
-      - name: build hirte tests containers
+      - name: Run integration tests
         run: |
-          podman build -f tests/Containerfile -t hirte-image .
-
-      - name: run hirte containers
-        run: |
-          podman run -d --net podman --rm -p 8420:8420 --name hirte-mgr \
-          $(podman images *hirte-image --format {{.ID}})
-          podman run -d --net podman --rm --name hirte-node-bar \
-          $(podman images *hirte-image --format {{.ID}})
-          podman run -d --net podman --rm --name hirte-node-foo \
-          $(podman images *hirte-image --format {{.ID}})
-          PODMAN_NET=$(hostname -I | awk '{print $1}')
-          echo "PODMAN_NET=$PODMAN_NET" >> $GITHUB_ENV
-
-      - name: run hirte manager
-        run: |
-          podman exec -it hirte-mgr \
-               bash -c   "sed -i \"s/\(AllowedNodeNames=\)\(.*\)/\1foo,bar/\" /etc/hirte/hirte.conf"
-          podman exec -it hirte-mgr \
-               bash -c "cat >> /etc/hirte/hirte.conf << _EOF
-          ManagerPort=8420
-          LogLevel=DEBUG
-          _EOF"
-          podman exec -it hirte-mgr \
-               bash -c "systemctl start hirte.service"
-
-      - name: run hirte agent-bar
-        run: |
-          podman exec -it hirte-node-bar bash -c \
-               "sed -i \"s/\(ManagerHost=\)\(.*\)/\1${{ env.PODMAN_NET }}/\" /etc/hirte/agent.conf"
-          podman exec -it hirte-node-bar \
-               bash -c "sed -i \"s/\(NodeName=\)\(.*\)/\1bar/\" /etc/hirte/agent.conf"
-          podman exec -it hirte-node-bar \
-               bash -c "cat >> /etc/hirte/agent.conf << _EOF
-          ManagerPort=8420
-          LogLevel=DEBUG
-          _EOF"
-          podman exec -d hirte-node-bar \
-               bash -c "systemctl start hirte-agent.service"
-          podman exec -it hirte-node-bar \
-               bash -c "journalctl -b | grep \"Connected to manager as 'bar'\""
-
-      - name: run hirte agent-foo
-        run: |
-          podman exec -it hirte-node-foo bash -c \
-               "sed -i \"s/\(ManagerHost=\)\(.*\)/\1${{ env.PODMAN_NET }}/\" /etc/hirte/agent.conf"
-          podman exec -it hirte-node-foo \
-               bash -c "sed -i \"s/\(NodeName=\)\(.*\)/\1foo/\" /etc/hirte/agent.conf"
-          podman exec -it hirte-node-foo \
-               bash -c "cat >> /etc/hirte/agent.conf << _EOF
-          ManagerPort=8420
-          LogLevel=DEBUG
-          _EOF"
-          podman exec -d hirte-node-foo \
-               bash -c "systemctl start hirte-agent.service"
-          podman exec -it hirte-node-foo \
-               bash -c "journalctl -b | grep \"Connected to manager as 'foo'\""
-
-      - name: Download logs from containers
-        if: always()
-        run: |
-          mkdir -p ${{ env.LOGS_DIR }}
-          podman exec -it hirte-mgr \
-               bash -c 'journalctl --no-pager > /tmp/hirte-mgr.log'
-          podman cp hirte-mgr:/tmp/hirte-mgr.log ${{ env.LOGS_DIR }}
-
-          podman exec -it hirte-node-bar \
-               bash -c 'journalctl --no-pager > /tmp/hirte-node-bar.log'
-          podman cp hirte-node-bar:/tmp/hirte-node-bar.log ${{ env.LOGS_DIR }}
-
-          podman exec -it hirte-node-foo \
-               bash -c 'journalctl --no-pager > /tmp/hirte-node-foo.log'
-          podman cp hirte-node-foo:/tmp/hirte-node-foo.log ${{ env.LOGS_DIR }}
+          cd hirte-tests
+          tmt run -eCONTAINER_USED=container-hirte-local
 
       - name: Export logs from containers
         if: always()
         uses: actions/upload-artifact@v3
         with:
           name: test-logs
-          path: ${{ env.LOGS_DIR }}
+          path: '/var/tmp/tmt'
 
 
