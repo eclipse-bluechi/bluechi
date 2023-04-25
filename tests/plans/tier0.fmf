@@ -1,0 +1,20 @@
+summary: Basic functionality tests - tier0
+discover:
+    how: fmf
+    filter: tier:0
+provision:
+    how: local
+environment:
+    CONTAINER_USED: container-hirte-snapshot
+    HIRTE_IMAGE_NAME: hirte-image
+    TEST_NET_RANGE: 10.10.0.0/24
+    MGR_PORT: 8420
+prepare:
+  - name: Set containers setup
+    how: shell
+    script: |
+        bash ./scripts/tests-setup.sh
+execute:
+    how: tmt
+report:
+    how: junit
