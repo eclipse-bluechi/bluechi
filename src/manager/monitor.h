@@ -24,11 +24,6 @@ struct Subscription {
         void *monitor;
         free_func_t free_monitor;
 
-        unit_new_handler_func_t *handle_unit_new;
-        unit_removed_handler_func_t *handle_unit_removed;
-        unit_state_changed_handler_func_t *handle_unit_state_changed;
-        unit_property_changed_handler_func_t *handle_unit_property_changed;
-
         char *node;
         char *unit;
 
@@ -53,6 +48,11 @@ struct Monitor {
 
         sd_bus_slot *export_slot;
         char *object_path;
+
+        unit_new_handler_func_t *handle_unit_new;
+        unit_removed_handler_func_t *handle_unit_removed;
+        unit_state_changed_handler_func_t *handle_unit_state_changed;
+        unit_property_changed_handler_func_t *handle_unit_property_changed;
 
         LIST_HEAD(Subscription, subscriptions);
 
