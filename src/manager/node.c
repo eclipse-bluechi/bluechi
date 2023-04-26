@@ -260,9 +260,7 @@ static int node_match_unit_properties_changed(sd_bus_message *m, void *userdata,
         }
 
         const UnitSubscriptionsKey key = { (char *) unit };
-        UnitSubscriptions *usubs = NULL;
-
-        usubs = hashmap_get(node->unit_subscriptions, &key);
+        UnitSubscriptions *usubs = hashmap_get(node->unit_subscriptions, &key);
         if (usubs == NULL) {
                 return 0;
         }
@@ -270,8 +268,8 @@ static int node_match_unit_properties_changed(sd_bus_message *m, void *userdata,
         UnitSubscription *usub = NULL;
         UnitSubscription *next_usub = NULL;
         LIST_FOREACH_SAFE(subs, usub, next_usub, usubs->subs) {
-                Subscription *sub = usub->sub;
-                int r = sub->handle_unit_property_changed(sub->monitor, node->name, sub->unit, interface, m);
+                Monitor *monitor = usub->sub->monitor;
+                int r = monitor->handle_unit_property_changed(monitor, node->name, unit, interface, m);
                 if (r < 0) {
                         hirte_log_error("Failed to emit UnitPropertyChanged signal");
                 }
@@ -292,9 +290,7 @@ static int node_match_unit_new(sd_bus_message *m, void *userdata, UNUSED sd_bus_
         }
 
         const UnitSubscriptionsKey key = { (char *) unit };
-        UnitSubscriptions *usubs = NULL;
-
-        usubs = hashmap_get(node->unit_subscriptions, &key);
+        UnitSubscriptions *usubs = hashmap_get(node->unit_subscriptions, &key);
         if (usubs == NULL) {
                 return 0;
         }
@@ -303,10 +299,10 @@ static int node_match_unit_new(sd_bus_message *m, void *userdata, UNUSED sd_bus_
         UnitSubscription *usub = NULL;
         UnitSubscription *next_usub = NULL;
         LIST_FOREACH_SAFE(subs, usub, next_usub, usubs->subs) {
-                Subscription *sub = usub->sub;
-                int r = sub->handle_unit_new(sub->monitor, node->name, sub->unit, reason);
+                Monitor *monitor = usub->sub->monitor;
+                int r = monitor->handle_unit_new(monitor, node->name, unit, reason);
                 if (r < 0) {
-                        hirte_log_error("Failed to emit UnitNew signal");
+                        hirte_log_errorf("Failed to emit UnitNew signal: %s", strerror(-r));
                 }
         }
 
@@ -327,9 +323,7 @@ static int node_match_unit_state_changed(sd_bus_message *m, void *userdata, UNUS
         }
 
         const UnitSubscriptionsKey key = { (char *) unit };
-        UnitSubscriptions *usubs = NULL;
-
-        usubs = hashmap_get(node->unit_subscriptions, &key);
+        UnitSubscriptions *usubs = hashmap_get(node->unit_subscriptions, &key);
         if (usubs == NULL) {
                 return 0;
         }
@@ -341,11 +335,11 @@ static int node_match_unit_state_changed(sd_bus_message *m, void *userdata, UNUS
         UnitSubscription *usub = NULL;
         UnitSubscription *next_usub = NULL;
         LIST_FOREACH_SAFE(subs, usub, next_usub, usubs->subs) {
-                Subscription *sub = usub->sub;
-                int r = sub->handle_unit_state_changed(
-                                sub->monitor, node->name, sub->unit, active_state, substate, reason);
+                Monitor *monitor = usub->sub->monitor;
+                int r = monitor->handle_unit_state_changed(
+                                monitor, node->name, unit, active_state, substate, reason);
                 if (r < 0) {
-                        hirte_log_error("Failed to emit UnitNew signal");
+                        hirte_log_errorf("Failed to emit UnitStateChanged signal: %s", strerror(-r));
                 }
         }
 
@@ -363,9 +357,7 @@ static int node_match_unit_removed(sd_bus_message *m, void *userdata, UNUSED sd_
         }
 
         const UnitSubscriptionsKey key = { (char *) unit };
-        UnitSubscriptions *usubs = NULL;
-
-        usubs = hashmap_get(node->unit_subscriptions, &key);
+        UnitSubscriptions *usubs = hashmap_get(node->unit_subscriptions, &key);
         if (usubs == NULL) {
                 return 0;
         }
@@ -374,10 +366,10 @@ static int node_match_unit_removed(sd_bus_message *m, void *userdata, UNUSED sd_
         UnitSubscription *usub = NULL;
         UnitSubscription *next_usub = NULL;
         LIST_FOREACH_SAFE(subs, usub, next_usub, usubs->subs) {
-                Subscription *sub = usub->sub;
-                int r = sub->handle_unit_removed(sub->monitor, node->name, sub->unit, "real");
+                Monitor *monitor = usub->sub->monitor;
+                int r = monitor->handle_unit_removed(monitor, node->name, unit, "real");
                 if (r < 0) {
-                        hirte_log_error("Failed to emit UnitNew signal");
+                        hirte_log_errorf("Failed to emit UnitRemoved signal: %s", strerror(-r));
                 }
         }
 
@@ -804,24 +796,23 @@ static int node_disconnected(UNUSED sd_bus_message *message, void *userdata, UNU
 
                 if (send_state_change) {
                         LIST_FOREACH_SAFE(subs, usub, next_usub, usubs->subs) {
-                                Subscription *sub = usub->sub;
-                                int r = sub->handle_unit_state_changed(
-                                                sub->monitor,
+                                Monitor *monitor = usub->sub->monitor;
+                                int r = monitor->handle_unit_state_changed(
+                                                monitor,
                                                 node->name,
-                                                sub->unit,
+                                                usubs->unit,
                                                 active_state_to_string(usubs->active_state),
                                                 usubs->substate,
                                                 "virtual");
                                 if (r < 0) {
-                                        hirte_log_error("Failed to emit UnitRemoved signal");
+                                        hirte_log_error("Failed to emit UnitStateChanged signal");
                                 }
                         }
                 }
 
                 LIST_FOREACH_SAFE(subs, usub, next_usub, usubs->subs) {
-                        Subscription *sub = usub->sub;
-
-                        int r = sub->handle_unit_removed(sub->monitor, node->name, sub->unit, "virtual");
+                        Monitor *monitor = usub->sub->monitor;
+                        int r = monitor->handle_unit_removed(monitor, node->name, usubs->unit, "virtual");
                         if (r < 0) {
                                 hirte_log_error("Failed to emit UnitRemoved signal");
                         }
@@ -1436,14 +1427,15 @@ void node_subscribe(Node *node, Subscription *sub) {
         /* We know this is loaded, so we won't get notified from
            the agent, instead send a virtual event here. */
         if (usubs->loaded) {
-                int r = sub->handle_unit_new(sub->monitor, node->name, sub->unit, "virtual");
+                Monitor *monitor = sub->monitor;
+                int r = monitor->handle_unit_new(monitor, node->name, sub->unit, "virtual");
                 if (r < 0) {
                         hirte_log_error("Failed to emit UnitNew signal");
                 }
 
                 if (usubs->active_state >= 0) {
-                        r = sub->handle_unit_state_changed(
-                                        sub->monitor,
+                        r = monitor->handle_unit_state_changed(
+                                        monitor,
                                         node->name,
                                         sub->unit,
                                         active_state_to_string(usubs->active_state),
