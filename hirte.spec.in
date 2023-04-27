@@ -102,6 +102,8 @@ Requires: selinux-policy >= %{_selinux_policy_version}
 %endif
 
 Requires(post): policycoreutils
+Requires(post): policycoreutils-python-utils
+Requires(postun): policycoreutils-python-utils
 
 %global selinuxtype	targeted
 
