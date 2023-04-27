@@ -64,6 +64,13 @@ LogTarget=journald
 LogIsQuiet=false
 ```
 
+## FILES
+
+Distributions provide the __/usr/share/hirte/config/hirte.conf__ file which defines hirte configuration defaults. Administrators can copy this file to __/etc/hirte/hirte.conf__ and specify their own configuration.
+
+Administrators can also use a "drop-in" directory __/etc/hirte/hirte.conf.d__ to drop their configuration changes.
+
+
 ## SEE ALSO
 
 **[hirte(1)](https://github.com/containers/hirte/blob/main/doc/man/hirte.1.md)**
