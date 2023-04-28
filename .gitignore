@@ -1,7 +1,10 @@
+# IDE specific files and directories
 .vscode/
 
-builddir
+# Build specific files and directories
 tags
-
+builddir
 hirte.spec
 rpmbuild/
+hirte-rpms/
+__pycache__/
