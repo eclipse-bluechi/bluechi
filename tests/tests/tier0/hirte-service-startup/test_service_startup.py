@@ -1,6 +1,5 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
 
-import platform
 import pytest
 
 from hirte_tests.gather import journal

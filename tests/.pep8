@@ -1,6 +1,5 @@
 [pep8]
 max_line_length = 120
-ignore =
 in-place = true
 recursive = true
 aggressive = 3
