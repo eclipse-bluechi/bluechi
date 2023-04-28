@@ -2,19 +2,19 @@
 
 ## Installation
 
-## Enable required repositories on CentOS Stream 9
+The integration tests use the RESTful API of [podman](https://podman.io/getting-started/installation) to isolate hirte and the agents on multiple, containerized nodes. Therefore, a working installation of podman is required. Please refer to [podman installation instructions](https://podman.io/getting-started/installation). 
 
-Following repositories are required on CentOS Stream 9 for successful installation:
+### Installing packages using RPM
+
+First, enable required repositories on CentOS Stream 9:
 
 ```shell
-dnf install -y dnf-plugin-config-manager
-dnf config-manager -y --set-enabled crb
-dnf install -y epel-release
+sudo dnf install -y dnf-plugin-config-manager
+sudo dnf install -y --set-enabled crb
+sudo dnf install -y epel-release
 ```
 
-## Install packages
-
-Following packages need to be installed for integration tests execution:
+Then install the required packages:
 
 ```shell
 dnf install \
@@ -25,6 +25,24 @@ dnf install \
     tmt \
     tmt-report-junit \
     -y
+```
+
+### Installing packages using pip
+
+All required python packages are listed in the [requirements.txt](./requirements.txt) and can be installed using `pip`:
+```
+pip install -r requirements.txt
+```
+
+Instead of installing the required packages directly, it is recommended to create a virtual environment. For example, the following snippet uses the built-in [venv](https://docs.python.org/3/library/venv.html):
+```bash
+python -m venv env
+source env/bin/activate
+pip install -r requirements.txt
+# ...
+
+# exit the virtual env
+deactivate
 ```
 
 ## Configure podman socket access for users

@@ -13,6 +13,7 @@ To build the project on CentOS Stream 9 you need to enable CodeReady Build repos
 ```bash
 sudo dnf install dnf-plugin-config-manager
 sudo dnf config-manager --set-enabled crb
+sudo dnf install -y epel-release
 ```
 
 #### Dependencies installation
