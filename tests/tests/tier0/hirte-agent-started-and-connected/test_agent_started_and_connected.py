@@ -4,15 +4,17 @@ import platform
 import pytest
 import socket
 
+from podman.domain.containers import Container
+
 from hirte_tests.gather import journal
 from hirte_tests.provision import containers
 
 
 @pytest.fixture(autouse=True)
 def handle_env(
-    hirte_controller_ctr,
-    hirte_node_foo_ctr,
-    tmt_test_data_dir,
+    hirte_controller_ctr: Container,
+    hirte_node_foo_ctr: Container,
+    tmt_test_data_dir: Container,
 ):
     # initialize configuration
     containers.put_files(hirte_controller_ctr, 'controller.conf.d', '/etc/hirte/hirte.conf.d')
@@ -34,8 +36,7 @@ def handle_env(
     # gather journal from containers
     journal.gather_containers_journal(
         tmt_test_data_dir,
-        hirte_controller_ctr,
-        hirte_node_foo_ctr,
+        [hirte_controller_ctr, hirte_node_foo_ctr],
     )
 
     # clean up containers
@@ -43,7 +44,7 @@ def handle_env(
     containers.clean_up_container(hirte_controller_ctr)
 
 
-def test_agent_foo_startup(hirte_node_foo_ctr):
+def test_agent_foo_startup(hirte_node_foo_ctr: Container):
     result, output = containers.exec_run(hirte_node_foo_ctr, 'systemctl is-active hirte-agent')
 
     assert result == 0
