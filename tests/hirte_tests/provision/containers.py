@@ -4,19 +4,27 @@ import io
 import os
 import tarfile
 
-def clean_up_all_containers(hirte_controller_ctr, hirte_node_foo_ctr, hirte_node_bar_ctr):
+from typing import Any, Iterator, Optional, Tuple, Union, IO
+
+from podman.domain.containers import Container
+
+
+def clean_up_all_containers(
+        hirte_controller_ctr: Container,
+        hirte_node_foo_ctr: Container,
+        hirte_node_bar_ctr: Container) -> Container:
     clean_up_container(hirte_node_bar_ctr)
     clean_up_container(hirte_node_foo_ctr)
     clean_up_container(hirte_controller_ctr)
 
 
-def clean_up_container(container):
+def clean_up_container(container: Container) -> None:
     if container.status == 'running':
         container.stop()
     container.remove()
 
 
-def put_file(container, local_file, container_directory):
+def put_file(container: Container, local_file: str, container_directory: str) -> None:
     content = None
     with open(local_file, 'rb') as fh:
         content = io.BytesIO(fh.read())
@@ -38,16 +46,18 @@ def put_file(container, local_file, container_directory):
     container.put_archive(path=container_directory, data=buff)
 
 
-def put_files(container, local_directory, container_directory):
+def put_files(container: Container, local_directory: str, container_directory: str) -> None:
     list_of_files = sorted(
-        filter(lambda x: os.path.isfile(os.path.join(local_directory, x)), os.listdir(local_directory))
+        filter(lambda x: os.path.isfile(os.path.join(
+            local_directory, x)), os.listdir(local_directory))
     )
     for file_name in list_of_files:
-        put_file(container, os.path.join(local_directory, file_name), container_directory)
+        put_file(container, os.path.join(
+            local_directory, file_name), container_directory)
 
 
-def get_file(container, container_path, local_path):
-    actual, stats = container.get_archive(container_path)
+def get_file(container: Container, container_path: str, local_path: str) -> None:
+    actual, _ = container.get_archive(container_path)
 
     with io.BytesIO() as fd:
         for chunk in actual:
@@ -58,7 +68,8 @@ def get_file(container, container_path, local_path):
             tar.extractall(path=local_path)
 
 
-def exec_run(container, command, raw_output=False):
+def exec_run(container: Container, command: (
+        str | list[str]), raw_output: bool = False) -> Tuple[Optional[int], Union[Iterator[bytes], Any, Tuple[bytes, bytes]]]:
     """Executes command inside the specified container and returns result code and processed output"""
     result, output = container.exec_run(command)
 
