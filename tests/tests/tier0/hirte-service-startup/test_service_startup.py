@@ -31,7 +31,7 @@ def handle_env(
 
 
 def test_controller_startup(hirte_controller_ctr):
-    result,output = containers.exec_run(hirte_controller_ctr, 'systemctl is-active hirte')
+    result, output = containers.exec_run(hirte_controller_ctr, 'systemctl is-active hirte')
 
     assert result == 0
     assert output == 'active'

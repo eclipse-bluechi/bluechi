@@ -63,9 +63,9 @@ def get_file(container, container_path, local_path):
 
 def exec_run(container, command, raw_output=False):
     """Executes command inside the specified container and returns result code and processed output"""
-    result,output = container.exec_run(command)
+    result, output = container.exec_run(command)
 
     if not raw_output and output:
         output = output.decode('utf-8').strip()
 
-    return result,output
+    return result, output
