@@ -4,9 +4,6 @@ import io
 import os
 import tarfile
 
-from hirte_tests.common import fixtures
-
-
 def clean_up_all_containers(hirte_controller_ctr, hirte_node_foo_ctr, hirte_node_bar_ctr):
     clean_up_container(hirte_node_bar_ctr)
     clean_up_container(hirte_node_foo_ctr)

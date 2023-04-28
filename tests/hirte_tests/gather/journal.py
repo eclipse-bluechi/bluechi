@@ -1,7 +1,5 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
 
-import os
-
 from hirte_tests.provision import containers
 
 
