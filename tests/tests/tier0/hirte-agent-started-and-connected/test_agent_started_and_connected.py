@@ -7,6 +7,7 @@ import socket
 from hirte_tests.gather import journal
 from hirte_tests.provision import containers
 
+
 @pytest.fixture(autouse=True)
 def handle_env(
     hirte_controller_ctr,
@@ -43,7 +44,7 @@ def handle_env(
 
 
 def test_agent_foo_startup(hirte_node_foo_ctr):
-    result,output = containers.exec_run(hirte_node_foo_ctr, 'systemctl is-active hirte-agent')
+    result, output = containers.exec_run(hirte_node_foo_ctr, 'systemctl is-active hirte-agent')
 
     assert result == 0
     assert output == 'active'

@@ -2,7 +2,9 @@
 
 ## Installation
 
-The integration tests use the RESTful API of [podman](https://podman.io/getting-started/installation) to isolate hirte and the agents on multiple, containerized nodes. Therefore, a working installation of podman is required. Please refer to [podman installation instructions](https://podman.io/getting-started/installation). 
+The integration tests use the RESTful API of [podman](https://podman.io/getting-started/installation) to isolate hirte
+and the agents on multiple, containerized nodes. Therefore, a working installation of podman is required. Please refer
+to [podman installation instructions](https://podman.io/getting-started/installation).
 
 ### Installing packages using RPM
 
@@ -30,11 +32,14 @@ dnf install \
 ### Installing packages using pip
 
 All required python packages are listed in the [requirements.txt](./requirements.txt) and can be installed using `pip`:
-```
+
+```bash
 pip install -r requirements.txt
 ```
 
-Instead of installing the required packages directly, it is recommended to create a virtual environment. For example, the following snippet uses the built-in [venv](https://docs.python.org/3/library/venv.html):
+Instead of installing the required packages directly, it is recommended to create a virtual environment. For example,
+the following snippet uses the built-in [venv](https://docs.python.org/3/library/venv.html):
+
 ```bash
 python -m venv env
 source env/bin/activate
@@ -97,4 +102,16 @@ After that step integration tests can be executed using following command:
 ```shell
 cd ~/hirte/tests
 tmt run -eCONTAINER_USED=container-hirte-local
+```
+
+## Developing integration tests
+
+### Code Style
+
+[autopep8](https://pypi.org/project/autopep8/) is used to enforce a unified code style. The applied rules are defined in
+the [.pep8](./.pep8) file. All source files can be formatted via:
+
+```bash
+# navigate into hirte/tests directory
+autopep8 ./
 ```

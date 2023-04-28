@@ -1,10 +1,13 @@
-# IDE specific files and directories
+# IDE
 .vscode/
 
-# Build specific files and directories
+# Build
 tags
-builddir
+builddir/
 hirte.spec
 rpmbuild/
+
+# Integration test
 hirte-rpms/
 __pycache__/
+env/
