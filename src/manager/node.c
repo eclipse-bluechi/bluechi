@@ -62,6 +62,7 @@ static const sd_bus_vtable node_vtable[] = {
         SD_BUS_METHOD("EnableUnitFiles", "asbb", "ba(sss)", node_method_passthrough_to_agent, 0),
         SD_BUS_METHOD("DisableUnitFiles", "asb", "a(sss)", node_method_passthrough_to_agent, 0),
         SD_BUS_METHOD("Reload", "", "", node_method_passthrough_to_agent, 0),
+        // SD_BUS_METHOD("SetNodeLogLevel", "ss", "", set_node_log_level, 0),
         SD_BUS_PROPERTY("Name", "s", node_property_get_nodename, 0, SD_BUS_VTABLE_PROPERTY_CONST),
         SD_BUS_PROPERTY("Status", "s", node_property_get_status, 0, SD_BUS_VTABLE_PROPERTY_EMITS_CHANGE),
         SD_BUS_VTABLE_END
@@ -1510,6 +1511,44 @@ static int node_method_restart_unit(sd_bus_message *m, void *userdata, UNUSED sd
 static int node_method_reload_unit(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error) {
         return node_run_unit_lifecycle_method(m, (Node *) userdata, "reload", "ReloadUnit");
 }
+
+// /*************************************************************************
+//  ********** org.containers.hirte.Node.SetNodeLogLevel *******************
+//  ************************************************************************/
+
+// static int set_node_log_level(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error) {
+//         const char *node_name = NULL;
+//         const char *level = NULL;
+//         Node *node = (Node *) userdata;
+//         sd_bus_error error = SD_BUS_ERROR_NULL;
+//         _cleanup_sd_bus_message_ sd_bus_message *sub_m = NULL;
+
+//         int r = sd_bus_message_read(m, "ss", &node_name, &level);
+//         if (r < 0) {
+//                 return r;
+//         }
+//         LogLevel loglevel = string_to_log_level(r);
+//         if (loglevel == LOG_LEVEL_INVALID) {
+//                 return r;
+//         }
+//         hirte_log_infof("Log level changed to %s", r);
+//         r = sd_bus_call_method(
+//                         node->agent_bus,
+//                         SYSTEMD_BUS_NAME,
+//                         SYSTEMD_OBJECT_PATH,
+//                         SYSTEMD_MANAGER_IFACE,
+//                         "SetNodeLogLevel",
+//                         &error,
+//                         &sub_m,
+//                         "");
+//         if (r < 0) {
+//                 hirte_log_errorf("Failed to issue subscribe call: %s", error.message);
+//                 sd_bus_error_free(&error);
+//                 return false;
+//         }
+//         hirte_log_set_level(loglevel);
+//         return r;
+// }
 
 static int send_agent_simple_message(Node *node, const char *method, const char *arg) {
         _cleanup_sd_bus_message_ sd_bus_message *m = NULL;

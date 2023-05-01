@@ -465,9 +465,8 @@ static int manager_method_ping(sd_bus_message *m, UNUSED void *userdata, UNUSED 
 
         int r = sd_bus_message_read(m, "s", &arg);
         if (r < 0) {
-                return r;
+                return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_INVALID_ARGS, "Invalid arguments");
         }
-
         return sd_bus_reply_method_return(m, "s", arg);
 }
 
@@ -812,6 +811,27 @@ static int manager_method_metrics_disable(sd_bus_message *m, void *userdata, UNU
         return sd_bus_reply_method_return(m, "");
 }
 
+/*************************************************************************
+ ************** org.containers.hirte.Manager.SetLogLevel ***************
+ ************************************************************************/
+
+static int set_log_level(sd_bus_message *m, UNUSED void *userdata, UNUSED sd_bus_error *ret_error) {
+        const char *level = NULL;
+        hirte_log_info("Start");
+
+        int r = sd_bus_message_read(m, "s", &level);
+        if (r < 0) {
+                return 1;
+        }
+        LogLevel loglevel = string_to_log_level(level);
+        if (loglevel == LOG_LEVEL_INVALID) {
+                return r;
+        }
+        hirte_log_set_level(loglevel);
+        hirte_log_infof("Log level changed to %s", level);
+        return 1;
+}
+
 static const sd_bus_vtable manager_vtable[] = {
         SD_BUS_VTABLE_START(0),
         SD_BUS_METHOD("Ping", "s", "s", manager_method_ping, 0),
@@ -819,6 +839,7 @@ static const sd_bus_vtable manager_vtable[] = {
         SD_BUS_METHOD("ListNodes", "", "a(sos)", manager_method_list_nodes, 0),
         SD_BUS_METHOD("GetNode", "s", "o", manager_method_get_node, 0),
         SD_BUS_METHOD("CreateMonitor", "", "o", manager_method_create_monitor, 0),
+        SD_BUS_METHOD("SetLogLevel", "s", "", set_log_level, 0),
         SD_BUS_METHOD("EnableMetrics", "", "", manager_method_metrics_enable, 0),
         SD_BUS_METHOD("DisableMetrics", "", "", manager_method_metrics_disable, 0),
         SD_BUS_SIGNAL_WITH_NAMES("JobNew", "uo", SD_BUS_PARAM(id) SD_BUS_PARAM(job), 0),

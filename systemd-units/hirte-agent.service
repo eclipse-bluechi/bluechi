@@ -10,6 +10,8 @@ After=network.target
 [Service]
 Type=simple
 ExecStart=/usr/bin/hirte-agent
+ExecReload=gdbus call --system --dest org.containers.hirte \
+ --method org.containers.hirte.AGENT.ReloadConfig --object-path /org/containers/hirte 
 Restart=on-failure
 
 [Install]
