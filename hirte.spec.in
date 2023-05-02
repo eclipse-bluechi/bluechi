@@ -163,12 +163,12 @@ This package contains the service controller command line tool.
 
 
 %changelog
-* Tue April 25 2023 Michael Engel <mengel@redhat.com> - 0.2.0-1
+* Tue Apr 25 2023 Michael Engel <mengel@redhat.com> - 0.2.0-1
 - Heartbeat interval configurable
 - Restart for hirte and hirte-agent systemd unit added
 - Logging improvements
 - SELinux policy added
-- Defaults for node name and manager host in code 
+- Defaults for node name and manager host in code
 - Fix conf.d usage and memory leaks
 
 * Tue Mar 21 2023 Martin Perina <mperina@redhat.com> - 0.1.0-1
