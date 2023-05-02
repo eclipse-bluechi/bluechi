@@ -14,10 +14,11 @@ def handle_env(
     tmt_test_data_dir: str,
 ):
     # initialize hirte configuration
-    containers.put_files(hirte_controller_ctr, 'controller.conf.d', '/etc/hirte/hirte.conf.d')
+    containers.put_files(hirte_controller_ctr,
+                         'controller.conf.d', '/etc/hirte/hirte.conf.d')
 
     # start services
-    hirte_controller_ctr.exec_run('systemctl start hirte', detach=True)
+    hirte_controller_ctr.exec_run('systemctl start hirte')
 
     yield
 
@@ -32,7 +33,8 @@ def handle_env(
 
 
 def test_controller_startup(hirte_controller_ctr: Container):
-    result, output = containers.exec_run(hirte_controller_ctr, 'systemctl is-active hirte')
+    result, output = containers.exec_run(
+        hirte_controller_ctr, 'systemctl is-active hirte')
 
     assert result == 0
     assert output == 'active'

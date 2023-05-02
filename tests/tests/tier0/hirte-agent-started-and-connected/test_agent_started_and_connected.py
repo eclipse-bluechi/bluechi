@@ -17,8 +17,10 @@ def handle_env(
     tmt_test_data_dir: Container,
 ):
     # initialize configuration
-    containers.put_files(hirte_controller_ctr, 'controller.conf.d', '/etc/hirte/hirte.conf.d')
-    containers.put_files(hirte_node_foo_ctr, 'node-foo.conf.d', '/etc/hirte/agent.conf.d')
+    containers.put_files(hirte_controller_ctr,
+                         'controller.conf.d', '/etc/hirte/hirte.conf.d')
+    containers.put_files(hirte_node_foo_ctr,
+                         'node-foo.conf.d', '/etc/hirte/agent.conf.d')
 
     # TODO: find out a better way how to set ManagerHost
     hirte_node_foo_ctr.exec_run(
@@ -28,8 +30,8 @@ def handle_env(
     )
 
     # start services
-    hirte_controller_ctr.exec_run('systemctl start hirte', detach=True)
-    hirte_node_foo_ctr.exec_run('systemctl start hirte-agent', detach=True)
+    hirte_controller_ctr.exec_run('systemctl start hirte')
+    hirte_node_foo_ctr.exec_run('systemctl start hirte-agent')
 
     yield
 
@@ -45,7 +47,8 @@ def handle_env(
 
 
 def test_agent_foo_startup(hirte_node_foo_ctr: Container):
-    result, output = containers.exec_run(hirte_node_foo_ctr, 'systemctl is-active hirte-agent')
+    result, output = containers.exec_run(
+        hirte_node_foo_ctr, 'systemctl is-active hirte-agent')
 
     assert result == 0
     assert output == 'active'
