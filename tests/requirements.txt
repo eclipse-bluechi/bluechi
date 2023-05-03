@@ -2,4 +2,4 @@ tmt >= 1.22
 junit-xml >= 1.9
 pytest >= 7.3.1
 podman >= 4.5.0
-autopep8 >= 2.0.2
+flake8 >= 6.0.0
