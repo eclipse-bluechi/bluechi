@@ -163,6 +163,9 @@ This package contains the service controller command line tool.
 
 
 %changelog
+* Wed May 03 2023 Michael Engel <mengel@redhat.com> - 0.2.1-1
+- RPM and unit test fixes
+
 * Tue Apr 25 2023 Michael Engel <mengel@redhat.com> - 0.2.0-1
 - Heartbeat interval configurable
 - Restart for hirte and hirte-agent systemd unit added
