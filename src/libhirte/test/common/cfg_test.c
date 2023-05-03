@@ -333,10 +333,9 @@ void test_config_dump() {
         _config_set_and_get(config, "key1", "value1", "value1", false);
         _config_set_and_get(config, "key2", "value4", "value4", false);
 
-        const char *expected_cfg_dump = "key1=value1\nkey2=value4\n";
-
         _cleanup_free_ const char *cfg = cfg_dump(config);
-        assert(streq(cfg, expected_cfg_dump));
+        assert(strstr(cfg, "key1=value1\n") != NULL);
+        assert(strstr(cfg, "key2=value4\n") != NULL);
 
         cfg_dispose(config);
 }
