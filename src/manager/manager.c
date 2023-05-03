@@ -71,15 +71,6 @@ void manager_unref(Manager *manager) {
         sd_bus_slot_unrefp(&manager->manager_slot);
         sd_bus_unrefp(&manager->api_bus);
 
-        Node *node = NULL;
-        Node *next_node = NULL;
-        LIST_FOREACH_SAFE(nodes, node, next_node, manager->nodes) {
-                node_unref(node);
-        }
-        LIST_FOREACH_SAFE(nodes, node, next_node, manager->anonymous_nodes) {
-                node_unref(node);
-        }
-
         Job *job = NULL;
         Job *next_job = NULL;
         LIST_FOREACH_SAFE(jobs, job, next_job, manager->jobs) {
@@ -89,13 +80,22 @@ void manager_unref(Manager *manager) {
         Subscription *sub = NULL;
         Subscription *next_sub = NULL;
         LIST_FOREACH_SAFE(all_subscriptions, sub, next_sub, manager->all_subscriptions) {
-                subscription_unref(sub);
+                manager_remove_subscription(manager, sub);
         }
 
         Monitor *monitor = NULL;
         Monitor *next_monitor = NULL;
         LIST_FOREACH_SAFE(monitors, monitor, next_monitor, manager->monitors) {
                 monitor_unref(monitor);
+        }
+
+        Node *node = NULL;
+        Node *next_node = NULL;
+        LIST_FOREACH_SAFE(nodes, node, next_node, manager->nodes) {
+                node_unref(node);
+        }
+        LIST_FOREACH_SAFE(nodes, node, next_node, manager->anonymous_nodes) {
+                node_unref(node);
         }
 
         if (manager->config) {
