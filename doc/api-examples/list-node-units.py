@@ -3,7 +3,7 @@
 import sys
 from collections import namedtuple
 import dasbus.connection
-bus = dasbus.connection.SessionMessageBus()
+bus = dasbus.connection.SystemMessageBus()
 
 UnitInfo = namedtuple("UnitInfo", ["name", "description",
                                    "load_state", "active_state", "sub_state", "follower", "object_path",

@@ -3,7 +3,7 @@
 import sys
 from dasbus.typing import get_native
 import dasbus.connection
-bus = dasbus.connection.SessionMessageBus()
+bus = dasbus.connection.SystemMessageBus()
 
 if len(sys.argv) != 5:
     print("No node name, unit, interface and property supplied")

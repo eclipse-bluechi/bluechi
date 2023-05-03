@@ -26,7 +26,7 @@ node_name = "" # Match all
 if len(sys.argv) > 2:
     node_name = sys.argv[2]
 
-bus = dasbus.connection.SessionMessageBus()
+bus = dasbus.connection.SystemMessageBus()
 
 manager = bus.get_proxy("org.containers.hirte",  "/org/containers/hirte")
 
