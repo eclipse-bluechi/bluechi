@@ -2,10 +2,10 @@
 
 from datetime import datetime
 import sys
-from dasbus.connection import SessionMessageBus
+from dasbus.connection import SystemMessageBus
 from dasbus.loop import EventLoop
 
-bus = SessionMessageBus()
+bus = SystemMessageBus()
 
 if len(sys.argv) != 3:
     print("No node name and unit supplied")

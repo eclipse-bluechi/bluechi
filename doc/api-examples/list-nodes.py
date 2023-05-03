@@ -3,7 +3,7 @@
 from collections import namedtuple
 import dasbus.connection
 
-bus = dasbus.connection.SessionMessageBus()
+bus = dasbus.connection.SystemMessageBus()
 
 NodeInfo = namedtuple("NodeInfo", ["name", "object_path", "status"])
 
