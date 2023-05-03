@@ -1,7 +1,6 @@
 #!/usr/bin/python3
 
 import sys
-from dasbus.typing import get_native
 from dasbus.typing import Variant
 import dasbus.connection
 bus = dasbus.connection.SystemMessageBus()

@@ -68,8 +68,10 @@ def get_file(container: Container, container_path: str, local_path: str) -> None
             tar.extractall(path=local_path)
 
 
-def exec_run(container: Container, command: (
-        str | list[str]), raw_output: bool = False) -> Tuple[Optional[int], Union[Iterator[bytes], Any, Tuple[bytes, bytes]]]:
+def exec_run(container: Container,
+             command: (str | list[str]),
+             raw_output: bool = False
+             ) -> Tuple[Optional[int], Union[Iterator[bytes], Any, Tuple[bytes, bytes]]]:
     """Executes command inside the specified container and returns result code and processed output"""
     result, output = container.exec_run(command)
 
