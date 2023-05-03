@@ -79,7 +79,6 @@ jobs:
           path: ./builddir/meson-logs/testlog-valgrind.txt
 
   rpmbuild:
-    needs: lint
     runs-on: ubuntu-latest
     container:
       image: quay.io/centos/centos:stream9
