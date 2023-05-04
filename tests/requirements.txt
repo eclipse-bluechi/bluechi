@@ -1,5 +1,6 @@
 tmt >= 1.22
 junit-xml >= 1.9
 pytest >= 7.3.1
+pytest-timeout >= 2.1.0
 podman >= 4.5.0
 flake8 >= 6.0.0

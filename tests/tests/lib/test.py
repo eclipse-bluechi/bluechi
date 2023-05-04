@@ -1,7 +1,5 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
 
-import logging
-
 from podman import PodmanClient
 from typing import List, Dict, Callable, Tuple
 
@@ -17,7 +15,7 @@ class HirteTest():
             hirte_image_id: str,
             hirte_network_name: str,
             hirte_ctrl_host_port: str,
-            hirte_ctrl_svc_port: str, 
+            hirte_ctrl_svc_port: str,
             tmt_test_data_dir: str) -> None:
 
         self.podman_client = podman_client
@@ -53,7 +51,7 @@ class HirteTest():
                 ports={self.hirte_ctrl_svc_port: self.hirte_ctrl_host_port},
                 networks={self.hirte_network_name: {}},
             )
-            
+
             ctrl_container = HirteContainer(c, self.hirte_controller_config)
             ctrl_container.exec_run('systemctl start hirte')
 
@@ -72,10 +70,10 @@ class HirteTest():
                 node_container[cfg.node_name] = node
         except Exception as ex:
             success = False
-            logging.error(f"Failed to setup hirte container: {ex}")
+            print(f"Failed to setup hirte container: {ex}")
 
         return (success, (ctrl_container, node_container))
-    
+
     def gather_logs(self, ctrl: HirteContainer, nodes: Dict[str, HirteContainer]):
         print("Collecting logs from all container...")
 
@@ -97,7 +95,7 @@ class HirteTest():
     def run(self, exec: Callable[[HirteContainer, Dict[str, HirteContainer]], None]):
         successful, container = self.setup()
         ctrl_container, node_container = container
-        
+
         if not successful:
             self.teardown(ctrl_container, node_container)
             raise Exception("Failed to setup hirte test")
@@ -107,4 +105,3 @@ class HirteTest():
         finally:
             self.gather_logs(ctrl_container, node_container)
             self.teardown(ctrl_container, node_container)
-

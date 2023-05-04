@@ -93,8 +93,14 @@ def hirte_test(
         hirte_image_id: str,
         hirte_network_name: str,
         hirte_ctrl_host_port: str,
-        hirte_ctrl_svc_port: str, 
+        hirte_ctrl_svc_port: str,
         tmt_test_data_dir: str):
 
-
-    return HirteTest(podman_client, hirte_image_id, hirte_network_name, hirte_ctrl_host_port, hirte_ctrl_svc_port, tmt_test_data_dir)
+    return HirteTest(
+        podman_client,
+        hirte_image_id,
+        hirte_network_name,
+        hirte_ctrl_host_port,
+        hirte_ctrl_svc_port,
+        tmt_test_data_dir,
+    )

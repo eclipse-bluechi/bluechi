@@ -2,6 +2,7 @@
 
 from typing import List
 
+
 class HirteConfig():
 
     def __init__(self, file_name: str) -> None:
@@ -47,7 +48,7 @@ LogIsQuiet={self.log_is_quiet}
 
     def get_confd_dir(self) -> str:
         return self.confd_dir
-    
+
     def deep_copy(self) -> "HirteControllerConfig":
         cfg = HirteControllerConfig(self.file_name)
         cfg.name = self.name
@@ -99,7 +100,7 @@ LogIsQuiet={self.log_is_quiet}
 
     def get_confd_dir(self) -> str:
         return self.confd_dir
-    
+
     def deep_copy(self) -> "HirteNodeConfig":
         cfg = HirteNodeConfig(self.file_name)
         cfg.node_name = self.node_name

@@ -1,0 +1,6 @@
+summary: Tests for the proxy service feature of hirte to resolve dependencies on other nodes
+
+tier: 1
+
+test: |
+  pytest -svv

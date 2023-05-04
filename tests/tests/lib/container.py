@@ -8,7 +8,6 @@ from podman.domain.containers import Container
 from typing import Any, Iterator, Optional, Tuple, Union, IO
 
 from tests.lib.config import HirteConfig
-from tests.tests.lib.config import HirteConfig
 
 
 class HirteContainer():
@@ -62,13 +61,25 @@ class HirteContainer():
             self.container.stop()
         self.container.remove()
 
-    def exec_run(self,command: (str | list[str]),raw_output: bool = False) -> Tuple[Optional[int],Union[Iterator[bytes],Any,Tuple[bytes,bytes]]]:
+    def exec_run(self, command: (str | list[str]), raw_output: bool = False) -> \
+            Tuple[Optional[int], Union[Iterator[bytes], Any, Tuple[bytes, bytes]]]:
+
         result, output = self.container.exec_run(command)
 
         if not raw_output and output:
             output = output.decode('utf-8').strip()
 
         return result, output
-    
-    def systemctl_daemon_reload(self) -> Tuple[Optional[int],Union[Iterator[bytes],Any,Tuple[bytes,bytes]]]:
+
+    def systemctl_daemon_reload(self) -> Tuple[Optional[int], Union[Iterator[bytes], Any, Tuple[bytes, bytes]]]:
         return self.exec_run("systemctl daemon-reload")
+
+    def wait_for_hirte(self):
+        result = 1
+        while result != 0:
+            result, _ = self.exec_run("systemctl is-active hirte")
+
+    def wait_for_hirte_agent(self):
+        result = 1
+        while result != 0:
+            result, _ = self.exec_run("systemctl is-active hirte-agent")
