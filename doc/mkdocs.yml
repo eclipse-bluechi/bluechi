@@ -1,0 +1,19 @@
+site_name: Hirte Documentation
+
+repo_url: https://github.com/containers/hirte
+repo_name: hirte
+
+copyright: © Red Hat
+nav:
+  - Home: index.md
+  - Getting Started: getting_started.md
+
+theme:
+  name: readthedocs
+
+markdown_extensions:
+  - toc:
+      permalink: True
+  - sane_lists
+  - smarty
+  - admonition
