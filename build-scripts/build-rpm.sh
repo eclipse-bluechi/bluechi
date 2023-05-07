@@ -15,5 +15,7 @@ rpmbuild \
     --rebuild rpmbuild/SRPMS/*src.rpm
 
 # Move RPMs to exported artifacts
-[[ -d $ARTIFACTS_DIR ]] || mkdir -p $ARTIFACTS_DIR
-find rpmbuild -iname \*rpm | xargs mv -t $ARTIFACTS_DIR
+ARTIFACTS_DIRECTORY="$(pwd)/artifacts/rpms/$(date +'%m-%d-%Y')"
+[[ -z "${ARTIFACTS_DIR}" ]] || ARTIFACTS_DIRECTORY="${ARTIFACTS_DIR}"
+[[ -d "${ARTIFACTS_DIRECTORY}" ]] || mkdir -p "${ARTIFACTS_DIRECTORY}"
+find rpmbuild -iname \*rpm | xargs mv -t "${ARTIFACTS_DIRECTORY}"
