@@ -37,6 +37,11 @@ Subscription *create_monitor_subscription(Monitor *monitor, const char *node) {
         subscription->monitor = monitor_ref(monitor);
         subscription->free_monitor = (free_func_t) monitor_unref;
 
+        subscription->handle_unit_new = monitor_on_unit_new;
+        subscription->handle_unit_removed = monitor_on_unit_removed;
+        subscription->handle_unit_state_changed = monitor_on_unit_state_changed;
+        subscription->handle_unit_property_changed = monitor_on_unit_property_changed;
+
         return subscription;
 }
 
@@ -142,11 +147,6 @@ Monitor *monitor_new(Manager *manager, const char *client) {
         if (r < 0) {
                 return NULL;
         }
-
-        monitor->handle_unit_new = monitor_on_unit_new;
-        monitor->handle_unit_removed = monitor_on_unit_removed;
-        monitor->handle_unit_state_changed = monitor_on_unit_state_changed;
-        monitor->handle_unit_property_changed = monitor_on_unit_property_changed;
 
         return steal_pointer(&monitor);
 }

@@ -35,6 +35,11 @@ struct Subscription {
 
         LIST_FIELDS(Subscription, subscriptions);     /* List in Monitor */
         LIST_FIELDS(Subscription, all_subscriptions); /* List in Manager */
+
+        unit_new_handler_func_t *handle_unit_new;
+        unit_removed_handler_func_t *handle_unit_removed;
+        unit_state_changed_handler_func_t *handle_unit_state_changed;
+        unit_property_changed_handler_func_t *handle_unit_property_changed;
 };
 
 Subscription *subscription_new(const char *node);
@@ -58,11 +63,6 @@ struct Monitor {
 
         sd_bus_slot *export_slot;
         char *object_path;
-
-        unit_new_handler_func_t *handle_unit_new;
-        unit_removed_handler_func_t *handle_unit_removed;
-        unit_state_changed_handler_func_t *handle_unit_state_changed;
-        unit_property_changed_handler_func_t *handle_unit_property_changed;
 
         LIST_HEAD(Subscription, subscriptions);
 
