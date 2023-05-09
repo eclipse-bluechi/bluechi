@@ -24,6 +24,7 @@ dnf install \
     podman \
     python3-podman \
     python3-pytest \
+    python3-pytest-timeout \
     tmt \
     tmt-report-junit \
     -y
