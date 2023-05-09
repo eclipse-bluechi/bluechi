@@ -930,6 +930,19 @@ static int node_disconnected(UNUSED sd_bus_message *message, void *userdata, UNU
         /* Remove anonymous nodes when they disconnect */
         if (node->name == NULL) {
                 manager_remove_node(manager, node);
+        } else {
+                /* Remove all jobs associated with the registered node that got
+                   disconnected. */
+                if (!LIST_IS_EMPTY(manager->jobs)) {
+                        Job *job = NULL;
+                        LIST_FOREACH(jobs, job, manager->jobs) {
+                                if (strcmp(job->node->name, node->name) == 0) {
+                                        hirte_log_debugf("Removing job %d from node %s", job->id, job->node->name);
+                                        LIST_REMOVE(jobs, manager->jobs, job);
+                                        job_unref(job);
+                                }
+                        }
+                }
         }
 
         return 0;
