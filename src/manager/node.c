@@ -230,24 +230,24 @@ bool node_is_online(Node *node) {
 }
 
 
-static uint64_t monitor_hashmap_hash(const void *item, UNUSED uint64_t seed0, UNUSED uint64_t seed1) {
-        const Monitor * const *monitorp = item;
-        return (uint64_t) *monitorp;
+static uint64_t subscription_hashmap_hash(const void *item, UNUSED uint64_t seed0, UNUSED uint64_t seed1) {
+        const Subscription * const *subscriptionp = item;
+        return (uint64_t) *subscriptionp;
 }
 
-static int monitor_hashmap_compare(const void *a, const void *b, UNUSED void *udata) {
-        const Monitor * const *monitor_a_p = a;
-        const Monitor * const *monitor_b_p = b;
-        if (*monitor_a_p == *monitor_b_p) {
+static int subscription_hashmap_compare(const void *a, const void *b, UNUSED void *udata) {
+        const Subscription * const *subscription_a_p = a;
+        const Subscription * const *subscription_b_p = b;
+        if ((*subscription_a_p)->monitor == (*subscription_b_p)->monitor) {
                 return 0;
         }
         return 1;
 }
 
-static struct hashmap *node_compute_unique_monitor_list(Node *node, const char *unit) {
-        struct hashmap *unique_monitors = hashmap_new(
-                        sizeof(void *), 0, 0, 0, monitor_hashmap_hash, monitor_hashmap_compare, NULL, NULL);
-        if (unique_monitors == NULL) {
+static struct hashmap *node_compute_unique_monitor_subscriptions(Node *node, const char *unit) {
+        struct hashmap *unique_subs = hashmap_new(
+                        sizeof(void *), 0, 0, 0, subscription_hashmap_hash, subscription_hashmap_compare, NULL, NULL);
+        if (unique_subs == NULL) {
                 return NULL;
         }
 
@@ -257,13 +257,13 @@ static struct hashmap *node_compute_unique_monitor_list(Node *node, const char *
                 UnitSubscription *usub = NULL;
                 UnitSubscription *next_usub = NULL;
                 LIST_FOREACH_SAFE(subs, usub, next_usub, usubs->subs) {
-                        Monitor *mo = usub->sub->monitor;
-                        hashmap_set(unique_monitors, &mo);
-                        if (hashmap_oom(unique_monitors)) {
+                        Subscription *sub = usub->sub;
+                        hashmap_set(unique_subs, &sub);
+                        if (hashmap_oom(unique_subs)) {
                                 hirte_log_error("Failed to compute vector of unique monitors, OOM");
 
-                                hashmap_free(unique_monitors);
-                                unique_monitors = NULL;
+                                hashmap_free(unique_subs);
+                                unique_subs = NULL;
                                 return NULL;
                         }
                 }
@@ -277,20 +277,20 @@ static struct hashmap *node_compute_unique_monitor_list(Node *node, const char *
                         UnitSubscription *usub = NULL;
                         UnitSubscription *next_usub = NULL;
                         LIST_FOREACH_SAFE(subs, usub, next_usub, usubs_wildcard->subs) {
-                                Monitor *mo = usub->sub->monitor;
-                                hashmap_set(unique_monitors, &mo);
-                                if (hashmap_oom(unique_monitors)) {
+                                Subscription *sub = usub->sub;
+                                hashmap_set(unique_subs, &sub);
+                                if (hashmap_oom(unique_subs)) {
                                         hirte_log_error("Failed to compute vector of unique monitors, OOM");
 
-                                        hashmap_free(unique_monitors);
-                                        unique_monitors = NULL;
+                                        hashmap_free(unique_subs);
+                                        unique_subs = NULL;
                                         return NULL;
                                 }
                         }
                 }
         }
 
-        return unique_monitors;
+        return unique_subs;
 }
 
 
@@ -325,18 +325,18 @@ static int node_match_unit_properties_changed(sd_bus_message *m, void *userdata,
                 return 0;
         }
 
-        struct hashmap *unique_monitors = node_compute_unique_monitor_list(node, unit);
-        if (unique_monitors != NULL) {
-                Monitor **monitorp = NULL;
+        struct hashmap *unique_subs = node_compute_unique_monitor_subscriptions(node, unit);
+        if (unique_subs != NULL) {
+                Subscription **subp = NULL;
                 size_t i = 0;
-                while (hashmap_iter(unique_monitors, &i, (void **) &monitorp)) {
-                        Monitor *monitor = *monitorp;
-                        int r = monitor->handle_unit_property_changed(monitor, node->name, unit, interface, m);
+                while (hashmap_iter(unique_subs, &i, (void **) &subp)) {
+                        Subscription *sub = *subp;
+                        int r = sub->handle_unit_property_changed(sub->monitor, node->name, unit, interface, m);
                         if (r < 0) {
                                 hirte_log_error("Failed to emit UnitPropertyChanged signal");
                         }
                 }
-                hashmap_free(unique_monitors);
+                hashmap_free(unique_subs);
         }
 
         return 1;
@@ -365,18 +365,18 @@ static int node_match_unit_new(sd_bus_message *m, void *userdata, UNUSED sd_bus_
                 }
         }
 
-        struct hashmap *unique_monitors = node_compute_unique_monitor_list(node, unit);
-        if (unique_monitors != NULL) {
-                Monitor **monitorp = NULL;
+        struct hashmap *unique_subs = node_compute_unique_monitor_subscriptions(node, unit);
+        if (unique_subs != NULL) {
+                Subscription **subp = NULL;
                 size_t i = 0;
-                while (hashmap_iter(unique_monitors, &i, (void **) &monitorp)) {
-                        Monitor *monitor = *monitorp;
-                        int r = monitor->handle_unit_new(monitor, node->name, unit, reason);
+                while (hashmap_iter(unique_subs, &i, (void **) &subp)) {
+                        Subscription *sub = *subp;
+                        int r = sub->handle_unit_new(sub->monitor, node->name, unit, reason);
                         if (r < 0) {
                                 hirte_log_errorf("Failed to emit UnitNew signal: %s", strerror(-r));
                         }
                 }
-                hashmap_free(unique_monitors);
+                hashmap_free(unique_subs);
         }
 
         return 1;
@@ -404,19 +404,19 @@ static int node_match_unit_state_changed(sd_bus_message *m, void *userdata, UNUS
                 usubs->substate = strdup(substate);
         }
 
-        struct hashmap *unique_monitors = node_compute_unique_monitor_list(node, unit);
-        if (unique_monitors != NULL) {
-                Monitor **monitorp = NULL;
+        struct hashmap *unique_subs = node_compute_unique_monitor_subscriptions(node, unit);
+        if (unique_subs != NULL) {
+                Subscription **subp = NULL;
                 size_t i = 0;
-                while (hashmap_iter(unique_monitors, &i, (void **) &monitorp)) {
-                        Monitor *monitor = *monitorp;
-                        int r = monitor->handle_unit_state_changed(
-                                        monitor, node->name, unit, active_state, substate, reason);
+                while (hashmap_iter(unique_subs, &i, (void **) &subp)) {
+                        Subscription *sub = *subp;
+                        int r = sub->handle_unit_state_changed(
+                                        sub->monitor, node->name, unit, active_state, substate, reason);
                         if (r < 0) {
                                 hirte_log_errorf("Failed to emit UnitStateChanged signal: %s", strerror(-r));
                         }
                 }
-                hashmap_free(unique_monitors);
+                hashmap_free(unique_subs);
         }
 
         return 1;
@@ -438,18 +438,18 @@ static int node_match_unit_removed(sd_bus_message *m, void *userdata, UNUSED sd_
                 usubs->loaded = false;
         }
 
-        struct hashmap *unique_monitors = node_compute_unique_monitor_list(node, unit);
-        if (unique_monitors != NULL) {
-                Monitor **monitorp = NULL;
+        struct hashmap *unique_subs = node_compute_unique_monitor_subscriptions(node, unit);
+        if (unique_subs != NULL) {
+                Subscription **subp = NULL;
                 size_t i = 0;
-                while (hashmap_iter(unique_monitors, &i, (void **) &monitorp)) {
-                        Monitor *monitor = *monitorp;
-                        int r = monitor->handle_unit_removed(monitor, node->name, unit, "real");
+                while (hashmap_iter(unique_subs, &i, (void **) &subp)) {
+                        Subscription *sub = *subp;
+                        int r = sub->handle_unit_removed(sub->monitor, node->name, unit, "real");
                         if (r < 0) {
                                 hirte_log_errorf("Failed to emit UnitRemoved signal: %s", strerror(-r));
                         }
                 }
-                hashmap_free(unique_monitors);
+                hashmap_free(unique_subs);
         }
 
         return 1;
@@ -873,15 +873,16 @@ static int node_disconnected(UNUSED sd_bus_message *message, void *userdata, UNU
 
                 int r = 0;
                 if (send_state_change) {
-                        struct hashmap *unique_monitors = node_compute_unique_monitor_list(node, usubs->unit);
-                        if (unique_monitors != NULL) {
+                        struct hashmap *unique_subs = node_compute_unique_monitor_subscriptions(
+                                        node, usubs->unit);
+                        if (unique_subs != NULL) {
 
-                                Monitor **monitorp = NULL;
+                                Subscription **subp = NULL;
                                 size_t s = 0;
-                                while (hashmap_iter(unique_monitors, &s, (void **) &monitorp)) {
-                                        Monitor *monitor = *monitorp;
-                                        r = monitor->handle_unit_state_changed(
-                                                        monitor,
+                                while (hashmap_iter(unique_subs, &s, (void **) &subp)) {
+                                        Subscription *sub = *subp;
+                                        r = sub->handle_unit_state_changed(
+                                                        sub->monitor,
                                                         node->name,
                                                         usubs->unit,
                                                         active_state_to_string(usubs->active_state),
@@ -891,24 +892,24 @@ static int node_disconnected(UNUSED sd_bus_message *message, void *userdata, UNU
                                                 hirte_log_error("Failed to emit UnitStateChanged signal");
                                         }
                                 }
-                                hashmap_free(unique_monitors);
+                                hashmap_free(unique_subs);
                         }
                 }
 
 
-                struct hashmap *unique_monitors = node_compute_unique_monitor_list(node, usubs->unit);
-                if (unique_monitors != NULL) {
+                struct hashmap *unique_subs = node_compute_unique_monitor_subscriptions(node, usubs->unit);
+                if (unique_subs != NULL) {
 
-                        Monitor **monitorp = NULL;
+                        Subscription **subp = NULL;
                         size_t s = 0;
-                        while (hashmap_iter(unique_monitors, &s, (void **) &monitorp)) {
-                                Monitor *monitor = *monitorp;
-                                r = monitor->handle_unit_removed(monitor, node->name, usubs->unit, "virtual");
+                        while (hashmap_iter(unique_subs, &s, (void **) &subp)) {
+                                Subscription *sub = *subp;
+                                r = sub->handle_unit_removed(sub->monitor, node->name, usubs->unit, "virtual");
                                 if (r < 0) {
                                         hirte_log_error("Failed to emit UnitRemoved signal");
                                 }
                         }
-                        hashmap_free(unique_monitors);
+                        hashmap_free(unique_subs);
                 }
         }
 
@@ -1523,15 +1524,14 @@ void node_subscribe(Node *node, Subscription *sub) {
                 /* We know this is loaded, so we won't get notified from
                    the agent, instead send a virtual event here. */
                 if (usubs->loaded) {
-                        Monitor *monitor = sub->monitor;
-                        int r = monitor->handle_unit_new(monitor, node->name, sub_unit->name, "virtual");
+                        int r = sub->handle_unit_new(sub->monitor, node->name, sub_unit->name, "virtual");
                         if (r < 0) {
                                 hirte_log_error("Failed to emit UnitNew signal");
                         }
 
                         if (usubs->active_state >= 0) {
-                                r = monitor->handle_unit_state_changed(
-                                                monitor,
+                                r = sub->handle_unit_state_changed(
+                                                sub->monitor,
                                                 node->name,
                                                 sub_unit->name,
                                                 active_state_to_string(usubs->active_state),

@@ -16,6 +16,11 @@ Subscription *create_proxy_monitor_subscription(ProxyMonitor *monitor, const cha
         subscription->monitor = monitor; /* Weak ref to avoid circular dep */
         subscription->free_monitor = NULL;
 
+        subscription->handle_unit_new = proxy_monitor_on_unit_new;
+        subscription->handle_unit_removed = proxy_monitor_on_unit_removed;
+        subscription->handle_unit_state_changed = proxy_monitor_on_unit_state_changed;
+        subscription->handle_unit_property_changed = proxy_monitor_on_unit_property_changed;
+
         return subscription;
 }
 
@@ -47,11 +52,6 @@ ProxyMonitor *proxy_monitor_new(
         if (!subscription_add_unit(monitor->subscription, unit_name)) {
                 return NULL;
         }
-
-        monitor->handle_unit_new = proxy_monitor_on_unit_new;
-        monitor->handle_unit_removed = proxy_monitor_on_unit_removed;
-        monitor->handle_unit_state_changed = proxy_monitor_on_unit_state_changed;
-        monitor->handle_unit_property_changed = proxy_monitor_on_unit_property_changed;
 
         return steal_pointer(&monitor);
 }
