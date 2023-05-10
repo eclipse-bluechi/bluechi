@@ -2,7 +2,7 @@
 
 ## NAME
 
-hirte-agent.conf - Configuration file to bootstrap hirte-agent
+agent.conf - Configuration file to bootstrap hirte-agent
 
 ## DESCRIPTION
 
@@ -92,7 +92,9 @@ LogIsQuiet=false
 ```
 ## FILES
 
-Distributions provide the __/usr/share/hirte-agent/config/hirte-default.conf__ file which defines hirte-agent configuration defaults. Administrators can copy this file to __/etc/hirte/agent.conf__ and specify their own configuration.
+Distributions provide the __/usr/share/hirte/config/agent.conf__ file which defines hirte-agent configuration defaults. Administrators can copy this file to __/etc/hirte/agent.conf__ and specify their own configuration.
+
+Administrators can also use a "drop-in" directory __/etc/hirte/agent.conf.d__ to drop their configuration changes.
 
 ## SEE ALSO
 

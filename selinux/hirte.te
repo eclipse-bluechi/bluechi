@@ -87,3 +87,5 @@ stream_connect_pattern(hirte_agent_t, haproxy_var_lib_t, haproxy_var_lib_t, hapr
 
 manage_sock_files_pattern(init_t, haproxy_var_lib_t, haproxy_var_lib_t)
 manage_sock_files_pattern(init_t, haproxy_var_run_t, haproxy_var_run_t)
+
+unconfined_dbus_chat(hirte_t)
