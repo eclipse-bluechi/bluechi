@@ -31,7 +31,7 @@ This package contains the controller and command line tool.
 %systemd_postun_with_restart hirte.service
 
 %files
-%config(noreplace) %{_sysconfdir}/hirte/hirte.conf
+%ghost %{_sysconfdir}/hirte/hirte.conf
 %dir %{_sysconfdir}/hirte
 %dir %{_sysconfdir}/hirte/hirte.conf.d
 %doc README.md
@@ -43,7 +43,7 @@ This package contains the controller and command line tool.
 %{_datadir}/dbus-1/interfaces/org.containers.hirte.Monitor.xml
 %{_datadir}/dbus-1/interfaces/org.containers.hirte.Node.xml
 %{_datadir}/dbus-1/system.d/org.containers.hirte.conf
-%{_datadir}/hirte/config/hirte-default.conf
+%{_datadir}/hirte/config/hirte.conf
 %{_mandir}/man1/hirte.*
 %{_mandir}/man5/hirte.conf.*
 %{_sysconfdir}/hirte/hirte.conf.d/README.md
@@ -71,7 +71,7 @@ This package contains the node agent.
 %systemd_postun_with_restart hirte-agent.service
 
 %files agent
-%config(noreplace) %{_sysconfdir}/hirte/agent.conf
+%ghost %{_sysconfdir}/hirte/agent.conf
 %dir %{_sysconfdir}/hirte
 %dir %{_sysconfdir}/hirte/agent.conf.d
 %doc README.md
@@ -79,7 +79,7 @@ This package contains the node agent.
 %{_bindir}/hirte-agent
 %{_bindir}/hirte-proxy
 %{_datadir}/dbus-1/system.d/org.containers.hirte.Agent.conf
-%{_datadir}/hirte-agent/config/hirte-default.conf
+%{_datadir}/hirte-agent/config/agent.conf
 %{_datadir}/dbus-1/interfaces/org.containers.hirte.Agent.xml
 %{_mandir}/man1/hirte-agent.*
 %{_mandir}/man1/hirte-proxy.*
