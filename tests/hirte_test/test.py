@@ -1,10 +1,12 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
 
+import traceback
+
 from podman import PodmanClient
 from typing import List, Dict, Callable, Tuple
 
 from hirte_test.config import HirteControllerConfig, HirteNodeConfig
-from hirte_test.container import HirteContainer
+from hirte_test.container import HirteContainer, HirteNodeContainer, HirteControllerContainer
 
 
 class HirteTest():
@@ -34,13 +36,13 @@ class HirteTest():
     def add_hirte_node_config(self, cfg: HirteNodeConfig):
         self.hirte_node_configs.append(cfg)
 
-    def setup(self) -> Tuple[bool, Tuple[HirteContainer, Dict[str, HirteContainer]]]:
+    def setup(self) -> Tuple[bool, Tuple[HirteControllerContainer, Dict[str, HirteNodeContainer]]]:
         if self.hirte_controller_config is None:
             raise Exception("Hirte Controller configuration not set")
 
         success = True
-        ctrl_container: HirteContainer = None
-        node_container: Dict[str, HirteContainer] = dict()
+        ctrl_container: HirteControllerContainer = None
+        node_container: Dict[str, HirteNodeContainer] = dict()
         try:
             print(f"Starting container for hirte-controller with config:\n{self.hirte_controller_config.serialize()}")
 
@@ -52,7 +54,7 @@ class HirteTest():
                 networks={self.hirte_network_name: {}},
             )
 
-            ctrl_container = HirteContainer(c, self.hirte_controller_config)
+            ctrl_container = HirteControllerContainer(c, self.hirte_controller_config)
             ctrl_container.exec_run('systemctl start hirte')
 
             for cfg in self.hirte_node_configs:
@@ -64,7 +66,7 @@ class HirteTest():
                     detach=True,
                     networks={self.hirte_network_name: {}},
                 )
-                node = HirteContainer(c, cfg)
+                node = HirteNodeContainer(c, cfg)
                 node.exec_run('systemctl start hirte-agent')
 
                 node_container[cfg.node_name] = node
@@ -74,7 +76,7 @@ class HirteTest():
 
         return (success, (ctrl_container, node_container))
 
-    def gather_logs(self, ctrl: HirteContainer, nodes: Dict[str, HirteContainer]):
+    def gather_logs(self, ctrl: HirteControllerContainer, nodes: Dict[str, HirteNodeContainer]):
         print("Collecting logs from all container...")
 
         if ctrl is not None:
@@ -83,7 +85,7 @@ class HirteTest():
         for _, node in nodes.items():
             node.gather_journal_logs(self.tmt_test_data_dir)
 
-    def teardown(self, ctrl: HirteContainer, nodes: Dict[str, HirteContainer]):
+    def teardown(self, ctrl: HirteControllerContainer, nodes: Dict[str, HirteNodeContainer]):
         print("Stopping and removing all container...")
 
         if ctrl is not None:
@@ -92,12 +94,13 @@ class HirteTest():
         for _, node in nodes.items():
             node.cleanup()
 
-    def run(self, exec: Callable[[HirteContainer, Dict[str, HirteContainer]], None]):
+    def run(self, exec: Callable[[HirteControllerContainer, Dict[str, HirteNodeContainer]], None]):
         successful, container = self.setup()
         ctrl_container, node_container = container
 
         if not successful:
             self.teardown(ctrl_container, node_container)
+            traceback.print_exc()
             raise Exception("Failed to setup hirte test")
 
         try:

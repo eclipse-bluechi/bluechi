@@ -7,7 +7,8 @@ import tarfile
 from podman.domain.containers import Container
 from typing import Any, Iterator, Optional, Tuple, Union, IO
 
-from hirte_test.config import HirteConfig
+from hirte_test.config import HirteConfig, HirteNodeConfig, HirteControllerConfig
+from hirte_test.util import read_file
 
 
 class HirteContainer():
@@ -74,12 +75,43 @@ class HirteContainer():
     def systemctl_daemon_reload(self) -> Tuple[Optional[int], Union[Iterator[bytes], Any, Tuple[bytes, bytes]]]:
         return self.exec_run("systemctl daemon-reload")
 
+    def copy_systemd_service(self, service_file_name: str, source_dir: str, target_dir):
+        source_path = os.path.join(source_dir, service_file_name)
+        target_path = os.path.join(target_dir, service_file_name)
+
+        content = read_file(source_path)
+
+        print(f"Copy local systemd service '{source_path}' to container path '{target_dir}' with content:")
+        print(f"{content}\n")
+        self.create_file(target_path, service_file_name, content)
+        self.systemctl_daemon_reload()
+
+
+class HirteControllerContainer(HirteContainer):
+
+    def __init__(self, container: Container, config: HirteControllerConfig) -> None:
+        super().__init__(container, config)
+
     def wait_for_hirte(self):
         result = 1
         while result != 0:
             result, _ = self.exec_run("systemctl is-active hirte")
+    
+    def copy_systemd_service(self, service_file_name: str, source_dir: str, target_dir):
+        super().copy_systemd_service(service_file_name, source_dir, target_dir)
+        self.wait_for_hirte()
+
+
+class HirteNodeContainer(HirteContainer):
+
+    def __init__(self, container: Container, config: HirteNodeConfig) -> None:
+        super().__init__(container, config)
 
     def wait_for_hirte_agent(self):
         result = 1
         while result != 0:
             result, _ = self.exec_run("systemctl is-active hirte-agent")
+    
+    def copy_systemd_service(self, service_file_name: str, source_dir: str, target_dir):
+        super().copy_systemd_service(service_file_name, source_dir, target_dir)
+        self.wait_for_hirte_agent()
