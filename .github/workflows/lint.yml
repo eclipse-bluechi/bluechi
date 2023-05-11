@@ -93,33 +93,22 @@ jobs:
                   meson \
                   selinux-policy-devel \
                   systemd-devel \
-                  valgrind \
               -y
 
       - name: Checkout sources
         uses: actions/checkout@v3
 
-      - name: Building hirte
+      - name: Initialize meson configuration
         run: |
-          make build
+          meson setup builddir
 
       - name: Running source code format check
         run: |
-          make check-fmt
+          ninja -C builddir clang-format-check
 
       - name: Running static analysis
         run: |
-          make lint-c
-
-      - name: Running unit tests
-        run: |
-          make test-with-valgrind
-
-      - name: Upload unit test logs
-        uses: actions/upload-artifact@v3
-        with:
-          name: unit-test-logs
-          path: ./builddir/meson-logs/testlog-valgrind.txt
+          ninja -C builddir clang-tidy
 
 
 
