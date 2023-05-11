@@ -4,11 +4,11 @@ import pytest
 from typing import Dict
 
 from hirte_test.test import HirteTest
-from hirte_test.container import HirteContainer
+from hirte_test.container import HirteControllerContainer, HirteNodeContainer
 from hirte_test.config import HirteControllerConfig, HirteNodeConfig
 
 
-def foo_startup_verify(ctrl: HirteContainer, nodes: Dict[str, HirteContainer]):
+def foo_startup_verify(ctrl: HirteControllerContainer, nodes: Dict[str, HirteNodeContainer]):
     result, output = ctrl.exec_run('systemctl is-active hirte')
 
     assert result == 0
