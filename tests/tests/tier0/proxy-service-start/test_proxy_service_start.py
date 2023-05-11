@@ -8,7 +8,6 @@ from typing import Dict
 from hirte_test.config import HirteControllerConfig, HirteNodeConfig
 from hirte_test.container import HirteControllerContainer, HirteNodeContainer
 from hirte_test.test import HirteTest
-from hirte_test.util import read_file
 
 
 node_foo_name = "node-foo"
@@ -19,7 +18,7 @@ def verify_proxy_start(ctrl: HirteControllerContainer, nodes: Dict[str, HirteNod
     foo = nodes[node_foo_name]
     bar = nodes[node_bar_name]
 
-    source_dir = os.path.join(".", "systemd")
+    source_dir = "systemd"
     target_dir = os.path.join("/", "etc", "systemd", "system")
     requesting_service = "requesting.service"
     simple_service = "simple.service"
@@ -27,21 +26,24 @@ def verify_proxy_start(ctrl: HirteControllerContainer, nodes: Dict[str, HirteNod
     foo.copy_systemd_service(requesting_service, source_dir, target_dir)
     bar.copy_systemd_service(simple_service, source_dir, target_dir)
 
-    result, _ = ctrl.exec_run(f"hirtectl start {node_foo_name} requesting.service")
-    assert result == 0
+    result, output = ctrl.exec_run(f"hirtectl start {node_foo_name} {requesting_service}")
+    if result != 0:
+        raise Exception(f"Failed to start requesting service on node foo: {output}")
 
     # verify the units have been loaded
     result, output = ctrl.exec_run(f"hirtectl list-units {node_bar_name} | grep {requesting_service}")
-    assert result == 0
+    if result != 0:
+        raise Exception(f"Failed to list units for node bar: {output}")
     assert re.search("active", output) is not None
 
     result, output = ctrl.exec_run(f"hirtectl list-units {node_foo_name} | grep {simple_service}")
-    assert result == 0
+    if result != 0:
+        raise Exception(f"Failed to list units for node foo: {output}")
     assert re.search("active", output) is not None
 
 
 @pytest.mark.timeout(10)
-def test_start_proxy_service(
+def test_proxy_service_start(
         hirte_test: HirteTest,
         hirte_ctrl_default_config: HirteControllerConfig,
         hirte_node_default_config: HirteNodeConfig):

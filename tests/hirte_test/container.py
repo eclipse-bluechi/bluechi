@@ -77,13 +77,11 @@ class HirteContainer():
 
     def copy_systemd_service(self, service_file_name: str, source_dir: str, target_dir):
         source_path = os.path.join(source_dir, service_file_name)
-        target_path = os.path.join(target_dir, service_file_name)
-
         content = read_file(source_path)
 
         print(f"Copy local systemd service '{source_path}' to container path '{target_dir}' with content:")
         print(f"{content}\n")
-        self.create_file(target_path, service_file_name, content)
+        self.create_file(target_dir, service_file_name, content)
         self.systemctl_daemon_reload()
 
 
@@ -96,7 +94,7 @@ class HirteControllerContainer(HirteContainer):
         result = 1
         while result != 0:
             result, _ = self.exec_run("systemctl is-active hirte")
-    
+
     def copy_systemd_service(self, service_file_name: str, source_dir: str, target_dir):
         super().copy_systemd_service(service_file_name, source_dir, target_dir)
         self.wait_for_hirte()
@@ -111,7 +109,7 @@ class HirteNodeContainer(HirteContainer):
         result = 1
         while result != 0:
             result, _ = self.exec_run("systemctl is-active hirte-agent")
-    
+
     def copy_systemd_service(self, service_file_name: str, source_dir: str, target_dir):
         super().copy_systemd_service(service_file_name, source_dir, target_dir)
         self.wait_for_hirte_agent()
