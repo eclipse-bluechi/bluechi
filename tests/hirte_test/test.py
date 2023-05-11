@@ -6,7 +6,7 @@ from podman import PodmanClient
 from typing import List, Dict, Callable, Tuple
 
 from hirte_test.config import HirteControllerConfig, HirteNodeConfig
-from hirte_test.container import HirteContainer, HirteNodeContainer, HirteControllerContainer
+from hirte_test.container import HirteNodeContainer, HirteControllerContainer
 
 
 class HirteTest():
