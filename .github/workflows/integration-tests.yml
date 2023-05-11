@@ -1,4 +1,4 @@
-name: Build
+name: Integration tests
 
 on:
   push:
@@ -61,7 +61,55 @@ jobs:
           name: rpm-artifacts
           path: ${{ env.ARTIFACTS_DIR}}
 
-  e2e:
+  test:
     needs: rpmbuild
-    uses: ./.github/workflows/e2e.yml
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install \
+                  genisoimage \
+                  libkrb5-dev \
+                  libvirt-daemon-system \
+                  libvirt-dev \
+                  pkg-config \
+                  podman \
+                  qemu-kvm \
+              -y
+
+      - name: Install unpackaged python libraries from PyPi
+        run: |
+          pip install "tmt[provision]" "tmt[report-junit]" podman pytest pytest-timeout
+
+      - name: Checkout sources
+        uses: actions/checkout@v3
+
+      - name: Download artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: rpm-artifacts
+          path: 'tests/hirte-rpms'
+
+      - name: Run integration tests
+        run: |
+          cd tests
+          tmt run -eCONTAINER_USED=container-hirte-local
+
+      - name: Show tmt log output in case of failure
+        if: ${{ failure() }}
+        run: |
+          cat /var/tmp/tmt/run-001/log.txt
+
+      - name: Gather tests artifacts
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: test-artifacts
+          path: '/var/tmp/tmt'
 
