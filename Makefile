@@ -53,7 +53,7 @@ rpm: srpm
 
 srpm: 
 	@rpmbuild || (echo "For building RPM package, rpmbuild command is required. To install use: dnf install rpm-build"; exit 1)
-	@build-scripts/build-rpm.sh
+	@build-scripts/build-srpm.sh
 
 distclean: clean
 	rm -rf $(BUILDDIR)
