@@ -111,14 +111,12 @@ int cfg_load_complete_configuration(
 
         if (custom_config_file != NULL) {
                 result = cfg_load_from_file(config, custom_config_file);
-                if (result < 0) {
+                if (result < 0 && result != -ENOENT) {
                         fprintf(stderr,
                                 "Error loading custom configuration file '%s': '%s'.\n",
                                 custom_config_file,
                                 strerror(-result));
-                        if (result != -ENOENT) {
-                                return result;
-                        }
+                        return result;
                 }
         }
 
