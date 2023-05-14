@@ -1,14 +1,13 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
 
 import os
-import platform
 import pytest
-import socket
 
 from podman import PodmanClient
 
 from hirte_test.test import HirteTest
 from hirte_test.config import HirteControllerConfig, HirteNodeConfig
+from hirte_test.util import get_primary_ip
 
 
 @pytest.fixture(scope='session')
@@ -83,7 +82,7 @@ def hirte_ctrl_default_config(hirte_ctrl_svc_port: str):
 def hirte_node_default_config(hirte_ctrl_svc_port: str):
     return HirteNodeConfig(
         file_name="agent.conf",
-        manager_host=socket.gethostbyname(platform.node()),
+        manager_host=get_primary_ip(),
         manager_port=hirte_ctrl_svc_port)
 
 
