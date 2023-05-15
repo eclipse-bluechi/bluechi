@@ -8,6 +8,7 @@ from typing import Dict
 from hirte_test.config import HirteControllerConfig, HirteNodeConfig
 from hirte_test.container import HirteControllerContainer, HirteNodeContainer
 from hirte_test.test import HirteTest
+from hirte_test.util import filter_hirtectl_list_units
 
 
 node_foo_name = "node-foo"
@@ -31,15 +32,17 @@ def verify_proxy_start(ctrl: HirteControllerContainer, nodes: Dict[str, HirteNod
         raise Exception(f"Failed to start requesting service on node foo: {output}")
 
     # verify the units have been loaded
-    result, output = ctrl.exec_run(f"hirtectl list-units {node_bar_name} | grep {requesting_service}")
+    result, output = ctrl.exec_run(f"hirtectl list-units {node_bar_name}")
     if result != 0:
         raise Exception(f"Failed to list units for node bar: {output}")
-    assert re.search("active", output) is not None
+    _, state, _ = filter_hirtectl_list_units(output, simple_service)
+    assert state == "active"
 
-    result, output = ctrl.exec_run(f"hirtectl list-units {node_foo_name} | grep {simple_service}")
+    result, output = ctrl.exec_run(f"hirtectl list-units {node_foo_name}")
     if result != 0:
         raise Exception(f"Failed to list units for node foo: {output}")
-    assert re.search("active", output) is not None
+    _, state, _ = filter_hirtectl_list_units(output, requesting_service)
+    assert state == "active"
 
 
 @pytest.mark.timeout(10)
