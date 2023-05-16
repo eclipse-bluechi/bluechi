@@ -1,0 +1,6 @@
+summary: Test if stopping the requesting service results in a stopped dependency service if its marked with StopWhenUnneeded
+
+tier: 0
+
+test: |
+  pytest -svv
