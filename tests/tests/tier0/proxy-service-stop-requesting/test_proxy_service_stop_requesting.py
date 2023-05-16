@@ -1,6 +1,5 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
 
-import re
 import os
 import pytest
 from typing import Dict
@@ -8,6 +7,7 @@ from typing import Dict
 from hirte_test.config import HirteControllerConfig, HirteNodeConfig
 from hirte_test.container import HirteControllerContainer, HirteNodeContainer
 from hirte_test.test import HirteTest
+from hirte_test.util import assemble_hirte_dep_service_name, assemble_hirte_proxy_service_name
 
 
 node_foo_name = "node-foo"
@@ -17,7 +17,27 @@ requesting_service = "requesting.service"
 simple_service = "simple.service"
 
 
-def setup_and_start_proxy(ctrl: HirteControllerContainer, nodes: Dict[str, HirteNodeContainer]):
+def verify_proxy_start(foo: HirteNodeContainer, bar: HirteNodeContainer):
+    assert foo.wait_for_unit_state_to_be(requesting_service, "active")
+    hirte_proxy_service = assemble_hirte_proxy_service_name(node_bar_name, simple_service)
+    assert foo.wait_for_unit_state_to_be(hirte_proxy_service, "active")
+
+    assert bar.wait_for_unit_state_to_be(simple_service, "active")
+    hirte_dep_service = assemble_hirte_dep_service_name(simple_service)
+    assert bar.wait_for_unit_state_to_be(hirte_dep_service, "active")
+
+
+def verify_proxy_stop(foo: HirteNodeContainer, bar: HirteNodeContainer):
+    assert foo.wait_for_unit_state_to_be(requesting_service, "inactive")
+    hirte_proxy_service = assemble_hirte_proxy_service_name(node_bar_name, simple_service)
+    assert foo.wait_for_unit_state_to_be(hirte_proxy_service, "inactive")
+
+    assert bar.wait_for_unit_state_to_be(simple_service, "active")
+    hirte_dep_service = assemble_hirte_dep_service_name(simple_service)
+    assert bar.wait_for_unit_state_to_be(hirte_dep_service, "inactive")
+
+
+def exec(ctrl: HirteControllerContainer, nodes: Dict[str, HirteNodeContainer]):
     foo = nodes[node_foo_name]
     bar = nodes[node_bar_name]
 
@@ -27,44 +47,10 @@ def setup_and_start_proxy(ctrl: HirteControllerContainer, nodes: Dict[str, Hirte
     foo.copy_systemd_service(requesting_service, source_dir, target_dir)
     bar.copy_systemd_service(simple_service, source_dir, target_dir)
 
-    result, output = ctrl.exec_run(f"hirtectl start {node_foo_name} {requesting_service}")
-    if result != 0:
-        raise Exception(f"Failed to start requesting service on node foo: {output}")
-
-
-def verify_proxies_running(ctrl: HirteControllerContainer):
-    result, output = ctrl.exec_run(f"hirtectl list-units {node_bar_name} | grep {requesting_service}")
-    if result != 0:
-        raise Exception(f"Failed to list units for node bar: {output}")
-    assert re.search("active", output) is not None
-
-    result, output = ctrl.exec_run(f"hirtectl list-units {node_foo_name} | grep {simple_service}")
-    if result != 0:
-        raise Exception(f"Failed to list units for node foo: {output}")
-    assert re.search("active", output) is not None
-
-
-def stop_requesting_service(ctrl: HirteControllerContainer):
-    result, output = ctrl.exec_run(f"hirtectl stop {node_foo_name} requesting.service")
-    if result != 0:
-        raise Exception(f"Failed to start requesting service on node foo: {output}")
-
-
-def exec(ctrl: HirteControllerContainer, nodes: Dict[str, HirteNodeContainer]):
-    setup_and_start_proxy(ctrl, nodes)
-    verify_proxies_running(ctrl)
-    stop_requesting_service(ctrl)
-
-    # verify requesting service is stopped, but simple service is still running
-    result, output = ctrl.exec_run(f"hirtectl list-units {node_bar_name} | grep {requesting_service}")
-    if result != 0:
-        raise Exception(f"Failed to list units for node bar: {output}")
-    assert re.search("inactive", output) is not None
-
-    result, output = ctrl.exec_run(f"hirtectl list-units {node_foo_name} | grep {simple_service}")
-    if result != 0:
-        raise Exception(f"Failed to list units for node foo: {output}")
-    assert re.search("active", output) is not None
+    ctrl.start_unit(node_foo_name, requesting_service)
+    verify_proxy_start(foo, bar)
+    ctrl.stop_unit(node_foo_name, requesting_service)
+    verify_proxy_stop(foo, bar)
 
 
 @pytest.mark.timeout(10)

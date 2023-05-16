@@ -1,4 +1,4 @@
-summary: Test if requesting.service's dependency on simple.service from node bar can be resolved
+summary: Test if stopping the requesting service results in a stopped hirte-proxy and hirte-dep service, but dependency service is still running
 
 tier: 0
 
