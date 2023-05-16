@@ -4,7 +4,7 @@ DESTDIR ?=
 BUILDDIR=builddir
 
 CODESPELL_PARAMS=\
-	-S Makefile,imgtype,copy,AUTHORS,bin,.git,CHANGELOG.md,changelog.txt,.cirrus.yml,"*.xz,*.gz,*.tar,*.tgz,*ico,*.png,*.1,*.5,*.orig,*.rej,*.xml,*xsl",build.ninja,intro-targets.json \
+	-S Makefile,imgtype,copy,AUTHORS,bin,.git,CHANGELOG.md,changelog.txt,.cirrus.yml,"*.xz,*.gz,*.tar,*.tgz,*ico,*.png,*.1,*.5,*.orig,*.rej,*.xml,*xsl",build.ninja,intro-targets.json,./tests/tests/tier0/proxy-service-fails-on-typo-in-file/systemd/simple.service \
 	-L keypair,flate,uint,iff,od,ERRO
 
 build:

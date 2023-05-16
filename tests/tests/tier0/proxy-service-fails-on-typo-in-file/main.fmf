@@ -1,0 +1,6 @@
+summary: Test if proxy service fails if dependency service can't be loaded due to typo
+
+tier: 0
+
+test: |
+  pytest -svv
