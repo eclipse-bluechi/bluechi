@@ -23,3 +23,11 @@ def get_primary_ip() -> str:
     finally:
         s.close()
     return ip
+
+
+def assemble_hirte_dep_service_name(unit_name: str) -> str:
+    return f"hirte-dep@{unit_name}"
+
+
+def assemble_hirte_proxy_service_name(node_name: str, unit_name: str) -> str:
+    return f"hirte-proxy@{node_name}_{unit_name}"

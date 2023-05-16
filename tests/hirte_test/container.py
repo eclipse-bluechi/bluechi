@@ -2,6 +2,7 @@
 
 import io
 import os
+import time
 import tarfile
 
 from podman.domain.containers import Container
@@ -84,6 +85,43 @@ class HirteContainer():
         self.create_file(target_dir, service_file_name, content)
         self.systemctl_daemon_reload()
 
+    def service_is_active(self, unit_name: str) -> bool:
+        result, _ = self.exec_run(f"systemctl is-active {unit_name}")
+        return result == 0
+
+    def get_unit_state(self, unit_name: str) -> str:
+        _, output = self.exec_run(f"systemctl is-active {unit_name}")
+        return output
+
+    def wait_for_unit_state_to_be(self, unit_name: str, expected_state: str, timeout: float = 2.0) -> bool:
+        latest_state = ""
+
+        start = time.time()
+        while (time.time() - start) < timeout:
+            latest_state = self.get_unit_state(unit_name)
+            if latest_state == expected_state:
+                return True
+
+        print(f"Timeout while waiting for {unit_name} to reach state {expected_state}. \
+              Latest state: {latest_state}")
+        return False
+
+
+class HirteNodeContainer(HirteContainer):
+
+    def __init__(self, container: Container, config: HirteNodeConfig) -> None:
+        super().__init__(container, config)
+        self.node_name = config.node_name
+
+    def wait_for_hirte_agent(self):
+        should_wait = True
+        while should_wait:
+            should_wait = not self.service_is_active("hirte-agent")
+
+    def copy_systemd_service(self, service_file_name: str, source_dir: str, target_dir):
+        super().copy_systemd_service(service_file_name, source_dir, target_dir)
+        self.wait_for_hirte_agent()
+
 
 class HirteControllerContainer(HirteContainer):
 
@@ -91,25 +129,24 @@ class HirteControllerContainer(HirteContainer):
         super().__init__(container, config)
 
     def wait_for_hirte(self):
-        result = 1
-        while result != 0:
-            result, _ = self.exec_run("systemctl is-active hirte")
+        should_wait = True
+        while should_wait:
+            should_wait = not self.service_is_active("hirte")
 
     def copy_systemd_service(self, service_file_name: str, source_dir: str, target_dir):
         super().copy_systemd_service(service_file_name, source_dir, target_dir)
         self.wait_for_hirte()
 
+    def start_unit(self, node_name: str, unit_name: str) -> None:
+        print(f"Starting unit {unit_name} on node {node_name}")
 
-class HirteNodeContainer(HirteContainer):
+        result, output = self.exec_run(f"hirtectl start {node_name} {unit_name}")
+        if result != 0:
+            raise Exception(f"Failed to start service {unit_name} on node {node_name}: {output}")
 
-    def __init__(self, container: Container, config: HirteNodeConfig) -> None:
-        super().__init__(container, config)
+    def stop_unit(self, node_name: str, unit_name: str) -> None:
+        print(f"Stopping unit {unit_name} on node {node_name}")
 
-    def wait_for_hirte_agent(self):
-        result = 1
-        while result != 0:
-            result, _ = self.exec_run("systemctl is-active hirte-agent")
-
-    def copy_systemd_service(self, service_file_name: str, source_dir: str, target_dir):
-        super().copy_systemd_service(service_file_name, source_dir, target_dir)
-        self.wait_for_hirte_agent()
+        result, output = self.exec_run(f"hirtectl stop {node_name} {unit_name}")
+        if result != 0:
+            raise Exception(f"Failed to start service {unit_name} on node {node_name}: {output}")

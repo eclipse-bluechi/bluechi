@@ -53,6 +53,7 @@ class HirteTest():
                 ports={self.hirte_ctrl_svc_port: self.hirte_ctrl_host_port},
                 networks={self.hirte_network_name: {}},
             )
+            c.wait(condition="running")
 
             ctrl_container = HirteControllerContainer(c, self.hirte_controller_config)
             ctrl_container.exec_run('systemctl start hirte')
@@ -66,10 +67,13 @@ class HirteTest():
                     detach=True,
                     networks={self.hirte_network_name: {}},
                 )
+                c.wait(condition="running")
+
                 node = HirteNodeContainer(c, cfg)
+                node_container[cfg.node_name] = node
+
                 node.exec_run('systemctl start hirte-agent')
 
-                node_container[cfg.node_name] = node
         except Exception as ex:
             success = False
             print(f"Failed to setup hirte container: {ex}")
