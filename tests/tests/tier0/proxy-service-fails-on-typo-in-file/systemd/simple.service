@@ -1,0 +1,7 @@
+[Unit]
+Description=Just sleeping
+
+[Sevice]
+Type=simple
+ExecStart=/bin/true
+RemainAfterExit=yes
