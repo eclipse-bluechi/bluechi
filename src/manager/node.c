@@ -935,7 +935,8 @@ static int node_disconnected(UNUSED sd_bus_message *message, void *userdata, UNU
                    disconnected. */
                 if (!LIST_IS_EMPTY(manager->jobs)) {
                         Job *job = NULL;
-                        LIST_FOREACH(jobs, job, manager->jobs) {
+                        Job *next_job = NULL;
+                        LIST_FOREACH_SAFE(jobs, job, next_job, manager->jobs) {
                                 if (strcmp(job->node->name, node->name) == 0) {
                                         hirte_log_debugf("Removing job %d from node %s", job->id, job->node->name);
                                         LIST_REMOVE(jobs, manager->jobs, job);
