@@ -1,21 +1,7 @@
-# Hirte interfaces
+<!-- markdownlint-disable-file MD013 MD007 MD024 -->
+# D-Bus API Description
 
-Hirte is a tool that allows you to manage a multitude of systems, each running systemd, in a single place.
-
-The main service in Hirte is called the manager. It runs on some kind of Linux system, that Linux system itself may be
-connected to Hirte, but that is not strictly necessary.
-
-When the manager starts it loads a configuration file that describes all the systems (called nodes) that are to be
-managed. Each node has a unique name that is used to reference it in the manager. Optionally the configuration also
-contains authentication information for each node (using client certificates).
-
-On each node that is under control of Hirte a service called `hirte-agent` is running, when it starts up it connects
-(via D-Bus over TCP) to the manager and registers as available (optionally authenticating). It then receives requests
-from the manager and reports local state changes to it.
-
-The main way to interact with Hirte is using D-Bus. It exposes a name on the system bus called `org.containers.hirte`
-that other programs can use to control the system. It is expected that high-level control planes use this API directly,
-but there is also a `hirtectl` program that is useful for debugging and testing.
+The main way to interact with Hirte is using [D-Bus](https://www.freedesktop.org/wiki/Software/dbus/). It exposes a name on the system bus called `org.containers.hirte` that other programs can use to control the system. It is expected that high-level control planes use this API directly, but there is also a `hirtectl` program that is useful for debugging and testing.
 
 ## Hirte public D-Bus API
 
@@ -26,7 +12,7 @@ Note that all properties also come with change events, so you can easily track w
 
 ### interface org.containers.hirte.Manager
 
-* Methods:
+#### Methods
 
   * `ListUnits(out a(sssssssouso) units)`
 
@@ -47,7 +33,7 @@ Note that all properties also come with change events, so you can easily track w
 
     Returns the object path of a node given its name.
 
-* Signals:
+#### Signals
 
   * `JobNew(u id, o job, s nodeName, s unit)`
 
@@ -59,7 +45,7 @@ Note that all properties also come with change events, so you can easily track w
     `failed`, `cancelled`, `timeout`, `dependency`, `skipped`. This is either the result from systemd on the node, or
     `cancelled` if the job was cancelled in Hirte before any systemd job was started for it.
 
-* Properties:
+#### Properties
 
   * `Nodes` - `as`
 
@@ -70,7 +56,7 @@ Note that all properties also come with change events, so you can easily track w
 
 Object path: `/org/containers/hirte/monitor/$id`
 
-* Methods:
+#### Methods
 
   * `Close()`
 
@@ -94,7 +80,7 @@ Object path: `/org/containers/hirte/monitor/$id`
     for all matching units in the system, and then again whenever one of the properties of the unit changes. Returns an
     identifier `id` used for a subsequent `Unsubscribe`.
 
-* Signals:
+#### Signals
 
   * `UnitPropertiesChanged(s node, s unit, s interface, a{sv} props)`
 
@@ -133,7 +119,7 @@ manager or not, and the status can change over time.
 
 Object path: `/org/containers/hirte/node/$name`
 
-* Methods:
+#### Methods
 
   * `StartUnit(in s name, in s mode, out o job)`
 
@@ -179,7 +165,7 @@ Object path: `/org/containers/hirte/node/$name`
     Returns all the currently loaded systemd units on this node. The returned structure is the same as the one returned
     by the systemd `ListUnits()` call.
 
-* Properties:
+#### Properties
 
   * `Name` - `s`
 
@@ -196,14 +182,14 @@ as cancelling it.
 
 Object path: `/org/containers/hirte/job/$id`
 
-* Methods:
+#### Methods
 
   * `Cancel()`
 
     Cancel the job, which means either cancelling the corresponding systemd job if it was started, or directly
     cancelling or replacing the Hirte job if no systemd job was started for it yet (i.e. it is in the queue).
 
-* Properties
+#### Properties
 
   * `Id` - `u`
 
@@ -232,7 +218,7 @@ interface.
 
 ### interface org.containers.hirte.Agent
 
-* Methods:
+#### Methods
 
   * `CreateProxy(in s service_name, in s node_name, in s unit_name)`
 
@@ -258,7 +244,7 @@ connection the regular Manager API is not available, instead we're using interna
 
 Object path: `/org/containers/hirte/internal`
 
-* Methods:
+#### Methods
 
   * `Register(in st name)`
 
@@ -269,7 +255,7 @@ Object path: `/org/containers/hirte/internal`
 
 This is the main interface that the node implements and that is used by the manager to affect change on the node.
 
-* Methods:
+#### Methods
 
   * `StartUnit(in s name, in s mode, in u id)`
 
@@ -301,7 +287,7 @@ This is the main interface that the node implements and that is used by the mana
 
     Remove a subscription added via `Subscribe()`. If there are none left, call `Unsubscribe()` in the systemd API.
 
-* Signals:
+#### Signals
 
   * `JobDone(u id, s result)`
 
@@ -337,7 +323,7 @@ This is the main interface that the node implements and that is used by the mana
 The node creates one of these by request from a proxy service, it is used to synchronize the state of the remote service
 with the proxy.
 
-* Methods:
+#### Methods
 
   * `Ready(in s result)`
 
