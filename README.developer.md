@@ -1,4 +1,21 @@
+
 # Hirte
+
+- [Hirte](#hirte)
+  - [Development](#development)
+    - [Environment Setup](#environment-setup)
+      - [Prerequisites](#prerequisites)
+      - [Dependencies installation](#dependencies-installation)
+    - [Code Style](#code-style)
+    - [Linting](#linting)
+    - [Build](#build)
+    - [Unit tests](#unit-tests)
+    - [Running](#running)
+      - [hirte](#hirte)
+      - [hirte-agent](#hirte-agent)
+  - [Documentation](#documentation)
+    - [Building MAN pages](#building-man-pages)
+  - [Packaging](#packaging)
 
 ## Development
 
@@ -160,7 +177,8 @@ The RPM creation [script](./build-scripts/build-rpm.sh) requires one environment
 - `ARTIFACTS_DIR` - full path to a directory where the RPMs will be saved.
   The script will create the directory if it does not exist
 
-Please note that the RPM creation script also installs all build dependencies and therefore requires running with root privileges
+Please note that the RPM creation script also installs all build dependencies and therefore requires running
+with root privileges
 
 In order to build an RPM locally use the following command:
 
