@@ -1,0 +1,8 @@
+[Unit]
+Description=Just sleeping
+StopWhenUnneeded=yes
+
+[Service]
+Type=simple
+ExecStart=/bin/true
+RemainAfterExit=yes

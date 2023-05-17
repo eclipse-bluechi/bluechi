@@ -1949,9 +1949,7 @@ static bool agent_connect(Agent *agent) {
                         "s",
                         agent->name);
         if (r < 0) {
-                if (r != -ENOTCONN) {
-                        hirte_log_errorf("Registering as '%s' failed: %s", agent->name, error.message);
-                }
+                hirte_log_errorf("Registering as '%s' failed: %s", agent->name, error.message);
                 sd_bus_error_free(&error);
                 return false;
         }

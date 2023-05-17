@@ -3,7 +3,6 @@
 
 #include "libhirte/common/common.h"
 
-#include "monitor.h"
 #include "types.h"
 
 struct ProxyMonitor {
@@ -18,11 +17,6 @@ struct ProxyMonitor {
         Node *target_node;
 
         char *proxy_object_path;
-
-        unit_new_handler_func_t *handle_unit_new;
-        unit_removed_handler_func_t *handle_unit_removed;
-        unit_state_changed_handler_func_t *handle_unit_state_changed;
-        unit_property_changed_handler_func_t *handle_unit_property_changed;
 
         LIST_FIELDS(ProxyMonitor, monitors);
 };

@@ -1,0 +1,115 @@
+name: Integration tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  rpmbuild:
+    runs-on: ubuntu-latest
+    container:
+      image: quay.io/centos/centos:stream9
+    env:
+      ARTIFACTS_DIR: exported-artifacts
+
+    steps:
+      - name: Enable additional repositories
+        run: |
+          dnf install -y dnf-plugin-config-manager
+
+          # CRB is required for meson
+          dnf config-manager -y --set-enabled crb
+
+      - name: Install dependencies
+        run: |
+          dnf install \
+                  createrepo_c \
+                  dnf-utils \
+                  gcc \
+                  git \
+                  gzip \
+                  jq \
+                  meson \
+                  rpm-build \
+                  sed \
+                  systemd-devel \
+                  tar \
+                  golang-github-cpuguy83-md2man \
+              -y
+
+      - name: Checkout sources
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          # Use githash of a tested commit instead of merge commit
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      - name: Perform build
+        run: |
+          ./build-scripts/build-rpm.sh $ARTIFACTS_DIR
+
+      - name: Create DNF repository
+        run: |
+          createrepo_c $ARTIFACTS_DIR
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: rpm-artifacts
+          path: ${{ env.ARTIFACTS_DIR}}
+
+  test:
+    needs: rpmbuild
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install \
+                  genisoimage \
+                  libkrb5-dev \
+                  libvirt-daemon-system \
+                  libvirt-dev \
+                  pkg-config \
+                  podman \
+                  qemu-kvm \
+              -y
+
+      - name: Install unpackaged python libraries from PyPi
+        run: |
+          pip install "tmt[provision]" "tmt[report-junit]" podman pytest pytest-timeout
+
+      - name: Checkout sources
+        uses: actions/checkout@v3
+
+      - name: Download artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: rpm-artifacts
+          path: 'tests/hirte-rpms'
+
+      - name: Run integration tests
+        run: |
+          cd tests
+          tmt run -eCONTAINER_USED=container-hirte-local
+
+      - name: Show tmt log output in case of failure
+        if: ${{ failure() }}
+        run: |
+          cat /var/tmp/tmt/run-001/log.txt
+
+      - name: Gather tests artifacts
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: test-artifacts
+          path: '/var/tmp/tmt'
+

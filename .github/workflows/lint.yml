@@ -1,0 +1,155 @@
+name: Lint
+
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  changes:
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: read
+    outputs:
+      clang: ${{ steps.filter.outputs.clang }}
+      md: ${{ steps.filter.outputs.md }}
+      python: ${{ steps.filter.outputs.python }}
+    steps:
+      - name: Detect changed files
+        uses: dorny/paths-filter@v2
+        id: filter
+        with:
+          filters: |
+            clang:
+              - '**/*.c'
+              - '**/*.h'
+              - '**/meson.build'
+              - 'meson_options.txt'
+            md:
+              - '**/*.md'
+            python:
+              - '**/*.py'
+
+
+
+  common:
+    name: Common
+    runs-on: ubuntu-latest
+    container:
+      image: quay.io/centos/centos:stream9
+
+    steps:
+      - name: Enable additional repositories
+        run: |
+          dnf install -y dnf-plugin-config-manager
+
+          # EPEL is required for codespell
+          dnf install -y epel-release
+
+      - name: Install dependencies
+        run: |
+          dnf install \
+                  codespell \
+                  make \
+              -y
+
+      - name: Checkout sources
+        uses: actions/checkout@v3
+
+      - name: Check SPDX headers
+        run: |
+          ./build-scripts/spdx-header-chech.sh
+
+      - name: Running codespell checker
+        run: |
+          make check-codespell
+
+
+
+  clang:
+    needs: changes
+    if: ${{ needs.changes.outputs.clang == 'true' }}
+    name: C
+    runs-on: ubuntu-latest
+    container:
+      image: quay.io/centos/centos:stream9
+
+    steps:
+      - name: Enable additional repositories
+        run: |
+          dnf install -y dnf-plugin-config-manager
+
+          # CRB is required for meson
+          dnf config-manager -y --set-enabled crb
+
+      - name: Install dependencies
+        run: |
+          dnf install \
+                  clang-tools-extra \
+                  bzip2 \
+                  gcc \
+                  meson \
+                  selinux-policy-devel \
+                  systemd-devel \
+              -y
+
+      - name: Checkout sources
+        uses: actions/checkout@v3
+
+      - name: Initialize meson configuration
+        run: |
+          meson setup builddir
+
+      - name: Running source code format check
+        run: |
+          ninja -C builddir clang-format-check
+
+      - name: Running static analysis
+        run: |
+          ninja -C builddir clang-tidy
+
+
+
+  markdown:
+    needs: changes
+    if: ${{ needs.changes.outputs.md == 'true' }}
+    name: Markdown
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout sources
+        uses: actions/checkout@v3
+
+      - name: Running markdown lint
+        uses: DavidAnson/markdownlint-cli2-action@v9
+
+
+
+  python:
+    needs: changes
+    if: ${{ needs.changes.outputs.python == 'true' }}
+    name: Python
+    runs-on: ubuntu-latest
+    container:
+      image: quay.io/centos/centos:stream9
+
+    steps:
+      - name: Enable additional repositories
+        run: |
+          dnf install -y dnf-plugin-config-manager
+
+          # EPEL is required for python3-flake8
+          dnf install -y epel-release
+
+      - name: Install dependencies
+        run: |
+          dnf install \
+                  python3-flake8 \
+              -y
+
+      - name: Checkout sources
+        uses: actions/checkout@v3
+
+      - name: Run flake8
+        run: |
+          find . -name '*.py' | xargs flake8

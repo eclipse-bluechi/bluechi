@@ -1,0 +1,6 @@
+summary: Test if stopping the dependency service results in a stopped hirte-dep and hirte-proxy service, but the requesting service is still running
+
+tier: 0
+
+test: |
+  pytest -svv
