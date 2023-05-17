@@ -1,3 +1,4 @@
+<!-- markdownlint-disable-file MD013 -->
 # Hirte integration test
 
 ## Installation
@@ -116,3 +117,15 @@ the [.pep8](./.pep8) file. All source files can be formatted via:
 # navigate into hirte/tests directory
 autopep8 ./
 ```
+
+## Usage of containers
+
+The integration tests rely on containers as separate compute entities. These containers are used to simulate hirte's
+functional behavior on a single runner.
+
+The [containers](./containers/) directory contains two container files.
+
+The `container-base` file describes the builder base image that is published to
+[registry.gitlab.com/centos/automotive/sample-images/hirte/hirte-builder](https://gitlab.com/CentOS/automotive/sample-images/container_registry/3897597). It contains core dependencies such as systemd and devel packages.
+
+Both, `containerfile-hirte-local` as well as `containerfile-hirte-snapshot`, are based on the builder base image and contain compiled products and configurations for integration testing.
