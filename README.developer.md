@@ -121,6 +121,12 @@ meson compile -C builddir
 meson test -C builddir
 ```
 
+### Integration tests
+
+All files related to the integration tests are located in [tests](./tests/) and are organized via
+[tmt](https://tmt.readthedocs.io/en/stable/). How to get started with running and developing
+integration tests for hirte is described in [tests/README](./tests/README.md).
+
 ### Running
 
 At the moment the `hirtectl` binary does not implement any logic. It only prints a simple greeting and exit.
