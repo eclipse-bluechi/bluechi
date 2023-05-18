@@ -7,6 +7,11 @@ copyright: © Red Hat
 nav:
   - Home: index.md
   - Getting Started: getting_started.md
+  - DBus API: 
+    - Description: api/description.md
+    - Examples: api/examples.md
+  - Proxy Services: 
+    - Concept: proxy/concept.md
 
 theme:
   name: readthedocs
@@ -17,3 +22,4 @@ markdown_extensions:
   - sane_lists
   - smarty
   - admonition
+  - pymdownx.snippets

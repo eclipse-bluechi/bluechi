@@ -1,11 +1,11 @@
 # Proxy Services
 
+In order to support cross-node systemd unit dependencies, hirte
+introduces something called proxy services.
+
 ## Using Proxy Services
 
-In order to support cross-node systemd unit dependencies, hirte
-introduces something called proxy services. The hirte agent
-comes with a template service called `hirte-proxy@.service`
-which is the core of this mechanism.
+The hirte agent comes with a template service called `hirte-proxy@.service` which is the core of this mechanism.
 
 Suppose there is a regular service file on node 'foo', which
 looks looks like this
