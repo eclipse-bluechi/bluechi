@@ -76,3 +76,12 @@ if clangtidy.found()
   run_target('clang-tidy', command : ['build-scripts/clang-tidy-all.sh'])
   run_target('clang-tidy-fix', command : ['build-scripts/clang-tidy-all.sh', '--fix'])
 endif
+
+# add custom rpmbuild targets
+rpmbuild = find_program('rpmbuild', required : false)
+if rpmbuild.found()
+  run_target('srpm', command : ['build-scripts/build-srpm.sh', meson.project_version(), meson.source_root()])
+  run_target('rpm', command : ['build-scripts/build-rpm.sh', meson.project_version(), meson.source_root()])
+else
+  message('For building RPM package, rpmbuild command is required.')
+endif

@@ -48,12 +48,11 @@ clean:
 	find . -name \*# -delete
 	meson setup --wipe $(BUILDDIR)
 
-rpm: srpm
-	@build-scripts/build-rpm.sh
+rpm:
+	ninja -C $(BUILDDIR) rpm
 
 srpm: 
-	@rpmbuild || (echo "For building RPM package, rpmbuild command is required. To install use: dnf install rpm-build"; exit 1)
-	@build-scripts/build-srpm.sh
+	ninja -C $(BUILDDIR) srpm
 
 distclean: clean
 	rm -rf $(BUILDDIR)

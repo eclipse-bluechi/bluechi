@@ -49,7 +49,8 @@ jobs:
 
       - name: Perform build
         run: |
-          ./build-scripts/build-rpm.sh $ARTIFACTS_DIR
+          meson setup builddir
+          make rpm
 
       - name: Create DNF repository
         run: |

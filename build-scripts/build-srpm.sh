@@ -1,9 +1,15 @@
 #!/bin/bash -xe
 # SPDX-License-Identifier: GPL-2.0-or-later
 
-# Parse package version from the project
-meson setup builddir
-VERSION="$(meson introspect --projectinfo builddir | jq -r '.version')"
+if [ -z "$1" ]; then
+    echo "Missing first argument: version"
+fi
+VERSION=$1
+
+if [ -z "$2" ]; then
+    echo "Missing second argument: source directory"
+fi
+cd $2
 
 # Mark current directory as safe for git to be able to parse git hash
 git config --global --add safe.directory $(pwd)

@@ -4,5 +4,6 @@ installdeps:
 	dnf -y install gcc git jq meson systemd-devel rpm-build
 
 srpm: installdeps
-	./build-scripts/build-srpm.sh
+	meson setup builddir
+	ninja -C builddir srpm
 	cp rpmbuild/SRPMS/*.src.rpm $(outdir)
