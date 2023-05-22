@@ -103,7 +103,7 @@ After that step integration tests can be executed using following command:
 
 ```shell
 cd ~/hirte/tests
-tmt run -eCONTAINER_USED=container-hirte-local
+tmt run -eCONTAINER_USED=integration-test-local
 ```
 
 ## Developing integration tests
@@ -125,7 +125,9 @@ functional behavior on a single runner.
 
 The [containers](./containers/) directory contains two container files.
 
-The `container-base` file describes the builder base image that is published to
-[registry.gitlab.com/centos/automotive/sample-images/hirte/hirte-builder](https://gitlab.com/CentOS/automotive/sample-images/container_registry/3897597). It contains core dependencies such as systemd and devel packages.
+The `integration-test-base` file describes the builder base image that is published to
+[https://quay.io/repository/hirte/integration-test-base](https://quay.io/repository/hirte/integration-test-base). It contains core dependencies such as systemd and devel packages.
 
-Both, `containerfile-hirte-local` as well as `containerfile-hirte-snapshot`, are based on the builder base image and contain compiled products and configurations for integration testing.
+Both, `integration-test-local` as well as `integration-test-snapshot`, are based on the builder base image for the integration tests and contain compiled products and configurations for integration testing.
+
+**_NOTE:_** Currently, the images are pushed manually to the quay.io container repository. If any updates are required, please reach out to the [code owners](../.github/CODEOWNERS).

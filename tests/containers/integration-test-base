@@ -1,0 +1,12 @@
+FROM quay.io/centos/centos:stream9
+
+RUN dnf install -y dnf-plugin-config-manager
+
+RUN dnf install \
+        policycoreutils-python-utils \
+        selinux-policy \
+        systemd \
+        systemd-devel \
+    -y
+
+RUN dnf -y clean all
