@@ -36,23 +36,9 @@ jobs:
     name: Common
     runs-on: ubuntu-latest
     container:
-      image: quay.io/centos/centos:stream9
+      image: quay.io/hirte/build-base:latest
 
     steps:
-      - name: Enable additional repositories
-        run: |
-          dnf install -y dnf-plugin-config-manager
-
-          # EPEL is required for codespell
-          dnf install -y epel-release
-
-      - name: Install dependencies
-        run: |
-          dnf install \
-                  codespell \
-                  make \
-              -y
-
       - name: Checkout sources
         uses: actions/checkout@v3
 
@@ -72,27 +58,9 @@ jobs:
     name: C
     runs-on: ubuntu-latest
     container:
-      image: quay.io/centos/centos:stream9
+      image: quay.io/hirte/build-base:latest
 
     steps:
-      - name: Enable additional repositories
-        run: |
-          dnf install -y dnf-plugin-config-manager
-
-          # CRB is required for meson
-          dnf config-manager -y --set-enabled crb
-
-      - name: Install dependencies
-        run: |
-          dnf install \
-                  clang-tools-extra \
-                  bzip2 \
-                  gcc \
-                  meson \
-                  selinux-policy-devel \
-                  systemd-devel \
-              -y
-
       - name: Checkout sources
         uses: actions/checkout@v3
 
@@ -131,22 +99,9 @@ jobs:
     name: Python
     runs-on: ubuntu-latest
     container:
-      image: quay.io/centos/centos:stream9
+      image: quay.io/hirte/build-base:latest
 
     steps:
-      - name: Enable additional repositories
-        run: |
-          dnf install -y dnf-plugin-config-manager
-
-          # EPEL is required for python3-flake8
-          dnf install -y epel-release
-
-      - name: Install dependencies
-        run: |
-          dnf install \
-                  python3-flake8 \
-              -y
-
       - name: Checkout sources
         uses: actions/checkout@v3
 
