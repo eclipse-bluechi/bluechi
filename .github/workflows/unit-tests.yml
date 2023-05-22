@@ -11,27 +11,9 @@ jobs:
   test:
     runs-on: ubuntu-latest
     container:
-      image: quay.io/centos/centos:stream9
+      image: quay.io/hirte/build-base:latest
 
     steps:
-      - name: Enable additional repositories
-        run: |
-          dnf install -y dnf-plugin-config-manager
-
-          # CRB is required for meson
-          dnf config-manager -y --set-enabled crb
-
-      - name: Install dependencies
-        run: |
-          dnf install \
-                  bzip2 \
-                  gcc \
-                  meson \
-                  selinux-policy-devel \
-                  systemd-devel \
-                  valgrind \
-              -y
-
       - name: Checkout sources
         uses: actions/checkout@v3
 

@@ -11,35 +11,10 @@ jobs:
   rpmbuild:
     runs-on: ubuntu-latest
     container:
-      image: quay.io/centos/centos:stream9
+      image: quay.io/hirte/build-base:latest
     env:
       ARTIFACTS_DIR: exported-artifacts
-
     steps:
-      - name: Enable additional repositories
-        run: |
-          dnf install -y dnf-plugin-config-manager
-
-          # CRB is required for meson
-          dnf config-manager -y --set-enabled crb
-
-      - name: Install dependencies
-        run: |
-          dnf install \
-                  createrepo_c \
-                  dnf-utils \
-                  gcc \
-                  git \
-                  gzip \
-                  jq \
-                  meson \
-                  rpm-build \
-                  sed \
-                  systemd-devel \
-                  tar \
-                  golang-github-cpuguy83-md2man \
-              -y
-
       - name: Checkout sources
         uses: actions/checkout@v3
         with:
