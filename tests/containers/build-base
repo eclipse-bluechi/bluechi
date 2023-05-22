@@ -1,0 +1,29 @@
+FROM quay.io/centos/centos:stream9
+
+RUN dnf install -y dnf-plugin-config-manager
+# CRB is required for meson
+RUN dnf config-manager -y --set-enabled crb
+# EPEL is required for python3-flake8 and codespell
+RUN dnf install -y epel-release
+
+RUN dnf install \
+        bzip2 \
+        clang-tools-extra \
+        codespell \
+        createrepo_c \
+        dnf-utils \
+        gcc \
+        git \
+        golang-github-cpuguy83-md2man \
+        gzip \
+        jq \
+        make \
+        meson \
+        python3-flake8 \
+        rpm-build \
+        sed \
+        selinux-policy-devel \
+        systemd-devel \
+        tar \
+        valgrind \
+    -y

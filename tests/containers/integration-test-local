@@ -1,13 +1,10 @@
-FROM registry.gitlab.com/centos/automotive/sample-images/hirte/hirte-builder:1.0.0
+FROM quay.io/hirte/integration-test-base:latest
 
 RUN mkdir -p /tmp/hirte-rpms
 COPY ./hirte-rpms /tmp/hirte-rpms
 
-RUN dnf install -y selinux-policy
 RUN dnf install -y --repo hirte-rpms \
     --repofrompath hirte-rpms,file:///tmp/hirte-rpms/ \
     --nogpgcheck hirte hirte-debuginfo hirte-agent hirte-agent-debuginfo hirte-ctl hirte-ctl-debuginfo hirte-selinux
 
 CMD [ "/sbin/init" ]
-
-WORKDIR /hirte
