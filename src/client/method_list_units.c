@@ -11,10 +11,10 @@ static int
                                 const char *typestring,
                                 int (*parse_unit_info)(sd_bus_message *, UnitInfo *),
                                 UnitList *unit_list) {
-        _cleanup_sd_bus_error_ sd_bus_error error = SD_BUS_ERROR_NULL;
-        _cleanup_sd_bus_message_ sd_bus_message *message = NULL;
 
         int r = 0;
+        _cleanup_sd_bus_error_ sd_bus_error error = SD_BUS_ERROR_NULL;
+        _cleanup_sd_bus_message_ sd_bus_message *message = NULL;
 
         r = sd_bus_call_method(
                         api_bus,
@@ -57,7 +57,7 @@ static int
         return r;
 }
 
-int method_list_units_on_all(sd_bus *api_bus, print_unit_list_fn print) {
+int method_list_units_on_all(sd_bus *api_bus, print_unit_list_fn print, const char *glob_filter) {
         _cleanup_unit_list_ UnitList *unit_list = new_unit_list();
 
         int r = fetch_unit_list(
@@ -72,12 +72,13 @@ int method_list_units_on_all(sd_bus *api_bus, print_unit_list_fn print) {
                 return r;
         }
 
-        print(unit_list);
+        print(unit_list, glob_filter);
 
         return 0;
 }
 
-int method_list_units_on(sd_bus *api_bus, const char *node_name, print_unit_list_fn print) {
+int method_list_units_on(
+                sd_bus *api_bus, const char *node_name, print_unit_list_fn print, const char *glob_filter) {
         int r = 0;
         _cleanup_unit_list_ UnitList *unit_list = new_unit_list();
 
@@ -99,7 +100,7 @@ int method_list_units_on(sd_bus *api_bus, const char *node_name, print_unit_list
                 return r;
         }
 
-        print(unit_list);
+        print(unit_list, glob_filter);
 
         return 0;
 }
@@ -141,11 +142,17 @@ void unit_list_unref(UnitList *unit_list) {
 }
 
 /* Prints 100-characters-wide table */
-void print_unit_list_simple(UnitList *unit_list) {
+void print_unit_list_simple(UnitList *unit_list, const char *glob_filter) {
         UnitInfo *unit = NULL;
         printf("%-20.20s|%-59.59s|%9s|%9s\n", "NODE", "ID", "ACTIVE", "SUB");
         printf("====================================================================================================\n");
         LIST_FOREACH(units, unit, unit_list->units) {
-                printf("%-20.20s|%-59.59s|%9s|%9s\n", unit->node, unit->id, unit->active_state, unit->sub_state);
+                if (glob_filter == NULL || match_glob(unit->id, glob_filter)) {
+                        printf("%-20.20s|%-59.59s|%9s|%9s\n",
+                               unit->node,
+                               unit->id,
+                               unit->active_state,
+                               unit->sub_state);
+                }
         }
 }
