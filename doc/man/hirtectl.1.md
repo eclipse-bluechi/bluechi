@@ -29,3 +29,11 @@ Performs one of the listed lifecycle operations on the given systemd unit for th
 ### **hirtectl** *list-units* [*agent*]
 
 Fetches information about all systemd units on the hirte-agents. If [hirte-agent] is not specified, all agents are queried.
+
+### **hirtectl** *monitor* [*agent*] [*unit1*,*unit2*,*...*]
+
+Creates a monitor on the given agent to observe changes in the specified units. Wildcards **\*** to match all agents and/or units are also supported. 
+
+**Example:**
+
+hirtectl monitor \\\* dbus.service,apache2.service

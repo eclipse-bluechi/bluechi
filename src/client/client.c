@@ -490,7 +490,7 @@ int print_client_usage(char *argv) {
         printf("Available command:\n");
         printf("  - help: shows this help message\n");
         printf("    usage: help\n");
-        printf("  - list-units: returns the list of systemd service running on a specific not or on all the nodes\n");
+        printf("  - list-units: returns the list of systemd services running on a specific or on all nodes\n");
         printf("    usage: list-units [nodename]\n");
         printf("  - start: starts a specific systemd service (or timer, or slice) on a specific node\n");
         printf("    usage: start nodename unitname\n");
@@ -504,5 +504,7 @@ int print_client_usage(char *argv) {
         printf("    usage: metrics [enable|disable]\n");
         printf("  - metrics listen: listen and print incoming metrics reports\n");
         printf("    usage: metrics listen\n");
+        printf("  - monitor: creates a monitor on the given node to observe changes in the specified units\n");
+        printf("    usage: monitor [node] [unit1,unit2,...]\n");
         return 0;
 }
