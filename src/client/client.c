@@ -1,7 +1,9 @@
 /* SPDX-License-Identifier: GPL-2.0-or-later */
 #include <errno.h>
+#include <getopt.h>
 
 #include "libhirte/bus/utils.h"
+#include "libhirte/common/opt.h"
 #include "libhirte/common/time-util.h"
 #include "libhirte/service/shutdown.h"
 
@@ -9,7 +11,7 @@
 #include "method_list_units.h"
 #include "method_monitor.h"
 
-Client *new_client(char *op, int opargc, char **opargv) {
+Client *new_client(char *op, int opargc, char **opargv, char *opt_filter_glob) {
         Client *client = malloc0(sizeof(Client));
         if (client == NULL) {
                 return NULL;
@@ -19,6 +21,7 @@ Client *new_client(char *op, int opargc, char **opargv) {
         client->op = op;
         client->opargc = opargc;
         client->opargv = opargv;
+        client->opt_filter_glob = opt_filter_glob;
 
         return client;
 }
@@ -316,10 +319,15 @@ int client_call_manager(Client *client) {
                 r = print_client_usage("hirte");
         } else if (streq(client->op, "list-units")) {
                 if (client->opargc == 0) {
-                        r = method_list_units_on_all(client->api_bus, print_unit_list_simple);
-                } else {
-                        r = method_list_units_on(client->api_bus, client->opargv[0], print_unit_list_simple);
+                        r = method_list_units_on_all(
+                                        client->api_bus, print_unit_list_simple, client->opt_filter_glob);
+                        return r;
                 }
+
+                char *node_name = client->opargv[0];
+                return method_list_units_on(
+                                client->api_bus, node_name, print_unit_list_simple, client->opt_filter_glob);
+
         } else if (streq(client->op, "start")) {
                 if (client->opargc != 2) {
                         return -EINVAL;
@@ -369,7 +377,7 @@ int print_client_usage(char *argv) {
         printf("  - help: shows this help message\n");
         printf("    usage: help\n");
         printf("  - list-units: returns the list of systemd services running on a specific or on all nodes\n");
-        printf("    usage: list-units [nodename]\n");
+        printf("    usage: list-units [nodename] [--filter=glob]\n");
         printf("  - start: starts a specific systemd service (or timer, or slice) on a specific node\n");
         printf("    usage: start nodename unitname\n");
         printf("  - stop: stop a specific systemd service (or timer, or slice) on a specific node\n");

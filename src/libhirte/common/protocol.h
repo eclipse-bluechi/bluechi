@@ -101,3 +101,5 @@ char *get_hostname();
 
 /* Constants */
 #define SYMBOL_WILDCARD "*"
+#define SYMBOL_GLOB_ALL '*'
+#define SYMBOL_GLOB_ONE '?'

@@ -29,6 +29,10 @@
 #define ARG_NAME_SHORT 'n'
 #define ARG_NAME_SHORT_S "n:"
 
+#define ARG_FILTER "filter"
+#define ARG_FILTER_SHORT 'f'
+#define ARG_FILTER_SHORT_S "f:"
+
 #define ARG_HELP "help"
 #define ARG_HELP_SHORT 'h'
 #define ARG_HELP_SHORT_S "h"

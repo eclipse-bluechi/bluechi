@@ -3,7 +3,8 @@
 common_src = [
   'cfg_test',
   'list_test',
-  'parse-util_test'
+  'parse-util_test',
+  'string-util_test'
 ]
 
 foreach src : common_src

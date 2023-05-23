@@ -48,3 +48,25 @@ static inline bool copy_str(char **p, const char *s) {
 static inline bool is_wildcard(const char *in) {
         return streq(in, SYMBOL_WILDCARD);
 }
+
+static inline bool is_glob(const char *s) {
+        return s != NULL && (strchr(s, SYMBOL_GLOB_ALL) != NULL || strchr(s, SYMBOL_GLOB_ONE) != NULL);
+}
+
+// NOLINTBEGIN(misc-no-recursion)
+static inline bool match_glob(const char *str, const char *glob) {
+        if (str == NULL || glob == NULL) {
+                return false;
+        }
+
+        if (*glob == SYMBOL_GLOB_ALL) {
+                return match_glob(str, glob + 1) || (*str && match_glob(str + 1, glob));
+        }
+
+        if (*str) {
+                return ((SYMBOL_GLOB_ONE == *glob) || (*str == *glob)) && match_glob(str + 1, glob + 1);
+        }
+
+        return !*glob;
+}
+// NOLINTEND(misc-no-recursion)

@@ -13,6 +13,8 @@ struct Client {
         int opargc;
         char **opargv;
 
+        char *opt_filter_glob;
+
         sd_bus *api_bus;
         char *object_path;
 
@@ -20,7 +22,7 @@ struct Client {
         sd_bus_message *pending_job_result;
 };
 
-Client *new_client(char *op, int opargc, char **opargv);
+Client *new_client(char *op, int opargc, char **opargv, char *opt_filter_glob);
 Client *client_ref(Client *client);
 void client_unref(Client *client);
 
