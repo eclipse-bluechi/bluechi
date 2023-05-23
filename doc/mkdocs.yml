@@ -22,4 +22,5 @@ markdown_extensions:
   - sane_lists
   - smarty
   - admonition
-  - pymdownx.snippets
+  - pymdownx.snippets:
+     base_path: ["doc"]
