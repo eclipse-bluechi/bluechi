@@ -464,7 +464,6 @@ bool agent_set_heartbeat_interval(Agent *agent, const char *interval_msec) {
         return true;
 }
 
-
 void agent_set_systemd_user(Agent *agent, bool systemd_user) {
         agent->systemd_user = systemd_user;
 }

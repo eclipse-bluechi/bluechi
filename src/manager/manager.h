@@ -32,6 +32,8 @@ struct Manager {
         LIST_HEAD(Subscription, all_subscriptions);
 
         struct config *config;
+
+        long debug_monitor_interval_msec;
 };
 
 Manager *manager_new(void);

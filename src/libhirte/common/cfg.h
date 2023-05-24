@@ -17,6 +17,7 @@
 #define CFG_NODE_NAME "NodeName"
 #define CFG_ALLOWED_NODE_NAMES "AllowedNodeNames"
 #define CFG_HEARTBEAT_INTERVAL "HeartbeatInterval"
+#define CFG_DEBUG_MONITOR_INTERVAL "DebugMonitorInterval"
 
 /*
  * Global section - this is used, when configuration options are specified in the configuration file

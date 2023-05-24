@@ -13,9 +13,13 @@
 #define ARG_ADDRESS_SHORT 'a'
 #define ARG_ADDRESS_SHORT_S "a:"
 
-#define ARG_HEARTBEAT_INTERVAL "interval"
+#define ARG_HEARTBEAT_INTERVAL "heartbeat-interval"
 #define ARG_HEARTBEAT_INTERVAL_SHORT 'i'
 #define ARG_HEARTBEAT_INTERVAL_SHORT_S "i:"
+
+#define ARG_DEBUG_MONITOR_INTERVAL "debug-monitor-interval"
+#define ARG_DEBUG_MONITOR_INTERVAL_SHORT 'd'
+#define ARG_DEBUG_MONITOR_INTERVAL_SHORT_S "d:"
 
 #define ARG_CONFIG "config"
 #define ARG_CONFIG_SHORT 'c'

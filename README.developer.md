@@ -94,6 +94,37 @@ After building, three binaries are available:
 - `hirte-agent`: the node agent unit which connects with the controller and executes commands on the node machine
 - `hirtectl`: a helper (CLI) program to send an commands to the controller
 
+### Debugging
+
+Debug prints can be written to the systemd journal or stderr.
+
+Periodic debug prints for `hirte` can be added in `hirte/src/manager/manager.c`, in function
+`manager_debug_monitor_timer_callback()`.  The interval in milliseconds for these prints can be
+set with the `hirte` config option, `DebugMonitorInterval`.  The default is zero milliseconds,
+which prevents the periodic function from getting invoked.
+
+Periodic debug prints for `hirte-agent` can be added in `hirte/src/agent/agent.c`, in function
+`agent_heartbeat_timer_callback()`.  The interval in milliseconds for these prints can set with
+the `hirte-agent` config option, `HeartbeatInterval`.
+
+Suppose you would like `hirte` to output the connected nodes to stderr every 2 seconds.
+`/etc/hirte/hirte.conf` could be set as follows:
+```bash
+[hirte]
+ManagerPort=1999
+AllowedNodeNames=agent-001,agent-002
+LogLevel=DEBUG
+LogTarget=stderr-full
+LogIsQuiet=false
+DebugMonitorInterval=2000
+```
+
+If `agent-001` and `agent-002` are connected, `hirte` outputs the following prints every 2 seconds:
+```bash
+15:04:26 DEBUG  ../src/manager/manager.c:845 manager_debug_monitor_timer_callback   msg="../src/manager/manager.c:845: manager_debug_monitor_timer_callback(): connected node name = agent-001"
+15:04:26 DEBUG  ../src/manager/manager.c:845 manager_debug_monitor_timer_callback   msg="../src/manager/manager.c:845: manager_debug_monitor_timer_callback(): connected node name = agent-002"
+```
+
 ### Unit tests
 
 Unit tests can be executed using following commands

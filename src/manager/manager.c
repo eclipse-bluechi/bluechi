@@ -6,6 +6,7 @@
 #include "libhirte/bus/utils.h"
 #include "libhirte/common/cfg.h"
 #include "libhirte/common/common.h"
+#include "libhirte/common/event-util.h"
 #include "libhirte/common/parse-util.h"
 #include "libhirte/log/log.h"
 #include "libhirte/service/shutdown.h"
@@ -39,6 +40,7 @@ Manager *manager_new(void) {
                 manager->port = HIRTE_DEFAULT_PORT;
                 manager->api_bus_service_name = steal_pointer(&service_name);
                 manager->event = steal_pointer(&event);
+                manager->debug_monitor_interval_msec = 0;
                 LIST_HEAD_INIT(manager->nodes);
                 LIST_HEAD_INIT(manager->anonymous_nodes);
                 LIST_HEAD_INIT(manager->jobs);
@@ -272,6 +274,17 @@ bool manager_set_port(Manager *manager, const char *port_s) {
         return true;
 }
 
+bool manager_set_debug_monitor_interval(Manager *manager, const char *interval_msec) {
+        long interval = 0;
+
+        if (!parse_long(interval_msec, &interval)) {
+                hirte_log_errorf("Invalid debug monitor interval format '%s'", interval_msec);
+                return false;
+        }
+        manager->debug_monitor_interval_msec = interval;
+        return true;
+}
+
 bool manager_parse_config(Manager *manager, const char *configfile) {
         int result = 0;
 
@@ -328,6 +341,13 @@ bool manager_parse_config(Manager *manager, const char *configfile) {
                         }
 
                         name = strtok_r(NULL, ",", &saveptr);
+                }
+        }
+
+        const char *debug_monitor_interval = cfg_get_value(manager->config, CFG_DEBUG_MONITOR_INTERVAL);
+        if (debug_monitor_interval) {
+                if (!manager_set_debug_monitor_interval(manager, debug_monitor_interval)) {
+                        return false;
                 }
         }
 
@@ -814,6 +834,63 @@ static int manager_name_owner_changed(sd_bus_message *m, void *userdata, UNUSED 
         return 0;
 }
 
+static int manager_reset_debug_monitor_timer(Manager *manager, sd_event_source **event_source);
+
+static int manager_debug_monitor_timer_callback(
+                sd_event_source *event_source, UNUSED uint64_t usec, void *userdata) {
+        Manager *manager = (Manager *) userdata;
+
+        /* List connected nodes. */
+        Node *node = NULL;
+        LIST_FOREACH(nodes, node, manager->nodes) {
+                if (node->agent_bus != NULL) {
+                        hirte_log_debugf(
+                                        "%s:%d: %s(): connected node name = %s",
+                                        __FILE__,
+                                        __LINE__,
+                                        __func__,
+                                        node->name);
+                }
+        }
+
+        int r = manager_reset_debug_monitor_timer(manager, &event_source);
+        if (r < 0) {
+                hirte_log_errorf("Failed to reset manager debug monitor timer: %s", strerror(-r));
+                return r;
+        }
+
+        return 0;
+}
+
+static int manager_reset_debug_monitor_timer(Manager *manager, sd_event_source **event_source) {
+        return event_reset_time_relative(
+                        manager->event,
+                        event_source,
+                        CLOCK_BOOTTIME,
+                        manager->debug_monitor_interval_msec * USEC_PER_MSEC,
+                        0,
+                        manager_debug_monitor_timer_callback,
+                        manager,
+                        0,
+                        "manager-debug-monitor-timer-source",
+                        false);
+}
+
+static int manager_setup_debug_monitor_timer(Manager *manager) {
+        _cleanup_(sd_event_source_unrefp) sd_event_source *event_source = NULL;
+        int r = 0;
+
+        assert(manager);
+
+        r = manager_reset_debug_monitor_timer(manager, &event_source);
+        if (r < 0) {
+                hirte_log_errorf("Failed to reset manager debug monitor timer: %s", strerror(-r));
+                return r;
+        }
+
+        return sd_event_source_set_floating(event_source, true);
+}
+
 bool manager_start(Manager *manager) {
         if (manager == NULL) {
                 return false;
@@ -890,6 +967,13 @@ bool manager_start(Manager *manager) {
         if (r < 0) {
                 hirte_log_errorf("Failed to add signals to manager event loop: %s", strerror(-r));
                 return false;
+        }
+
+        if (manager->debug_monitor_interval_msec > 0) {
+                r = manager_setup_debug_monitor_timer(manager);
+                if (r < 0) {
+                        hirte_log_errorf("Failed to set up manager debug monitor timer: %s", strerror(-r));
+                }
         }
 
         r = sd_event_loop(manager->event);

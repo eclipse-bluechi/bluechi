@@ -931,8 +931,7 @@ static int node_disconnected(UNUSED sd_bus_message *message, void *userdata, UNU
         if (node->name == NULL) {
                 manager_remove_node(manager, node);
         } else {
-                /* Remove all jobs associated with the registered node that got
-                   disconnected. */
+                /* Remove all jobs for the disconnected node. */
                 if (!LIST_IS_EMPTY(manager->jobs)) {
                         Job *job = NULL;
                         Job *next_job = NULL;
