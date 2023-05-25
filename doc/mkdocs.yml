@@ -13,6 +13,14 @@ nav:
     - Examples: api/examples.md
   - Proxy Services: 
     - Concept: proxy/concept.md
+  - Configuration files:
+    - Hirte controller: man/hirte_conf.md
+    - Hirte agent: man/hirte_agent_conf.md
+  - Binaries:
+    - hirte: man/hirte.md
+    - hirte-agent: man/hirte-agent.md
+    - hirtectl: man/hirtectl.md
+    - hirte-proxy: man/hirte-proxy.md
 
 theme:
   name: readthedocs
