@@ -2,7 +2,7 @@ site_name: Hirte Documentation
 
 repo_url: https://github.com/containers/hirte
 repo_name: hirte
-edit_uri: blob/main/doc/
+edit_uri: blob/main/doc/docs/
 
 copyright: © Red Hat
 nav:
