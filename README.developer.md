@@ -1,4 +1,21 @@
+
 # Hirte
+
+- [Development](#development)
+  - [Environment Setup](#environment-setup)
+    - [Prerequisites](#prerequisites)
+    - [Dependencies Installation](#dependencies-installation)
+  - [Code Style](#code-style)
+  - [Linting](#linting)
+  - [Build](#build)
+  - [Unit Tests](#unit-tests)
+  - [Integration Tests](#integration-tests)
+  - [Running](#running)
+    - [hirte](#hirte)
+    - [hirte-agent](#hirte-agent)
+- [Documentation](#documentation)
+  - [Building MAN Pages](#building-man-pages)
+- [Packaging](#packaging)
 
 ## Development
 
