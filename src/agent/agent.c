@@ -652,6 +652,48 @@ static AgentUnitInfo *agent_ensure_unit_info(Agent *agent, const char *unit) {
         return info;
 }
 
+static int agent_method_passthrough_to_systemd_cb(
+                sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error) {
+        _cleanup_systemd_request_ SystemdRequest *req = userdata;
+
+        if (sd_bus_message_is_method_error(m, NULL)) {
+                return sd_bus_reply_method_error(req->request_message, sd_bus_message_get_error(m));
+        }
+
+        _cleanup_sd_bus_message_ sd_bus_message *reply = NULL;
+        int r = sd_bus_message_new_method_return(req->request_message, &reply);
+        if (r < 0) {
+                return r;
+        }
+
+        r = sd_bus_message_copy(reply, m, true);
+        if (r < 0) {
+                return r;
+        }
+
+        return sd_bus_message_send(reply);
+}
+
+static int agent_method_passthrough_to_systemd(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error) {
+        Agent *agent = userdata;
+        _cleanup_systemd_request_ SystemdRequest *req = agent_create_request(
+                        agent, m, sd_bus_message_get_member(m));
+        if (req == NULL) {
+                return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "Internal error");
+        }
+
+        int r = sd_bus_message_copy(req->message, m, true);
+        if (r < 0) {
+                return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "Internal error");
+        }
+
+        if (!systemd_request_start(req, agent_method_passthrough_to_systemd_cb)) {
+                return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "Internal error");
+        }
+
+        return 1;
+}
+
 /*************************************************************************
  ********** org.containers.hirte.internal.Agent.ListUnits ****************
  ************************************************************************/
@@ -1324,6 +1366,9 @@ static const sd_bus_vtable internal_agent_vtable[] = {
         SD_BUS_SIGNAL_WITH_NAMES("Heartbeat", "s", SD_BUS_PARAM(agent_name), 0),
         SD_BUS_METHOD("StartDep", "s", "", agent_method_start_dep, 0),
         SD_BUS_METHOD("StopDep", "s", "", agent_method_stop_dep, 0),
+        SD_BUS_METHOD("EnableUnitFiles", "asbb", "ba(sss)", agent_method_passthrough_to_systemd, 0),
+        SD_BUS_METHOD("DisableUnitFiles", "asb", "a(sss)", agent_method_passthrough_to_systemd, 0),
+        SD_BUS_METHOD("Reload", "", "", agent_method_passthrough_to_systemd, 0),
         SD_BUS_VTABLE_END
 };
 

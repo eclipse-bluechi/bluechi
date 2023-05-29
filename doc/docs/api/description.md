@@ -146,6 +146,23 @@ Object path: `/org/containers/hirte/node/$name`
 
     Kill a unit on the node. Arguments and semantics are equivalent to the systemd `KillUnit()` method.
 
+  * `EnableUnitFiles(in  as files, in  b runtime, in  b force, out b carries_install_info, out a(sss) changes);`
+
+    `EnableUnitFiles()` may be used to enable one or more units in the system (by creating symlinks to them in /etc/ or /run/).
+    It takes a list of unit files to enable
+    (either just file names or full absolute paths if the unit files are residing outside the usual unit search paths)
+    and two booleans: the first controls whether the unit shall be enabled for runtime only (true, /run/), or persistently (false, /etc/).
+    The second one controls whether symlinks pointing to other units shall be replaced if necessary.
+    This method returns one boolean and an array of the changes made.
+    The boolean signals whether the unit files contained any enablement information (i.e. an [Install] section).
+    The changes array consists of structures with three strings: the type of the change (one of "symlink" or "unlink"),
+    the file name of the symlink and the destination of the symlink.
+
+  * `DisableUnitFiles(in  as files, in  b runtime, out a(sss) changes);`
+
+    `DisableUnitFiles()` is similar to `EnableUnitFiles()` but
+    disables the specified units by removing all symlinks to them in /etc/ and /run/
+
   * `GetUnitProperties(in s name, in s interface, out a{sv} props)`
 
     Returns the current properties for a named unit on the node. The returned properties are the same as you would
@@ -164,6 +181,10 @@ Object path: `/org/containers/hirte/node/$name`
 
     Returns all the currently loaded systemd units on this node. The returned structure is the same as the one returned
     by the systemd `ListUnits()` call.
+
+  * `Reload()`
+
+    `Reload()` may be invoked to reload all unit files.
 
 #### Properties
 

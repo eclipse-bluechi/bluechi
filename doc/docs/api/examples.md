@@ -66,3 +66,11 @@ pip3 install dasbus
 ```
 
 ---
+
+### Enable unit files
+
+```python
+--8<-- "api-examples/enable-unit.py"
+```
+
+---
