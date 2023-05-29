@@ -302,6 +302,206 @@ int method_metrics_listen(Client *client) {
         return r;
 }
 
+static int create_message_new_method_call(
+                Client *client, const char *node_name, const char *member, sd_bus_message **new_message) {
+        int r = 0;
+        _cleanup_sd_bus_message_ sd_bus_message *outgoing_message = NULL;
+
+        r = assemble_object_path_string(NODE_OBJECT_PATH_PREFIX, node_name, &client->object_path);
+        if (r < 0) {
+                return r;
+        }
+
+        r = sd_bus_message_new_method_call(
+                        client->api_bus,
+                        &outgoing_message,
+                        HIRTE_INTERFACE_BASE_NAME,
+                        client->object_path,
+                        NODE_INTERFACE,
+                        member);
+        if (r < 0) {
+                fprintf(stderr, "Failed to create a new method call: %s\n", strerror(-r));
+                return r;
+        }
+
+        *new_message = sd_bus_message_ref(outgoing_message);
+        return 0;
+}
+
+static int add_string_array_to_message(sd_bus_message *m, char **units, size_t units_count) {
+        _cleanup_free_ char **units_array = NULL;
+        int r = 0;
+
+        units_array = malloc0_array(0, sizeof(char *), units_count + 1);
+        if (units_array == NULL) {
+                fprintf(stderr, "Failed to allocate memory\n");
+                return -ENOMEM;
+        }
+        size_t i = 0;
+        for (i = 0; i < units_count; i++) {
+                units_array[i] = units[i];
+        }
+
+        r = sd_bus_message_append_strv(m, units_array);
+        if (r < 0) {
+                fprintf(stderr, "Failed to append the list of units to the message: %s\n", strerror(-r));
+                return r;
+        }
+
+        return 0;
+}
+
+static int parse_enable_disable_response_from_message(sd_bus_message *m) {
+        int r = 0;
+
+        r = sd_bus_message_enter_container(m, SD_BUS_TYPE_ARRAY, "(sss)");
+        if (r < 0) {
+                fprintf(stderr, "Failed to open the strings array container: %s\n", strerror(-r));
+                return r;
+        }
+
+        for (;;) {
+                const char *op_type = NULL;
+                const char *symlink_file = NULL;
+                const char *symlink_dest = NULL;
+
+                r = sd_bus_message_read(m, "(sss)", &op_type, &symlink_file, &symlink_dest);
+                if (r < 0) {
+                        fprintf(stderr, "Failed to read enabled unit file information: %s\n", strerror(-r));
+                        return r;
+                }
+                if (r == 0) {
+                        break;
+                }
+                if (streq(op_type, "symlink")) {
+                        fprintf(stderr, "Created symlink %s -> %s\n", symlink_file, symlink_dest);
+                } else if (streq(op_type, "unlink")) {
+                        fprintf(stderr, "Removed \"%s\".\n", symlink_file);
+                } else {
+                        fprintf(stderr, "Unknown operation: %s\n", op_type);
+                }
+        }
+
+        return 0;
+}
+
+static int method_enable_unit_on(
+                Client *client, char *node_name, char **units, size_t units_count, int runtime, int force) {
+        int r = 0;
+        _cleanup_sd_bus_error_ sd_bus_error error = SD_BUS_ERROR_NULL;
+        _cleanup_sd_bus_message_ sd_bus_message *result = NULL;
+        _cleanup_sd_bus_message_ sd_bus_message *outgoing_message = NULL;
+
+        r = create_message_new_method_call(client, node_name, "EnableUnitFiles", &outgoing_message);
+        if (r < 0) {
+                fprintf(stderr, "Failed to create a new message: %s\n", strerror(-r));
+                return r;
+        }
+
+        r = add_string_array_to_message(outgoing_message, units, units_count);
+        if (r < 0) {
+                fprintf(stderr, "Failed to append the string array to the message: %s\n", strerror(-r));
+        }
+
+        r = sd_bus_message_append(outgoing_message, "bb", runtime, force);
+        if (r < 0) {
+                fprintf(stderr, "Failed to append runtime and force to the message: %s\n", strerror(-r));
+                return r;
+        }
+
+        r = sd_bus_call(client->api_bus, outgoing_message, HIRTE_DEFAULT_DBUS_TIMEOUT, &error, &result);
+        if (r < 0) {
+                fprintf(stderr, "Failed to issue call: %s\n", error.message);
+                return r;
+        }
+
+        int carries_install_info = 0;
+        r = sd_bus_message_read(result, "b", &carries_install_info);
+        if (r < 0) {
+                fprintf(stderr, "Failed to read carries_install_info from the message: %s\n", strerror(-r));
+                return r;
+        }
+
+        if (carries_install_info) {
+                fprintf(stderr, "The unit files included enablement information\n");
+        } else {
+                fprintf(stderr, "The unit files did not include any enablement information\n");
+        }
+
+        r = parse_enable_disable_response_from_message(result);
+        if (r < 0) {
+                fprintf(stderr, "Failed to parse the response strings array: %s\n", error.message);
+                return r;
+        }
+
+        return 0;
+}
+
+static int method_disable_unit_on(Client *client, char *node_name, char **units, size_t units_count, int runtime) {
+        int r = 0;
+        _cleanup_sd_bus_error_ sd_bus_error error = SD_BUS_ERROR_NULL;
+        _cleanup_sd_bus_message_ sd_bus_message *result = NULL;
+        _cleanup_sd_bus_message_ sd_bus_message *outgoing_message = NULL;
+
+        r = create_message_new_method_call(client, node_name, "DisableUnitFiles", &outgoing_message);
+        if (r < 0) {
+                fprintf(stderr, "Failed to create a new message: %s\n", strerror(-r));
+                return r;
+        }
+
+        r = add_string_array_to_message(outgoing_message, units, units_count);
+        if (r < 0) {
+                fprintf(stderr, "Failed to append the string array to the message: %s\n", strerror(-r));
+        }
+
+        r = sd_bus_message_append(outgoing_message, "b", runtime);
+        if (r < 0) {
+                fprintf(stderr, "Failed to append runtime to the message: %s\n", strerror(-r));
+                return r;
+        }
+
+        r = sd_bus_call(client->api_bus, outgoing_message, HIRTE_DEFAULT_DBUS_TIMEOUT, &error, &result);
+        if (r < 0) {
+                fprintf(stderr, "Failed to issue call: %s\n", error.message);
+                return r;
+        }
+
+        r = parse_enable_disable_response_from_message(result);
+        if (r < 0) {
+                fprintf(stderr, "Failed to parse the response strings array: %s\n", error.message);
+                return r;
+        }
+
+        return 0;
+}
+
+static int method_daemon_reload_on(Client *client, char *node_name) {
+        int r = 0;
+        _cleanup_sd_bus_error_ sd_bus_error error = SD_BUS_ERROR_NULL;
+        _cleanup_sd_bus_message_ sd_bus_message *result = NULL;
+
+        r = assemble_object_path_string(NODE_OBJECT_PATH_PREFIX, node_name, &client->object_path);
+        if (r < 0) {
+                return r;
+        }
+
+        r = sd_bus_call_method(
+                        client->api_bus,
+                        HIRTE_INTERFACE_BASE_NAME,
+                        client->object_path,
+                        NODE_INTERFACE,
+                        "Reload",
+                        &error,
+                        &result,
+                        "");
+        if (r < 0) {
+                fprintf(stderr, "Failed to issue method call: %s\n", error.message);
+                return r;
+        }
+
+        return 0;
+}
+
 int client_call_manager(Client *client) {
         int r = 0;
 
@@ -363,6 +563,39 @@ int client_call_manager(Client *client) {
                 } else if (streq(client->opargv[0], "listen")) {
                         method_metrics_listen(client);
                 }
+        } else if (streq(client->op, "enable")) {
+                if (client->opargc < 2) {
+                        return -EINVAL;
+                }
+                r = method_enable_unit_on(
+                                client, client->opargv[0], &client->opargv[1], client->opargc - 1, 0, 0);
+                if (r < 0) {
+                        fprintf(stderr,
+                                "Failed to enable the units on node [%s] - %s",
+                                client->opargv[0],
+                                strerror(-r));
+                } else {
+                        r = method_daemon_reload_on(client, client->opargv[0]);
+                }
+        } else if (streq(client->op, "disable")) {
+                if (client->opargc < 2) {
+                        return -EINVAL;
+                }
+                r = method_disable_unit_on(
+                                client, client->opargv[0], &client->opargv[1], client->opargc - 1, 0);
+                if (r < 0) {
+                        fprintf(stderr,
+                                "Failed to disable the units on node [%s] - %s",
+                                client->opargv[0],
+                                strerror(-r));
+                } else {
+                        r = method_daemon_reload_on(client, client->opargv[0]);
+                }
+        } else if (streq(client->op, "daemon-reload")) {
+                if (client->opargc != 1) {
+                        return -EINVAL;
+                }
+                r = method_daemon_reload_on(client, client->opargv[0]);
         } else {
                 return -EINVAL;
         }
@@ -386,11 +619,17 @@ int print_client_usage(char *argv) {
         printf("    usage: reload nodename unitname\n");
         printf("  - restart: restarts a specific systemd service (or timer, or slice) on a specific node\n");
         printf("    usage: restart nodename unitname\n");
+        printf("  - enable: enables the specified systemd files on a specific node\n");
+        printf("    usage: enable nodename unitfilename...\n");
+        printf("  - disable: disables the specified systemd files on a specific node\n");
+        printf("    usage: disable nodename unitfilename...\n");
         printf("  - metrics [enable|disable]: enables/disables metrics reporting\n");
         printf("    usage: metrics [enable|disable]\n");
         printf("  - metrics listen: listen and print incoming metrics reports\n");
         printf("    usage: metrics listen\n");
         printf("  - monitor: creates a monitor on the given node to observe changes in the specified units\n");
         printf("    usage: monitor [node] [unit1,unit2,...]\n");
+        printf("  - daemon-reload: reload systemd daemon on a specific node\n");
+        printf("    usage: disable nodename\n");
         return 0;
 }

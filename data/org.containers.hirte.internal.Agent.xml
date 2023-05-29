@@ -43,6 +43,18 @@
       <arg name="runtime" type="b" direction="in" />
       <arg name="keyvalues" type="a(sv)" direction="in" />
     </method>
+    <method name="EnableUnitFiles">
+      <arg name="files" type="as" direction="in" />
+      <arg name="runtime" type="b" direction="in" />
+      <arg name="force" type="b" direction="in" />
+      <arg name="carries_install_info" type="b" direction="out" />
+      <arg name="changes" type="a{sss}" direction="out" />
+    </method>
+    <method name="DisableUnitFiles">
+      <arg name="files" type="as" direction="in" />
+      <arg name="runtime" type="b" direction="in" />
+      <arg name="changes" type="a{sss}" direction="out" />
+    </method>
     <method name="ListUnits">
       <arg name="units" type="a(ssssssouso)" direction="out" />
     </method>
@@ -60,6 +72,7 @@
     <method name="StopDep">
       <arg name="unit" type="s" direction="in" />
     </method>
+    <method name="Reload" />
 
     <signal name="JobDone">
       <arg name="id" type="u" />

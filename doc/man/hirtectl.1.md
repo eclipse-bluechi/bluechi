@@ -26,14 +26,22 @@ Print usage statement and exit.
 
 Performs one of the listed lifecycle operations on the given systemd unit for the `hirte-agent`.
 
+### **hirtectl** [*enable|disable*] [*agent*] [*unit1*,*...*]
+
+Enable/Disable the list of systemd unit files for the `hirte-agent`.
+
 ### **hirtectl** *list-units* [*agent*]
 
 Fetches information about all systemd units on the hirte-agents. If [hirte-agent] is not specified, all agents are queried.
 
 ### **hirtectl** *monitor* [*agent*] [*unit1*,*unit2*,*...*]
 
-Creates a monitor on the given agent to observe changes in the specified units. Wildcards **\*** to match all agents and/or units are also supported. 
+Creates a monitor on the given agent to observe changes in the specified units. Wildcards **\*** to match all agents and/or units are also supported.
 
 **Example:**
 
 hirtectl monitor \\\* dbus.service,apache2.service
+
+### **hirtectl** [*daemon-reload*] [*agent*]
+
+Performs `daemon-reload` for the `hirte-agent`.

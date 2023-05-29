@@ -27,6 +27,7 @@ static int node_method_start_unit(sd_bus_message *m, void *userdata, UNUSED sd_b
 static int node_method_stop_unit(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error);
 static int node_method_restart_unit(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error);
 static int node_method_reload_unit(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error);
+static int node_method_passthrough_to_agent(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error);
 static int node_property_get_nodename(
                 sd_bus *bus,
                 const char *path,
@@ -58,6 +59,9 @@ static const sd_bus_vtable node_vtable[] = {
         SD_BUS_METHOD("GetUnitProperties", "ss", "a{sv}", node_method_get_unit_properties, 0),
         SD_BUS_METHOD("GetUnitProperty", "sss", "v", node_method_get_unit_property, 0),
         SD_BUS_METHOD("SetUnitProperties", "sba(sv)", "", node_method_set_unit_properties, 0),
+        SD_BUS_METHOD("EnableUnitFiles", "asbb", "ba(sss)", node_method_passthrough_to_agent, 0),
+        SD_BUS_METHOD("DisableUnitFiles", "asb", "a(sss)", node_method_passthrough_to_agent, 0),
+        SD_BUS_METHOD("Reload", "", "", node_method_passthrough_to_agent, 0),
         SD_BUS_PROPERTY("Name", "s", node_property_get_nodename, 0, SD_BUS_VTABLE_PROPERTY_CONST),
         SD_BUS_PROPERTY("Status", "s", node_property_get_status, 0, SD_BUS_VTABLE_PROPERTY_EMITS_CHANGE),
         SD_BUS_VTABLE_END
@@ -1310,6 +1314,54 @@ static int node_method_set_unit_properties(sd_bus_message *m, void *userdata, UN
         }
 
         r = sd_bus_message_copy(req->message, m, false);
+        if (r < 0) {
+                return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "Internal error");
+        }
+
+        if (agent_request_start(req) < 0) {
+                return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "Internal error");
+        }
+
+        return 1;
+}
+
+static int node_method_passthrough_to_agent_callback(
+                AgentRequest *req, sd_bus_message *m, UNUSED sd_bus_error *ret_error) {
+        sd_bus_message *request_message = req->userdata;
+
+        if (sd_bus_message_is_method_error(m, NULL)) {
+                return sd_bus_reply_method_error(request_message, sd_bus_message_get_error(m));
+        }
+
+        _cleanup_sd_bus_message_ sd_bus_message *reply = NULL;
+        int r = sd_bus_message_new_method_return(request_message, &reply);
+        if (r < 0) {
+                return sd_bus_reply_method_errorf(request_message, SD_BUS_ERROR_FAILED, "Internal error");
+        }
+
+        r = sd_bus_message_copy(reply, m, true);
+        if (r < 0) {
+                return sd_bus_reply_method_errorf(request_message, SD_BUS_ERROR_FAILED, "Internal error");
+        }
+
+        return sd_bus_message_send(reply);
+}
+
+static int node_method_passthrough_to_agent(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error) {
+        Node *node = userdata;
+        _cleanup_agent_request_ AgentRequest *req = NULL;
+        node_create_request(
+                        &req,
+                        node,
+                        sd_bus_message_get_member(m),
+                        node_method_passthrough_to_agent_callback,
+                        sd_bus_message_ref(m),
+                        (free_func_t) sd_bus_message_unref);
+        if (req == NULL) {
+                return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "Internal error");
+        }
+
+        int r = sd_bus_message_copy(req->message, m, true);
         if (r < 0) {
                 return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "Internal error");
         }
