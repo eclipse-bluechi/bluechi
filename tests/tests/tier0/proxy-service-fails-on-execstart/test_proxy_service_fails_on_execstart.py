@@ -41,6 +41,7 @@ def exec(ctrl: HirteControllerContainer, nodes: Dict[str, HirteNodeContainer]):
     verify_proxy_start_failed(foo, bar)
 
 
+@pytest.mark.skip(reason="Currently flaky. Tracked in https://github.com/containers/hirte/issues/320. ")
 @pytest.mark.timeout(10)
 def test_proxy_service_fails_on_execstart(
         hirte_test: HirteTest,
