@@ -2,6 +2,7 @@
 #include <errno.h>
 
 #include "libhirte/common/common.h"
+#include "libhirte/common/time-util.h"
 
 #include "log.h"
 
@@ -90,21 +91,17 @@ int hirte_log_to_stderr_full_with_location(
                 const char *func,
                 const char *msg,
                 const char *data) {
-
-        time_t t = time(NULL);
-        const size_t timestamp_size = 9;
-        char timebuf[timestamp_size];
-        timebuf[strftime(timebuf, sizeof(timebuf), "%H:%M:%S", localtime(&t))] = '\0';
+        _cleanup_free_ char *timestamp = get_formatted_log_timestamp();
 
         // clang-format off
         if (data && *data) {
                 fprintf(stderr, "%s %s\t%s:%s %s\tmsg=\"%s\", data=\"%s\"\n",
-                        timebuf, log_level_to_string(lvl),
+                        timestamp, log_level_to_string(lvl),
                         file, line, func,
                         msg, data);
         } else {
                 fprintf(stderr, "%s %s\t%s:%s %s\tmsg=\"%s\"\n",
-                        timebuf, log_level_to_string(lvl),
+                        timestamp, log_level_to_string(lvl),
                         file, line, func,
                         msg);
         }
@@ -119,7 +116,8 @@ int hirte_log_to_stderr_with_location(
                 UNUSED const char *func,
                 const char *msg,
                 UNUSED const char *data) {
-        fprintf(stderr, "%s\t: %s\n", log_level_to_string(lvl), msg);
+        _cleanup_free_ char *timestamp = get_formatted_log_timestamp();
+        fprintf(stderr, "%s %s\t: %s\n", timestamp, log_level_to_string(lvl), msg);
         return 0;
 }
 
