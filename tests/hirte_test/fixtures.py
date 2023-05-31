@@ -70,7 +70,8 @@ def hirte_image_id(podman_client: PodmanClient, hirte_image_name: str) -> (str |
         ),
         None,
     )
-    return image.id if image else None
+    assert image, f"Image '{hirte_image_name}' was not found"
+    return image.id
 
 
 @pytest.fixture(scope='function')
