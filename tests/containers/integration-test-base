@@ -2,6 +2,8 @@ FROM quay.io/centos/centos:stream9
 
 RUN dnf install -y dnf-plugin-config-manager
 
+RUN dnf upgrade --refresh -y
+
 RUN dnf install \
         policycoreutils-python-utils \
         selinux-policy \
