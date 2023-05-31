@@ -4,6 +4,9 @@
 set -x
 
 podman build -f ./containers/$CONTAINER_USED -t $HIRTE_IMAGE_NAME .
+if [[ $? -ne 0 ]]; then
+    exit 1
+fi
 
 podman network exists hirte-test
 if [[ $? -ne 0 ]]; then
