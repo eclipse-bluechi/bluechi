@@ -163,6 +163,17 @@ This package contains the service controller command line tool.
 
 
 %changelog
+* Wed May 31 2023 Michael Engel <mengel@redhat.com> - 0.3.0-1
+- API and hirtectl commands for enabling, disabling and reloading of systemd units added
+- Glob filter option to hirtectl list-units
+- Collecting metrics for unit startup time
+- Improvements for building hirte RPMs
+- Allow hirte to run with unconfined user
+- Aligned naming of hirte config files
+- Fixed for invalid type cast of ProxyMonitor
+- Mkdocs-based documentation added
+- Wildcard support for monitoring units
+
 * Wed May 03 2023 Michael Engel <mengel@redhat.com> - 0.2.1-1
 - RPM and unit test fixes
 
