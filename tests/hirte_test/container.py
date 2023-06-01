@@ -150,3 +150,10 @@ class HirteControllerContainer(HirteContainer):
         result, output = self.exec_run(f"hirtectl stop {node_name} {unit_name}")
         if result != 0:
             raise Exception(f"Failed to start service {unit_name} on node {node_name}: {output}")
+
+    def enable_unit(self, node_name: str, unit_name: str) -> None:
+        print(f"Enabling unit {unit_name} on node {node_name}")
+
+        result, output = self.exec_run(f"hirtectl enable {node_name} {unit_name}")
+        if result != 0:
+            raise Exception(f"Failed to enable service {unit_name} on node {node_name}: {output}")
