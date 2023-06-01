@@ -40,8 +40,12 @@ Creates a monitor on the given agent to observe changes in the specified units. 
 
 **Example:**
 
+hirtectl monitor
+
+hirtectl monitor node1
+
 hirtectl monitor \\\* dbus.service,apache2.service
 
-### **hirtectl** [*daemon-reload*] [*agent*]
+### **hirtectl** *daemon-reload* [*agent*]
 
 Performs `daemon-reload` for the `hirte-agent`.

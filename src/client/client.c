@@ -549,10 +549,22 @@ int client_call_manager(Client *client) {
                 }
                 r = method_lifecycle_action_on(client, client->opargv[0], client->opargv[1], "ReloadUnit");
         } else if (streq(client->op, "monitor")) {
-                if (client->opargc != 2) {
+                char *arg0 = SYMBOL_WILDCARD;
+                char *arg1 = SYMBOL_WILDCARD;
+                switch (client->opargc) {
+                case 0:
+                        break;
+                case 1:
+                        arg0 = client->opargv[0];
+                        break;
+                case 2:
+                        arg0 = client->opargv[0];
+                        arg1 = client->opargv[1];
+                        break;
+                default:
                         return -EINVAL;
                 }
-                r = method_monitor_units_on_nodes(client->api_bus, client->opargv[0], client->opargv[1]);
+                r = method_monitor_units_on_nodes(client->api_bus, arg0, arg1);
         } else if (streq(client->op, "metrics")) {
                 if (client->opargc != 1) {
                         return -EINVAL;
