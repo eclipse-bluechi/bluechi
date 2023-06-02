@@ -549,6 +549,12 @@ int client_call_manager(Client *client) {
                 }
                 r = method_lifecycle_action_on(client, client->opargv[0], client->opargv[1], "ReloadUnit");
         } else if (streq(client->op, "monitor")) {
+                /* monitor node connection status changes */
+                if (client->opargc == 1 && streq(client->opargv[0], "node-connection")) {
+                        return method_monitor_node_connection_state(client->api_bus);
+                }
+
+                /* monitor systemd units on the specified nodes */
                 char *arg0 = SYMBOL_WILDCARD;
                 char *arg1 = SYMBOL_WILDCARD;
                 switch (client->opargc) {
@@ -641,6 +647,8 @@ int print_client_usage(char *argv) {
         printf("    usage: metrics listen\n");
         printf("  - monitor: creates a monitor on the given node to observe changes in the specified units\n");
         printf("    usage: monitor [node] [unit1,unit2,...]\n");
+        printf("  - monitor node-connection: creates a monitor to observe changes in state of all nodes\n");
+        printf("    usage: monitor node-connection\n");
         printf("  - daemon-reload: reload systemd daemon on a specific node\n");
         printf("    usage: disable nodename\n");
         return 0;
