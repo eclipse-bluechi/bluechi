@@ -33,6 +33,14 @@ Note that all properties also come with change events, so you can easily track w
 
     Returns the object path of a node given its name.
 
+  * `EnableMetrics()`
+
+    Enables the collection of metrics on all connected agents.
+
+  * `DisableMetrics()`
+
+    Disables the collection of metrics on all agents.
+
 #### Signals
 
   * `JobNew(u id, o job, s nodeName, s unit)`
@@ -256,6 +264,20 @@ interface.
 
     When a proxy is not needed anymore it is being removed on the node and a `ProxyRemoved` is emitted to notify the manager.
 
+### interface org.containers.hirte.Metrics
+
+This interface is provides signals for collecting metrics. It is created by calling `EnableMetrics` on the `org.containers.hirte.Manager` interface and removed by calling `DisableMetrics`.
+
+#### Signals
+
+  * `StartUnitJobMetrics(s node_name, s job_id, s unit, t job_measured_time_micros, t unit_start_prop_time_micros)`
+
+    `StartUnitJobMetrics` will be emitted when a `Start` operation processed by Hirte finishes and the collection of metrics has been enabled previously.
+
+  * `AgentJobMetrics(s node_name, s unit, s method, t systemd_job_time_micros)`
+
+    `AgentJobMetrics` will be emitted for all unit lifecycle operations (e.g. `Start`, `Stop`, `Reload`, etc.) processed by Hirte when these finish and the collection of metrics has been enabled previously.
+
 ## Internal D-Bus APIs
 
 The above APIs are the public facing ones that users of Hirte would use. Additionally there are additional APIs that are
@@ -311,6 +333,26 @@ This is the main interface that the node implements and that is used by the mana
   * `Unsubscribe(in unit s)`
 
     Remove a subscription added via `Subscribe()`. If there are none left, call `Unsubscribe()` in the systemd API.
+  
+  * `EnableMetrics()`
+
+    Enables the collection of metrics on this agent.
+
+  * `DisableMetrics()`
+
+    Disables the collection of metrics on this agent.
+
+  * `StartDep(in unit s)`
+
+    Starts a dependency systemd service on the specified unit. This is used by the proxy service to ensure that required systemd services on other nodes are running.
+
+  * `StopDep(in unit s)`
+
+    Stops a dependency systemd service on the specified unit.
+
+  * `Reload()`
+
+    `Reload` causes systemd on the agent to reload all unit files.
 
 #### Signals
 
@@ -355,3 +397,13 @@ with the proxy.
     Called by the manager when the corresponding service is active (either was running already, or was started), or when
     it failed. result is `done` if it was already running, otherwise it is the same value as the remote node returned in
     result from its start job.
+
+### interface org.containers.hirte.internal.Agent.Metrics
+
+This is the interface that provides signals sent from the agent to the manager to collect metrics, e.g. time measurements.
+
+#### Signals
+
+  * `AgentJobMetrics(in s unit, in s method, in t systemd_job_time_micros)`
+
+    This is emitted for each completed job when the collection of metrics has been enabled via `EnableMetrics`.
