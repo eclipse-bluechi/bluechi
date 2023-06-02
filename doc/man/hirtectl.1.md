@@ -38,6 +38,11 @@ Fetches information about all systemd units on the hirte-agents. If [hirte-agent
 
 Creates a monitor on the given agent to observe changes in the specified units. Wildcards **\*** to match all agents and/or units are also supported.
 
+### **hirtectl** *monitor* *node-connection*
+
+Creates a monitor to observe connection state changes for all nodes. 
+
+
 **Example:**
 
 hirtectl monitor
