@@ -1,8 +1,42 @@
 /* SPDX-License-Identifier: GPL-2.0-or-later */
 #include "libhirte/common/common.h"
+#include "libhirte/common/list.h"
 #include "libhirte/service/shutdown.h"
 
 #include "method_monitor.h"
+
+static int start_event_loop(sd_bus *api_bus) {
+        _cleanup_sd_event_ sd_event *event = NULL;
+        int r = sd_event_default(&event);
+        if (r < 0) {
+                fprintf(stderr, "Failed to create event loop: %s", strerror(-r));
+                return r;
+        }
+
+        r = sd_bus_attach_event(api_bus, event, SD_EVENT_PRIORITY_NORMAL);
+        if (r < 0) {
+                fprintf(stderr, "Failed to attach api bus to event: %s", strerror(-r));
+                return r;
+        }
+
+        r = event_loop_add_shutdown_signals(event);
+        if (r < 0) {
+                fprintf(stderr, "Failed to add signals to agent event loop: %s", strerror(-r));
+                return r;
+        }
+
+        r = sd_event_loop(event);
+        if (r < 0) {
+                fprintf(stderr, "Failed to start event loop: %s", strerror(-r));
+                return r;
+        }
+
+        return 0;
+}
+
+/***************************************************************
+ ******** Monitor: Changes in systemd units of agents **********
+ ***************************************************************/
 
 static int on_unit_new_signal(sd_bus_message *m, UNUSED void *userdata, UNUSED sd_bus_error *error) {
         const char *node_name = NULL, *unit_name = NULL, *reason = NULL;
@@ -252,30 +286,158 @@ int method_monitor_units_on_nodes(sd_bus *api_bus, char *node, char *units) {
                 return r;
         }
 
-        _cleanup_sd_event_ sd_event *event = NULL;
-        r = sd_event_default(&event);
-        if (r < 0) {
-                fprintf(stderr, "Failed to create event loop: %s", strerror(-r));
-                return r;
+        return start_event_loop(api_bus);
+}
+
+
+/***************************************************************
+ ******** Monitor: Connection state changes of agents **********
+ ***************************************************************/
+
+typedef struct Nodes Nodes;
+typedef struct NodeConnection NodeConnection;
+
+struct NodeConnection {
+        char *name;
+        char *state;
+        LIST_FIELDS(NodeConnection, nodes);
+};
+
+typedef struct Nodes {
+        LIST_HEAD(NodeConnection, nodes);
+} Nodes;
+
+static Nodes *nodes_new() {
+        Nodes *nodes = malloc0(sizeof(Nodes));
+        LIST_HEAD_INIT(nodes->nodes);
+        return nodes;
+}
+
+static void nodes_add_connection(Nodes *nodes, const char *node_name, const char *node_state) {
+        NodeConnection *node_connection = malloc0(sizeof(NodeConnection));
+        node_connection->name = strdup(node_name);
+        node_connection->state = strdup(node_state);
+
+        LIST_APPEND(nodes, nodes->nodes, node_connection);
+}
+
+static void nodes_update_connection(Nodes *nodes, const char *node_name, const char *node_state) {
+        NodeConnection *curr = NULL;
+        NodeConnection *next = NULL;
+        LIST_FOREACH_SAFE(nodes, curr, next, nodes->nodes) {
+                if (streq(curr->name, node_name)) {
+                        free(curr->state);
+                        curr->state = strdup(node_state);
+                }
+        }
+}
+
+static void nodes_unref(Nodes *nodes) {
+        if (nodes == NULL) {
+                return;
         }
 
-        r = sd_bus_attach_event(api_bus, event, SD_EVENT_PRIORITY_NORMAL);
-        if (r < 0) {
-                fprintf(stderr, "Failed to attach api bus to event: %s", strerror(-r));
-                return r;
+        NodeConnection *curr = NULL;
+        NodeConnection *next = NULL;
+        LIST_FOREACH_SAFE(nodes, curr, next, nodes->nodes) {
+                free(curr->name);
+                free(curr->state);
         }
 
-        r = event_loop_add_shutdown_signals(event);
+        free(nodes);
+        nodes = NULL;
+}
+
+DEFINE_CLEANUP_FUNC(Nodes, nodes_unref)
+#define _cleanup_nodes_ _cleanup_(nodes_unrefp)
+
+static void print_nodes(Nodes *nodes) {
+        /* clear screen */
+        printf("\033[2J");
+        printf("\033[%d;%dH", 0, 0);
+
+        /* print monitor header */
+        printf("%-30.30s|%10s\n", "NODE", "STATE");
+        printf("=========================================\n");
+
+        NodeConnection *curr = NULL;
+        NodeConnection *next = NULL;
+        LIST_FOREACH_SAFE(nodes, curr, next, nodes->nodes) {
+                printf("%-30.30s|%10s\n", curr->name, curr->state);
+        }
+}
+
+static int on_node_connection_state_changed(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *error) {
+        Nodes *nodes = userdata;
+
+        const char *node_name = NULL, *con_state = NULL;
+
+        int r = 0;
+        r = sd_bus_message_read(m, "ss", &node_name, &con_state);
         if (r < 0) {
-                fprintf(stderr, "Failed to add signals to agent event loop: %s", strerror(-r));
-                return r;
+                fprintf(stderr, "Can't parse node connection state changed signal: %s\n", strerror(-r));
+                return 0;
         }
 
-        r = sd_event_loop(event);
-        if (r < 0) {
-                fprintf(stderr, "Failed to start event loop: %s", strerror(-r));
-                return r;
-        }
+        nodes_update_connection(nodes, node_name, con_state);
+        print_nodes(nodes);
 
         return 0;
+}
+
+int method_monitor_node_connection_state(sd_bus *api_bus) {
+        _cleanup_sd_bus_error_ sd_bus_error error = SD_BUS_ERROR_NULL;
+        _cleanup_sd_bus_message_ sd_bus_message *reply = NULL;
+        int r = 0;
+
+        r = sd_bus_call_method(
+                        api_bus,
+                        HIRTE_INTERFACE_BASE_NAME,
+                        HIRTE_OBJECT_PATH,
+                        MANAGER_INTERFACE,
+                        "ListNodes",
+                        &error,
+                        &reply,
+                        "");
+        if (r < 0) {
+                fprintf(stderr, "Failed to list nodes: %s\n", error.message);
+                return r;
+        }
+
+        _cleanup_nodes_ Nodes *nodes = nodes_new();
+
+        r = sd_bus_message_enter_container(reply, SD_BUS_TYPE_ARRAY, "(sos)");
+        if (r < 0) {
+                fprintf(stderr, "Failed to open reply array: %s\n", strerror(-r));
+                return r;
+        }
+        while (sd_bus_message_at_end(reply, false) == 0) {
+                const char *name = NULL;
+                UNUSED const char *path = NULL;
+                const char *state = NULL;
+
+                r = sd_bus_message_read(reply, "(sos)", &name, &path, &state);
+                if (r < 0) {
+                        fprintf(stderr, "Failed to read node information: %s\n", strerror(-r));
+                        return r;
+                }
+                nodes_add_connection(nodes, name, state);
+        }
+        print_nodes(nodes);
+
+        r = sd_bus_match_signal(
+                        api_bus,
+                        NULL,
+                        HIRTE_INTERFACE_BASE_NAME,
+                        HIRTE_OBJECT_PATH,
+                        MANAGER_INTERFACE,
+                        "NodeConnectionStateChanged",
+                        on_node_connection_state_changed,
+                        nodes);
+        if (r < 0) {
+                fprintf(stderr, "Failed to create callback for NodeConnectionStateChanged: %s\n", strerror(-r));
+                return r;
+        }
+
+        return start_event_loop(api_bus);
 }
