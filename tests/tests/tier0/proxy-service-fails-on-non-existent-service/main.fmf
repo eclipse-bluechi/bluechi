@@ -1,6 +1,1 @@
 summary: Test if proxy service fails on requesting non-existent dependency service
-
-tier: 0
-
-test: |
-  pytest -svv

@@ -1,6 +1,1 @@
 summary: Test if stopping the hirte-dep service results in a stopped hirte-proxy service, but both actual services are still running
-
-tier: 0
-
-test: |
-  pytest -svv

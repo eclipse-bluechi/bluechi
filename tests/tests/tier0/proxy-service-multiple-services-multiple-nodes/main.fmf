@@ -1,6 +1,1 @@
 summary: Test proper lifetimes of all services when multiple services on multiple nodes request the same service on the same node
-
-tier: 0
-
-test: |
-  pytest -svv
