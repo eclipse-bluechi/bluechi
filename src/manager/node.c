@@ -856,6 +856,7 @@ static int node_method_register(sd_bus_message *m, void *userdata, UNUSED sd_bus
         node_unset_agent_bus(node);
 
         hirte_log_infof("Registered managed node from fd %d as '%s'", sd_bus_get_fd(agent_bus), name);
+        manager_node_connection_state_changed(named_node->manager, named_node->name, "online");
 
         return sd_bus_reply_method_return(m, "");
 }
@@ -933,14 +934,6 @@ static int node_disconnected(UNUSED sd_bus_message *message, void *userdata, UNU
                 node_remove_proxy_monitor(node, proxy_monitor);
         }
 
-        if (node->name) {
-                hirte_log_infof("Node '%s' disconnected", node->name);
-        } else {
-                hirte_log_info("Anonymous node disconnected");
-        }
-
-        node_unset_agent_bus(node);
-
         /* Remove anonymous nodes when they disconnect */
         if (node->name == NULL) {
                 manager_remove_node(manager, node);
@@ -959,6 +952,15 @@ static int node_disconnected(UNUSED sd_bus_message *message, void *userdata, UNU
                         }
                 }
         }
+
+        if (node->name) {
+                hirte_log_infof("Node '%s' disconnected", node->name);
+        } else {
+                hirte_log_info("Anonymous node disconnected");
+        }
+        manager_node_connection_state_changed(node->manager, node->name, "offline");
+
+        node_unset_agent_bus(node);
 
         return 0;
 }
