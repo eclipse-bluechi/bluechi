@@ -1,6 +1,1 @@
 summary: Test if requesting.service's dependency on simple.service from node bar can be resolved
-
-tier: 0
-
-test: |
-  pytest -svv

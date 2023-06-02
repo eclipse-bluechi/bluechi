@@ -1,6 +1,1 @@
 summary: Test if hirte service started successfully
-
-tier: 0
-
-test: |
-  pytest -svv
