@@ -1,6 +1,1 @@
 summary: Test if hirte-agent on node foo started successfully and is connected to hirte controller
-
-tier: 0
-
-test: |
-  pytest -svv
