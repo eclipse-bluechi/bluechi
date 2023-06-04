@@ -52,6 +52,8 @@ struct Node {
         LIST_HEAD(ProxyDependency, proxy_dependencies);
 
         struct hashmap *unit_subscriptions;
+
+        char heartbeat_timestamp[AGENT_HEARTBEAT_TIMESTAMP_SIZE];
 };
 
 Node *node_new(Manager *manager, const char *name);

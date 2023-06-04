@@ -300,6 +300,7 @@ typedef struct NodeConnection NodeConnection;
 struct NodeConnection {
         char *name;
         char *state;
+        char *heartbeat_timestamp;
         LIST_FIELDS(NodeConnection, nodes);
 };
 
@@ -313,21 +314,31 @@ static Nodes *nodes_new() {
         return nodes;
 }
 
-static void nodes_add_connection(Nodes *nodes, const char *node_name, const char *node_state) {
+static void nodes_add_connection(
+                Nodes *nodes,
+                const char *node_name,
+                const char *node_state,
+                const char *node_heartbeat_timestamp) {
         NodeConnection *node_connection = malloc0(sizeof(NodeConnection));
         node_connection->name = strdup(node_name);
         node_connection->state = strdup(node_state);
+        node_connection->heartbeat_timestamp = strdup(node_heartbeat_timestamp);
 
         LIST_APPEND(nodes, nodes->nodes, node_connection);
 }
 
-static void nodes_update_connection(Nodes *nodes, const char *node_name, const char *node_state) {
+static void nodes_update_connection(
+                Nodes *nodes,
+                const char *node_name,
+                const char *node_state,
+                const char *node_heartbeat_timestamp) {
         NodeConnection *curr = NULL;
         NodeConnection *next = NULL;
         LIST_FOREACH_SAFE(nodes, curr, next, nodes->nodes) {
                 if (streq(curr->name, node_name)) {
                         free(curr->state);
                         curr->state = strdup(node_state);
+                        curr->heartbeat_timestamp = strdup(node_heartbeat_timestamp);
                 }
         }
 }
@@ -342,6 +353,7 @@ static void nodes_unref(Nodes *nodes) {
         LIST_FOREACH_SAFE(nodes, curr, next, nodes->nodes) {
                 free(curr->name);
                 free(curr->state);
+                free(curr->heartbeat_timestamp);
         }
 
         free(nodes);
@@ -357,29 +369,29 @@ static void print_nodes(Nodes *nodes) {
         printf("\033[%d;%dH", 0, 0);
 
         /* print monitor header */
-        printf("%-30.30s|%10s\n", "NODE", "STATE");
-        printf("=========================================\n");
+        printf("%-30.30s|%10s|%20s|\n", "NODE", "STATE", "LAST HEARTBEAT");
+        printf("===============================================================\n");
 
         NodeConnection *curr = NULL;
         NodeConnection *next = NULL;
         LIST_FOREACH_SAFE(nodes, curr, next, nodes->nodes) {
-                printf("%-30.30s|%10s\n", curr->name, curr->state);
+                printf("%-30.30s|%10s|%20s|\n", curr->name, curr->state, curr->heartbeat_timestamp);
         }
 }
 
 static int on_node_connection_state_changed(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *error) {
         Nodes *nodes = userdata;
 
-        const char *node_name = NULL, *con_state = NULL;
+        const char *node_name = NULL, *con_state = NULL, *heartbeat_timestamp = NULL;
 
         int r = 0;
-        r = sd_bus_message_read(m, "ss", &node_name, &con_state);
+        r = sd_bus_message_read(m, "sss", &node_name, &con_state, &heartbeat_timestamp);
         if (r < 0) {
                 fprintf(stderr, "Can't parse node connection state changed signal: %s\n", strerror(-r));
                 return 0;
         }
 
-        nodes_update_connection(nodes, node_name, con_state);
+        nodes_update_connection(nodes, node_name, con_state, heartbeat_timestamp);
         print_nodes(nodes);
 
         return 0;
@@ -406,7 +418,7 @@ int method_monitor_node_connection_state(sd_bus *api_bus) {
 
         _cleanup_nodes_ Nodes *nodes = nodes_new();
 
-        r = sd_bus_message_enter_container(reply, SD_BUS_TYPE_ARRAY, "(sos)");
+        r = sd_bus_message_enter_container(reply, SD_BUS_TYPE_ARRAY, "(soss)");
         if (r < 0) {
                 fprintf(stderr, "Failed to open reply array: %s\n", strerror(-r));
                 return r;
@@ -415,13 +427,15 @@ int method_monitor_node_connection_state(sd_bus *api_bus) {
                 const char *name = NULL;
                 UNUSED const char *path = NULL;
                 const char *state = NULL;
+                const char *timestamp = NULL;
 
-                r = sd_bus_message_read(reply, "(sos)", &name, &path, &state);
+                r = sd_bus_message_read(reply, "(soss)", &name, &path, &state, &timestamp);
                 if (r < 0) {
                         fprintf(stderr, "Failed to read node information: %s\n", strerror(-r));
                         return r;
                 }
-                nodes_add_connection(nodes, name, state);
+
+                nodes_add_connection(nodes, name, state, timestamp);
         }
         print_nodes(nodes);
 

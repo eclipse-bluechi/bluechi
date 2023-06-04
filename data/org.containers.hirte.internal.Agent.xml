@@ -110,7 +110,8 @@
       <arg name="unitName" type="s" />
     </signal>
     <signal name="Heartbeat">
-      <arg name="agent_name" type="s" />
+      <arg name="nodeName" type="s" />
+      <arg name="timestamp" type="s" />
     </signal>
   </interface>
 </node>

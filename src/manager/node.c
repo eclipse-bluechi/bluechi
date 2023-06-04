@@ -129,6 +129,7 @@ Node *node_new(Manager *manager, const char *name) {
         LIST_HEAD_INIT(node->outstanding_requests);
         LIST_HEAD_INIT(node->proxy_monitors);
         LIST_HEAD_INIT(node->proxy_dependencies);
+        node->heartbeat_timestamp[0] = '\0';
 
         node->unit_subscriptions = hashmap_new(
                         sizeof(UnitSubscriptions),
@@ -479,13 +480,18 @@ static int node_match_job_done(UNUSED sd_bus_message *m, UNUSED void *userdata, 
 }
 
 static int node_match_heartbeat(UNUSED sd_bus_message *m, UNUSED void *userdata, UNUSED sd_bus_error *error) {
-        char *node_name = NULL;
+        Node *node = userdata;
+        const char *node_name = NULL;
+        const char *timestamp = NULL;
 
-        int r = sd_bus_message_read(m, "s", &node_name);
+        int r = sd_bus_message_read(m, "ss", &node_name, &timestamp);
         if (r < 0) {
                 hirte_log_errorf("Error reading heartbeat: %s", strerror(-r));
                 return 0;
         }
+
+        strncpy(node->heartbeat_timestamp, timestamp, AGENT_HEARTBEAT_TIMESTAMP_SIZE - 1);
+        manager_node_connection_state_update(node->manager, node->name, "online", node->heartbeat_timestamp);
 
         return 1;
 }
@@ -745,9 +751,9 @@ bool node_set_agent_bus(Node *node, sd_bus *bus) {
                                 NULL,
                                 INTERNAL_AGENT_OBJECT_PATH,
                                 INTERNAL_AGENT_INTERFACE,
-                                AGENT_HEARTBEAT_SIGNAL_NAME,
+                                "Heartbeat",
                                 node_match_heartbeat,
-                                NULL);
+                                node);
                 if (r < 0) {
                         hirte_log_errorf("Failed to add heartbeat signal match: %s", strerror(-r));
                         return false;
@@ -856,7 +862,8 @@ static int node_method_register(sd_bus_message *m, void *userdata, UNUSED sd_bus
         node_unset_agent_bus(node);
 
         hirte_log_infof("Registered managed node from fd %d as '%s'", sd_bus_get_fd(agent_bus), name);
-        manager_node_connection_state_changed(named_node->manager, named_node->name, "online");
+        manager_node_connection_state_update(
+                        named_node->manager, named_node->name, "online", named_node->heartbeat_timestamp);
 
         return sd_bus_reply_method_return(m, "");
 }
@@ -938,8 +945,7 @@ static int node_disconnected(UNUSED sd_bus_message *message, void *userdata, UNU
         if (node->name == NULL) {
                 manager_remove_node(manager, node);
         } else {
-                /* Remove all jobs associated with the registered node that got
-                   disconnected. */
+                /* Remove all jobs for the disconnected node. */
                 if (!LIST_IS_EMPTY(manager->jobs)) {
                         Job *job = NULL;
                         Job *next_job = NULL;
@@ -958,7 +964,7 @@ static int node_disconnected(UNUSED sd_bus_message *message, void *userdata, UNU
         } else {
                 hirte_log_info("Anonymous node disconnected");
         }
-        manager_node_connection_state_changed(node->manager, node->name, "offline");
+        manager_node_connection_state_update(node->manager, node->name, "offline", node->heartbeat_timestamp);
 
         node_unset_agent_bus(node);
 

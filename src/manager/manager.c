@@ -240,7 +240,8 @@ void manager_job_state_changed(Manager *manager, uint32_t job_id, const char *st
         }
 }
 
-void manager_node_connection_state_changed(Manager *manager, const char *node_name, const char *state) {
+void manager_node_connection_state_update(
+                Manager *manager, const char *node_name, const char *state, const char *heartbeat_timestamp) {
         /* skip emitting state changed for anonymous node
            since it wasn't (fully) connected in the first place */
         if (node_name == NULL) {
@@ -252,9 +253,10 @@ void manager_node_connection_state_changed(Manager *manager, const char *node_na
                         HIRTE_MANAGER_OBJECT_PATH,
                         MANAGER_INTERFACE,
                         "NodeConnectionStateChanged",
-                        "ss",
+                        "sss",
                         node_name,
-                        state);
+                        state,
+                        heartbeat_timestamp);
         if (r < 0) {
                 hirte_log_debugf(
                                 "Failed to emit NodeConnectionStateChanged signal for node %s and new state %s: %s",
@@ -656,12 +658,18 @@ static int manager_method_list_units(sd_bus_message *m, void *userdata, UNUSED s
  ************************************************************************/
 
 static int manager_method_list_encode_node(sd_bus_message *reply, Node *node) {
-        int r = sd_bus_message_open_container(reply, SD_BUS_TYPE_STRUCT, "sos");
+        int r = sd_bus_message_open_container(reply, SD_BUS_TYPE_STRUCT, "soss");
         if (r < 0) {
                 return r;
         }
 
-        r = sd_bus_message_append(reply, "sos", node->name, node->object_path, node_get_status(node));
+        r = sd_bus_message_append(
+                        reply,
+                        "soss",
+                        node->name,
+                        node->object_path,
+                        node_get_status(node),
+                        node->heartbeat_timestamp);
         if (r < 0) {
                 return r;
         }
@@ -678,7 +686,7 @@ static int manager_method_list_nodes(sd_bus_message *m, void *userdata, UNUSED s
                 return sd_bus_reply_method_errorf(reply, SD_BUS_ERROR_FAILED, "Internal error");
         }
 
-        r = sd_bus_message_open_container(reply, SD_BUS_TYPE_ARRAY, "(sos)");
+        r = sd_bus_message_open_container(reply, SD_BUS_TYPE_ARRAY, "(soss)");
         if (r < 0) {
                 return sd_bus_reply_method_errorf(reply, SD_BUS_ERROR_FAILED, "Internal error");
         }
@@ -816,7 +824,7 @@ static const sd_bus_vtable manager_vtable[] = {
         SD_BUS_VTABLE_START(0),
         SD_BUS_METHOD("Ping", "s", "s", manager_method_ping, 0),
         SD_BUS_METHOD("ListUnits", "", NODE_AND_UNIT_INFO_STRUCT_ARRAY_TYPESTRING, manager_method_list_units, 0),
-        SD_BUS_METHOD("ListNodes", "", "a(sos)", manager_method_list_nodes, 0),
+        SD_BUS_METHOD("ListNodes", "", "a(soss)", manager_method_list_nodes, 0),
         SD_BUS_METHOD("GetNode", "s", "o", manager_method_get_node, 0),
         SD_BUS_METHOD("CreateMonitor", "", "o", manager_method_create_monitor, 0),
         SD_BUS_METHOD("EnableMetrics", "", "", manager_method_metrics_enable, 0),
@@ -829,7 +837,10 @@ static const sd_bus_vtable manager_vtable[] = {
                                         SD_BUS_PARAM(result),
                         0),
         SD_BUS_SIGNAL_WITH_NAMES(
-                        "NodeConnectionStateChanged", "ss", SD_BUS_PARAM(node) SD_BUS_PARAM(connection_state), 0),
+                        "NodeConnectionStateChanged",
+                        "sss",
+                        SD_BUS_PARAM(node) SD_BUS_PARAM(connection_state) SD_BUS_PARAM(heartbeat_timestamp),
+                        0),
         SD_BUS_VTABLE_END
 };
 

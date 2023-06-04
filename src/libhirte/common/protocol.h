@@ -93,11 +93,8 @@ UnitActiveState active_state_from_string(const char *s);
 
 char *get_hostname();
 
-/* Agent to Hirte heartbeat signals */
-
-// Application-level heartbeat set at 2 seconds.
 #define AGENT_HEARTBEAT_INTERVAL_MSEC (2000)
-#define AGENT_HEARTBEAT_SIGNAL_NAME "Heartbeat"
+#define AGENT_HEARTBEAT_TIMESTAMP_SIZE 16
 
 /* Constants */
 #define SYMBOL_WILDCARD "*"

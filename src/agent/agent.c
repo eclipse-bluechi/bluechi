@@ -117,13 +117,18 @@ static int agent_heartbeat_timer_callback(sd_event_source *event_source, UNUSED 
         Agent *agent = (Agent *) userdata;
 
         if (agent->connection_state == AGENT_CONNECTION_STATE_CONNECTED) {
+                time_t t = time(NULL);
+                char timestamp[AGENT_HEARTBEAT_TIMESTAMP_SIZE];
+                strftime(timestamp, sizeof(timestamp), "%b %02d %H:%M:%S", localtime(&t));
+
                 int r = sd_bus_emit_signal(
                                 agent->peer_dbus,
                                 INTERNAL_AGENT_OBJECT_PATH,
                                 INTERNAL_AGENT_INTERFACE,
                                 "Heartbeat",
-                                "s",
-                                agent->name);
+                                "ss",
+                                agent->name,
+                                timestamp);
                 if (r < 0) {
                         hirte_log_errorf("Failed to emit heartbeat signal: %s", strerror(-r));
                 }
@@ -1363,7 +1368,7 @@ static const sd_bus_vtable internal_agent_vtable[] = {
                                         SD_BUS_PARAM(reason),
                         0),
         SD_BUS_SIGNAL_WITH_NAMES("UnitRemoved", "s", SD_BUS_PARAM(unit), 0),
-        SD_BUS_SIGNAL_WITH_NAMES("Heartbeat", "s", SD_BUS_PARAM(agent_name), 0),
+        SD_BUS_SIGNAL_WITH_NAMES("Heartbeat", "ss", SD_BUS_PARAM(nodeName) SD_BUS_PARAM(timestamp), 0),
         SD_BUS_METHOD("StartDep", "s", "", agent_method_start_dep, 0),
         SD_BUS_METHOD("StopDep", "s", "", agent_method_stop_dep, 0),
         SD_BUS_METHOD("EnableUnitFiles", "asbb", "ba(sss)", agent_method_passthrough_to_systemd, 0),
