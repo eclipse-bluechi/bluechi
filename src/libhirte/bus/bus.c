@@ -3,6 +3,7 @@
 #include <errno.h>
 
 #include "libhirte/common/common.h"
+#include "libhirte/common/network.h"
 #include "libhirte/log/log.h"
 #include "libhirte/socket.h"
 
@@ -11,12 +12,6 @@
 /*****************
  *** peer dbus ***
  *****************/
-
-static char *typesafe_inet_ntop4(const struct sockaddr_in *addr) {
-        char *dst = malloc0_array(0, sizeof(char), INET_ADDRSTRLEN);
-        inet_ntop(AF_INET, &addr->sin_addr, dst, INET_ADDRSTRLEN);
-        return dst;
-}
 
 char *assemble_tcp_address(const struct sockaddr_in *addr) {
         if (addr == NULL) {

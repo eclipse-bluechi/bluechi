@@ -9,8 +9,12 @@
 #include <sys/socket.h>
 #include <sys/types.h>
 
+#include "libhirte/common/common.h"
+
 bool isIPv4Addr(const char *domain);
 
 bool isIPv6Addr(const char *domain);
 
 int get_address(const char *domain, char *ip_address, size_t ip_address_size);
+
+char *typesafe_inet_ntop4(const struct sockaddr_in *addr);

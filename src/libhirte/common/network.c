@@ -44,3 +44,9 @@ int get_address(const char *domain, char *ip_address, size_t ip_address_size) {
 
         return 0;
 }
+
+char *typesafe_inet_ntop4(const struct sockaddr_in *addr) {
+        char *dst = malloc0_array(0, sizeof(char), INET_ADDRSTRLEN);
+        inet_ntop(AF_INET, &addr->sin_addr, dst, INET_ADDRSTRLEN);
+        return dst;
+}
