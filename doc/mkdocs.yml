@@ -8,19 +8,21 @@ copyright: © Red Hat
 nav:
   - Home: index.md
   - Getting Started: getting_started.md
+  - Configuration: configuration.md
   - DBus API: 
     - Description: api/description.md
     - Examples: api/examples.md
   - Proxy Services: 
     - Concept: proxy/concept.md
-  - Configuration files:
-    - Hirte controller: man/hirte_conf.md
-    - Hirte agent: man/hirte_agent_conf.md
-  - Binaries:
-    - hirte: man/hirte.md
-    - hirte-agent: man/hirte-agent.md
-    - hirtectl: man/hirtectl.md
-    - hirte-proxy: man/hirte-proxy.md
+  - MAN Pages:
+    - Binaries:
+      - hirte(1): man/hirte.md
+      - hirte-agent(1): man/hirte-agent.md
+      - hirte-proxy(1): man/hirte-proxy.md
+      - hirtectl(1): man/hirtectl.md
+    - Configuration:
+      - hirte(5): man/hirte_conf.md
+      - hirte-agent(5): man/hirte_agent_conf.md
 
 theme:
   name: readthedocs
