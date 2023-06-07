@@ -12,8 +12,7 @@ nav:
   - DBus API: 
     - Description: api/description.md
     - Examples: api/examples.md
-  - Proxy Services: 
-    - Concept: proxy/concept.md
+  - Proxy Services: proxy_services.md
   - MAN Pages:
     - Binaries:
       - hirte(1): man/hirte.md

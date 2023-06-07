@@ -5,7 +5,7 @@ introduces something called proxy services.
 
 ## Using Proxy Services
 
-The hirte agent comes with a template service called `hirte-proxy@.service` which is the core of this mechanism.
+The hirte-agent comes with a template service called `hirte-proxy@.service` which is the core of this mechanism.
 
 Suppose there is a regular service file on node 'foo', which
 looks looks like this
@@ -65,6 +65,11 @@ the target node. By default, in systemd this doesn't do anything, even
 if there are no other dependencies on the target service. However you
 can use `StopWhenUnneeded=yes` in the service to make it stop when
 the last dependency (local or via proxy) stops.
+
+Based on the described example, the following diagram visualizes the
+architecture of the hirte proxy services:
+
+![Hirte-Proxy Architecture diagram](./img/hirte_proxy_architecture.png)
 
 ## Internal Details on the source node
 
