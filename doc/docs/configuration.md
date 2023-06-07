@@ -10,8 +10,8 @@ On startup, hirte loads configuration files from the following directories:
 
 Based on the load order, settings from a previously read configuration file will be overridden by subsequent files.
 For example, the default setting for `AllowedNodeNames` in `/usr/share/hirte/config/hirte.conf` is an empty list and
-needs to be overridden by either `/etc/hirte/hirte.conf` or files in `/etc/hirte/hirte.conf.d`. Configuration files are
-sorted alphabetically and read in ascending order.
+can be overridden by either editing `/etc/hirte/hirte.conf` or adding a file in `/etc/hirte/hirte.conf.d`. Configuration
+files in `/etc/hirte/hirte.conf.d` are sorted alphabetically and read in ascending order.
 
 It is also possible to pass the cli option `-c <path_to_file>` to both, hirte and hirte-agent. If specified, this
 configuration has the highest priority and all defined settings will override previously set options.
