@@ -100,7 +100,7 @@ Object path: `/org/containers/hirte/monitor/$id`
     emitted. Additionally it is emitted initially once for each matched unit. This allows you to easily monitor and get
     the current state in a race-free way without missing any changes.
 
-  * UnitNew(s node, s unit, s reason)
+  * `UnitNew(s node, s unit, s reason)`
 
      Emitted when a new unit is loaded by systemd, for example when a
      service is started (reason=`real`), or if hirte learns of an
@@ -111,14 +111,14 @@ Object path: `/org/containers/hirte/monitor/$id`
     to a previously offline node and the unit was already running
     on the node.
 
-  * UnitStateChanged(s node, s unit, s active_state, s substate, s reason)
+  * `UnitStateChanged(s node, s unit, s active_state, s substate, s reason)`
 
     Emitted when the active state (and substate) of a monitored unit
     changes. Additionally, when a new subscription is added to a unit that
     is already active, a virtual event is sent. This makes it very easy
     to track the current active state of a unit.
 
-  * UnitRemove(s node, s unit, s reason)
+  * `UnitRemove(s node, s unit, s reason)`
 
     Emitted when a unit is unloaded by systemd (reason=`real`), or
     when the agent disconnects and we previously reported the unit
