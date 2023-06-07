@@ -5,8 +5,7 @@
 #include <stdlib.h>
 
 #include "libhirte/common/network.h"
-
-#define bool_to_str(b) b ? "true" : "false"
+#include "libhirte/common/string-util.h"
 
 bool test_isIPv6Addr(const char *in, bool expected) {
         bool result = isIPv6Addr(in);

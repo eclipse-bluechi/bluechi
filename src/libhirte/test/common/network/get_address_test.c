@@ -5,8 +5,7 @@
 #include <stdlib.h>
 
 #include "libhirte/common/network.h"
-
-#define bool_to_str(b) b ? "true" : "false"
+#include "libhirte/common/string-util.h"
 
 bool test_get_address(const char *domain, char *ip, size_t ip_size, bool expected) {
         bool result = get_address(domain, ip, ip_size);
