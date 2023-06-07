@@ -21,13 +21,11 @@
     <signal name="JobNew">
       <arg name="id" type="u" />
       <arg name="job" type="o" />
-      <arg name="nodeName" type="s" />
-      <arg name="unit" type="s" />
     </signal>
     <signal name="JobRemoved">
       <arg name="id" type="u" />
       <arg name="job" type="o" />
-      <arg name="nodeName" type="s" />
+      <arg name="node" type="s" />
       <arg name="unit" type="s" />
       <arg name="result" type="s" />
     </signal>

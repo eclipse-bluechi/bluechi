@@ -404,6 +404,6 @@ This is the interface that provides signals sent from the agent to the manager t
 
 #### Signals
 
-  * `AgentJobMetrics(in s unit, in s method, in t systemd_job_time_micros)`
+  * `AgentJobMetrics(s unit, s method, t systemd_job_time_micros)`
 
     This is emitted for each completed job when the collection of metrics has been enabled via `EnableMetrics`.
