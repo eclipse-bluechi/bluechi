@@ -40,14 +40,16 @@ int get_address(const char *domain, char **ip_address) {
 
         if (res->ai_family == AF_INET) { // IPv4 address
                 struct sockaddr_in *ipv4 = (struct sockaddr_in *) res->ai_addr;
-                *ip_address = typesafe_inet_ntop4(ipv4);
+                _cleanup_free_ char *reverse = typesafe_inet_ntop4(ipv4);
+                strncpy(*ip_address, reverse, INET_ADDRSTRLEN);
                 if (ip_address == NULL) {
                         hirte_log_errorf("AF_INET: Failed to convert the IP address. errno: %d\n", errno);
                         return 1;
                 }
         } else if (res->ai_family == AF_INET6) { // IPv6 address
                 struct sockaddr_in *ipv6 = (struct sockaddr_in *) res->ai_addr;
-                *ip_address = typesafe_inet_ntop6(ipv6);
+                _cleanup_free_ char *reverse = typesafe_inet_ntop6(ipv6);
+                strncpy(*ip_address, reverse, INET6_ADDRSTRLEN);
                 if (ip_address == NULL) {
                         hirte_log_errorf("AF_INET6: Failed to convert the IP address. errno: %d\n", errno);
                         return 1;
