@@ -20,3 +20,5 @@ int get_address(const char *domain, char **ip_address);
 
 char *typesafe_inet_ntop4(const struct sockaddr_in *addr);
 char *typesafe_inet_ntop6(const struct sockaddr_in *addr);
+
+char *assemble_tcp_address(const struct sockaddr_in *addr);

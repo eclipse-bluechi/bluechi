@@ -4,6 +4,7 @@ network_src = [
   'isIPv4Addr_test',
   'isIPv6Addr_test',
   'get_address_test',
+  'assemble_tcp_address',
 ]
 
 foreach src : network_src
