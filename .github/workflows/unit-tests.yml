@@ -26,6 +26,7 @@ jobs:
           make test-with-valgrind
 
       - name: Upload unit test logs
+        if: always()
         uses: actions/upload-artifact@v3
         with:
           name: unit-test-logs
