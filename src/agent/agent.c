@@ -1823,8 +1823,8 @@ static bool ensure_orch_address(Agent *agent) {
 
         /* it's not an IPv4 address, let's do the reverse */
         if (!isIPv4Addr(agent->host)) {
-                char ip_address[INET_ADDRSTRLEN];
-                int r = get_address(agent->host, ip_address, sizeof(ip_address));
+                char *ip_address = malloc0_array(0, sizeof(char), INET_ADDRSTRLEN);
+                int r = get_address(agent->host, &ip_address);
                 if (r != 0) {
                         hirte_log_errorf("Failed to get IP address from: '%s'", agent->host);
                         return false;

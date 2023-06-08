@@ -10,11 +10,13 @@
 #include <sys/types.h>
 
 #include "libhirte/common/common.h"
+#include "libhirte/log/log.h"
 
 bool isIPv4Addr(const char *domain);
 
 bool isIPv6Addr(const char *domain);
 
-int get_address(const char *domain, char *ip_address, size_t ip_address_size);
+int get_address(const char *domain, char **ip_address);
 
 char *typesafe_inet_ntop4(const struct sockaddr_in *addr);
+char *typesafe_inet_ntop6(const struct sockaddr_in *addr);

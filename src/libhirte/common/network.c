@@ -17,7 +17,7 @@ bool isIPv6Addr(const char *domain) {
         return (inet_pton(AF_INET6, domain, &(sa.sin6_addr)) == 1);
 }
 
-int get_address(const char *domain, char *ip_address, size_t ip_address_size) {
+int get_address(const char *domain, char **ip_address) {
         if (domain == NULL) {
                 return 1;
         }
@@ -34,23 +34,22 @@ int get_address(const char *domain, char *ip_address, size_t ip_address_size) {
 
         int status = getaddrinfo(domain, NULL, &hints, &res);
         if (status != 0) {
-                fprintf(stderr, "getaddrinfo failed: %s\n", gai_strerror(status));
+                hirte_log_errorf("getaddrinfo failed: %s\n", gai_strerror(status));
                 return 1;
         }
 
-        void *addr = NULL;
         if (res->ai_family == AF_INET) { // IPv4 address
                 struct sockaddr_in *ipv4 = (struct sockaddr_in *) res->ai_addr;
-                addr = &(ipv4->sin_addr);
-                if (inet_ntop(AF_INET, addr, ip_address, ip_address_size) == NULL) {
-                        fprintf(stderr, "AF_INET: Failed to convert the IP address. errno: %d\n", errno);
+                *ip_address = typesafe_inet_ntop4(ipv4);
+                if (ip_address == NULL) {
+                        hirte_log_errorf("AF_INET: Failed to convert the IP address. errno: %d\n", errno);
                         return 1;
                 }
         } else if (res->ai_family == AF_INET6) { // IPv6 address
-                struct sockaddr_in6 *ipv6 = (struct sockaddr_in6 *) res->ai_addr;
-                addr = &(ipv6->sin6_addr);
-                if (inet_ntop(AF_INET6, addr, ip_address, ip_address_size) == NULL) {
-                        fprintf(stderr, "AF_INET6: Failed to convert the IP address. errno: %d\n", errno);
+                struct sockaddr_in *ipv6 = (struct sockaddr_in *) res->ai_addr;
+                *ip_address = typesafe_inet_ntop6(ipv6);
+                if (ip_address == NULL) {
+                        hirte_log_errorf("AF_INET6: Failed to convert the IP address. errno: %d\n", errno);
                         return 1;
                 }
         }
@@ -63,5 +62,11 @@ int get_address(const char *domain, char *ip_address, size_t ip_address_size) {
 char *typesafe_inet_ntop4(const struct sockaddr_in *addr) {
         char *dst = malloc0_array(0, sizeof(char), INET_ADDRSTRLEN);
         inet_ntop(AF_INET, &addr->sin_addr, dst, INET_ADDRSTRLEN);
+        return dst;
+}
+
+char *typesafe_inet_ntop6(const struct sockaddr_in *addr) {
+        char *dst = malloc0_array(0, sizeof(char), INET6_ADDRSTRLEN);
+        inet_ntop(AF_INET6, &addr->sin_addr, dst, INET6_ADDRSTRLEN);
         return dst;
 }
