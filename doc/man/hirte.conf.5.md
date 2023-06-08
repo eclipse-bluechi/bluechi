@@ -53,6 +53,12 @@ By default `journald` is used as the target.
 
 If this flag is set to `true`, no logs are written by hirte. By default the flag is set to `false`.
 
+#### **DbusName** (string)
+D-Bus name for hirte.
+
+#### **DbusObjectPath** (string)
+D-Bus object path for hirte.
+
 ## Example
 
 ```
