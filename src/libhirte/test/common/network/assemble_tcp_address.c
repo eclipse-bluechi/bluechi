@@ -5,8 +5,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "libhirte/bus/bus.h"
 #include "libhirte/common/common.h"
+#include "libhirte/common/network.h"
 
 
 #ifndef __FUNCTION_NAME__

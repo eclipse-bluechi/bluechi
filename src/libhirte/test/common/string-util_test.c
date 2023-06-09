@@ -6,8 +6,6 @@
 
 #include "libhirte/common/string-util.h"
 
-#define bool_to_str(b) b ? "true" : "false"
-
 bool test_is_glob(const char *in, bool expected) {
         bool result = is_glob(in);
         if (result == expected) {

@@ -16,3 +16,5 @@ foreach src : common_src
   )
   test(src, exec_test)
 endforeach
+
+subdir('network')

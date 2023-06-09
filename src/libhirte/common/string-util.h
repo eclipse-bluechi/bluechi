@@ -13,6 +13,8 @@
 #define streqi(a, b) (strcasecmp(a, b) == 0)
 #define strneqi(a, b, n) (strncasecmp(a, b, n) == 0)
 
+#define bool_to_str(b) b ? "true" : "false"
+
 static inline bool ascii_isdigit(char a) {
         return a >= '0' && a <= '9';
 }

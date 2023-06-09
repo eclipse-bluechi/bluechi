@@ -9,6 +9,7 @@
 #include "libhirte/common/cfg.h"
 #include "libhirte/common/common.h"
 #include "libhirte/common/event-util.h"
+#include "libhirte/common/network.h"
 #include "libhirte/common/opt.h"
 #include "libhirte/common/parse-util.h"
 #include "libhirte/common/time-util.h"
@@ -1815,6 +1816,22 @@ static bool ensure_orch_address(Agent *agent) {
                 return false;
         }
 
+        if (isIPv6Addr(agent->host)) {
+                hirte_log_errorf("IPV6 address '%s' is not supported at moment", agent->host);
+                return false;
+        }
+
+        /* it's not an IPv4 address, let's do the reverse */
+        if (!isIPv4Addr(agent->host)) {
+                char *ip_address = malloc0_array(0, sizeof(char), INET_ADDRSTRLEN);
+                int r = get_address(agent->host, &ip_address);
+                if (r != 0) {
+                        hirte_log_errorf("Failed to get IP address from: '%s'", agent->host);
+                        return false;
+                }
+                hirte_log_infof("Translated '%s' to '%s'", agent->host, ip_address);
+                copy_str(&agent->host, ip_address);
+        }
         r = inet_pton(AF_INET, agent->host, &host.sin_addr);
         if (r < 1) {
                 hirte_log_errorf("Invalid host option '%s'", agent->host);
