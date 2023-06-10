@@ -8,9 +8,9 @@
 #include "socket.h"
 
 int create_tcp_socket(uint16_t port) {
-        struct sockaddr_in servaddr;
+        struct sockaddr_in6 servaddr;
 
-        int fd = socket(AF_INET, SOCK_STREAM | SOCK_CLOEXEC | SOCK_NONBLOCK, 0);
+        int fd = socket(AF_INET6, SOCK_STREAM | SOCK_CLOEXEC | SOCK_NONBLOCK, 0);
         if (fd < 0) {
                 int errsv = errno;
                 return -errsv;
@@ -22,11 +22,11 @@ int create_tcp_socket(uint16_t port) {
                 return -errsv;
         }
 
-        servaddr.sin_family = AF_INET;
-        servaddr.sin_addr.s_addr = htonl(INADDR_ANY);
-        servaddr.sin_port = htons(port);
+        servaddr.sin6_family = AF_INET6;
+        servaddr.sin6_addr = in6addr_any;
+        servaddr.sin6_port = htons(port);
 
-        if (bind(fd, (struct sockaddr *) &servaddr, sizeof(servaddr)) < 0) {
+        if (bind(fd, &servaddr, sizeof(servaddr)) < 0) {
                 int errsv = errno;
                 return -errsv;
         }

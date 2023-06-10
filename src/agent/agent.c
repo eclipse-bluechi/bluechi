@@ -1800,29 +1800,43 @@ int agent_init_units(Agent *agent, sd_bus_message *m) {
 }
 
 static bool ensure_orch_address(Agent *agent) {
-        struct sockaddr_in host;
         int r = 0;
 
         if (agent->orch_addr != NULL) {
                 return true;
         }
 
-        memset(&host, 0, sizeof(host));
-        host.sin_family = AF_INET;
-        host.sin_port = htons(agent->port);
 
         if (agent->host == NULL) {
                 hirte_log_errorf("No manager host specified for agent '%s'", agent->name);
                 return false;
         }
 
-        if (isIPv6Addr(agent->host)) {
-                hirte_log_errorf("IPV6 address '%s' is not supported at moment", agent->host);
-                return false;
-        }
 
-        /* it's not an IPv4 address, let's do the reverse */
-        if (!isIPv4Addr(agent->host)) {
+        // IPv4
+        if (isIPv4Addr(agent->host)) {
+                struct sockaddr_in host;
+                memset(&host, 0, sizeof(host));
+                host.sin_family = AF_INET;
+                host.sin_port = htons(agent->port);
+                r = inet_pton(AF_INET, agent->host, &host.sin_addr);
+                if (r < 1) {
+                        hirte_log_errorf("INET4: Invalid host option '%s'", agent->host);
+                        return false;
+                }
+                agent->orch_addr = assemble_tcp_address(&host);
+        } else if (isIPv6Addr(agent->host)) { // IPv6
+                struct sockaddr_in6 host6;
+                memset(&host6, 0, sizeof(host6));
+                host6.sin6_family = AF_INET6;
+                host6.sin6_port = htons(agent->port);
+                r = inet_pton(AF_INET6, agent->host, &host6.sin6_addr);
+                if (r < 1) {
+                        hirte_log_errorf("INET6: Invalid host option '%s'", agent->host);
+                        return false;
+                }
+                agent->orch_addr = assemble_tcp_address_v6(&host6);
+        } else { // We need to resolve the FQDN
                 char *ip_address = malloc0_array(0, sizeof(char), INET_ADDRSTRLEN);
                 int r = get_address(agent->host, &ip_address);
                 if (r != 0) {
@@ -1832,13 +1846,6 @@ static bool ensure_orch_address(Agent *agent) {
                 hirte_log_infof("Translated '%s' to '%s'", agent->host, ip_address);
                 copy_str(&agent->host, ip_address);
         }
-        r = inet_pton(AF_INET, agent->host, &host.sin_addr);
-        if (r < 1) {
-                hirte_log_errorf("Invalid host option '%s'", agent->host);
-                return false;
-        }
-
-        agent->orch_addr = assemble_tcp_address(&host);
 
         return agent->orch_addr != NULL;
 }

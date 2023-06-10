@@ -47,7 +47,7 @@ int get_address(const char *domain, char **ip_address) {
                         return 1;
                 }
         } else if (res->ai_family == AF_INET6) { // IPv6 address
-                struct sockaddr_in *ipv6 = (struct sockaddr_in *) res->ai_addr;
+                struct sockaddr_in6 *ipv6 = (struct sockaddr_in6 *) res->ai_addr;
                 _cleanup_free_ char *reverse = typesafe_inet_ntop6(ipv6);
                 strncpy(*ip_address, reverse, INET6_ADDRSTRLEN);
                 if (ip_address == NULL) {
@@ -67,23 +67,40 @@ char *typesafe_inet_ntop4(const struct sockaddr_in *addr) {
         return dst;
 }
 
-char *typesafe_inet_ntop6(const struct sockaddr_in *addr) {
+char *typesafe_inet_ntop6(const struct sockaddr_in6 *addr) {
         char *dst = malloc0_array(0, sizeof(char), INET6_ADDRSTRLEN);
-        inet_ntop(AF_INET6, &addr->sin_addr, dst, INET6_ADDRSTRLEN);
+        inet_ntop(AF_INET6, &addr->sin6_addr, dst, INET6_ADDRSTRLEN);
         return dst;
 }
 
 char *assemble_tcp_address(const struct sockaddr_in *addr) {
         if (addr == NULL) {
-                hirte_log_error("Can not assemble an empty address");
+                hirte_log_error("INET4: Can not assemble an empty address");
                 return NULL;
         }
 
         _cleanup_free_ char *host = typesafe_inet_ntop4(addr);
+
         char *dbus_addr = NULL;
         int r = asprintf(&dbus_addr, "tcp:host=%s,port=%d", host, ntohs(addr->sin_port));
         if (r < 0) {
-                hirte_log_error("Out of memory");
+                hirte_log_error("INET4: Out of memory");
+                return NULL;
+        }
+        return dbus_addr;
+}
+
+char *assemble_tcp_address_v6(const struct sockaddr_in6 *addr) {
+        if (addr == NULL) {
+                hirte_log_error("INET6: Can not assemble an empty address");
+                return NULL;
+        }
+
+        _cleanup_free_ char *host = typesafe_inet_ntop6(addr);
+        char *dbus_addr = NULL;
+        int r = asprintf(&dbus_addr, "tcp:host=%s,port=%d", host, ntohs(addr->sin6_port));
+        if (r < 0) {
+                hirte_log_error("INET6: Out of memory");
                 return NULL;
         }
         return dbus_addr;
