@@ -19,7 +19,7 @@ setup(
     install_requires=[
         "dasbus",
     ],
-    package_dir={":": "src/python"},
+    package_dir={":": "src/bindings/python"},
     packages=find_packages(include=['hirte', 'hirte.src.python']),
     include_package_data=True,
     package_data={"hirte": ["py.typed"]},
