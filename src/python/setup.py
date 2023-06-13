@@ -15,7 +15,7 @@ setup(
     long_description=readme(),
     author="Hirte developers",
     url="https://github.com/containers/hirte/",
-    license="SPDX-License-Identifier: GPL-2.0-or-later",
+    license="GPL-2.0-or-later",
     install_requires=[
         "dasbus",
     ],
@@ -24,7 +24,7 @@ setup(
     include_package_data=True,
     package_data={"hirte": ["py.typed"]},
     zip_safe=True,
-    keywords=['hirte', 'python']
+    keywords=['hirte', 'python'],
     classifiers=[
         "Programming Language :: Python",
         "Programming Language :: Python :: 3.9",

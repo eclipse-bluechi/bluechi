@@ -334,7 +334,7 @@ class Hirte:
         nodeName,
         unitName,
         value,
-        persist=False
+        runtime=False
     ):
         """
         Set CPU Weight
@@ -349,15 +349,12 @@ class Hirte:
             value:
                 value to be set
 
-            persist:
-                Set True to NOT persist de change
-                Default value is False
+            runtime:
+                If runtime is true the property changes do not persist across
+                reboots. Default value is False
 
         Returns:
         """
-        # Don't persist change = True
-        runtime = persist
-
         node_path = self.manager.GetNode(nodeName)
         node = self.bus.get_proxy(
             HIRTE_DBUS_INTERFACE,
