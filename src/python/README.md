@@ -14,8 +14,9 @@ gobject and pip packages:
 
 ```sh
 dnf install -y \
-    python3-gobject \
-    python3-pip
+    python3-dasbus \
+    python3-pip \
+    python3-setuptool
 ```
 
 ## Installation
