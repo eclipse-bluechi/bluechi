@@ -12,7 +12,7 @@ hirte is made available in EPEL.
 On the laptop install both hirte and the hirte-agent via this command:
 
 ```bash
-dnf install hirte hirte-agent
+dnf install hirte hirte-agent hirte-ctl
 ```
 
 On the Raspberry Pi 4, install only the agent via this command:
