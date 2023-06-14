@@ -1335,6 +1335,29 @@ static int agent_method_disable_metrics(sd_bus_message *m, void *userdata, UNUSE
         return sd_bus_reply_method_return(m, "");
 }
 
+/*************************************************************************
+ ************** org.containers.hirte.Agent.SetNodeLogLevel ***************
+ ************************************************************************/
+
+static int agent_method_set_log_level(
+                UNUSED sd_bus_message *m, UNUSED void *userdata, UNUSED sd_bus_error *ret_error) {
+        const char *level = NULL;
+        int r = sd_bus_message_read(m, "s", &level);
+        if (r < 0) {
+                hirte_log_errorf("Failed to read Loglevel parameter: %s", strerror(-r));
+                return sd_bus_reply_method_errorf(
+                                m, SD_BUS_ERROR_FAILED, "Failed to read Loglevel parameter: %s", strerror(-r));
+        }
+        LogLevel loglevel = string_to_log_level(level);
+        if (loglevel == LOG_LEVEL_INVALID) {
+                hirte_log_errorf("Invalid input for log level: %s", loglevel);
+                return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "Invalid input for log level");
+        }
+        hirte_log_set_level(loglevel);
+        hirte_log_infof("Log level changed to %s", level);
+        return sd_bus_reply_method_return(m, "");
+}
+
 
 static const sd_bus_vtable internal_agent_vtable[] = {
         SD_BUS_VTABLE_START(0),
@@ -1350,6 +1373,7 @@ static const sd_bus_vtable internal_agent_vtable[] = {
         SD_BUS_METHOD("Unsubscribe", "s", "", agent_method_unsubscribe, 0),
         SD_BUS_METHOD("EnableMetrics", "", "", agent_method_enable_metrics, 0),
         SD_BUS_METHOD("DisableMetrics", "", "", agent_method_disable_metrics, 0),
+        SD_BUS_METHOD("SetLogLevel", "s", "", agent_method_set_log_level, 0),
         SD_BUS_SIGNAL_WITH_NAMES("JobDone", "us", SD_BUS_PARAM(id) SD_BUS_PARAM(result), 0),
         SD_BUS_SIGNAL_WITH_NAMES("JobStateChanged", "us", SD_BUS_PARAM(id) SD_BUS_PARAM(state), 0),
         SD_BUS_SIGNAL_WITH_NAMES(
