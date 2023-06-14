@@ -465,9 +465,8 @@ static int manager_method_ping(sd_bus_message *m, UNUSED void *userdata, UNUSED 
 
         int r = sd_bus_message_read(m, "s", &arg);
         if (r < 0) {
-                return r;
+                return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_INVALID_ARGS, "Invalid arguments");
         }
-
         return sd_bus_reply_method_return(m, "s", arg);
 }
 
@@ -812,6 +811,29 @@ static int manager_method_metrics_disable(sd_bus_message *m, void *userdata, UNU
         return sd_bus_reply_method_return(m, "");
 }
 
+/*************************************************************************
+ ************** org.containers.hirte.Manager.SetLogLevel ***************
+ ************************************************************************/
+
+static int manager_method_set_log_level(sd_bus_message *m, UNUSED void *userdata, UNUSED sd_bus_error *ret_error) {
+        const char *level = NULL;
+
+        int r = sd_bus_message_read(m, "s", &level);
+        if (r < 0) {
+                hirte_log_errorf("Failed to read the parameter: %s", strerror(-r));
+                return sd_bus_reply_method_errorf(
+                                m, SD_BUS_ERROR_FAILED, "Failed to read the parameter: %s", strerror(-r));
+        }
+        LogLevel loglevel = string_to_log_level(level);
+        if (loglevel == LOG_LEVEL_INVALID) {
+                hirte_log_errorf("Invalid input for log level: %s", loglevel);
+                return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "Invalid input for log level");
+        }
+        hirte_log_set_level(loglevel);
+        hirte_log_infof("Log level changed to %s", level);
+        return sd_bus_reply_method_return(m, "");
+}
+
 static const sd_bus_vtable manager_vtable[] = {
         SD_BUS_VTABLE_START(0),
         SD_BUS_METHOD("Ping", "s", "s", manager_method_ping, 0),
@@ -819,6 +841,7 @@ static const sd_bus_vtable manager_vtable[] = {
         SD_BUS_METHOD("ListNodes", "", "a(sos)", manager_method_list_nodes, 0),
         SD_BUS_METHOD("GetNode", "s", "o", manager_method_get_node, 0),
         SD_BUS_METHOD("CreateMonitor", "", "o", manager_method_create_monitor, 0),
+        SD_BUS_METHOD("SetLogLevel", "s", "", manager_method_set_log_level, 0),
         SD_BUS_METHOD("EnableMetrics", "", "", manager_method_metrics_enable, 0),
         SD_BUS_METHOD("DisableMetrics", "", "", manager_method_metrics_disable, 0),
         SD_BUS_SIGNAL_WITH_NAMES("JobNew", "uo", SD_BUS_PARAM(id) SD_BUS_PARAM(job), 0),
