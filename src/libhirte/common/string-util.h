@@ -70,3 +70,7 @@ static inline bool match_glob(const char *str, const char *glob) {
         return !*glob;
 }
 // NOLINTEND(misc-no-recursion)
+
+static inline bool isempty(const char *a) {
+        return !a || a[0] == '\0';
+}

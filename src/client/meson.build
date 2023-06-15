@@ -6,7 +6,8 @@ client_src = [
   'main.c',
   'client.c',
   'method_monitor.c',
-  'method_list_units.c'
+  'method_list_units.c',
+  'method_status.c'
 ]
 
 executable(
