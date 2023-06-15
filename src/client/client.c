@@ -10,6 +10,7 @@
 #include "client.h"
 #include "method_list_units.h"
 #include "method_monitor.h"
+#include "method_status.h"
 
 Client *new_client(char *op, int opargc, char **opargv, char *opt_filter_glob) {
         Client *client = malloc0(sizeof(Client));
@@ -302,7 +303,7 @@ int method_metrics_listen(Client *client) {
         return r;
 }
 
-static int create_message_new_method_call(
+int create_message_new_method_call(
                 Client *client, const char *node_name, const char *member, sd_bus_message **new_message) {
         int r = 0;
         _cleanup_sd_bus_message_ sd_bus_message *outgoing_message = NULL;
@@ -614,6 +615,11 @@ int client_call_manager(Client *client) {
                         return -EINVAL;
                 }
                 r = method_daemon_reload_on(client, client->opargv[0]);
+        } else if (streq(client->op, "status")) {
+                if (client->opargc < 2) {
+                        return -EINVAL;
+                }
+                r = method_status_unit_on(client, client->opargv[0], &client->opargv[1], client->opargc - 1);
         } else {
                 return -EINVAL;
         }
@@ -651,5 +657,7 @@ int print_client_usage(char *argv) {
         printf("    usage: monitor node-connection\n");
         printf("  - daemon-reload: reload systemd daemon on a specific node\n");
         printf("    usage: disable nodename\n");
+        printf("  - status: get the status of systemd units on a specific node\n");
+        printf("    usage: status nodename unitfilename...\n");
         return 0;
 }

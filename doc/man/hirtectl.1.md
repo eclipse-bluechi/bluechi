@@ -40,7 +40,7 @@ Creates a monitor on the given agent to observe changes in the specified units. 
 
 ### **hirtectl** *monitor* *node-connection*
 
-Creates a monitor to observe connection state changes for all nodes. 
+Creates a monitor to observe connection state changes for all nodes.
 
 
 **Example:**
@@ -54,3 +54,7 @@ hirtectl monitor \\\* dbus.service,apache2.service
 ### **hirtectl** *daemon-reload* [*agent*]
 
 Performs `daemon-reload` for the `hirte-agent`.
+
+### **hirtectl** [*status*] [*agent*] [*unit1*,*...*]
+
+Fetches the status of the systemd units for the `hirte-agent`.
