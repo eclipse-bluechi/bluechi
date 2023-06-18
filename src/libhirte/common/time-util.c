@@ -31,10 +31,10 @@ char *get_formatted_log_timestamp() {
         if (r < 0) {
                 return NULL;
         }
-        return get_formatted_log_timestamp_for_timespec(now);
+        return get_formatted_log_timestamp_for_timespec(now, false);
 }
 
-char *get_formatted_log_timestamp_for_timespec(struct timespec time) {
+char *get_formatted_log_timestamp_for_timespec(struct timespec time, bool is_gmt) {
         const size_t timestamp_size = 20;
         const size_t timestamp_with_millis_size = timestamp_size + 4;
         const size_t timestamp_offset_size = 7;
@@ -42,12 +42,12 @@ char *get_formatted_log_timestamp_for_timespec(struct timespec time) {
         char timebuf[timestamp_size];
         char offsetbuf[timestamp_offset_size];
         char *timebuf_full = malloc0(timestamp_full_size);
-        struct tm *time_tm = localtime(&time.tv_sec);
+        struct tm *time_tm = is_gmt ? gmtime(&time.tv_sec) : localtime(&time.tv_sec);
 
         strftime(timebuf, timestamp_size, "%Y-%m-%d %H:%M:%S", time_tm);
         uint64_t millis = (uint64_t) ((double) time.tv_nsec * nanosec_to_millisec_multiplier);
         strftime(offsetbuf, timestamp_offset_size, "%z", time_tm);
-        snprintf(timebuf_full, timestamp_full_size, "%s,%ld%s", timebuf, millis % millis_in_second, offsetbuf);
+        snprintf(timebuf_full, timestamp_full_size, "%s,%03ld%s", timebuf, millis % millis_in_second, offsetbuf);
 
         return timebuf_full;
 }
