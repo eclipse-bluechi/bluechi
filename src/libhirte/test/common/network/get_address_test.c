@@ -30,7 +30,7 @@ bool test_get_address(const char *domain, char *ip, bool expected) {
 
 int main() {
         bool result = true;
-        char ip[INET_ADDRSTRLEN];
+        char ip[INET6_ADDRSTRLEN];
 
         result = result && test_get_address(NULL, ip, false);
         result = result && test_get_address(".", ip, false);
