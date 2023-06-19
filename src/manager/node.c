@@ -239,7 +239,7 @@ bool node_is_online(Node *node) {
 
 static uint64_t subscription_hashmap_hash(const void *item, UNUSED uint64_t seed0, UNUSED uint64_t seed1) {
         const Subscription * const *subscriptionp = item;
-        return (uint64_t) *subscriptionp;
+        return (uint64_t) ((uintptr_t) *subscriptionp);
 }
 
 static int subscription_hashmap_compare(const void *a, const void *b, UNUSED void *udata) {
