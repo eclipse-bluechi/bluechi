@@ -47,7 +47,12 @@ char *get_formatted_log_timestamp_for_timespec(struct timespec time, bool is_gmt
         strftime(timebuf, timestamp_size, "%Y-%m-%d %H:%M:%S", time_tm);
         uint64_t millis = (uint64_t) ((double) time.tv_nsec * nanosec_to_millisec_multiplier);
         strftime(offsetbuf, timestamp_offset_size, "%z", time_tm);
-        snprintf(timebuf_full, timestamp_full_size, "%s,%03ld%s", timebuf, millis % millis_in_second, offsetbuf);
+        snprintf(timebuf_full,
+                 timestamp_full_size,
+                 "%s,%03" PRIu64 "%s",
+                 timebuf,
+                 millis % millis_in_second,
+                 offsetbuf);
 
         return timebuf_full;
 }
