@@ -50,6 +50,15 @@ This package contains the controller and command line tool.
 %{_unitdir}/hirte.service
 %{_unitdir}/hirte.socket
 
+%package -n python3-%{name}
+Summary:	Hirte python module
+BuildArch:      noarch
+BuildRequires:  python3-devel
+Buildrequires:  python3dist(dasbus)
+
+%description -n python3-%{name}
+A python module for hirte.
+
 %package agent
 Summary:  Hirte service controller agent
 Requires: systemd
@@ -145,6 +154,12 @@ This package contains the service controller command line tool.
 %{_bindir}/hirtectl
 %{_mandir}/man1/hirtectl.*
 
+%files -n python3-%{name}
+%license LICENSE
+%{python3_sitelib}/%{name}/__init__.py
+%{python3_sitelib}/%{name}/config.py
+%{python3_sitelib}/%{name}/__pycache__/
+
 %prep
 %autosetup
 
@@ -156,6 +171,8 @@ This package contains the service controller command line tool.
 
 %install
 %meson_install
+install -p -D -m 0644 src/bindings/python/hirte/__init__.py %{buildroot}%{python3_sitelib}/%{name}/__init__.py
+install -p -D -m 0644 src/bindings/python/hirte/config.py %{buildroot}%{python3_sitelib}/%{name}/config.py
 
 
 %check
