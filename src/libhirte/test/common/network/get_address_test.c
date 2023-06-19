@@ -35,7 +35,7 @@ int main() {
         result = result && test_get_address(NULL, ip, false);
         result = result && test_get_address(".", ip, false);
         result = result && test_get_address("redhat", ip, false);
-        result = result && test_get_address("redhat.com", ip, true);
+        result = result && test_get_address("localhost", ip, true);
         result = result && test_get_address("8.8.8.8", ip, false);
         result = result && test_get_address("fe80::78b3:75ff:fe1b:6803", ip, false);
         result = result && test_get_address("?10.10.10.3", ip, false);
