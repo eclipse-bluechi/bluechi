@@ -1813,6 +1813,17 @@ static bool ensure_orch_address(Agent *agent) {
         }
 
 
+        if (!isIPv4Addr(agent->host) && !isIPv6Addr(agent->host)) {
+                char *ip_address = malloc0_array(0, sizeof(char), INET6_ADDRSTRLEN);
+                int r = get_address(agent->host, &ip_address);
+                if (r != 0) {
+                        hirte_log_errorf("Failed to get IP address from: '%s'", agent->host);
+                        return false;
+                }
+                hirte_log_infof("Translated '%s' to '%s'", agent->host, ip_address);
+                copy_str(&agent->host, ip_address);
+        }
+
         // IPv4
         if (isIPv4Addr(agent->host)) {
                 struct sockaddr_in host;
@@ -1835,16 +1846,6 @@ static bool ensure_orch_address(Agent *agent) {
                         hirte_log_errorf("INET6: Invalid host option '%s'", agent->host);
                         return false;
                 }
-                agent->orch_addr = assemble_tcp_address_v6(&host6);
-        } else { // We need to resolve the FQDN
-                char *ip_address = malloc0_array(0, sizeof(char), INET_ADDRSTRLEN);
-                int r = get_address(agent->host, &ip_address);
-                if (r != 0) {
-                        hirte_log_errorf("Failed to get IP address from: '%s'", agent->host);
-                        return false;
-                }
-                hirte_log_infof("Translated '%s' to '%s'", agent->host, ip_address);
-                copy_str(&agent->host, ip_address);
         }
 
         return agent->orch_addr != NULL;
