@@ -1837,7 +1837,7 @@ static bool ensure_orch_address(Agent *agent) {
                 }
                 agent->orch_addr = assemble_tcp_address_v6(&host6);
         } else { // We need to resolve the FQDN
-                char *ip_address = malloc0_array(0, sizeof(char), INET_ADDRSTRLEN);
+                char *ip_address = malloc0_array(0, sizeof(char), INET6_ADDRSTRLEN);
                 int r = get_address(agent->host, &ip_address);
                 if (r != 0) {
                         hirte_log_errorf("Failed to get IP address from: '%s'", agent->host);
