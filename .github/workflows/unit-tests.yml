@@ -2,9 +2,9 @@ name: Unit tests
 
 on:
   push:
-    branches: [main]
+    branches: [main, hirte-*]
   pull_request:
-    branches: [main]
+    branches: [main, hirte-*]
   workflow_dispatch:
 
 jobs:
