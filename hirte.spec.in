@@ -163,6 +163,9 @@ This package contains the service controller command line tool.
 
 
 %changelog
+* Tue Jun 20 2023 Martin Perina <mperina@redhat.com> - 0.3.1-1
+- Fix build issue on 32 bit platforms
+
 * Wed May 31 2023 Michael Engel <mengel@redhat.com> - 0.3.0-1
 - API and hirtectl commands for enabling, disabling and reloading of systemd units added
 - Glob filter option to hirtectl list-units
