@@ -5,7 +5,7 @@ discover:
 provision:
     how: local
 environment:
-    CONTAINER_USED: container-hirte-snapshot
+    CONTAINER_USED: integration-test-snapshot
     HIRTE_IMAGE_NAME: hirte-image
     TEST_NET_RANGE: 10.10.0.0/24
     MGR_PORT: 8420

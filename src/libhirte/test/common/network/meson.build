@@ -1,8 +1,8 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
 
 network_src = [
-  'isIPv4Addr_test',
-  'isIPv6Addr_test',
+  'is_ipv4_test',
+  'is_ipv6_test',
   'get_address_test',
   'assemble_tcp_address',
 ]

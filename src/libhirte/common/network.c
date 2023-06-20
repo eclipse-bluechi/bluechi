@@ -1,7 +1,7 @@
 /* SPDX-License-Identifier: GPL-2.0-or-later */
 #include "network.h"
 
-bool isIPv4Addr(const char *domain) {
+bool is_ipv4(const char *domain) {
         if (domain == NULL) {
                 return false;
         }
@@ -9,7 +9,7 @@ bool isIPv4Addr(const char *domain) {
         return (inet_pton(AF_INET, domain, &(sa.sin_addr)) == 1);
 }
 
-bool isIPv6Addr(const char *domain) {
+bool is_ipv6(const char *domain) {
         if (domain == NULL) {
                 return false;
         }
@@ -19,12 +19,11 @@ bool isIPv6Addr(const char *domain) {
 
 int get_address(const char *domain, char **ip_address) {
         if (domain == NULL) {
-                return 1;
+                return -EINVAL;
         }
 
-        // Already an IP, no need to resolve
-        if (isIPv4Addr(domain) || isIPv6Addr(domain)) {
-                return 1;
+        if (is_ipv4(domain) || is_ipv6(domain)) {
+                return 0;
         }
 
         struct addrinfo hints, *res = NULL;
@@ -35,25 +34,29 @@ int get_address(const char *domain, char **ip_address) {
         int status = getaddrinfo(domain, NULL, &hints, &res);
         if (status != 0) {
                 hirte_log_errorf("getaddrinfo failed: %s\n", gai_strerror(status));
-                return 1;
+                return status;
         }
 
-        if (res->ai_family == AF_INET) { // IPv4 address
+        if (res->ai_family == AF_INET) {
                 struct sockaddr_in *ipv4 = (struct sockaddr_in *) res->ai_addr;
                 _cleanup_free_ char *reverse = typesafe_inet_ntop4(ipv4);
-                strncpy(*ip_address, reverse, INET_ADDRSTRLEN);
-                if (ip_address == NULL) {
-                        hirte_log_errorf("AF_INET: Failed to convert the IP address. errno: %d\n", errno);
-                        return 1;
+                if (reverse == NULL) {
+                        freeaddrinfo(res);
+                        return -ENOMEM;
                 }
-        } else if (res->ai_family == AF_INET6) { // IPv6 address
+                *ip_address = steal_pointer(&reverse);
+        } else if (res->ai_family == AF_INET6) {
                 struct sockaddr_in6 *ipv6 = (struct sockaddr_in6 *) res->ai_addr;
                 _cleanup_free_ char *reverse = typesafe_inet_ntop6(ipv6);
-                strncpy(*ip_address, reverse, INET6_ADDRSTRLEN);
-                if (ip_address == NULL) {
-                        hirte_log_errorf("AF_INET6: Failed to convert the IP address. errno: %d\n", errno);
-                        return 1;
+                if (reverse == NULL) {
+                        freeaddrinfo(res);
+                        return -ENOMEM;
                 }
+                *ip_address = steal_pointer(&reverse);
+        } else {
+                hirte_log_errorf("Unsupported address family '%d'", res->ai_family);
+                freeaddrinfo(res);
+                return -EFAULT;
         }
 
         freeaddrinfo(res);
@@ -63,12 +66,20 @@ int get_address(const char *domain, char **ip_address) {
 
 char *typesafe_inet_ntop4(const struct sockaddr_in *addr) {
         char *dst = malloc0_array(0, sizeof(char), INET_ADDRSTRLEN);
+        if (dst == NULL) {
+                hirte_log_error("AF_INET OOM: Failed allocate memory");
+                return NULL;
+        }
         inet_ntop(AF_INET, &addr->sin_addr, dst, INET_ADDRSTRLEN);
         return dst;
 }
 
 char *typesafe_inet_ntop6(const struct sockaddr_in6 *addr) {
         char *dst = malloc0_array(0, sizeof(char), INET6_ADDRSTRLEN);
+        if (dst == NULL) {
+                hirte_log_error("AF_INET6 OOM: Failed allocate memory");
+                return NULL;
+        }
         inet_ntop(AF_INET6, &addr->sin6_addr, dst, INET6_ADDRSTRLEN);
         return dst;
 }

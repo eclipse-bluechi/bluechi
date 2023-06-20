@@ -7,39 +7,48 @@
 #include "libhirte/common/network.h"
 #include "libhirte/common/string-util.h"
 
-bool test_get_address(const char *domain, char *ip, bool expected) {
-        bool result = get_address(domain, &ip);
-        // adjust the values for the below validation
-        if (result == 0) {
-                result = true;
-        } else {
-                result = false;
+bool test_get_address(const char *domain, const char *expected_address, int expected_ret) {
+        _cleanup_free_ char *ip = NULL;
+        int result = get_address(domain, &ip);
+        if (result != expected_ret) {
+                fprintf(stdout,
+                        "FAILED: get_address('%s') - Expected return code %d, but got %d (%s)\n",
+                        domain,
+                        expected_ret,
+                        result,
+                        strerror(-result));
+                return false;
         }
-
-        if (result == expected) {
-                return true;
+        if (expected_address == NULL && ip != NULL) {
+                fprintf(stdout, "FAILED: get_address('%s') - Expected null, but got non-null (%s)", domain, ip);
+                return false;
         }
-        fprintf(stdout,
-                "FAILED: get_address('%s') - Expected %s, but got %s\n",
-                domain,
-                bool_to_str(expected),
-                bool_to_str(result));
-        return false;
+        if (expected_address != NULL && ip == NULL) {
+                fprintf(stdout, "FAILED: get_address('%s') - Expected non-null, but got null", domain);
+                return false;
+        }
+        if (expected_address != NULL && ip != NULL && !streq(ip, expected_address)) {
+                fprintf(stdout,
+                        "FAILED: get_address('%s') - Expected %s, but got %s\n",
+                        domain,
+                        expected_address,
+                        ip);
+                return false;
+        }
+        return true;
 }
 
 
 int main() {
         bool result = true;
-        char ip[INET6_ADDRSTRLEN];
-
-        result = result && test_get_address(NULL, ip, false);
-        result = result && test_get_address(".", ip, false);
-        result = result && test_get_address("redhat", ip, false);
-        result = result && test_get_address("localhost", ip, true);
-        result = result && test_get_address("8.8.8.8", ip, false);
-        result = result && test_get_address("fe80::78b3:75ff:fe1b:6803", ip, false);
-        result = result && test_get_address("?10.10.10.3", ip, false);
-        result = result && test_get_address("192.168.1.", ip, false);
+        result = result && test_get_address(NULL, NULL, -EINVAL);
+        result = result && test_get_address(".", NULL, -ENOENT);
+        result = result && test_get_address("redhat", NULL, -ENOENT);
+        result = result && test_get_address("localhost", "127.0.0.1", 0);
+        result = result && test_get_address("8.8.8.8", NULL, 0);
+        result = result && test_get_address("fe80::78b3:75ff:fe1b:6803", NULL, 0);
+        result = result && test_get_address("?10.10.10.3", NULL, -ENOENT);
+        result = result && test_get_address("192.168.1.", NULL, -ENOENT);
         if (result) {
                 return EXIT_SUCCESS;
         }
