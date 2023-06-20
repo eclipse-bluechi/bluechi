@@ -62,8 +62,8 @@ static const sd_bus_vtable node_vtable[] = {
         SD_BUS_METHOD("SetUnitProperties", "sba(sv)", "", node_method_set_unit_properties, 0),
         SD_BUS_METHOD("EnableUnitFiles", "asbb", "ba(sss)", node_method_passthrough_to_agent, 0),
         SD_BUS_METHOD("DisableUnitFiles", "asb", "a(sss)", node_method_passthrough_to_agent, 0),
-        SD_BUS_METHOD("SetNodeLogLevel", "s", "", node_method_set_log_level, 0),
-        SD_BUS_METHOD("Reload", "", "", NULL, 0),
+        SD_BUS_METHOD("Reload", "", "", node_method_passthrough_to_agent, 0),
+        SD_BUS_METHOD("SetLogLevel", "s", "", node_method_set_log_level, 0),
         SD_BUS_PROPERTY("Name", "s", node_property_get_nodename, 0, SD_BUS_VTABLE_PROPERTY_CONST),
         SD_BUS_PROPERTY("Status", "s", node_property_get_status, 0, SD_BUS_VTABLE_PROPERTY_EMITS_CHANGE),
         SD_BUS_VTABLE_END
@@ -1525,18 +1525,13 @@ static int node_method_set_log_level(sd_bus_message *m, UNUSED void *userdata, U
 
         int r = sd_bus_message_read(m, "s", &level);
         if (r < 0) {
-                hirte_log_errorf("Failed to set log level call: %s", error.message);
-                r = sd_bus_reply_method_return(m, "");
-                if (r < 0) {
-                        hirte_log_errorf("Failed to send reply to proxy request: %s", strerror(-r));
-                }
+                return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_INVALID_ARGS, "Invalid arguments");
         }
         LogLevel loglevel = string_to_log_level(level);
         if (loglevel == LOG_LEVEL_INVALID) {
-                hirte_log_error("Failed to set log level call: Incorrect loglevel name");
                 r = sd_bus_reply_method_return(m, "");
                 if (r < 0) {
-                        hirte_log_errorf("Failed to send reply to proxy request: %s", strerror(-r));
+                        return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_INVALID_ARGS, "Invalid arguments");
                 }
         }
         r = sd_bus_call_method(
@@ -1551,8 +1546,7 @@ static int node_method_set_log_level(sd_bus_message *m, UNUSED void *userdata, U
                         level);
         if (r < 0) {
                 hirte_log_errorf("Failed to set log level call: %s", error.message);
-                sd_bus_error_free(&error);
-                return false;
+                return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "Internal error");
         }
         return sd_bus_reply_method_return(m, "");
 }

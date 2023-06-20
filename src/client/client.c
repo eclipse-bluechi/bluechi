@@ -503,6 +503,57 @@ static int method_daemon_reload_on(Client *client, char *node_name) {
         return 0;
 }
 
+static int method_set_log_level(Client *client, char *node_name, char *loglevel) {
+        int r = 0;
+        _cleanup_sd_bus_error_ sd_bus_error error = SD_BUS_ERROR_NULL;
+        _cleanup_sd_bus_message_ sd_bus_message *result = NULL;
+
+        if (node_name != NULL) {
+                char *path = NULL;
+                int r = assemble_object_path_string(NODE_OBJECT_PATH_PREFIX, node_name, &path);
+                if (r < 0) {
+                        r = assemble_object_path_string(
+                                        NODE_OBJECT_PATH_PREFIX, node_name, &client->object_path);
+                        if (r < 0) {
+                                fprintf(stderr, "Failed to assemble pbject path to string: %s\n", strerror(-r));
+                                return r;
+                        }
+                }
+
+                r = sd_bus_call_method(
+                                client->api_bus,
+                                HIRTE_INTERFACE_BASE_NAME,
+                                path,
+                                NODE_INTERFACE,
+                                "SetLogLevel",
+                                &error,
+                                &result,
+                                "s",
+                                loglevel);
+                if (r < 0) {
+                        fprintf(stderr, "Failed to issue method call: %s\n", error.message);
+                        return r;
+                }
+                return 0;
+        } else {
+                r = sd_bus_call_method(
+                                client->api_bus,
+                                HIRTE_INTERFACE_BASE_NAME,
+                                HIRTE_OBJECT_PATH,
+                                MANAGER_INTERFACE,
+                                "SetLogLevel",
+                                &error,
+                                &result,
+                                "s",
+                                loglevel);
+                if (r < 0) {
+                        fprintf(stderr, "Failed to issue method call: %s\n", error.message);
+                        return r;
+                }
+        }
+        return 0;
+}
+
 int client_call_manager(Client *client) {
         int r = 0;
 
@@ -620,6 +671,14 @@ int client_call_manager(Client *client) {
                         return -EINVAL;
                 }
                 r = method_status_unit_on(client, client->opargv[0], &client->opargv[1], client->opargc - 1);
+        } else if (streq(client->op, "set-loglevel")) {
+                if (client->opargc == 1) {
+                        r = method_set_log_level(client, NULL, client->opargv[0]);
+                } else if (client->opargc == 2) {
+                        r = method_set_log_level(client, client->opargv[0], client->opargv[1]);
+                } else {
+                        return -EINVAL;
+                }
         } else {
                 return -EINVAL;
         }
@@ -657,7 +716,5 @@ int print_client_usage(char *argv) {
         printf("    usage: monitor node-connection\n");
         printf("  - daemon-reload: reload systemd daemon on a specific node\n");
         printf("    usage: disable nodename\n");
-        printf("  - status: get the status of systemd units on a specific node\n");
-        printf("    usage: status nodename unitfilename...\n");
         return 0;
 }

@@ -53,7 +53,8 @@
     <method name="ListUnits">
       <arg name="units" type="a(ssssssouso)" direction="out" />
     </method>
-    <method name="SetNodeLogLevel">
+    <method name="Reload" />
+    <method name="SetLogLevel">
       <arg name="level" type="s" direction="in" />
     </method>
 

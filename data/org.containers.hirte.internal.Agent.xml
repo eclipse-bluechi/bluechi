@@ -67,6 +67,7 @@
     <method name="StopDep">
       <arg name="unit" type="s" direction="in" />
     </method>
+    <method name="Reload" />
     <method name="SetLogLevel">
       <arg name="level" type="s" direction="in" />
     </method>

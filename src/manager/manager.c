@@ -827,7 +827,7 @@ static int manager_method_set_log_level(sd_bus_message *m, UNUSED void *userdata
         LogLevel loglevel = string_to_log_level(level);
         if (loglevel == LOG_LEVEL_INVALID) {
                 hirte_log_errorf("Invalid input for log level: %s", loglevel);
-                return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "Invalid input for log level");
+                return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_INVALID_ARGS, "Invalid input for log level");
         }
         hirte_log_set_level(loglevel);
         hirte_log_infof("Log level changed to %s", level);
