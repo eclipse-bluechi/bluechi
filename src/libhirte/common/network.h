@@ -12,9 +12,8 @@
 #include "libhirte/common/common.h"
 #include "libhirte/log/log.h"
 
-bool isIPv4Addr(const char *domain);
-
-bool isIPv6Addr(const char *domain);
+bool is_ipv4(const char *domain);
+bool is_ipv6(const char *domain);
 
 int get_address(const char *domain, char **ip_address);
 
