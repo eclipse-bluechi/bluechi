@@ -45,7 +45,7 @@ the following snippet uses the built-in [venv](https://docs.python.org/3/library
 ```bash
 python -m venv env
 source env/bin/activate
-pip install -r requirements.txt
+pip install -r -U requirements.txt
 # ...
 
 # exit the virtual env
