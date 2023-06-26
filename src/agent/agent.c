@@ -99,13 +99,14 @@ bool agent_is_connected(Agent *agent) {
 
 static int agent_stop_local_proxy_service(Agent *agent, ProxyService *proxy);
 static bool agent_connect(Agent *agent);
+static bool agent_reconnect(Agent *agent);
 
 static int agent_disconnected(UNUSED sd_bus_message *message, void *userdata, UNUSED sd_bus_error *error) {
         Agent *agent = (Agent *) userdata;
 
         hirte_log_error("Disconnected from manager");
 
-        if (!agent_connect(agent)) {
+        if (!agent_reconnect(agent)) {
                 agent->connection_state = AGENT_CONNECTION_STATE_RETRY;
         }
 
@@ -131,7 +132,7 @@ static int agent_heartbeat_timer_callback(sd_event_source *event_source, UNUSED 
         } else if (agent->connection_state == AGENT_CONNECTION_STATE_RETRY) {
                 agent->connection_retry_count++;
                 hirte_log_infof("Trying to connect to manager (try %d)", agent->connection_retry_count);
-                if (!agent_connect(agent)) {
+                if (!agent_reconnect(agent)) {
                         hirte_log_debugf("Connection retry %d failed", agent->connection_retry_count);
                 }
         }
@@ -1805,46 +1806,61 @@ static bool ensure_orch_address(Agent *agent) {
         if (agent->orch_addr != NULL) {
                 return true;
         }
-
-
         if (agent->host == NULL) {
                 hirte_log_errorf("No manager host specified for agent '%s'", agent->name);
                 return false;
         }
 
+        char *ip_address = agent->host;
+        bool host_is_ipv4 = is_ipv4(ip_address);
+        bool host_is_ipv6 = is_ipv6(ip_address);
 
-        // IPv4
-        if (isIPv4Addr(agent->host)) {
+        _cleanup_free_ char *resolved_ip_address = NULL;
+        if (!host_is_ipv4 && !host_is_ipv6) {
+                int r = get_address(ip_address, &resolved_ip_address);
+                if (r < 0) {
+                        hirte_log_errorf(
+                                        "Failed to get IP address from host '%s': %s",
+                                        agent->host,
+                                        strerror(-r));
+                        return false;
+                }
+                hirte_log_infof("Translated '%s' to '%s'", ip_address, resolved_ip_address);
+                ip_address = resolved_ip_address;
+        }
+
+        if (host_is_ipv4 || is_ipv4(ip_address)) {
                 struct sockaddr_in host;
                 memset(&host, 0, sizeof(host));
                 host.sin_family = AF_INET;
                 host.sin_port = htons(agent->port);
-                r = inet_pton(AF_INET, agent->host, &host.sin_addr);
+                r = inet_pton(AF_INET, ip_address, &host.sin_addr);
                 if (r < 1) {
-                        hirte_log_errorf("INET4: Invalid host option '%s'", agent->host);
+                        hirte_log_errorf("INET4: Invalid host option '%s'", ip_address);
                         return false;
                 }
-                agent->orch_addr = assemble_tcp_address(&host);
-        } else if (isIPv6Addr(agent->host)) { // IPv6
+                _cleanup_free_ char *orch_addr = assemble_tcp_address(&host);
+                if (orch_addr == NULL) {
+                        return false;
+                }
+                agent_set_orch_address(agent, orch_addr);
+        } else if (host_is_ipv6 || is_ipv6(ip_address)) {
                 struct sockaddr_in6 host6;
                 memset(&host6, 0, sizeof(host6));
                 host6.sin6_family = AF_INET6;
                 host6.sin6_port = htons(agent->port);
-                r = inet_pton(AF_INET6, agent->host, &host6.sin6_addr);
+                r = inet_pton(AF_INET6, ip_address, &host6.sin6_addr);
                 if (r < 1) {
-                        hirte_log_errorf("INET6: Invalid host option '%s'", agent->host);
+                        hirte_log_errorf("INET6: Invalid host option '%s'", ip_address);
                         return false;
                 }
-                agent->orch_addr = assemble_tcp_address_v6(&host6);
-        } else { // We need to resolve the FQDN
-                char *ip_address = malloc0_array(0, sizeof(char), INET_ADDRSTRLEN);
-                int r = get_address(agent->host, &ip_address);
-                if (r != 0) {
-                        hirte_log_errorf("Failed to get IP address from: '%s'", agent->host);
+                _cleanup_free_ char *orch_addr = assemble_tcp_address_v6(&host6);
+                if (orch_addr == NULL) {
                         return false;
                 }
-                hirte_log_infof("Translated '%s' to '%s'", agent->host, ip_address);
-                copy_str(&agent->host, ip_address);
+                agent_set_orch_address(agent, orch_addr);
+        } else {
+                hirte_log_errorf("Unknown protocol for '%s'", ip_address);
         }
 
         return agent->orch_addr != NULL;
@@ -2146,6 +2162,20 @@ static bool agent_connect(Agent *agent) {
         }
 
         return true;
+}
+
+static bool agent_reconnect(Agent *agent) {
+        // resolve FQDN again in case the system changed
+        // e.g. hirte controller has been migrated to a different host
+        if (agent->orch_addr != NULL) {
+                free(agent->orch_addr);
+                agent->orch_addr = NULL;
+        }
+        if (!ensure_orch_address(agent)) {
+                return false;
+        }
+
+        return agent_connect(agent);
 }
 
 static int stop_proxy_callback(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error) {

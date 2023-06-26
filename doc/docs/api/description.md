@@ -154,10 +154,6 @@ Object path: `/org/containers/hirte/node/$name`
     `ReloadUnit()`/`RestartUnit()` is similar to `StartUnit()` but can be used to reload/restart a unit instead. See
     equivalent systemd methods for details.
 
-  * `KillUnit(in  s name, in  s who, in  i signal)`
-
-    Kill a unit on the node. Arguments and semantics are equivalent to the systemd `KillUnit()` method.
-
   * `EnableUnitFiles(in  as files, in  b runtime, in  b force, out b carries_install_info, out a(sss) changes);`
 
     `EnableUnitFiles()` may be used to enable one or more units in the system (by creating symlinks to them in /etc/ or /run/).
@@ -311,8 +307,6 @@ This is the main interface that the node implements and that is used by the mana
   * `ReloadUnit(in s name, in s mode, in u id)`
 
   * `RestartUnit(in s name, in s mode, in u id)`
-
-  * `KillUnit(in s name, in s who, in i signal)`
 
   * `GetUnitProperties(in name, out a{sv} props)`
 

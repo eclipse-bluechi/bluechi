@@ -1,1 +1,1 @@
-test: pytest -svv
+test: pytest -svv --confcutdir=../../../
