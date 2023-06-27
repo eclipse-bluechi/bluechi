@@ -1,0 +1,16 @@
+
+
+    {% for signal in signals -%}
+        def on_{{ signal.pyname }}(self, callback: Callable[[
+        {%- for arg in signal.args -%}
+            {%- if arg.pytype != "" -%}
+            {{ arg.pytype }}, {# comment to enforce whitespace #}
+            {%- endif -%}
+        {%- endfor -%}
+        ], None]) -> None:
+        """
+        callback: 
+        """
+        self.get_proxy().{{ signal.name }}.connect(callback)
+
+    {% endfor %}

@@ -1,26 +1,45 @@
-# hirte
+# hirte python bindings
 
-The hirte python module  
-This is an effort from the hirte team to provide to community a python module.
+The hirte python bindings provides a python module to interact with the D-Bus API of hirte. It consists of the following
+subpackages:
 
-With the **hirte python module**, it's possible to make dynamic programs using
-dbus interface. However, don't expect such library in an official FuSA image.
-
-Go to **examples/** dir to see all working examples.
-
-## Requirements
-
-gobject and pip packages:
-
-```sh
-dnf install -y \
-    python3-dasbus \
-    python3-pip \
-    python3-setuptool
-```
+- `api`: auto-generated code based the hirte D-BUS API description
+- `ext`: custom written code to simplify common tasks
 
 ## Installation
 
+Using `pip3`:
+
 ```sh
-python ./setup.py install
+# from PyPi
+pip3 install pyhirte
+# or from cloned git repo
+pip3 install --force dist/pyhirte-<version>-py3-none-any.whl 
+```
+
+## Examples
+
+Listing all connected nodes and their current state:
+
+```python
+from pyhirte.api import Manager
+
+for node in Manager().list_nodes():
+    # node[name, obj_path, status]
+    print(f"Node: {node[0]}, State: {node[3]}")
+```
+
+Starting and stopping of a systemd unit on a specific node using the `Unit` class from the `ext` subpackage to
+implicitly wait for the job to finish:
+
+```python
+from pyhirte.ext import Unit
+
+hu = Unit("my-node-name")
+
+result = hu.start_unit("chronyd.service")
+print(result)
+
+result = hu.stop_unit("chronyd.service")
+print(result)
 ```
