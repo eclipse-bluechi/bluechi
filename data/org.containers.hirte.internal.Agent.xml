@@ -43,7 +43,7 @@
       <arg name="runtime" type="b" direction="in" />
       <arg name="force" type="b" direction="in" />
       <arg name="carries_install_info" type="b" direction="out" />
-      <arg name="changes" type="ba(sss)" direction="out" />
+      <arg name="changes" type="a(sss)" direction="out" />
     </method>
     <method name="DisableUnitFiles">
       <arg name="files" type="as" direction="in" />
