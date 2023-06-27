@@ -9,7 +9,7 @@ authors = [
 ]
 description = "Python bindings for hirte's D-Bus API"
 readme = "README.md"
-version = "0.4.0"
+version = "@VERSION@"
 license = { text = "GPL-2.0-or-later" }
 dependencies = [
     "dasbus>=1.7",

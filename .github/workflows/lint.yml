@@ -28,7 +28,10 @@ jobs:
             md:
               - '**/*.md'
             python:
-              - '**/*.py'
+              - 'tests/**/*.py'
+              - 'doc/**/*.py'
+            apispec:
+              - 'data/*.xml'
 
 
 
@@ -107,4 +110,38 @@ jobs:
 
       - name: Run flake8
         run: |
-          find . -name '*.py' | xargs flake8
+          find doc/ -name '*.py' | xargs flake8
+          find tests/ -name '*.py' | xargs flake8
+
+
+
+  apispec:
+    needs: changes
+    if: ${{ needs.changes.outputs.apispec == 'true' }}
+    name: 
+    runs-on: ubuntu-latest
+    container:
+      image: quay.io/hirte/build-base:latest
+
+    steps:
+      - name: Checkout sources
+        uses: actions/checkout@v3
+      
+      - name: Install dependencies
+        run: | 
+          python3 -m ensurepip --default-pip
+          python3 -m pip install -r src/bindings/generator/requirements.txt
+      
+      - name: Generate python bindings
+        run: |
+          bash build-scripts/generate-bindings.sh python
+
+      - name: Check for changes in generated python code
+        run: |
+          git config --global --add safe.directory $(pwd)
+          git diff --exit-code src/bindings/python/
+
+      - name: Prompt rebuilding python bindings
+        if: ${{ failure() }}
+        run: |
+          echo "Changes in D-Bus API spec detected. Please generated them."
