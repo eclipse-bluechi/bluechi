@@ -161,16 +161,16 @@ static int parse_unit_status_response_from_message(sd_bus_message *m, unit_info_
 }
 
 #define PRINT_TAB_SIZE 8
-static void print_info_header(unsigned long name_col_width) {
-        unsigned long i = 0;
+static void print_info_header(size_t name_col_width) {
+        size_t i = 0;
 
         fprintf(stderr, "UNIT");
-        for (i = name_col_width; i > 0; i -= PRINT_TAB_SIZE) {
+        for (i = PRINT_TAB_SIZE + name_col_width; i > PRINT_TAB_SIZE; i -= PRINT_TAB_SIZE) {
                 fprintf(stderr, "\t");
         }
 
         fprintf(stderr, "| LOADED\t| ACTIVE\t| SUBSTATE\t| ENABLED\t|\n");
-        for (i = name_col_width; i > 0; i -= PRINT_TAB_SIZE) {
+        for (i = PRINT_TAB_SIZE + name_col_width; i > PRINT_TAB_SIZE; i -= PRINT_TAB_SIZE) {
                 fprintf(stderr, "--------");
         }
         fprintf(stderr, "----------------");
@@ -188,8 +188,8 @@ static void print_info_header(unsigned long name_col_width) {
         } while (0)
 
 
-static void print_unit_info(unit_info_t *unit_info, unsigned long name_col_width) {
-        unsigned long i = 0;
+static void print_unit_info(unit_info_t *unit_info, size_t name_col_width) {
+        size_t i = 0;
 
         if (unit_info->load_state && streq(unit_info->load_state, "not-found")) {
                 fprintf(stderr, "Unit %s could not be found.\n", unit_info->id);
@@ -199,7 +199,7 @@ static void print_unit_info(unit_info_t *unit_info, unsigned long name_col_width
         fprintf(stderr, "%s", unit_info->id);
         name_col_width -= unit_info->id ? strlen(unit_info->id) : 0;
         name_col_width += PRINT_TAB_SIZE;
-        for (i = name_col_width; i > 0; i -= PRINT_TAB_SIZE) {
+        for (i = PRINT_TAB_SIZE + name_col_width; i > PRINT_TAB_SIZE; i -= PRINT_TAB_SIZE) {
                 fprintf(stderr, "\t");
         }
 
@@ -211,19 +211,19 @@ static void print_unit_info(unit_info_t *unit_info, unsigned long name_col_width
         fprintf(stderr, "|\n");
 }
 
-static unsigned long get_max_name_len(char **units, size_t units_count) {
+static size_t get_max_name_len(char **units, size_t units_count) {
         size_t i = 0;
-        unsigned long max_unit_name_len = 0;
+        size_t max_unit_name_len = 0;
 
         for (i = 0; i < units_count; i++) {
-                unsigned long unit_name_len = strlen(units[i]);
+                size_t unit_name_len = strlen(units[i]);
                 max_unit_name_len = max_unit_name_len > unit_name_len ? max_unit_name_len : unit_name_len;
         }
 
         return max_unit_name_len;
 }
 
-static int get_status_unit_on(Client *client, char *node_name, char *unit_name, unsigned long name_col_width) {
+static int get_status_unit_on(Client *client, char *node_name, char *unit_name, size_t name_col_width) {
         int r = 0;
         _cleanup_sd_bus_error_ sd_bus_error error = SD_BUS_ERROR_NULL;
         _cleanup_sd_bus_message_ sd_bus_message *result = NULL;
@@ -262,7 +262,7 @@ static int get_status_unit_on(Client *client, char *node_name, char *unit_name, 
 int method_status_unit_on(Client *client, char *node_name, char **units, size_t units_count) {
         unsigned i = 0;
 
-        unsigned long max_name_len = get_max_name_len(units, units_count);
+        size_t max_name_len = get_max_name_len(units, units_count);
 
         print_info_header(max_name_len);
         for (i = 0; i < units_count; i++) {
