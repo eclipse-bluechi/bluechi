@@ -116,3 +116,13 @@ char *assemble_tcp_address_v6(const struct sockaddr_in6 *addr) {
         }
         return dbus_addr;
 }
+
+char *get_hostname() {
+        char hostname[BUFSIZ];
+        memset((char *) hostname, 0, sizeof(hostname));
+        if (gethostname(hostname, sizeof(hostname)) < 0) {
+                fprintf(stderr, "Warning failed to gethostname, error code '%s'.\n", strerror(-errno));
+                return "";
+        }
+        return strdup(hostname);
+}

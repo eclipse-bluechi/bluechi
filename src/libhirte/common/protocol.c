@@ -43,13 +43,3 @@ UnitActiveState active_state_from_string(const char *s) {
         }
         return _UNIT_ACTIVE_STATE_INVALID;
 }
-
-char *get_hostname() {
-        char hostname[BUFSIZ];
-        memset((char *) hostname, 0, sizeof(hostname));
-        if (gethostname(hostname, sizeof(hostname)) < 0) {
-                fprintf(stderr, "Warning failed to gethostname, error code '%s'.\n", strerror(-errno));
-                return "";
-        }
-        return strdup(hostname);
-}
