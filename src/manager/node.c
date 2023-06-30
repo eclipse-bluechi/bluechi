@@ -28,6 +28,7 @@ static int node_method_stop_unit(sd_bus_message *m, void *userdata, UNUSED sd_bu
 static int node_method_restart_unit(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error);
 static int node_method_reload_unit(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error);
 static int node_method_passthrough_to_agent(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error);
+static int node_method_set_log_level(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error);
 static int node_property_get_nodename(
                 sd_bus *bus,
                 const char *path,
@@ -62,6 +63,7 @@ static const sd_bus_vtable node_vtable[] = {
         SD_BUS_METHOD("EnableUnitFiles", "asbb", "ba(sss)", node_method_passthrough_to_agent, 0),
         SD_BUS_METHOD("DisableUnitFiles", "asb", "a(sss)", node_method_passthrough_to_agent, 0),
         SD_BUS_METHOD("Reload", "", "", node_method_passthrough_to_agent, 0),
+        SD_BUS_METHOD("SetLogLevel", "s", "", node_method_set_log_level, 0),
         SD_BUS_PROPERTY("Name", "s", node_property_get_nodename, 0, SD_BUS_VTABLE_PROPERTY_CONST),
         SD_BUS_PROPERTY("Status", "s", node_property_get_status, 0, SD_BUS_VTABLE_PROPERTY_EMITS_CHANGE),
         SD_BUS_VTABLE_END
@@ -1509,6 +1511,44 @@ static int node_method_restart_unit(sd_bus_message *m, void *userdata, UNUSED sd
 
 static int node_method_reload_unit(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error) {
         return node_run_unit_lifecycle_method(m, (Node *) userdata, "reload", "ReloadUnit");
+}
+
+/*************************************************************************
+ ********** org.containers.hirte.Node.SetLogLevel *******************
+ ************************************************************************/
+
+static int node_method_set_log_level(sd_bus_message *m, UNUSED void *userdata, UNUSED sd_bus_error *ret_error) {
+        const char *level = NULL;
+        Node *node = (Node *) userdata;
+        sd_bus_error error = SD_BUS_ERROR_NULL;
+        _cleanup_sd_bus_message_ sd_bus_message *sub_m = NULL;
+
+        int r = sd_bus_message_read(m, "s", &level);
+        if (r < 0) {
+                return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_INVALID_ARGS, "Invalid arguments");
+        }
+        LogLevel loglevel = string_to_log_level(level);
+        if (loglevel == LOG_LEVEL_INVALID) {
+                r = sd_bus_reply_method_return(m, "");
+                if (r < 0) {
+                        return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_INVALID_ARGS, "Invalid arguments");
+                }
+        }
+        r = sd_bus_call_method(
+                        node->agent_bus,
+                        HIRTE_AGENT_DBUS_NAME,
+                        INTERNAL_AGENT_OBJECT_PATH,
+                        INTERNAL_AGENT_INTERFACE,
+                        "SetLogLevel",
+                        &error,
+                        &sub_m,
+                        "s",
+                        level);
+        if (r < 0) {
+                hirte_log_errorf("Failed to set log level call: %s", error.message);
+                return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "Internal error");
+        }
+        return sd_bus_reply_method_return(m, "");
 }
 
 static int send_agent_simple_message(Node *node, const char *method, const char *arg) {

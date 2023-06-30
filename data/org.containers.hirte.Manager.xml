@@ -17,7 +17,10 @@
     </method>
     <method name="EnableMetrics" />
     <method name="DisableMetrics" />
-
+    <method name="SetLogLevel">
+      <arg name="loglevel" type="s" direction="in" />
+    </method>
+    
     <signal name="JobNew">
       <arg name="id" type="u" />
       <arg name="job" type="o" />
