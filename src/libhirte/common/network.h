@@ -15,6 +15,7 @@
 bool is_ipv4(const char *domain);
 bool is_ipv6(const char *domain);
 
+char *get_hostname();
 int get_address(const char *domain, char **ip_address);
 
 char *typesafe_inet_ntop4(const struct sockaddr_in *addr);
