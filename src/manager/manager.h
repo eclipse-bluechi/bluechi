@@ -45,7 +45,6 @@ bool manager_set_port(Manager *manager, const char *port);
 bool manager_parse_config(Manager *manager, const char *configfile);
 
 bool manager_start(Manager *manager);
-bool manager_stop(Manager *manager);
 
 Node *manager_find_node(Manager *manager, const char *name);
 Node *manager_find_node_by_path(Manager *manager, const char *path);
