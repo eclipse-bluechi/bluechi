@@ -1003,11 +1003,3 @@ bool manager_start(Manager *manager) {
 
         return true;
 }
-
-bool manager_stop(Manager *manager) {
-        if (manager == NULL) {
-                return false;
-        }
-
-        return true;
-}
