@@ -3,6 +3,7 @@
 #include <getopt.h>
 #include <stdlib.h>
 
+#include "libhirte/common/cfg.h"
 #include "libhirte/common/opt.h"
 #include "libhirte/common/parse-util.h"
 #include "libhirte/service/shutdown.h"
@@ -83,7 +84,7 @@ int main(int argc, char *argv[]) {
 
         /* Then override individual options */
 
-        if (opt_port && !manager_set_port(manager, opt_port)) {
+        if (opt_port && !cfg_set_port(NODE_MANAGER, manager, opt_port)) {
                 return EXIT_FAILURE;
         }
 

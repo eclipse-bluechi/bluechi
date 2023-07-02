@@ -94,7 +94,6 @@ Agent *agent_new(void);
 Agent *agent_ref(Agent *agent);
 void agent_unref(Agent *agent);
 
-bool agent_set_port(Agent *agent, const char *port);
 bool agent_set_host(Agent *agent, const char *host);
 bool agent_set_orch_address(Agent *agent, const char *address);
 bool agent_set_name(Agent *agent, const char *name);

@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "libhirte/common/cfg.h"
 #include "libhirte/common/opt.h"
 #include "libhirte/log/log.h"
 
@@ -131,7 +132,7 @@ int main(int argc, char *argv[]) {
         /* Then override individual options */
         agent_set_systemd_user(agent, opt_user);
 
-        if (opt_port && !agent_set_port(agent, opt_port)) {
+        if (opt_port && !cfg_set_port(NODE_AGENT, agent, opt_port)) {
                 return EXIT_FAILURE;
         }
 

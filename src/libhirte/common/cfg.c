@@ -9,8 +9,13 @@
 #include <unistd.h>
 
 #include "libhirte/common/list.h"
+#include "libhirte/common/parse-util.h"
 #include "libhirte/hashmap/hashmap.h"
 #include "libhirte/ini/ini.h"
+#include "libhirte/log/log.h"
+
+#include "agent/agent.h"
+#include "manager/manager.h"
 
 #include "cfg.h"
 #include "common.h"
@@ -89,6 +94,32 @@ void cfg_dispose(struct config *config) {
         hashmap_free(config->cfg_store);
         free(config->default_section);
         free(config);
+}
+
+bool cfg_set_port(enum NodeType node, void *instance, const char *port_s) {
+        uint16_t port = 0;
+
+        if (port_s == NULL) {
+                port = HIRTE_DEFAULT_PORT;
+        } else {
+                if (!parse_port(port_s, &port)) {
+                        hirte_log_errorf("Invalid port format '%s'", port_s);
+                        return false;
+                }
+        }
+
+        if (node == NODE_MANAGER) {
+                Manager *node_config = (Manager *) instance;
+                node_config->port = port;
+        } else if (node == NODE_AGENT) {
+                Agent *node_config = (Agent *) instance;
+                node_config->port = port;
+        } else {
+                hirte_log_errorf("Unable to identify the node type %s", node);
+                return false;
+        }
+
+        return true;
 }
 
 int cfg_load_complete_configuration(

@@ -38,7 +38,6 @@ Manager *manager_new(void) {
         Manager *manager = malloc0(sizeof(Manager));
         if (manager != NULL) {
                 manager->ref_count = 1;
-                manager->port = HIRTE_DEFAULT_PORT;
                 manager->api_bus_service_name = steal_pointer(&service_name);
                 manager->event = steal_pointer(&event);
                 manager->metrics_enabled = false;
@@ -293,17 +292,6 @@ Node *manager_add_node(Manager *manager, const char *name) {
         return steal_pointer(&node);
 }
 
-bool manager_set_port(Manager *manager, const char *port_s) {
-        uint16_t port = 0;
-
-        if (!parse_port(port_s, &port)) {
-                hirte_log_errorf("Invalid port format '%s'", port_s);
-                return false;
-        }
-        manager->port = port;
-        return true;
-}
-
 bool manager_parse_config(Manager *manager, const char *configfile) {
         int result = 0;
 
@@ -345,7 +333,7 @@ bool manager_parse_config(Manager *manager, const char *configfile) {
         const char *port = NULL;
         port = cfg_get_value(manager->config, CFG_MANAGER_PORT);
         if (port) {
-                if (!manager_set_port(manager, port)) {
+                if (!cfg_set_port(NODE_MANAGER, manager, port)) {
                         return false;
                 }
         }

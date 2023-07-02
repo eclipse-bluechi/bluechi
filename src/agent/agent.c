@@ -373,7 +373,6 @@ Agent *agent_new(void) {
         agent->ref_count = 1;
         agent->event = steal_pointer(&event);
         agent->api_bus_service_name = steal_pointer(&service_name);
-        agent->port = HIRTE_DEFAULT_PORT;
         agent->host = strdup(HIRTE_DEFAULT_HOST);
         agent->heartbeat_interval_msec = AGENT_HEARTBEAT_INTERVAL_MSEC;
         LIST_HEAD_INIT(agent->outstanding_requests);
@@ -488,17 +487,6 @@ void agent_unref(Agent *agent) {
         free(agent);
 }
 
-bool agent_set_port(Agent *agent, const char *port_s) {
-        uint16_t port = 0;
-
-        if (!parse_port(port_s, &port)) {
-                hirte_log_errorf("Invalid port format '%s'", port_s);
-                return false;
-        }
-        agent->port = port;
-        return true;
-}
-
 bool agent_set_orch_address(Agent *agent, const char *address) {
         return copy_str(&agent->orch_addr, address);
 }
@@ -584,10 +572,8 @@ bool agent_parse_config(Agent *agent, const char *configfile) {
         }
 
         value = cfg_get_value(agent->config, CFG_MANAGER_PORT);
-        if (value) {
-                if (!agent_set_port(agent, value)) {
-                        return false;
-                }
+        if (!cfg_set_port(NODE_AGENT, agent, value)) {
+                return false;
         }
 
         value = cfg_get_value(agent->config, CFG_MANAGER_ADDRESS);

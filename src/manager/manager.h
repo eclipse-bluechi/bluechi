@@ -41,7 +41,6 @@ Manager *manager_new(void);
 Manager *manager_ref(Manager *manager);
 void manager_unref(Manager *manager);
 
-bool manager_set_port(Manager *manager, const char *port);
 bool manager_parse_config(Manager *manager, const char *configfile);
 
 bool manager_start(Manager *manager);
