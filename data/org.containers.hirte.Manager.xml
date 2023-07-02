@@ -36,7 +36,5 @@
       <arg name="node" type="s" />
       <arg name="connection_state" type="s" />
     </signal>
-
-    <property name="Nodes" type="as" access="read" />
   </interface>
 </node>
