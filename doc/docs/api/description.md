@@ -41,6 +41,10 @@ Note that all properties also come with change events, so you can easily track w
 
     Disables the collection of metrics on all agents.
 
+  * `SetLogLevel(in s log_level)`
+
+    Set the new log level for hirte controller. This change is persistent as long as hirte not restarted.
+
 #### Signals
 
   * `JobNew(u id, o job, s nodeName, s unit)`
@@ -193,6 +197,10 @@ Object path: `/org/containers/hirte/node/$name`
   * `Reload()`
 
     `Reload()` may be invoked to reload all unit files.
+
+  * `SetLogLevel(in s log_level)`
+
+    Set the new log level for hirte-agent by invoking the internal hirte-agent API.
 
 #### Properties
 
@@ -351,6 +359,10 @@ This is the main interface that the node implements and that is used by the mana
   * `Reload()`
 
     `Reload` causes systemd on the agent to reload all unit files.
+  
+  * `SetLogLevel(in s log_level)`
+
+    Set the new log level for hirte-agent node. This change is persistent as long as hirte-agent not restarted.
 
 #### Signals
 
