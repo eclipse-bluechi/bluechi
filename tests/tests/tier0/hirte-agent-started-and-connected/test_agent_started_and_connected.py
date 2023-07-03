@@ -14,10 +14,10 @@ def foo_startup_verify(ctrl: HirteControllerContainer, nodes: Dict[str, HirteNod
     assert result == 0
     assert output == 'active'
 
-    result, output = nodes["node-foo"].exec_run('systemctl is-active hirte-agent')
+    result, output = ctrl.exec_run('hirtectl status node-foo hirte-agent.service')
 
     assert result == 0
-    assert output == 'active'
+    assert str(output).split('\n')[2].split('|')[2].strip() == 'active'
 
     # TODO: Add code to test that agent on node foo is successfully connected to hirte controller
 
