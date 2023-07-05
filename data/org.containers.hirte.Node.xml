@@ -60,5 +60,6 @@
 
     <property name="Name" type="s" access="read" />
     <property name="Status" type="s" access="read" />
+    <property name="LastSeenTimestamp" type="t" access="read" />
   </interface>
 </node>
