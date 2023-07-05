@@ -203,6 +203,10 @@ Object path: `/org/containers/hirte/node/$name`
   * `Status` - `s`
 
     Status of the node, currently one of: `online`, `offline`. Emits changed when this changes.
+  
+  * `LastSeenTimestamp` - `t`
+
+    Timestamp of the last successfully received heartbeat of the node.
 
 ### interface org.containers.hirte.Job
 

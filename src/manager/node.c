@@ -45,6 +45,14 @@ static int node_property_get_status(
                 sd_bus_message *reply,
                 void *userdata,
                 sd_bus_error *ret_error);
+static int node_property_get_last_seen(
+                sd_bus *bus,
+                const char *path,
+                const char *interface,
+                const char *property,
+                sd_bus_message *reply,
+                void *userdata,
+                sd_bus_error *ret_error);
 
 static const sd_bus_vtable internal_manager_controller_vtable[] = {
         SD_BUS_VTABLE_START(0), SD_BUS_METHOD("Register", "s", "", node_method_register, 0), SD_BUS_VTABLE_END
@@ -66,6 +74,7 @@ static const sd_bus_vtable node_vtable[] = {
         SD_BUS_METHOD("SetLogLevel", "s", "", node_method_set_log_level, 0),
         SD_BUS_PROPERTY("Name", "s", node_property_get_nodename, 0, SD_BUS_VTABLE_PROPERTY_CONST),
         SD_BUS_PROPERTY("Status", "s", node_property_get_status, 0, SD_BUS_VTABLE_PROPERTY_EMITS_CHANGE),
+        SD_BUS_PROPERTY("LastSeenTimestamp", "t", node_property_get_last_seen, 0, SD_BUS_VTABLE_PROPERTY_EXPLICIT),
         SD_BUS_VTABLE_END
 };
 
@@ -144,6 +153,8 @@ Node *node_new(Manager *manager, const char *name) {
         if (node->unit_subscriptions == NULL) {
                 return NULL;
         }
+
+        node->last_seen = 0;
 
         if (name) {
                 node->name = strdup(name);
@@ -480,10 +491,19 @@ static int node_match_job_done(UNUSED sd_bus_message *m, UNUSED void *userdata, 
         return 1;
 }
 
-static int node_match_heartbeat(UNUSED sd_bus_message *m, UNUSED void *userdata, UNUSED sd_bus_error *error) {
-        char *node_name = NULL;
+static int node_match_heartbeat(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *error) {
+        Node *node = userdata;
 
-        int r = sd_bus_message_read(m, "s", &node_name);
+        struct timespec now;
+        int r = clock_gettime(CLOCK_REALTIME, &now);
+        if (r < 0) {
+                hirte_log_errorf("Failed to get current time on heartbeat: %s", strerror(-r));
+                return 0;
+        }
+        node->last_seen = now.tv_sec;
+
+        char *node_name = NULL;
+        r = sd_bus_message_read(m, "s", &node_name);
         if (r < 0) {
                 hirte_log_errorf("Error reading heartbeat: %s", strerror(-r));
                 return 0;
@@ -749,7 +769,7 @@ bool node_set_agent_bus(Node *node, sd_bus *bus) {
                                 INTERNAL_AGENT_INTERFACE,
                                 AGENT_HEARTBEAT_SIGNAL_NAME,
                                 node_match_heartbeat,
-                                NULL);
+                                node);
                 if (r < 0) {
                         hirte_log_errorf("Failed to add heartbeat signal match: %s", strerror(-r));
                         return false;
@@ -998,6 +1018,19 @@ static int node_property_get_status(
         Node *node = userdata;
 
         return sd_bus_message_append(reply, "s", node_get_status(node));
+}
+
+static int node_property_get_last_seen(
+                UNUSED sd_bus *bus,
+                UNUSED const char *path,
+                UNUSED const char *interface,
+                UNUSED const char *property,
+                sd_bus_message *reply,
+                void *userdata,
+                UNUSED sd_bus_error *ret_error) {
+        Node *node = userdata;
+
+        return sd_bus_message_append(reply, "t", node->last_seen);
 }
 
 
