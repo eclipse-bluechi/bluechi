@@ -379,7 +379,7 @@ This is the main interface that the node implements and that is used by the mana
     This is emitted when a proxy is not needed anymore because the service requiring the proxy
     service is stopped.
 
-  * `Heartbeat(s nodeName)`
+  * `Heartbeat()`
 
     This is a periodic signal from the node to the manager.
 

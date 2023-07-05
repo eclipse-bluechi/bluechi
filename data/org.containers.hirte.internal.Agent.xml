@@ -107,8 +107,6 @@
       <arg name="nodeName" type="s" />
       <arg name="unitName" type="s" />
     </signal>
-    <signal name="Heartbeat">
-      <arg name="agent_name" type="s" />
-    </signal>
+    <signal name="Heartbeat" />
   </interface>
 </node>

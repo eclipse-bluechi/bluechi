@@ -314,8 +314,7 @@ static struct hashmap *node_compute_unique_monitor_subscriptions(Node *node, con
 }
 
 
-static int node_match_job_state_changed(
-                UNUSED sd_bus_message *m, UNUSED void *userdata, UNUSED sd_bus_error *error) {
+static int node_match_job_state_changed(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *error) {
         Node *node = userdata;
         Manager *manager = node->manager;
         uint32_t hirte_job_id = 0;
@@ -491,7 +490,7 @@ static int node_match_job_done(UNUSED sd_bus_message *m, UNUSED void *userdata, 
         return 1;
 }
 
-static int node_match_heartbeat(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *error) {
+static int node_match_heartbeat(UNUSED sd_bus_message *m, void *userdata, UNUSED sd_bus_error *error) {
         Node *node = userdata;
 
         struct timespec now;
@@ -501,13 +500,6 @@ static int node_match_heartbeat(sd_bus_message *m, void *userdata, UNUSED sd_bus
                 return 0;
         }
         node->last_seen = now.tv_sec;
-
-        char *node_name = NULL;
-        r = sd_bus_message_read(m, "s", &node_name);
-        if (r < 0) {
-                hirte_log_errorf("Error reading heartbeat: %s", strerror(-r));
-                return 0;
-        }
 
         return 1;
 }
