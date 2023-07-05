@@ -1,6 +1,7 @@
 /* SPDX-License-Identifier: GPL-2.0-or-later */
 #include "libhirte/common/common.h"
 #include "libhirte/common/list.h"
+#include "libhirte/common/time-util.h"
 #include "libhirte/service/shutdown.h"
 
 #include "method_monitor.h"
@@ -299,37 +300,61 @@ typedef struct NodeConnection NodeConnection;
 
 struct NodeConnection {
         char *name;
+        char *node_path;
         char *state;
+        uint64_t last_seen;
         LIST_FIELDS(NodeConnection, nodes);
 };
 
 typedef struct Nodes {
+        sd_bus *api_bus;
         LIST_HEAD(NodeConnection, nodes);
 } Nodes;
 
-static Nodes *nodes_new() {
+static Nodes *nodes_new(sd_bus *api_bus) {
         Nodes *nodes = malloc0(sizeof(Nodes));
+        nodes->api_bus = api_bus;
         LIST_HEAD_INIT(nodes->nodes);
         return nodes;
 }
 
-static void nodes_add_connection(Nodes *nodes, const char *node_name, const char *node_state) {
+static char *node_connection_fmt_last_seen(NodeConnection *con) {
+        if (streq(con->state, "online")) {
+                return strdup("now");
+        } else if (streq(con->state, "offline") && con->last_seen == 0) {
+                return strdup("never");
+        }
+
+        struct timespec t;
+        t.tv_sec = (time_t) con->last_seen;
+        t.tv_nsec = 0;
+        return get_formatted_log_timestamp_for_timespec(t, false);
+}
+
+static void nodes_add_connection(
+                Nodes *nodes,
+                const char *node_name,
+                const char *node_path,
+                const char *node_state,
+                uint64_t last_seen_timestamp) {
         NodeConnection *node_connection = malloc0(sizeof(NodeConnection));
         node_connection->name = strdup(node_name);
+        node_connection->node_path = strdup(node_path);
         node_connection->state = strdup(node_state);
+        node_connection->last_seen = last_seen_timestamp;
 
         LIST_APPEND(nodes, nodes->nodes, node_connection);
 }
 
-static void nodes_update_connection(Nodes *nodes, const char *node_name, const char *node_state) {
+static NodeConnection *nodes_find_by_name(Nodes *nodes, const char *node_name) {
         NodeConnection *curr = NULL;
         NodeConnection *next = NULL;
         LIST_FOREACH_SAFE(nodes, curr, next, nodes->nodes) {
                 if (streq(curr->name, node_name)) {
-                        free(curr->state);
-                        curr->state = strdup(node_state);
+                        return curr;
                 }
         }
+        return NULL;
 }
 
 static void nodes_unref(Nodes *nodes) {
@@ -341,6 +366,7 @@ static void nodes_unref(Nodes *nodes) {
         NodeConnection *next = NULL;
         LIST_FOREACH_SAFE(nodes, curr, next, nodes->nodes) {
                 free(curr->name);
+                free(curr->node_path);
                 free(curr->state);
         }
 
@@ -357,14 +383,44 @@ static void print_nodes(Nodes *nodes) {
         printf("\033[%d;%dH", 0, 0);
 
         /* print monitor header */
-        printf("%-30.30s|%10s\n", "NODE", "STATE");
-        printf("=========================================\n");
+        printf("%-30.30s| %-10.10s| %-28.28s\n", "NODE", "STATE", "LAST SEEN");
+        printf("=========================================================================\n");
 
         NodeConnection *curr = NULL;
         NodeConnection *next = NULL;
         LIST_FOREACH_SAFE(nodes, curr, next, nodes->nodes) {
-                printf("%-30.30s|%10s\n", curr->name, curr->state);
+                _cleanup_free_ char *last_seen = node_connection_fmt_last_seen(curr);
+                printf("%-30.30s| %-10.10s| %-28.28s\n", curr->name, curr->state, last_seen);
         }
+}
+
+
+static int fetch_last_seen_timestamp_property(
+                sd_bus *api_bus, const char *node_path, uint64_t *ret_last_seen_timestamp) {
+        _cleanup_sd_bus_error_ sd_bus_error prop_error = SD_BUS_ERROR_NULL;
+        _cleanup_sd_bus_message_ sd_bus_message *prop_reply = NULL;
+
+        int r = sd_bus_get_property(
+                        api_bus,
+                        HIRTE_INTERFACE_BASE_NAME,
+                        node_path,
+                        NODE_INTERFACE,
+                        "LastSeenTimestamp",
+                        &prop_error,
+                        &prop_reply,
+                        "t");
+        if (r < 0) {
+                return r;
+        }
+
+        uint64_t last_seen_timestamp = 0;
+        r = sd_bus_message_read(prop_reply, "t", &last_seen_timestamp);
+        if (r < 0) {
+                return r;
+        }
+        *ret_last_seen_timestamp = last_seen_timestamp;
+
+        return 0;
 }
 
 static int on_node_connection_state_changed(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *error) {
@@ -379,7 +435,21 @@ static int on_node_connection_state_changed(sd_bus_message *m, void *userdata, U
                 return 0;
         }
 
-        nodes_update_connection(nodes, node_name, con_state);
+        NodeConnection *con = nodes_find_by_name(nodes, node_name);
+        if (con == NULL) {
+                fprintf(stderr, "Couldn't find connection for node '%s'", node_name);
+                return 0;
+        }
+
+        r = fetch_last_seen_timestamp_property(nodes->api_bus, con->node_path, &con->last_seen);
+        if (r < 0) {
+                fprintf(stderr, "Failed to get last seen property of node %s: %s\n", con->name, strerror(-r));
+                return r;
+        }
+
+        free(con->state);
+        con->state = strdup(con_state);
+
         print_nodes(nodes);
 
         return 0;
@@ -404,7 +474,7 @@ int method_monitor_node_connection_state(sd_bus *api_bus) {
                 return r;
         }
 
-        _cleanup_nodes_ Nodes *nodes = nodes_new();
+        _cleanup_nodes_ Nodes *nodes = nodes_new(api_bus);
 
         r = sd_bus_message_enter_container(reply, SD_BUS_TYPE_ARRAY, "(sos)");
         if (r < 0) {
@@ -413,16 +483,30 @@ int method_monitor_node_connection_state(sd_bus *api_bus) {
         }
         while (sd_bus_message_at_end(reply, false) == 0) {
                 const char *name = NULL;
-                UNUSED const char *path = NULL;
+                const char *path = NULL;
                 const char *state = NULL;
+                uint64_t last_seen_timestamp = 0;
 
                 r = sd_bus_message_read(reply, "(sos)", &name, &path, &state);
                 if (r < 0) {
                         fprintf(stderr, "Failed to read node information: %s\n", strerror(-r));
                         return r;
                 }
-                nodes_add_connection(nodes, name, state);
+
+                if (streq(state, "offline")) {
+                        r = fetch_last_seen_timestamp_property(api_bus, path, &last_seen_timestamp);
+                        if (r < 0) {
+                                fprintf(stderr,
+                                        "Failed to get last seen property of node %s: %s\n",
+                                        name,
+                                        strerror(-r));
+                                return r;
+                        }
+                }
+
+                nodes_add_connection(nodes, name, path, state, last_seen_timestamp);
         }
+
         print_nodes(nodes);
 
         r = sd_bus_match_signal(
