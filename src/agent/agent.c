@@ -124,8 +124,7 @@ static int agent_heartbeat_timer_callback(sd_event_source *event_source, UNUSED 
                                 INTERNAL_AGENT_OBJECT_PATH,
                                 INTERNAL_AGENT_INTERFACE,
                                 "Heartbeat",
-                                "s",
-                                agent->name);
+                                "");
                 if (r < 0) {
                         hirte_log_errorf("Failed to emit heartbeat signal: %s", strerror(-r));
                 }
@@ -1389,7 +1388,7 @@ static const sd_bus_vtable internal_agent_vtable[] = {
                                         SD_BUS_PARAM(reason),
                         0),
         SD_BUS_SIGNAL_WITH_NAMES("UnitRemoved", "s", SD_BUS_PARAM(unit), 0),
-        SD_BUS_SIGNAL_WITH_NAMES("Heartbeat", "s", SD_BUS_PARAM(agent_name), 0),
+        SD_BUS_SIGNAL("Heartbeat", "", 0),
         SD_BUS_METHOD("StartDep", "s", "", agent_method_start_dep, 0),
         SD_BUS_METHOD("StopDep", "s", "", agent_method_stop_dep, 0),
         SD_BUS_METHOD("EnableUnitFiles", "asbb", "ba(sss)", agent_method_passthrough_to_systemd, 0),
