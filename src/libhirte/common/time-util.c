@@ -16,6 +16,20 @@ uint64_t get_time_micros() {
         return now_micros;
 }
 
+int get_time_seconds(time_t *ret_time_seconds) {
+        if (ret_time_seconds == NULL) {
+                return -EINVAL;
+        }
+
+        struct timespec now;
+        int r = clock_gettime(CLOCK_REALTIME, &now);
+        if (r < 0) {
+                return r;
+        }
+        *ret_time_seconds = now.tv_sec;
+        return 0;
+}
+
 uint64_t finalize_time_interval_micros(int64_t start_time_micros) {
         return get_time_micros() - start_time_micros;
 }
