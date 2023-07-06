@@ -19,3 +19,4 @@ foreach src : common_src
 endforeach
 
 subdir('network')
+subdir('time-util')

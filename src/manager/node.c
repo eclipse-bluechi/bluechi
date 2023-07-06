@@ -493,14 +493,11 @@ static int node_match_job_done(UNUSED sd_bus_message *m, UNUSED void *userdata, 
 static int node_match_heartbeat(UNUSED sd_bus_message *m, void *userdata, UNUSED sd_bus_error *error) {
         Node *node = userdata;
 
-        struct timespec now;
-        int r = clock_gettime(CLOCK_REALTIME, &now);
+        int r = get_time_seconds(&node->last_seen);
         if (r < 0) {
                 hirte_log_errorf("Failed to get current time on heartbeat: %s", strerror(-r));
                 return 0;
         }
-        node->last_seen = now.tv_sec;
-
         return 1;
 }
 
