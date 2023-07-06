@@ -1,0 +1,33 @@
+
+
+    {% for method in methods -%}
+        def {{ method.pyname }}(self
+        {%- for arg in method.args -%}
+            , {{ arg.name }} 
+            {%- if arg.pytype != "" -%}
+            : {{ arg.pytype }}
+            {%- endif -%}
+        {%- endfor -%}
+        ) -> {# comment to enforce whitespace #}
+        {%- if method.rets|length <= 0 -%}
+        None
+        {%- elif method.rets|length == 1 -%}
+        {{ method.rets[0].pytype }}
+        {%- else -%}
+        Tuple[
+        {%- for ret in method.rets -%}
+        {{ ret.pytype }},
+        {%- endfor -%}
+        ]
+        {%- endif -%}:
+        {% if method.rets|length > 0 -%}
+        return {# comment to enforce whitespace #}
+        {%- endif -%}
+        self.get_proxy().{{ method.name }}(
+        
+        {%- for arg in method.args -%}
+            {{ arg.name }}, 
+        {%- endfor -%}
+        )
+
+    {% endfor %}

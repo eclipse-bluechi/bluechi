@@ -1,0 +1,21 @@
+#!/bin/bash -xe
+# SPDX-License-Identifier: GPL-2.0-or-later
+
+SCRIPT_DIR=$( realpath "$0"  )
+SCRIPT_DIR=$(dirname "$SCRIPT_DIR")/
+BINDINGS_DIR=$SCRIPT_DIR"../src/bindings/"
+
+generator=$BINDINGS_DIR"generator/src/generator.py"
+data_dir=$SCRIPT_DIR"../data/"
+
+function python(){
+    # Generate python bindings
+    template_dir=$BINDINGS_DIR"/python/templates/"
+    output_file_path=$BINDINGS_DIR"/python/pyhirte/api.py"
+    python3 "$generator" "$data_dir" "$template_dir" "$output_file_path"
+    black "$output_file_path"
+}
+
+echo "Generating bindings for $1"
+echo ""
+$1

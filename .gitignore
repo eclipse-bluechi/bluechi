@@ -7,8 +7,15 @@ builddir/
 hirte.spec
 rpmbuild/
 artifacts/
+## python build artifacts
+build/
+dist/
+pyhirte.egg-info/
 
 # Integration test
 hirte-rpms/
 __pycache__/
+## virtual env directories
 env/
+.venv/
+venv/

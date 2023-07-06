@@ -1,0 +1,26 @@
+[build-system]
+requires = ["setuptools", "setuptools-scm"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pyhirte"
+authors = [
+    {name = "Hirte developers"}
+]
+description = "Python bindings for hirte's D-Bus API"
+readme = "README.md"
+version = "@VERSION@"
+license = { text = "GPL-2.0-or-later" }
+dependencies = [
+    "dasbus>=1.7",
+]
+keywords = ["hirte", "python", "D-Bus"]
+classifiers = [
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+]
+
+[tool.setuptools.packages.find]
+include = ["pyhirte*"]
