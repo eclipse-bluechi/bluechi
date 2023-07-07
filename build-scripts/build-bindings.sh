@@ -14,10 +14,10 @@ function python() {
     ## Set version and release
     sed \
         -e "s|@VERSION@|${VERSION}|g" \
-        < $PYTHON_BINDINGS_DIR"pyproject.toml.in" \
-        > $PYTHON_BINDINGS_DIR"pyproject.toml"
+        < $PYTHON_BINDINGS_DIR"setup.py.in" \
+        > $PYTHON_BINDINGS_DIR"setup.py"
         
-    python3 -m build --sdist --wheel --outdir dist/ $PYTHON_BINDINGS_DIR
+    python3 $PYTHON_BINDINGS_DIR"setup.py" bdist_wheel --dist-dir=dist/
 }
 
 echo "Building bindings $1"
