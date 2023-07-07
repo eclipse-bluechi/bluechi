@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: LGPL-3.0-or-later
 
 from dasbus.connection import MessageBus
-from typing import Callable, List, NamedTuple
+from typing import Callable, List, NamedTuple, Tuple
 from collections import namedtuple
 from dasbus.loop import EventLoop
 from dasbus.typing import UInt32, ObjPath
@@ -35,10 +35,13 @@ UnitChange = namedtuple(
     ],
 )
 
+def unit_changes_from_tuples(tuples: List[Tuple[str, str, str]]) -> List[UnitChange]:
+    changes: List[UnitChange] = []
+    for change in tuples:
+        changes.append(UnitChange(change[0], change[1], change[2]))
+    return changes
 
-class EnableUnitsResponse(NamedTuple):
-    carries_install_info: bool
-    changes: List[UnitChange]
+EnableUnitsResponse = NamedTuple("EnableUnits", carries_install_info=bool, changes=List[UnitChange])
 
 
 class Unit:
@@ -82,7 +85,8 @@ class Unit:
         return self._wait_for_complete(self.node.reload_unit, unit)
 
     def enable_unit_files(self, files: List[str]) -> EnableUnitsResponse:
-        return self.node.enable_unit_files(files, False, False)
+        resp = self.node.enable_unit_files(files, False, False)
+        return EnableUnitsResponse(resp[0], unit_changes_from_tuples(resp[1]))
 
     def disable_unit_files(self, files: List[str]) -> List[UnitChange]:
-        return self.node.disable_unit_files(files, False)
+        return unit_changes_from_tuples(self.node.disable_unit_files(files, False))
