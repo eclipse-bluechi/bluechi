@@ -149,18 +149,18 @@ This package contains the service controller command line tool.
 %{_mandir}/man1/hirtectl.*
 
 
-%package python3-pyhirte
+%package -n python3-pyhirte
 Summary: Python bindings for Hirte
 BuildRequires:  python3-devel
 BuildRequires:  python3-setuptools
 Requires:       python3-dasbus
 
-%description python3-pyhirte
+%description -n python3-pyhirte
 pyhirte is a python module to access the public D-Bus API of hirte. 
 It contains typed python code that is auto-generated from hirte's 
 API description and manually written code to simplify recurring tasks. 
 
-%files python3-pyhirte
+%files -n python3-pyhirte
 %license LICENSE
 %doc README.md
 %{python3_sitelib}/pyhirte-*.egg-info/
