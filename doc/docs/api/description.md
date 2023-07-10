@@ -47,11 +47,11 @@ Note that all properties also come with change events, so you can easily track w
 
 #### Signals
 
-  * `JobNew(u id, o job, s nodeName, s unit)`
+  * `JobNew(u id, o job, s node_name, s unit)`
 
     Emitted each time a new Hirte job is queued.
 
-  * `JobRemoved(u id, o job, s nodeName, s unit, s result)`
+  * `JobRemoved(u id, o job, s node_name, s unit, s result)`
 
     Emitted each time a new job is dequeued or the underlying systemd job finished. `result` is one of: `done`,
     `failed`, `cancelled`, `timeout`, `dependency`, `skipped`. This is either the result from systemd on the node, or
@@ -379,14 +379,14 @@ This is the main interface that the node implements and that is used by the mana
     This is equivalent to the Monitor signal, but for this node only. The same set of properties described there is
     supported here.
 
-  * `ProxyNew(s nodeName, s unitName, o proxy)`
+  * `ProxyNew(s node_name, s unit_name, o proxy)`
 
     Whenever a proxy service is running on the system with the node it calls into the node service, and the node service
     creates a new `org.containers.internal.Proxy` object and emits this signal to tell the manager about it. The manager
     will notice this and try to arrange that the requested unit is running on the requested node. If the unit is already
     running, when it is started, or when the start fails, the manager will call the `Ready()` method on it.
 
-  * `ProxyRemoved(s nodeName, s unitName)`
+  * `ProxyRemoved(s node_name, s unit_name)`
 
     This is emitted when a proxy is not needed anymore because the service requiring the proxy
     service is stopped.
