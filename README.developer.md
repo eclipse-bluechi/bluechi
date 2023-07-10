@@ -13,6 +13,7 @@
   - [Running](#running)
     - [hirte](#hirte)
     - [hirte-agent](#hirte-agent)
+    - [hirtectl](#hirtectl)
 - [Documentation](#documentation)
   - [Building MAN Pages](#building-man-pages)
 - [Packaging](#packaging)
@@ -45,10 +46,14 @@ of installation for your setup.
 
 ### Code Style
 
-[clang-format](https://clang.llvm.org/docs/ClangFormat.html) is used to enforce a unified code style. All source files
-can be formatted via:
+[clang-format](https://clang.llvm.org/docs/ClangFormat.html) is used to enforce a uniform code style. The formatting
+of all source files can be checked via:
 
 ```bash
+# only check for formatting
+make check-fmt
+
+# apply formatting to files 
 make fmt
 ```
 
@@ -57,34 +62,33 @@ For the most part, this project follows systemd coding style:
 some of the coding conventions from systemd. For example, function names pertaining to D-Bus services look like
 `bus_service_set_property()`.
 
-A formatting check of existing files can be executed by:
-
-```bash
-make check-fmt
-```
-
 ### Linting
 
 [clang-tidy](https://clang.llvm.org/extra/clang-tidy/) is used for static analysis of C source codes.
 [markdownlint-cli2](https://github.com/DavidAnson/markdownlint-cli2) is used for static analysis of markdown files.
+[flake8](https://flake8.pycqa.org/en/latest/) is used for format checking and linting of python code.
 
-All source files can be checked via:
+The following make targets simplify the usage of the different linting tools:
 
 ```bash
+# using clang-tidy, lint all C source files
+make lint-c
+
+# same as lint-c target, but auto-fix errors if possible
+make lint-c-fix
+
+# using markdownlint-cli2, lint all markdown files
+make lint-markdown
+
+# combines lint-c and lint-markdown
 make lint
-```
-
-Some errors detected by `clang-tidy` can be fixed automatically via:
-
-```bash
-make lint-fix
 ```
 
 ### Build
 
-The project is using [meson](https://mesonbuild.com/) build system.
+The project is using [meson](https://mesonbuild.com/) as its primary build system.
 
-The binaries can be built via:
+The binaries and other artifacts (such as the man pages) can be built via:
 
 ```bash
 meson setup builddir
@@ -104,16 +108,29 @@ To install it into `builddir/bin` use:
 meson install -C builddir --destdir bin
 ```
 
-After building, three binaries are available:
+After building, the following binaries are available:
 
 - `hirte`: the systemd service controller which is run on the main machine, sending commands to the agents and
   monitoring the progress
 - `hirte-agent`: the node agent unit which connects with the controller and executes commands on the node machine
+- `hirte-proxy`: an internally used application to resolve cross-node dependencies
 - `hirtectl`: a helper (CLI) program to send an commands to the controller
+
+#### Bindings
+
+Bindings for the D-Bus API of `hirte` are located in [src/bindings](./src/bindings/). Please refer to the
+[README.md](./src/bindings/README.md) for more details.
+
+A complete set of typed python bindings for the D-Bus API is auto-generated. On any change to any of the [interfaces](./data/),
+these need to be re-generated via
+
+```bash
+bash build-scripts/generate-bindings.sh python
+```
 
 ### Unit tests
 
-Unit tests can be executed using following commands
+Unit tests can be executed using following commands:
 
 ```bash
 meson setup builddir
@@ -129,39 +146,71 @@ integration tests for hirte is described in [tests/README](./tests/README.md).
 
 ### Running
 
-At the moment the `hirtectl` binary does not implement any logic. It only prints a simple greeting and exit.
+The following sections describe how to run the built application(s) locally on one machine. For this, the assumed setup
+used is described in the first section.
+
+#### Assumed setup
+
+The project has been build with the following command sequence:
+
+```bash
+meson setup builddir
+meson compile -C builddir
+meson install -C builddir --destdir bin
+```
+
+Meson will output the artifacts to `./builddir/bin/usr/local/`. This directory is referred to in the following sections
+simply as `<builddir>`.
+
+To allow `hirte` and `hirte-agent` to own a name on the local system D-Bus, the provided configuration
+files need to be copied (if not already existing):
+
+```bash
+cp <builddir>/share/dbus-1/system.d/org.containers.hirte.Agent.conf /etc/dbus-1/system.d/
+cp <builddir>/share/dbus-1/system.d/org.containers.hirte.conf /etc/dbus-1/system.d/
+```
+
+**Note:** Make sure to reload the dbus service so these changes take effect: `systemctl reload dbus-broker.service` (or
+`systemctl reload dbus.service`)
 
 #### hirte
 
-The controller can be run via:
+The newly built controller can simply be run via `./<builddir>/bin/hirte`, but it is recommended to use a specific
+configuration for development. This file can be passed in with the `-c` CLI option:
 
 ```bash
-hirte
-```
-
-It starts a tcp socket on all network interfaces on port `842` and accepts connections, but does not do much more at
-this point. This can be tested manually via:
-
-```bash
-nc <host> <port>
+./<builddir>/bin/hirte -c <path-to-cfg-file>
 ```
 
 #### hirte-agent
 
-A node can be run via:
+Before starting the agent, it is best to have the hirte controller already running. However, `hirte-agent` will
+try to reconnect in the configured heartbeat interval.
+
+Similar to `hirte`, it is recommended to use a dedicated configuration file for development:
 
 ```bash
-./bin/hirte-agent -n <agent name> -H <host>
+./<builddir>/bin/hirte -c <path-to-cfg-file>
 ```
 
-It creates a new D-Bus which tries to connect to the specified host. The host will print out a message if the request
-was accepted. It does not do much more at this point.
+#### hirtectl
+
+The newly built `hirtectl` can be used via:
+
+```bash
+./<builddir>/bin/hirtectl COMMANDS
+```
 
 ## Documentation
 
-For further documentation please refer to the [doc](./doc/) directory.
+Files for documentation of this project are located in the [doc](./doc/) directory comprising:
 
-The target architecture for this project is described in [doc/arch](./doc/arch/).
+- [api examples](./doc/api-examples/): directory containing python files that use the D-Bus API of hirte, e.g. for starting
+a systemd unit
+- [man](./doc/man/): directory containing the markdown files for generating the man pages
+(see [Building MAN pages](#building-man-pages) for more information)
+- readthedocs files for building the documentation website of hirte (see [the README](./doc/README.md) for further information)
+- [diagrams.drawio](./doc/diagrams.drawio) file containing all diagrams used for hirte
 
 ### Building MAN pages
 
