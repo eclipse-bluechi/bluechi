@@ -12,6 +12,7 @@ setup(
     version="0.4.0",
     description="Python bindings for hirte's D-Bus API",
     long_description=readme(),
+    long_description_content_type="text/markdown",
     author="Hirte developers",
     url="https://github.com/containers/hirte/",
     license="LGPL-2.0-or-later",
