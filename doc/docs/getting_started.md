@@ -5,9 +5,13 @@
 
 On Fedora systems, hirte can be directly installed from the Fedora repository.
 On CentOS-Stream systems, it can be installed using the COPR repository shipping
-the latest hirte code. That repository can be enabled using: dnf copr enable
-mperina/hirte-snapshot centos-stream-9.  This should no longer be necessary once
-hirte is made available in EPEL.
+the latest hirte code. That repository can be enabled using:
+
+```bash
+dnf copr enable mperina/hirte-snapshot centos-stream-9
+```
+
+This should no longer be necessary once hirte is made available in EPEL.
 
 On the laptop install both hirte and the hirte-agent via this command:
 

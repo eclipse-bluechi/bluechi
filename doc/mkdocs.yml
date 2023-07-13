@@ -12,6 +12,7 @@ nav:
   - DBus API: 
     - Description: api/description.md
     - Examples: api/examples.md
+    - Bindings: api/bindings.md
   - Proxy Services: proxy_services.md
   - MAN Pages:
     - Binaries:
