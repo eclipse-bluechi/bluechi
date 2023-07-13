@@ -11,13 +11,15 @@ VERSION="$(meson introspect --projectinfo builddir | jq -r '.version')"
 function python() {
     # Package python bindings
     PYTHON_BINDINGS_DIR="src/bindings/python/"
+    cd $PYTHON_BINDINGS_DIR
+
     ## Set version and release
     sed \
         -e "s|@VERSION@|${VERSION}|g" \
-        < $PYTHON_BINDINGS_DIR"setup.py.in" \
-        > $PYTHON_BINDINGS_DIR"setup.py"
-        
-    python3 $PYTHON_BINDINGS_DIR"setup.py" bdist_wheel --dist-dir=dist/
+        < "setup.py.in" \
+        > "setup.py"
+
+    python3 "setup.py" bdist_wheel --dist-dir=dist/
 }
 
 echo "Building bindings $1"
