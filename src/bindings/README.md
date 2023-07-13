@@ -8,4 +8,3 @@ functions are written to simplify recurring tasks.
 
 - [bindings/generator](./generator/): small python project used to generate client code for the D-Bus API
 - [bindinds/python](./python/): python client for hirte
-- [bindings/examples](./examples/): contains example code for using the bindings
