@@ -110,6 +110,7 @@ bool agent_is_connected(Agent *agent);
 void agent_remove_proxy(Agent *agent, ProxyService *proxy, bool emit);
 
 int agent_send_job_metrics(Agent *agent, char *unit, char *method, uint64_t systemd_job_time);
+int cfg_set_defaults_agent(struct config *config);
 
 DEFINE_CLEANUP_FUNC(Agent, agent_unref)
 #define _cleanup_agent_ _cleanup_(agent_unrefp)

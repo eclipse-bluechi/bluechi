@@ -80,6 +80,36 @@ static void agent_job_op_unref(AgentJobOp *op) {
 DEFINE_CLEANUP_FUNC(AgentJobOp, agent_job_op_unref)
 #define _cleanup_agent_job_op_ _cleanup_(agent_job_op_unrefp)
 
+int cfg_set_defaults_agent(struct config *config) {
+
+        // NodeName
+        if (cfg_set_value(config, CFG_NODE_NAME, get_hostname()) != 0) {
+                return -1;
+        }
+
+        // ManagerHost
+        if (cfg_set_value(config, CFG_MANAGER_HOST, HIRTE_DEFAULT_HOST) != 0) {
+                return -1;
+        }
+
+
+        // if (cfg_set_value(config, CFG_MANAGER_ADDRESS, "") != 0) {
+        //         return -1;
+        // }
+
+        // HeartbeatInterval
+        if (cfg_set_value(config, CFG_HEARTBEAT_INTERVAL, int_to_string(AGENT_HEARTBEAT_INTERVAL_MSEC)) != 0) {
+                return -1;
+        }
+
+        // ManagerPort
+        if (cfg_set_value(config, CFG_MANAGER_PORT, int_to_string(HIRTE_DEFAULT_PORT)) != 0) {
+                return -1;
+        }
+
+        return 0;
+}
+
 static AgentJobOp *agent_job_new(Agent *agent, uint32_t hirte_job_id, const char *unit, const char *method) {
         AgentJobOp *op = malloc0(sizeof(AgentJobOp));
         if (op) {
@@ -372,9 +402,6 @@ Agent *agent_new(void) {
         agent->ref_count = 1;
         agent->event = steal_pointer(&event);
         agent->api_bus_service_name = steal_pointer(&service_name);
-        agent->port = HIRTE_DEFAULT_PORT;
-        agent->host = strdup(HIRTE_DEFAULT_HOST);
-        agent->heartbeat_interval_msec = AGENT_HEARTBEAT_INTERVAL_MSEC;
         LIST_HEAD_INIT(agent->outstanding_requests);
         LIST_HEAD_INIT(agent->tracked_jobs);
         LIST_HEAD_INIT(agent->proxy_services);
@@ -388,7 +415,6 @@ Agent *agent_new(void) {
         agent->connection_state = AGENT_CONNECTION_STATE_DISCONNECTED;
         agent->connection_retry_count = 0;
         agent->wildcard_subscription_active = false;
-        agent->name = get_hostname();
         agent->metrics_enabled = false;
 
         return steal_pointer(&agent);
@@ -535,6 +561,21 @@ bool agent_parse_config(Agent *agent, const char *configfile) {
                 return false;
         }
 
+        result = cfg_set_default_section(agent->config, CFG_SECT_AGENT);
+        if (result != 0) {
+                fprintf(stderr,
+                        "Error setting default section for agent '%s', error code '%s'.\n",
+                        CFG_SECT_AGENT,
+                        strerror(-result));
+                return false;
+        }
+
+        result = cfg_set_defaults_agent(agent->config);
+        if (result < 0) {
+                fprintf(stderr, "Failed to load default settings...");
+                return false;
+        }
+
         result = cfg_load_complete_configuration(
                         agent->config,
                         CFG_AGENT_DEFAULT_CONFIG,
@@ -555,40 +596,23 @@ bool agent_parse_config(Agent *agent, const char *configfile) {
                 }
         }
 
-        result = cfg_set_default_section(agent->config, CFG_SECT_AGENT);
-        if (result != 0) {
-                fprintf(stderr,
-                        "Error setting default section for agent '%s', error code '%s'.\n",
-                        CFG_SECT_AGENT,
-                        strerror(-result));
-                return false;
-        }
-
         // set logging configuration
         hirte_log_init(agent->config);
 
+        // setting values for agent using config
+        if (!agent_set_name(agent, cfg_get_value(agent->config, CFG_NODE_NAME))) {
+                return false;
+        }
+
+        if (!agent_set_host(agent, cfg_get_value(agent->config, CFG_MANAGER_HOST))) {
+                return false;
+        }
+
+        if (!agent_set_port(agent, cfg_get_value(agent->config, CFG_MANAGER_PORT))) {
+                return false;
+        }
+
         const char *value = NULL;
-        value = cfg_get_value(agent->config, CFG_NODE_NAME);
-        if (value) {
-                if (!agent_set_name(agent, value)) {
-                        return false;
-                }
-        }
-
-        value = cfg_get_value(agent->config, CFG_MANAGER_HOST);
-        if (value) {
-                if (!agent_set_host(agent, value)) {
-                        return false;
-                }
-        }
-
-        value = cfg_get_value(agent->config, CFG_MANAGER_PORT);
-        if (value) {
-                if (!agent_set_port(agent, value)) {
-                        return false;
-                }
-        }
-
         value = cfg_get_value(agent->config, CFG_MANAGER_ADDRESS);
         if (value) {
                 if (!agent_set_orch_address(agent, value)) {
@@ -596,11 +620,12 @@ bool agent_parse_config(Agent *agent, const char *configfile) {
                 }
         }
 
-        value = cfg_get_value(agent->config, CFG_HEARTBEAT_INTERVAL);
-        if (value) {
-                if (!agent_set_heartbeat_interval(agent, value)) {
-                        return false;
-                }
+        // if (!agent_set_orch_address(agent, cfg_get_value(agent->config, CFG_MANAGER_ADDRESS))) {
+        //         return false;
+        // }
+
+        if (!agent_set_heartbeat_interval(agent, cfg_get_value(agent->config, CFG_HEARTBEAT_INTERVAL))) {
+                return false;
         }
 
         _cleanup_free_ const char *dumped_cfg = cfg_dump(agent->config);

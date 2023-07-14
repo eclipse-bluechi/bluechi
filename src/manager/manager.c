@@ -38,7 +38,6 @@ Manager *manager_new(void) {
         Manager *manager = malloc0(sizeof(Manager));
         if (manager != NULL) {
                 manager->ref_count = 1;
-                manager->port = HIRTE_DEFAULT_PORT;
                 manager->api_bus_service_name = steal_pointer(&service_name);
                 manager->event = steal_pointer(&event);
                 manager->metrics_enabled = false;
@@ -304,12 +303,43 @@ bool manager_set_port(Manager *manager, const char *port_s) {
         return true;
 }
 
+int cfg_set_defaults_manager(struct config *config) {
+
+        // ManagerPort
+        _cleanup_free_ char *port = int_to_string(HIRTE_DEFAULT_PORT);
+        if (cfg_set_value(config, CFG_MANAGER_PORT, port) != 0) {
+                return -1;
+        }
+
+        // AllowedNodeNames by default is an empty list
+        if (cfg_set_value(config, CFG_ALLOWED_NODE_NAMES, "") != 0) {
+                return -1;
+        }
+
+        return 0;
+}
+
 bool manager_parse_config(Manager *manager, const char *configfile) {
         int result = 0;
 
         result = cfg_initialize(&manager->config);
         if (result != 0) {
                 fprintf(stderr, "Error initializing configuration: '%s'.\n", strerror(-result));
+                return false;
+        }
+
+        result = cfg_set_default_section(manager->config, CFG_SECT_HIRTE);
+        if (result != 0) {
+                fprintf(stderr,
+                        "Error setting default section for hirte '%s', error code '%s'.\n",
+                        CFG_SECT_HIRTE,
+                        strerror(-result));
+                return false;
+        }
+
+        result = cfg_set_defaults_manager(manager->config);
+        if (result != 0) {
+                fprintf(stderr, "Error setting default config values in manager instance");
                 return false;
         }
 
@@ -330,24 +360,13 @@ bool manager_parse_config(Manager *manager, const char *configfile) {
                 }
         }
 
-        result = cfg_set_default_section(manager->config, CFG_SECT_HIRTE);
-        if (result != 0) {
-                fprintf(stderr,
-                        "Error setting default section for hirte '%s', error code '%s'.\n",
-                        CFG_SECT_HIRTE,
-                        strerror(-result));
-                return false;
-        }
 
         // set logging configuration
         hirte_log_init(manager->config);
 
-        const char *port = NULL;
-        port = cfg_get_value(manager->config, CFG_MANAGER_PORT);
-        if (port) {
-                if (!manager_set_port(manager, port)) {
-                        return false;
-                }
+        // setting values for manager using config
+        if (!manager_set_port(manager, cfg_get_value(manager->config, CFG_MANAGER_PORT))) {
+                return false;
         }
 
         const char *expected_nodes = cfg_get_value(manager->config, CFG_ALLOWED_NODE_NAMES);

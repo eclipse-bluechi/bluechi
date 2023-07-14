@@ -153,6 +153,13 @@ int is_file_name_ending_with_conf(const struct dirent *entry) {
         return false;
 }
 
+char *int_to_string(int a) {
+        int str_size = snprintf(NULL, 0, "%d", a) + 1;
+        char *res = (char *) malloc(str_size);
+        snprintf(res, str_size, "%d", a);
+        return res;
+}
+
 int cfg_load_from_dir(struct config *config, const char *custom_config_directory) {
         struct dirent **all_files_in_dir = NULL;
         int number_of_files = 0;

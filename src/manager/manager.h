@@ -63,5 +63,7 @@ void manager_remove_monitor(Manager *manager, Monitor *monitor);
 void manager_add_subscription(Manager *manager, Subscription *sub);
 void manager_remove_subscription(Manager *manager, Subscription *sub);
 
+int cfg_set_defaults_manager(struct config *config);
+
 DEFINE_CLEANUP_FUNC(Manager, manager_unref)
 #define _cleanup_manager_ _cleanup_(manager_unrefp)
