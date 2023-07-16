@@ -351,16 +351,19 @@ bool manager_parse_config(Manager *manager, const char *configfile) {
         }
 
         const char *expected_nodes = cfg_get_value(manager->config, CFG_ALLOWED_NODE_NAMES);
-        if (expected_nodes) {
-                char *saveptr = NULL;
-                char *name = strtok_r((char *) expected_nodes, ",", &saveptr);
-                while (name != NULL) {
-                        if (manager_find_node(manager, name) == NULL) {
-                                manager_add_node(manager, name);
-                        }
+        if (!expected_nodes) {
+                hirte_log_error("AllowedNodeNames must container at least one node in configuration file");
+                return false;
+        }
 
-                        name = strtok_r(NULL, ",", &saveptr);
+        char *saveptr = NULL;
+        char *name = strtok_r((char *) expected_nodes, ",", &saveptr);
+        while (name != NULL) {
+                if (manager_find_node(manager, name) == NULL) {
+                        manager_add_node(manager, name);
                 }
+
+                name = strtok_r(NULL, ",", &saveptr);
         }
 
         _cleanup_free_ const char *dumped_cfg = cfg_dump(manager->config);
