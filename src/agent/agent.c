@@ -59,6 +59,38 @@ typedef struct {
         char *method;
 } AgentJobOp;
 
+int cfg_set_defaults_agent(struct config *config) {
+
+        char *buff = NULL;
+        // NodeName
+        if (cfg_set_value(config, CFG_NODE_NAME, get_hostname()) != 0) {
+                return -1;
+        }
+
+        // ManagerHost
+        if (cfg_set_value(config, CFG_MANAGER_HOST, HIRTE_DEFAULT_HOST) != 0) {
+                return -1;
+        }
+
+        // HeartbeatInterval
+        if (asprintf(&buff, "%i", AGENT_HEARTBEAT_INTERVAL_MSEC) <= 0) {
+                return -1;
+        }
+        if (cfg_set_value(config, CFG_HEARTBEAT_INTERVAL, buff) != 0) {
+                return -1;
+        }
+
+        // ManagerPort
+        if (asprintf(&buff, "%i", HIRTE_DEFAULT_PORT) <= 0) {
+                return -1;
+        }
+        if (cfg_set_value(config, CFG_MANAGER_PORT, buff) != 0) {
+                return -1;
+        }
+
+        return 0;
+}
+
 
 static AgentJobOp *agent_job_op_ref(AgentJobOp *op) {
         op->ref_count++;
@@ -372,9 +404,9 @@ Agent *agent_new(void) {
         agent->ref_count = 1;
         agent->event = steal_pointer(&event);
         agent->api_bus_service_name = steal_pointer(&service_name);
-        agent->port = HIRTE_DEFAULT_PORT;
-        agent->host = strdup(HIRTE_DEFAULT_HOST);
-        agent->heartbeat_interval_msec = AGENT_HEARTBEAT_INTERVAL_MSEC;
+        // agent->port = HIRTE_DEFAULT_PORT;
+        // agent->host = strdup(HIRTE_DEFAULT_HOST);
+        // agent->heartbeat_interval_msec = AGENT_HEARTBEAT_INTERVAL_MSEC;
         LIST_HEAD_INIT(agent->outstanding_requests);
         LIST_HEAD_INIT(agent->tracked_jobs);
         LIST_HEAD_INIT(agent->proxy_services);
@@ -388,7 +420,7 @@ Agent *agent_new(void) {
         agent->connection_state = AGENT_CONNECTION_STATE_DISCONNECTED;
         agent->connection_retry_count = 0;
         agent->wildcard_subscription_active = false;
-        agent->name = get_hostname();
+        // agent->name = get_hostname();
         agent->metrics_enabled = false;
 
         return steal_pointer(&agent);
@@ -529,9 +561,25 @@ void agent_set_systemd_user(Agent *agent, bool systemd_user) {
 bool agent_parse_config(Agent *agent, const char *configfile) {
         int result = 0;
 
+        const char *value = NULL;
         result = cfg_initialize(&agent->config);
         if (result != 0) {
                 fprintf(stderr, "Error initializing configuration: '%s'.\n", strerror(-result));
+                return false;
+        }
+
+        result = cfg_set_default_section(agent->config, CFG_SECT_AGENT);
+        if (result != 0) {
+                fprintf(stderr,
+                        "Error setting default section for agent '%s', error code '%s'.\n",
+                        CFG_SECT_AGENT,
+                        strerror(-result));
+                return false;
+        }
+
+        result = cfg_set_defaults_agent(agent->config);
+        if (result < 0) {
+                fprintf(stderr, "Failed to load default settings...");
                 return false;
         }
 
@@ -555,38 +603,20 @@ bool agent_parse_config(Agent *agent, const char *configfile) {
                 }
         }
 
-        result = cfg_set_default_section(agent->config, CFG_SECT_AGENT);
-        if (result != 0) {
-                fprintf(stderr,
-                        "Error setting default section for agent '%s', error code '%s'.\n",
-                        CFG_SECT_AGENT,
-                        strerror(-result));
-                return false;
-        }
-
         // set logging configuration
         hirte_log_init(agent->config);
 
-        const char *value = NULL;
-        value = cfg_get_value(agent->config, CFG_NODE_NAME);
-        if (value) {
-                if (!agent_set_name(agent, value)) {
-                        return false;
-                }
+        //  setting values for agent using config
+        if (!agent_set_name(agent, cfg_get_value(agent->config, CFG_NODE_NAME))) {
+                return false;
         }
 
-        value = cfg_get_value(agent->config, CFG_MANAGER_HOST);
-        if (value) {
-                if (!agent_set_host(agent, value)) {
-                        return false;
-                }
+        if (!agent_set_host(agent, cfg_get_value(agent->config, CFG_MANAGER_HOST))) {
+                return false;
         }
 
-        value = cfg_get_value(agent->config, CFG_MANAGER_PORT);
-        if (value) {
-                if (!agent_set_port(agent, value)) {
-                        return false;
-                }
+        if (!agent_set_port(agent, cfg_get_value(agent->config, CFG_MANAGER_PORT))) {
+                return false;
         }
 
         value = cfg_get_value(agent->config, CFG_MANAGER_ADDRESS);
@@ -596,11 +626,8 @@ bool agent_parse_config(Agent *agent, const char *configfile) {
                 }
         }
 
-        value = cfg_get_value(agent->config, CFG_HEARTBEAT_INTERVAL);
-        if (value) {
-                if (!agent_set_heartbeat_interval(agent, value)) {
-                        return false;
-                }
+        if (!agent_set_heartbeat_interval(agent, cfg_get_value(agent->config, CFG_HEARTBEAT_INTERVAL))) {
+                return false;
         }
 
         _cleanup_free_ const char *dumped_cfg = cfg_dump(agent->config);
