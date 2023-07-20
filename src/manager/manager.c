@@ -38,7 +38,6 @@ Manager *manager_new(void) {
         Manager *manager = malloc0(sizeof(Manager));
         if (manager != NULL) {
                 manager->ref_count = 1;
-                manager->port = HIRTE_DEFAULT_PORT;
                 manager->api_bus_service_name = steal_pointer(&service_name);
                 manager->event = steal_pointer(&event);
                 manager->metrics_enabled = false;
@@ -304,12 +303,46 @@ bool manager_set_port(Manager *manager, const char *port_s) {
         return true;
 }
 
+int manager_cfg_set_defaults(struct config *config) {
+
+        char *buff = NULL;
+        // ManagerPort
+        if (asprintf(&buff, "%i", HIRTE_DEFAULT_PORT) <= 0) {
+                return -1;
+        }
+        if (cfg_set_value(config, CFG_MANAGER_PORT, buff) != 0) {
+                return -1;
+        }
+
+        // AllowedNodeNames by default is an empty list
+        if (cfg_set_value(config, CFG_ALLOWED_NODE_NAMES, "") != 0) {
+                return -1;
+        }
+
+        return 0;
+}
+
 bool manager_parse_config(Manager *manager, const char *configfile) {
         int result = 0;
 
         result = cfg_initialize(&manager->config);
         if (result != 0) {
                 fprintf(stderr, "Error initializing configuration: '%s'.\n", strerror(-result));
+                return false;
+        }
+
+        result = cfg_set_default_section(manager->config, CFG_SECT_HIRTE);
+        if (result != 0) {
+                fprintf(stderr,
+                        "Error setting default section for hirte '%s', error code '%s'.\n",
+                        CFG_SECT_HIRTE,
+                        strerror(-result));
+                return false;
+        }
+
+        result = manager_cfg_set_defaults(manager->config);
+        if (result != 0) {
+                fprintf(stderr, "Error setting default config values in manager instance");
                 return false;
         }
 
@@ -328,15 +361,6 @@ bool manager_parse_config(Manager *manager, const char *configfile) {
                                 strerror(-result));
                         return false;
                 }
-        }
-
-        result = cfg_set_default_section(manager->config, CFG_SECT_HIRTE);
-        if (result != 0) {
-                fprintf(stderr,
-                        "Error setting default section for hirte '%s', error code '%s'.\n",
-                        CFG_SECT_HIRTE,
-                        strerror(-result));
-                return false;
         }
 
         // set logging configuration
