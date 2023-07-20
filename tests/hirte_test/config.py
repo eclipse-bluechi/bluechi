@@ -71,7 +71,7 @@ class HirteNodeConfig(HirteConfig):
             manager_host: str = "",
             manager_port: str = "8420",
             manager_address: str = "",
-            heartbeat_interval: str = "",
+            heartbeat_interval: str = "2000",
             log_level: str = "DEBUG",
             log_target: str = "journald",
             log_is_quiet: bool = False) -> None:

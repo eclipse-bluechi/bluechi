@@ -3,7 +3,7 @@
 
 #include <errno.h>
 
-#define HIRTE_DEFAULT_PORT 842
+#define HIRTE_DEFAULT_PORT "842"
 #define HIRTE_DEFAULT_HOST "127.0.0.1"
 
 #define HIRTE_DBUS_NAME "org.containers.hirte"
@@ -94,7 +94,7 @@ UnitActiveState active_state_from_string(const char *s);
 /* Agent to Hirte heartbeat signals */
 
 // Application-level heartbeat set at 2 seconds.
-#define AGENT_HEARTBEAT_INTERVAL_MSEC (2000)
+#define AGENT_HEARTBEAT_INTERVAL_MSEC "2000"
 #define AGENT_HEARTBEAT_SIGNAL_NAME "Heartbeat"
 
 /* Constants */

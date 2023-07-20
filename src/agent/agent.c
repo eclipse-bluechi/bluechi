@@ -59,7 +59,6 @@ typedef struct {
         char *method;
 } AgentJobOp;
 
-
 static AgentJobOp *agent_job_op_ref(AgentJobOp *op) {
         op->ref_count++;
         return op;
@@ -372,9 +371,6 @@ Agent *agent_new(void) {
         agent->ref_count = 1;
         agent->event = steal_pointer(&event);
         agent->api_bus_service_name = steal_pointer(&service_name);
-        agent->port = HIRTE_DEFAULT_PORT;
-        agent->host = strdup(HIRTE_DEFAULT_HOST);
-        agent->heartbeat_interval_msec = AGENT_HEARTBEAT_INTERVAL_MSEC;
         LIST_HEAD_INIT(agent->outstanding_requests);
         LIST_HEAD_INIT(agent->tracked_jobs);
         LIST_HEAD_INIT(agent->proxy_services);
@@ -388,7 +384,6 @@ Agent *agent_new(void) {
         agent->connection_state = AGENT_CONNECTION_STATE_DISCONNECTED;
         agent->connection_retry_count = 0;
         agent->wildcard_subscription_active = false;
-        agent->name = get_hostname();
         agent->metrics_enabled = false;
 
         return steal_pointer(&agent);
@@ -535,6 +530,11 @@ bool agent_parse_config(Agent *agent, const char *configfile) {
                 return false;
         }
 
+        result = cfg_agent_def_conf(agent->config);
+        if (result < 0) {
+                fprintf(stderr, "Failed to set default settings for agent: %s", strerror(-result));
+                return false;
+        }
         result = cfg_load_complete_configuration(
                         agent->config,
                         CFG_AGENT_DEFAULT_CONFIG,
@@ -555,14 +555,6 @@ bool agent_parse_config(Agent *agent, const char *configfile) {
                 }
         }
 
-        result = cfg_set_default_section(agent->config, CFG_SECT_AGENT);
-        if (result != 0) {
-                fprintf(stderr,
-                        "Error setting default section for agent '%s', error code '%s'.\n",
-                        CFG_SECT_AGENT,
-                        strerror(-result));
-                return false;
-        }
 
         // set logging configuration
         hirte_log_init(agent->config);

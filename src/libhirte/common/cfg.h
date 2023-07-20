@@ -182,3 +182,13 @@ bool cfg_s_get_bool_value(struct config *config, const char *section, const char
  * The caller is responsible for freeing the returned string.
  */
 const char *cfg_dump(struct config *config);
+
+/*
+ * Populate the default agent configuration from the source code
+ */
+int cfg_agent_def_conf(struct config *config);
+
+/*
+ * Populate the default manager configuration from the source code
+ */
+int cfg_manager_def_conf(struct config *config);
