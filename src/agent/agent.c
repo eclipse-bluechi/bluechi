@@ -567,6 +567,7 @@ bool agent_parse_config(Agent *agent, const char *configfile) {
         // set logging configuration
         hirte_log_init(agent->config);
 
+        fprintf(stderr, "test 123");
         const char *value = NULL;
         value = cfg_get_value(agent->config, CFG_NODE_NAME);
         if (value) {
