@@ -38,7 +38,6 @@ Manager *manager_new(void) {
         Manager *manager = malloc0(sizeof(Manager));
         if (manager != NULL) {
                 manager->ref_count = 1;
-                manager->port = HIRTE_DEFAULT_PORT;
                 manager->api_bus_service_name = steal_pointer(&service_name);
                 manager->event = steal_pointer(&event);
                 manager->metrics_enabled = false;
@@ -313,6 +312,12 @@ bool manager_parse_config(Manager *manager, const char *configfile) {
                 return false;
         }
 
+        result = cfg_manager_def_conf(manager->config);
+        if (result != 0) {
+                fprintf(stderr, "Failed to set default settings for manager: %s", strerror(-result));
+                return false;
+        }
+
         result = cfg_load_complete_configuration(
                         manager->config, CFG_HIRTE_DEFAULT_CONFIG, CFG_ETC_HIRTE_CONF, CFG_ETC_HIRTE_CONF_DIR);
         if (result != 0) {
@@ -328,15 +333,6 @@ bool manager_parse_config(Manager *manager, const char *configfile) {
                                 strerror(-result));
                         return false;
                 }
-        }
-
-        result = cfg_set_default_section(manager->config, CFG_SECT_HIRTE);
-        if (result != 0) {
-                fprintf(stderr,
-                        "Error setting default section for hirte '%s', error code '%s'.\n",
-                        CFG_SECT_HIRTE,
-                        strerror(-result));
-                return false;
         }
 
         // set logging configuration

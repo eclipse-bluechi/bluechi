@@ -9,6 +9,7 @@
 #include <unistd.h>
 
 #include "libhirte/common/list.h"
+#include "libhirte/common/network.h"
 #include "libhirte/hashmap/hashmap.h"
 #include "libhirte/ini/ini.h"
 
@@ -337,4 +338,73 @@ const char *cfg_dump(struct config *config) {
                 }
         }
         return cfg_info;
+}
+
+int cfg_agent_def_conf(struct config *config) {
+        int result = 0;
+
+        result = cfg_set_default_section(config, CFG_SECT_AGENT);
+        if (result != 0) {
+                return result;
+        }
+
+        if (cfg_set_value(config, CFG_NODE_NAME, get_hostname()) != 0) {
+                return -1;
+        }
+
+        if (cfg_set_value(config, CFG_MANAGER_HOST, HIRTE_DEFAULT_HOST) != 0) {
+                return -1;
+        }
+
+        if (cfg_set_value(config, CFG_HEARTBEAT_INTERVAL, AGENT_HEARTBEAT_INTERVAL_MSEC) != 0) {
+                return -1;
+        }
+
+        if (cfg_set_value(config, CFG_MANAGER_PORT, HIRTE_DEFAULT_PORT) != 0) {
+                return -1;
+        }
+
+        const char *LOG_LEVEL_INFO = "INFO";
+        if (cfg_set_value(config, CFG_LOG_LEVEL, LOG_LEVEL_INFO) != 0) {
+                return -1;
+        }
+
+        if (cfg_set_value(config, CFG_LOG_TARGET, HIRTE_LOG_TARGET_STDERR) != 0) {
+                return -1;
+        }
+
+        if (cfg_set_value(config, CFG_LOG_IS_QUIET, NULL) != 0) {
+                return -1;
+        }
+        return 0;
+}
+
+int cfg_manager_def_conf(struct config *config) {
+        int result = 0;
+
+        result = cfg_set_default_section(config, CFG_SECT_HIRTE);
+        if (result != 0) {
+                return result;
+        }
+
+        if (cfg_set_value(config, CFG_MANAGER_PORT, HIRTE_DEFAULT_PORT) != 0) {
+                return -1;
+        }
+
+        if (cfg_set_value(config, CFG_ALLOWED_NODE_NAMES, "") != 0) {
+                return -1;
+        }
+
+        if (cfg_set_value(config, CFG_LOG_LEVEL, log_level_to_string(LOG_LEVEL_INFO)) != 0) {
+                return -1;
+        }
+
+        if (cfg_set_value(config, CFG_LOG_TARGET, HIRTE_LOG_TARGET_STDERR) != 0) {
+                return -1;
+        }
+
+        if (cfg_set_value(config, CFG_LOG_IS_QUIET, NULL) != 0) {
+                return -1;
+        }
+        return 0;
 }
