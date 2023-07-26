@@ -25,6 +25,8 @@ int create_tcp_socket(uint16_t port) {
         servaddr.sin6_family = AF_INET6;
         servaddr.sin6_addr = in6addr_any;
         servaddr.sin6_port = htons(port);
+        servaddr.sin6_flowinfo = 0;
+        servaddr.sin6_scope_id = 0;
 
         if (bind(fd, &servaddr, sizeof(servaddr)) < 0) {
                 int errsv = errno;
