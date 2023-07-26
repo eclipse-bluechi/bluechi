@@ -41,7 +41,7 @@ The unique name of this `hirte-agent` used for registering at `hirte`. This opti
 
 #### **--interval**, **-i**
 
-The interval between two heartbeat signals sent to hirte in milliseconds. This option will overwrite the heartbeat interval defined in the configuration file. 
+The interval between two heartbeat signals sent to hirte in milliseconds. If an agent is not connected, it will retry to connect on each heartbeat. Setting this options to values smaller or equal to 0 disables it. This option will overwrite the heartbeat interval defined in the configuration file. 
 
 #### **--config**, **-c**
 
