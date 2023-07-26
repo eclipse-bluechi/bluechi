@@ -164,6 +164,11 @@ static int agent_setup_heartbeat_timer(Agent *agent) {
 
         assert(agent);
 
+        if (agent->heartbeat_interval_msec <= 0) {
+                hirte_log_warnf("Heartbeat disabled since interval is '%d', ", agent->heartbeat_interval_msec);
+                return 0;
+        }
+
         r = agent_reset_heartbeat_timer(agent, &event_source);
         if (r < 0) {
                 hirte_log_errorf("Failed to reset agent heartbeat timer: %s", strerror(-r));
