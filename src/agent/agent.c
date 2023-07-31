@@ -1890,6 +1890,8 @@ bool agent_start(Agent *agent) {
         int r = 0;
         sd_bus_error error = SD_BUS_ERROR_NULL;
 
+        hirte_log_infof("Starting hirte-agent %s", CONFIG_H_HIRTE_VERSION);
+
         if (agent == NULL) {
                 return false;
         }

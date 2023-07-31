@@ -914,6 +914,7 @@ static int manager_name_owner_changed(sd_bus_message *m, void *userdata, UNUSED 
 }
 
 bool manager_start(Manager *manager) {
+        hirte_log_infof("Starting hirte %s", CONFIG_H_HIRTE_VERSION);
         if (manager == NULL) {
                 return false;
         }
