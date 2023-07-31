@@ -8,7 +8,7 @@ project(
   default_options: [
     'c_std=gnu17',     # Adds "-std=gnu17".  Includes GNU 17 extensions.
     'warning_level=2', # Adds "-Wextra".  Enables additional warnings.
-    'debug=true',      # Adds "-g".  Object files include debugging symbols.
+    'debug=false',      # Adds "-g".  Object files include debugging symbols.
     'werror=true'      # Adds "-Werror".  Treat warnings as errors.
   ]
 )
