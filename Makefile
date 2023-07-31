@@ -57,3 +57,8 @@ srpm:
 
 distclean: clean
 	rm -rf $(BUILDDIR)
+
+debug:
+	$(MAKE) clean
+	@sed -i 's/debug=false/debug=true/g' meson.build
+	$(MAKE) build
