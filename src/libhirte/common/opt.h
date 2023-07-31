@@ -36,3 +36,7 @@
 #define ARG_HELP "help"
 #define ARG_HELP_SHORT 'h'
 #define ARG_HELP_SHORT_S "h"
+
+#define ARG_VERSION "version"
+#define ARG_VERSION_SHORT 'v'
+#define ARG_VERSION_SHORT_S "v"

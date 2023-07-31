@@ -20,6 +20,10 @@ A simple command line tool that uses the public D-Bus API provided by `hirte` to
 
 Print usage statement and exit.
 
+#### **--version**,  **-v**
+
+Print current hirtectl version
+
 ## Commands
 
 ### **hirtectl** [*start|stop|restart|reload*] [*agent*] [*unit*]

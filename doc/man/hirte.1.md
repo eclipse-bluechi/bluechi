@@ -30,6 +30,10 @@ The port on which hirte is listening for and setting up connections with `hirte-
 
 Path to the configuration file, see `hirte.conf(5)`.
 
+#### **--version**,  **-v**
+
+Print current hirte version
+
 ## Environment Variables
 
 `hirte` understands the following environment variables that can be used to override the settings from the configuration file (see `hirte.conf(5)`).

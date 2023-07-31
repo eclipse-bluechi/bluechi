@@ -18,11 +18,12 @@ const struct option options[] = { { ARG_HOST, required_argument, 0, ARG_HOST_SHO
                                   { ARG_CONFIG, required_argument, 0, ARG_CONFIG_SHORT },
                                   { ARG_USER, no_argument, 0, ARG_USER_SHORT },
                                   { ARG_HELP, no_argument, 0, ARG_HELP_SHORT },
+                                  { ARG_VERSION, no_argument, 0, ARG_VERSION_SHORT },
                                   { NULL, 0, 0, '\0' } };
 
 #define OPTIONS_STR                                                                               \
         ARG_PORT_SHORT_S ARG_HOST_SHORT_S ARG_ADDRESS_SHORT_S ARG_HELP_SHORT_S ARG_CONFIG_SHORT_S \
-                        ARG_NAME_SHORT_S ARG_USER_SHORT_S ARG_HEARTBEAT_INTERVAL_SHORT_S
+                        ARG_NAME_SHORT_S ARG_USER_SHORT_S ARG_HEARTBEAT_INTERVAL_SHORT_S ARG_VERSION_SHORT_S
 
 static const char *opt_port = 0;
 static const char *opt_host = NULL;
@@ -43,7 +44,8 @@ static void usage(char *argv[]) {
                "\t-%c %s\t\t The unique name of this hirte-agent used to register at hirte.\n"
                "\t-%c %s\t The interval between two heartbeat signals in milliseconds.\n"
                "\t-%c %s\t A path to a config file used to bootstrap hirte-agent.\n"
-               "\t-%c %s\t\t Connect to the user systemd instance instead of the system one.\n",
+               "\t-%c %s\t\t Connect to the user systemd instance instead of the system one.\n"
+               "\t-%c %s\t\t Print current version of hirte-agent.\n",
                argv[0],
                ARG_HELP_SHORT,
                ARG_HELP,
@@ -60,7 +62,9 @@ static void usage(char *argv[]) {
                ARG_CONFIG_SHORT,
                ARG_CONFIG,
                ARG_USER_SHORT,
-               ARG_USER);
+               ARG_USER,
+               ARG_VERSION_SHORT,
+               ARG_VERSION);
 }
 
 static int get_opts(int argc, char *argv[]) {
@@ -70,6 +74,10 @@ static int get_opts(int argc, char *argv[]) {
                 switch (opt) {
                 case ARG_HELP_SHORT:
                         usage(argv);
+                        return 1;
+
+                case ARG_VERSION_SHORT:
+                        printf("%s\n", CONFIG_H_HIRTE_VERSION);
                         return 1;
 
                 case ARG_NAME_SHORT:

@@ -47,6 +47,10 @@ The interval between two heartbeat signals sent to hirte in milliseconds. If an 
 
 Path to the configuration file, see `hirte-agent.conf(5)`. (default: /etc/hirte/agent.conf)
 
+#### **--version**,  **-v**
+
+Print current hirte-agent version
+
 #### **--user**
 
 Connect to the user systemd instance instead of the system one.

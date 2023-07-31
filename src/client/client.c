@@ -679,6 +679,8 @@ int client_call_manager(Client *client) {
                 } else {
                         return -EINVAL;
                 }
+        } else if (streq(client->op, "version")) {
+                printf("%s\n", CONFIG_H_HIRTE_VERSION);
         } else {
                 return -EINVAL;
         }
