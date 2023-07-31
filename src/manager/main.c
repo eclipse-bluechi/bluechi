@@ -12,9 +12,10 @@
 const struct option options[] = { { ARG_PORT, required_argument, 0, ARG_PORT_SHORT },
                                   { ARG_CONFIG, required_argument, 0, ARG_CONFIG_SHORT },
                                   { ARG_HELP, no_argument, 0, ARG_HELP_SHORT },
+                                  { ARG_VERSION, no_argument, 0, ARG_VERSION_SHORT },
                                   { NULL, 0, 0, '\0' } };
 
-#define OPTIONS_STR ARG_PORT_SHORT_S ARG_HELP_SHORT_S ARG_CONFIG_SHORT_S
+#define OPTIONS_STR ARG_PORT_SHORT_S ARG_HELP_SHORT_S ARG_CONFIG_SHORT_S ARG_VERSION_SHORT_S
 
 static const char *opt_port = 0;
 static const char *opt_config = NULL;
@@ -25,14 +26,17 @@ static void usage(char *argv[]) {
                "Available options are:\n"
                "\t-%c %s\t\t Print this help message.\n"
                "\t-%c %s\t\t The port of hirte to connect to.\n"
-               "\t-%c %s\t A path to a config file used to bootstrap hirte-agent.\n",
+               "\t-%c %s\t A path to a config file used to bootstrap hirte-agent.\n"
+               "\t-%c %s\t Print current hirte version.\n",
                argv[0],
                ARG_HELP_SHORT,
                ARG_HELP,
                ARG_PORT_SHORT,
                ARG_PORT,
                ARG_CONFIG_SHORT,
-               ARG_CONFIG);
+               ARG_CONFIG,
+               ARG_VERSION_SHORT,
+               ARG_VERSION);
 }
 
 static int get_opts(int argc, char *argv[]) {
@@ -42,6 +46,10 @@ static int get_opts(int argc, char *argv[]) {
                 switch (opt) {
                 case ARG_HELP_SHORT:
                         usage(argv);
+                        return 1;
+
+                case ARG_VERSION_SHORT:
+                        printf("%s\n", CONFIG_H_HIRTE_VERSION);
                         return 1;
 
                 case ARG_PORT_SHORT:

@@ -12,9 +12,10 @@
 
 const struct option options[] = { { ARG_USER, no_argument, 0, ARG_USER_SHORT },
                                   { ARG_HELP, no_argument, 0, ARG_HELP_SHORT },
+                                  { ARG_VERSION, no_argument, 0, ARG_VERSION_SHORT },
                                   { NULL, 0, 0, '\0' } };
 
-#define OPTIONS_STR ARG_HELP_SHORT_S ARG_USER_SHORT_S
+#define OPTIONS_STR ARG_HELP_SHORT_S ARG_USER_SHORT_S ARG_VERSION_SHORT_S
 
 static const char *opt_node_unit = NULL;
 static const char *opt_operation = NULL;
@@ -33,7 +34,8 @@ static void usage(char *argv[]) {
         printf("Usage: %s \n"
                "\t[-h help]\t\t Print this help message.\n"
                "\t<operation>\t\t Required. Operation to perform. Must be one of [%s,%s].\n"
-               "\t<node>_<service>\t Required. Input the name of the node the required service is supposed to run on.\n",
+               "\t<node>_<service>\t Required. Input the name of the node the required service is supposed to run on.\n"
+               "\t<[-v version]\t Print current version of hirte-proxy\n",
                argv[0],
                OPT_OPERATION_CREATE,
                OPT_OPERATION_REMOVE);
@@ -72,6 +74,11 @@ static int get_opts(int argc, char *argv[]) {
                 case ARG_HELP_SHORT:
                         usage(argv);
                         return 1;
+
+                case ARG_VERSION_SHORT:
+                        printf("%s\n", CONFIG_H_HIRTE_VERSION);
+                        return 1;
+
                 case ARG_USER_SHORT:
                         opt_user = true;
                         break;

@@ -36,6 +36,7 @@ prefixdir = get_option('prefix')
 
 conf.set_quoted('CONFIG_H_SYSCONFDIR', join_paths(prefixdir, get_option('sysconfdir')))
 conf.set_quoted('CONFIG_H_DATADIR', join_paths(prefixdir, get_option('datadir')))
+conf.set_quoted('CONFIG_H_HIRTE_VERSION', meson.project_version())
 
 config_h = configure_file(
         output : 'config.h',

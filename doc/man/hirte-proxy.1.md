@@ -27,6 +27,10 @@ or stopped on a remote node managed by another `hirte-agent`.
 
 Print usage statement and exit.
 
+#### **--version**,  **-v**
+
+Print current hirte-proxy version
+
 
 ## Commands
 
