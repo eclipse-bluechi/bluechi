@@ -8,6 +8,7 @@
   - [Code Style](#code-style)
   - [Linting](#linting)
   - [Build](#build)
+  - [Debug](#debug)
   - [Unit Tests](#unit-tests)
   - [Integration Tests](#integration-tests)
   - [Running](#running)
@@ -126,6 +127,20 @@ these need to be re-generated via
 
 ```bash
 bash build-scripts/generate-bindings.sh python
+```
+
+### Debug
+
+In some cases, developers might need a debug session with tools like gdb, here an example:
+
+First, make sure **meson.build** contains **debug=true**.  
+
+Rebuild the hirte project with debug symbols included:
+
+```bash
+hirte> make clean
+hirte> meson install -C builddir --dest=bin
+hirte> gdb --args ./builddir/bin/usr/local/bin/hirte -c /etc/hirte/hirte.conf
 ```
 
 ### Unit tests
