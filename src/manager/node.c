@@ -156,6 +156,7 @@ Node *node_new(Manager *manager, const char *name) {
 
         node->last_seen = 0;
 
+        node->name = NULL;
         if (name) {
                 node->name = strdup(name);
                 if (node->name == NULL) {
@@ -962,6 +963,7 @@ static int node_disconnected(UNUSED sd_bus_message *message, void *userdata, UNU
                                 }
                         }
                 }
+                node_unset_agent_bus(node);
         }
 
         if (node->name) {
@@ -970,8 +972,6 @@ static int node_disconnected(UNUSED sd_bus_message *message, void *userdata, UNU
                 hirte_log_info("Anonymous node disconnected");
         }
         manager_node_connection_state_changed(node->manager, node->name, "offline");
-
-        node_unset_agent_bus(node);
 
         return 0;
 }
