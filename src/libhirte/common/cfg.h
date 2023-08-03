@@ -65,6 +65,15 @@ struct config_option {
 int cfg_initialize(struct config **config);
 
 /*
+ * Iterates over all entries in src and copies the key=value pairs
+ * into the dst config. If a key from src already exists in dst, the
+ * value is overridden.
+ *
+ * Returns 0 if successful, otherwise forwards error from cfg_s_set_value.
+ */
+int cfg_copy_overwrite(struct config *src, struct config *dst);
+
+/*
  * Dispose the application configuration object
  */
 void cfg_dispose(struct config *config);

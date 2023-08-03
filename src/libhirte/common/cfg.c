@@ -56,10 +56,21 @@ static int parsing_handler(void *user, const char *section, const char *name, co
         if (user == NULL) {
                 return 0;
         }
+
         struct config *config = (struct config *) user;
+
+        const char *existing_value = cfg_s_get_value(config, section, name);
+        if (existing_value != NULL) {
+                _cleanup_free_ const char *new_value = strcat_dup(existing_value, value);
+                if (cfg_s_set_value(config, section, name, new_value) != 0) {
+                        return 0;
+                }
+                return 1;
+        }
         if (cfg_s_set_value(config, section, name, value) != 0) {
                 return 0;
         }
+
         return 1;
 }
 
@@ -83,6 +94,20 @@ int cfg_initialize(struct config **config) {
         new_cfg->default_section = section_copy;
 
         *config = new_cfg;
+        return 0;
+}
+
+int cfg_copy_overwrite(struct config *src, struct config *dst) {
+        int r = 0;
+        void *item = NULL;
+        size_t i = 0;
+        while (hashmap_iter(src->cfg_store, &i, &item)) {
+                struct config_option *opt = item;
+                r = cfg_s_set_value(dst, opt->section, opt->name, opt->value);
+                if (r < 0) {
+                        return r;
+                }
+        }
         return 0;
 }
 
@@ -144,7 +169,22 @@ int cfg_load_from_file(struct config *config, const char *config_file) {
         if (access(config_file, R_OK) != 0) {
                 return -errno;
         }
-        return ini_parse(config_file, parsing_handler, config);
+
+        struct config *tmp_config = NULL;
+        int r = cfg_initialize(&tmp_config);
+        if (r < 0) {
+                return r;
+        }
+
+        r = ini_parse(config_file, parsing_handler, tmp_config);
+        if (r < 0) {
+                cfg_dispose(tmp_config);
+                return r;
+        }
+
+        r = cfg_copy_overwrite(tmp_config, config);
+        cfg_dispose(tmp_config);
+        return r;
 }
 
 int is_file_name_ending_with_conf(const struct dirent *entry) {

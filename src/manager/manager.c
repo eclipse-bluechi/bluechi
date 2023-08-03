@@ -349,7 +349,12 @@ bool manager_parse_config(Manager *manager, const char *configfile) {
         const char *expected_nodes = cfg_get_value(manager->config, CFG_ALLOWED_NODE_NAMES);
         if (expected_nodes) {
                 char *saveptr = NULL;
-                char *name = strtok_r((char *) expected_nodes, ",", &saveptr);
+
+                /* copy string of expected nodes since */
+                _cleanup_free_ char *expected_nodes_cpy = NULL;
+                copy_str(&expected_nodes_cpy, expected_nodes);
+
+                char *name = strtok_r(expected_nodes_cpy, ",", &saveptr);
                 while (name != NULL) {
                         if (manager_find_node(manager, name) == NULL) {
                                 manager_add_node(manager, name);

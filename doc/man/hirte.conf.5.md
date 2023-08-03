@@ -11,7 +11,7 @@ The basic file definition used to bootstrap hirte.
 ## Format
 
 The hirte configuration file is using the
-[systemd configuration file format](https://www.freedesktop.org/software/systemd/man/systemd.syntax.html).
+[systemd configuration file format](https://www.freedesktop.org/software/systemd/man/systemd.syntax.html). Contrary to this, there is no need for the `\` symbol at the end of a line to continue a value on the next line. A value continued on multiple lines will just be concatenated by hirte. The maximum line length supported is 500 characters. If the value exceeds this limitation, use multiple, indented lines.
 
 ### **hirte** section
 
@@ -55,10 +55,26 @@ If this flag is set to `true`, no logs are written by hirte. By default the flag
 
 ## Example
 
+A basic example of a configuration file for `hirte`:
+
 ```
 [hirte]
 ManagerPort=842
 AllowedNodeNames=agent-007,agent-123
+LogLevel=DEBUG
+LogTarget=journald
+LogIsQuiet=false
+```
+
+Using a value that is continued on multiple lines:
+
+```
+[hirte]
+ManagerPort=842
+AllowedNodeNames=agent-007,
+   agent-123,
+   agent-456,
+   agent-789
 LogLevel=DEBUG
 LogTarget=journald
 LogIsQuiet=false
