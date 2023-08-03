@@ -11,7 +11,7 @@ The basic file definition used to bootstrap hirte-agent.
 ## Format
 
 The hirte-agent configuration file is using the
-[systemd configuration file format](https://www.freedesktop.org/software/systemd/man/systemd.syntax.html).
+[systemd configuration file format](https://www.freedesktop.org/software/systemd/man/systemd.syntax.html). Contrary to this, there is no need for the `\` symbol at the end of a line to continue a value on the next line. A value continued on multiple lines will just be concatenated by hirte. The maximum line length supported is 500 characters. If the value exceeds this limitation, use multiple, indented lines.
 
 ### **hirte-agent** section
 
@@ -90,6 +90,20 @@ LogLevel=DEBUG
 LogTarget=journald
 LogIsQuiet=false
 ```
+
+Using a value that is continued on multiple lines:
+
+```
+[hirte-agent]
+NodeName=agent-007
+ManagerAddress=tcp:
+  host=127.0.0.1,
+  port=842
+LogLevel=DEBUG
+LogTarget=journald
+LogIsQuiet=false
+```
+
 ## FILES
 
 Distributions provide the __/usr/share/hirte/config/agent.conf__ file which defines hirte-agent configuration defaults. Administrators can copy this file to __/etc/hirte/agent.conf__ and specify their own configuration.

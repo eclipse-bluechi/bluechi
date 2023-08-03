@@ -1,0 +1,1 @@
+summary: Test if hirte can properly parse a very long setting value spread across multiple lines, e.g. for the allowed node names

@@ -5,6 +5,10 @@ from typing import List
 
 class HirteConfig():
 
+    # use a smaller max line length than possible
+    # to prevent any accidental faults
+    MAX_LINE_LENGTH = 400
+
     def __init__(self, file_name: str) -> None:
         self.file_name = file_name
 
@@ -38,9 +42,13 @@ class HirteControllerConfig(HirteConfig):
         self.log_is_quiet = log_is_quiet
 
     def serialize(self) -> str:
+        # use one line for each node name so the max line length
+        # supported by hirte is never exceeded
+        allowed_node_names = ",\n ".join(self.allowed_node_names)
+
         return f"""[hirte]
 ManagerPort={self.port}
-AllowedNodeNames={",".join(self.allowed_node_names)}
+AllowedNodeNames={allowed_node_names}
 LogLevel={self.log_level}
 LogTarget={self.log_target}
 LogIsQuiet={self.log_is_quiet}
