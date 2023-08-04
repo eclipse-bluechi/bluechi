@@ -551,11 +551,14 @@ bool agent_parse_config(Agent *agent, const char *configfile) {
 
         if (configfile != NULL) {
                 result = cfg_load_from_file(agent->config, configfile);
-                if (result != 0) {
+                if (result < 0) {
                         fprintf(stderr,
                                 "Error loading configuration file '%s', error code '%s'.\n",
                                 configfile,
                                 strerror(-result));
+                        return false;
+                } else if (result > 0) {
+                        fprintf(stderr, "Error parsing configuration file '%s' on line %d\n", configfile, result);
                         return false;
                 }
         }
