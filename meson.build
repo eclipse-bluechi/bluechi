@@ -21,10 +21,16 @@ common_cflags = cc.get_supported_arguments(test_cflags)
 # Link with systemd shared library.
 systemd_dep = dependency('libsystemd')
 
+# Set option to use either the session or system D-Bus
 api_bus = get_option('api_bus')
 if api_bus == 'user'
    common_cflags += '-DUSE_USER_API_BUS'
 endif
+
+# Set option of inih libraries maximum line length
+# 500 characters for actual value
+# 20 characters as buffer (key, library internal usage, etc.)
+common_cflags += '-DINI_MAX_LINE=520'
 
 # Build time configuration header file
 conf = configuration_data()
