@@ -27,10 +27,13 @@ if api_bus == 'user'
    common_cflags += '-DUSE_USER_API_BUS'
 endif
 
-# Set option of inih libraries maximum line length
+# inih library options
+# Set option of maximum line length
 # 500 characters for actual value
 # 20 characters as buffer (key, library internal usage, etc.)
 common_cflags += '-DINI_MAX_LINE=520'
+# Set option to abort parsing on first error
+common_cflags += '-DINI_STOP_ON_FIRST_ERROR=1'
 
 # Build time configuration header file
 conf = configuration_data()

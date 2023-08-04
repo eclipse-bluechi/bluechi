@@ -100,7 +100,8 @@ int cfg_load_complete_configuration(
 /*
  * Load the application configuration from the specified file and override any existing options values.
  *
- * Returns 0 if successful, otherwise standard error code.
+ * Returns 0 if successful. If a parsing error occurred, a positive integer indicating the line of error is
+ * returned. On all other errors a standard error code will be returned.
  */
 int cfg_load_from_file(struct config *config, const char *config_file);
 

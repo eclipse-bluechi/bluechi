@@ -326,11 +326,14 @@ bool manager_parse_config(Manager *manager, const char *configfile) {
 
         if (configfile != NULL) {
                 result = cfg_load_from_file(manager->config, configfile);
-                if (result != 0) {
+                if (result < 0) {
                         fprintf(stderr,
                                 "Error loading configuration file '%s': '%s'.\n",
                                 configfile,
                                 strerror(-result));
+                        return false;
+                } else if (result > 0) {
+                        fprintf(stderr, "Error parsing configuration file '%s' on line %d\n", configfile, result);
                         return false;
                 }
         }

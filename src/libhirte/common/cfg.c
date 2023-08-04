@@ -132,16 +132,29 @@ int cfg_load_complete_configuration(
                                 default_config_file,
                                 strerror(-result));
                         return result;
+                } else if (result > 0) {
+                        fprintf(stderr,
+                                "Error parsing configuration file '%s' on line %d\n",
+                                default_config_file,
+                                result);
+                        return -EINVAL;
                 }
         }
 
         if (custom_config_file != NULL) {
                 result = cfg_load_from_file(config, custom_config_file);
-                if (result < 0 && result != -ENOENT) {
-                        fprintf(stderr,
-                                "Error loading custom configuration file '%s': '%s'.\n",
-                                custom_config_file,
-                                strerror(-result));
+                if (result != 0 && result != -ENOENT) {
+                        if (result < 0) {
+                                fprintf(stderr,
+                                        "Error loading custom configuration file '%s': '%s'.\n",
+                                        custom_config_file,
+                                        strerror(-result));
+                        } else if (result > 0) {
+                                fprintf(stderr,
+                                        "Error parsing configuration file '%s' on line %d\n",
+                                        custom_config_file,
+                                        result);
+                        }
                         return result;
                 }
         }
@@ -154,6 +167,9 @@ int cfg_load_complete_configuration(
                                 custom_config_directory,
                                 strerror(-result));
                         return result;
+                } else if (result > 0) {
+                        /* error already logged in cfg_load_from_dir */
+                        return -EINVAL;
                 }
         }
 
@@ -177,7 +193,7 @@ int cfg_load_from_file(struct config *config, const char *config_file) {
         }
 
         r = ini_parse(config_file, parsing_handler, tmp_config);
-        if (r < 0) {
+        if (r != 0) {
                 cfg_dispose(tmp_config);
                 return r;
         }
@@ -222,7 +238,7 @@ int cfg_load_from_dir(struct config *config, const char *custom_config_directory
 
                 r = cfg_load_from_file(config, file);
                 if (r < 0) {
-                        fprintf(stderr, "Error loading confd file '%s': '%s'.\n", file, strerror(-r));
+                        fprintf(stderr, "Error loading confd file '%s' on line %d.\n", file, r);
                         break;
                 }
         }
