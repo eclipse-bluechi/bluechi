@@ -1,8 +1,9 @@
 /* SPDX-License-Identifier: GPL-2.0-or-later */
 #pragma once
 
+#include <hashmap.h>
+
 #include "libhirte/common/common.h"
-#include "libhirte/hashmap/hashmap.h"
 
 #include "types.h"
 

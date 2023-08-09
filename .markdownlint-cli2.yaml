@@ -8,3 +8,4 @@ globs:
 
 ignores:
   - "doc/man/*.md"
+  - "subprojects/*/*.md"

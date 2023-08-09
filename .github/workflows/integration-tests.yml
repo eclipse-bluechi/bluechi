@@ -19,6 +19,7 @@ jobs:
         uses: actions/checkout@v3
         with:
           fetch-depth: 0
+          submodules: 'true'
           # Use githash of a tested commit instead of merge commit
           ref: ${{ github.event.pull_request.head.sha }}
 
@@ -64,6 +65,8 @@ jobs:
 
       - name: Checkout sources
         uses: actions/checkout@v3
+        with:
+          submodules: 'true'
 
       - name: Download artifact
         uses: actions/download-artifact@v3

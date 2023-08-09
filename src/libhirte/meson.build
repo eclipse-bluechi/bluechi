@@ -19,10 +19,6 @@ libhirte_src = [
     'common/network.c',
     'common/time-util.c',
     'common/time-util.h',
-    'hashmap/hashmap.c',
-    'hashmap/hashmap.h',
-    'ini/ini.c',
-    'ini/ini.h',
     'service/service.c',
     'service/service.h',
     'service/shutdown.c',
@@ -36,7 +32,9 @@ libhirte_src = [
 hirte_lib = static_library('hirte',
                             libhirte_src,
                             dependencies: [
-                                systemd_dep
+                                systemd_dep,
+                                inih_dep,
+                                hashmapc_dep,
                             ],
                             c_args: common_cflags,
                             include_directories: include_directories('..'))

@@ -25,4 +25,9 @@ After adding the new repository, checkout the desired tag to be used:
 git -C subprojects/<repository name> checkout <tag>
 ```
 
+For the new subproject to be usable by hirte, it needs to be integrated in the main [meson.build](../meson.build). One
+requirement for this is that the subproject itself uses meson and provides a `meson.build`. If the subproject itself is
+a `meson` project, include it as [subproject](https://mesonbuild.com/Subprojects.html). The included `inih` or
+`hashmap.c` can serve as a reference here. Otherwise the `subdir` function can be used (similar to hirte internal projects).
+
 And, finally, add and commit the changes. The same procedure can be used to upgrade a submodule to a newer tag.

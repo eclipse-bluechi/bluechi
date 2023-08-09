@@ -8,10 +8,11 @@
 #include <string.h>
 #include <unistd.h>
 
+#include <hashmap.h>
+#include <ini.h>
+
 #include "libhirte/common/list.h"
 #include "libhirte/common/network.h"
-#include "libhirte/hashmap/hashmap.h"
-#include "libhirte/ini/ini.h"
 
 #include "cfg.h"
 #include "common.h"

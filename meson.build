@@ -27,14 +27,6 @@ if api_bus == 'user'
    common_cflags += '-DUSE_USER_API_BUS'
 endif
 
-# inih library options
-# Set option of maximum line length
-# 500 characters for actual value
-# 20 characters as buffer (key, library internal usage, etc.)
-common_cflags += '-DINI_MAX_LINE=520'
-# Set option to abort parsing on first error
-common_cflags += '-DINI_STOP_ON_FIRST_ERROR=1'
-
 # Build time configuration header file
 conf = configuration_data()
 
@@ -53,6 +45,22 @@ config_h = configure_file(
 
 # For lint to work properly the same include needs to be added manually to clang-tidy arguments
 add_project_arguments('-include', 'config.h', language : 'c')
+
+
+# (External) subprojects used by hirte
+inih = subproject('inih', default_options: [
+  'default_library=static',           # include it as static library
+  '-Dinih:distro_install=false',      # disable distro install so other options are used
+  '-Dinih:max_line_length=520',       # set maximum line length so that ~500 characters can be used as value
+  '-Dinih:stop_on_first_error=true',  # abort after first error when parsing file
+])
+inih_dep = inih.get_variable('inih_dep')
+
+hashmapc = subproject('hashmap.c', default_options: [
+  'default_library=static', # include it as static library
+  'werror=false'            # don't treat warnings as errors since it
+])
+hashmapc_dep = hashmapc.get_variable('hashmapc_dep')
 
 
 # Subdirectory for the shared library.
