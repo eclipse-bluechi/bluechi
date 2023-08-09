@@ -1,0 +1,6 @@
+[submodule "subprojects/hashmap.c"]
+	path = subprojects/hashmap.c
+	url = https://github.com/engelmi/hashmap.c.git
+[submodule "subprojects/inih"]
+	path = subprojects/inih
+	url = https://github.com/benhoyt/inih.git
