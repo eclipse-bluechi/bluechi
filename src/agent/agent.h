@@ -5,9 +5,10 @@
 #include <stdbool.h>
 #include <sys/socket.h>
 
+#include <hashmap.h>
+
 #include "libhirte/common/cfg.h"
 #include "libhirte/common/common.h"
-#include "libhirte/hashmap/hashmap.h"
 
 #include "types.h"
 

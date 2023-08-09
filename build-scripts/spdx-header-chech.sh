@@ -22,6 +22,7 @@ result=0
 found_files="
     $(find -type f -regex ${CHECKED_FILES} \
         -not -path './builddir/*' \
+        -not -path './subprojects/*' \
         -not -path './doc/arch/*')
 "
 

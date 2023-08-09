@@ -12,6 +12,7 @@ RUN dnf install -y dnf-plugin-config-manager && \
         codespell \
         createrepo_c \
         dnf-utils \
+        g++ \
         gcc \
         git \
         golang-github-cpuguy83-md2man \

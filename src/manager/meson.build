@@ -23,6 +23,8 @@ executable(
   orch_src,
   dependencies: [
     systemd_dep,
+    inih_dep,
+    hashmapc_dep,
   ],
   link_with: [
     hirte_lib,

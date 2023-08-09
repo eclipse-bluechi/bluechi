@@ -27,7 +27,8 @@ The following exceptions apply:
 * Files `selinux/meson.build` and `selinux/build-selinux.sh` are copied from
   [flatpak](https://github.com/flatpak/flatpak) project and they are licensed under the original license,
   **LGPL-2.1-or-later**.
-* Files under `src/libhirte/ini/` are copied from [inih](https://github.com/benhoyt/inih) project and they're
-  licensed under the original license, **BSD-3-Clause**.
-* Files under `src/libhirte/hashmap/` are copied from [hashmap.c](https://github.com/tidwall/hashmap.c) project
-  and they are licensed under the original license, **MIT**.
+* Files under [`subprojects/`](../subprojects/) are integrated as git submodules and they are licensed under
+their respective original license as follows:
+
+  * [inih](https://github.com/benhoyt/inih/) located in [subprojects/inih](../subprojects/inih): **BSD-3-Clause**
+  * [hashmap.c](https://github.com/tidwall/hashmap.c) located in [subprojects/hashmap.c](../subprojects/hashmap.c): **MIT**
