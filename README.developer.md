@@ -149,26 +149,10 @@ Unit tests can be executed using following commands:
 
 ```bash
 meson setup builddir
+meson configure -Db_coverage=true builddir  # if you want to collect coverage data
 meson compile -C builddir
 meson test -C builddir
-```
-
-or simply:
-
-```bash
-# unit tests
-make test
-# unit tests with valgrind
-make test-with-valgrind
-```
-
-If you want to get coverage data you'll need `lcov` package installed:
-
-```bash
-# unit tests with coverage report
-make test-coverage
-# unit tests with valgrind and coverage report
-make test-with-valgrind-coverage
+ninja coverage-html -C builddir  # if you want to generate coverage report
 ```
 
 will produce a coverage report in `builddir/meson-logs/coveragereport/index.html`
