@@ -1840,7 +1840,7 @@ static bool ensure_orch_address(Agent *agent) {
 
         _cleanup_free_ char *resolved_ip_address = NULL;
         if (!host_is_ipv4 && !host_is_ipv6) {
-                int r = get_address(ip_address, &resolved_ip_address);
+                int r = get_address(ip_address, &resolved_ip_address, getaddrinfo);
                 if (r < 0) {
                         hirte_log_errorf(
                                         "Failed to get IP address from host '%s': %s",
