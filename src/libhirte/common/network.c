@@ -17,7 +17,7 @@ bool is_ipv6(const char *domain) {
         return (inet_pton(AF_INET6, domain, &(sa.sin6_addr)) == 1);
 }
 
-int get_address(const char *domain, char **ip_address) {
+int get_address(const char *domain, char **ip_address, getaddrinfo_func resolve_addr) {
         if (domain == NULL) {
                 return -EINVAL;
         }
@@ -31,7 +31,7 @@ int get_address(const char *domain, char **ip_address) {
         hints.ai_family = AF_UNSPEC;
         hints.ai_socktype = SOCK_STREAM;
 
-        int status = getaddrinfo(domain, NULL, &hints, &res);
+        int status = resolve_addr(domain, NULL, &hints, &res);
         if (status != 0) {
                 hirte_log_errorf("getaddrinfo failed: %s\n", gai_strerror(status));
                 return status;
