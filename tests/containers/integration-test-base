@@ -1,7 +1,7 @@
 FROM quay.io/centos/centos:stream9
 
-RUN dnf upgrade --refresh -y --setopt=tsflags=nodocs &&
-    dnf install --setopt=tsflags=nodocs \
+RUN dnf upgrade --refresh -y --nodocs && \
+    dnf install --nodocs \
         policycoreutils-python-utils \
         selinux-policy \
         systemd \

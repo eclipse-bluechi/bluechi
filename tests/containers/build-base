@@ -5,7 +5,8 @@ FROM quay.io/centos/centos:stream9
 RUN dnf install -y dnf-plugin-config-manager && \
     dnf config-manager -y --set-enabled crb && \
     dnf install -y epel-release && \
-    dnf install --setopt=tsflags=nodocs \
+    dnf update --refresh --nodocs -y && \
+    dnf install --nodocs \
         bzip2 \
         clang-tools-extra \
         codespell \
