@@ -6,7 +6,7 @@ COPY ./hirte-rpms /tmp/hirte-rpms
 RUN dnf install -y --repo hirte-rpms \
         --repofrompath hirte-rpms,file:///tmp/hirte-rpms/ \
         --nogpgcheck \
-        --setopt=tsflags=nodocs \
+        --nodocs \
         hirte \
         hirte-debuginfo \
         hirte-agent \
