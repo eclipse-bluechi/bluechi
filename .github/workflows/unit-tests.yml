@@ -19,11 +19,17 @@ jobs:
 
       - name: Building hirte
         run: |
-          make build
+          meson setup builddir
+          meson configure -Db_coverage=true builddir
+          meson compile -C builddir
 
       - name: Running unit tests
         run: |
-          make test-with-valgrind
+          meson test --wrap='valgrind --leak-check=full --error-exitcode=1 --track-origins=yes' -C builddir
+
+      - name: Generating coverage report
+        run: |
+          ninja coverage-html -C builddir
 
       - name: Upload unit test logs
         if: always()
@@ -31,3 +37,15 @@ jobs:
         with:
           name: unit-test-logs
           path: ./builddir/meson-logs/testlog-valgrind.txt
+
+      - name: Upload coverage HTML artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: coverage
+          path: builddir/meson-logs/coveragereport
+          if-no-files-found: error
+
+      - name: Report coverage results
+        run: |
+          cd builddir/meson-logs/coveragereport/
+          html2text --ignore-images --ignore-links -b 0 --bypass-tables index.html >> $GITHUB_STEP_SUMMARY
