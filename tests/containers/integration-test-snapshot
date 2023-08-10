@@ -2,6 +2,15 @@ FROM quay.io/hirte/integration-test-base:latest
 
 RUN dnf install -y --repo hirte-snapshot \
     --repofrompath hirte-snapshot,https://download.copr.fedorainfracloud.org/results/mperina/hirte-snapshot/centos-stream-9-$ARCH/ \
-    --nogpgcheck hirte hirte-debuginfo hirte-agent hirte-agent-debuginfo hirte-ctl hirte-ctl-debuginfo hirte-selinux
+    --nogpgcheck \
+    --setopt=tsflags=nodocs \
+        hirte \
+        hirte-debuginfo \
+        hirte-agent \
+        hirte-agent-debuginfo \
+        hirte-ctl \
+        hirte-ctl-debuginfo \
+        hirte-selinux && \
+    dnf -y clean all
 
 CMD [ "/sbin/init" ]
