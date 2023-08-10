@@ -24,7 +24,7 @@ jobs:
 
       - name: Perform build
         run: |
-          ./build-scripts/build-rpm.sh $ARTIFACTS_DIR
+          RPMBUILD_OPTS="--with coverage" ./build-scripts/build-rpm.sh $ARTIFACTS_DIR
 
       - name: Create DNF repository
         run: |
@@ -75,6 +75,10 @@ jobs:
         run: |
           cd tests
           tmt run -eCONTAINER_USED=integration-test-local
+
+      - name: WIP - figure out where coverage data are stored
+        run: |
+          find /var/tmp -type f
 
       - name: Show tmt log output in case of failure
         if: ${{ failure() }}

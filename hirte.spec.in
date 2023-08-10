@@ -1,3 +1,10 @@
+%bcond_with coverage
+%if %{with coverage}
+# disable stripping
+%global __brp_strip %{nil}
+%global debug_package %{nil}
+%endif
+
 Name:    hirte
 Version: @VERSION@
 Release: @RELEASE@%{?dist}
@@ -11,6 +18,10 @@ BuildRequires: meson
 BuildRequires: systemd-devel
 BuildRequires: systemd-rpm-macros
 BuildRequires: golang-github-cpuguy83-md2man
+
+%if %{with coverage}
+BuildRequires: lcov
+%endif
 
 Requires: systemd
 Recommends: hirte-selinux
@@ -173,7 +184,7 @@ cp -r src/bindings/python/* ./
 
 
 %build
-%meson -Dapi_bus=system
+%meson -Dapi_bus=system %{?with_coverage:-Db_coverage=true}
 %meson_build
 %py3_build
 

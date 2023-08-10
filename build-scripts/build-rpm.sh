@@ -12,6 +12,7 @@ fi
 rpmbuild \
     --define "_topmdir rpmbuild" \
     --define "_rpmdir rpmbuild" \
+    ${RPMBUILD_OPTS:-} \
     --rebuild rpmbuild/SRPMS/*src.rpm
 
 # Move RPMs to exported artifacts
