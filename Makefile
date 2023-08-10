@@ -11,11 +11,23 @@ build:
 	meson setup $(BUILDDIR)
 	meson compile -C $(BUILDDIR)
 
+build-coverage:
+	meson setup -Db_coverage=true $(BUILDDIR)
+	meson compile -C $(BUILDDIR)
+
 test: build
 	meson test -C $(BUILDDIR)
 
+test-coverage: build-coverage
+	meson test -C $(BUILDDIR)
+	ninja coverage-html -C $(BUILDDIR)
+
 test-with-valgrind: build
 	meson test --wrap='valgrind --leak-check=full --error-exitcode=1 --track-origins=yes' -C $(BUILDDIR)
+
+test-with-valgrind-coverage: build-coverage
+	meson test --wrap='valgrind --leak-check=full --error-exitcode=1 --track-origins=yes' -C $(BUILDDIR)
+	ninja coverage-html -C $(BUILDDIR)
 
 install: build
 	meson install -C $(BUILDDIR) --destdir "$(DESTDIR)"
