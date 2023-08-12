@@ -13,7 +13,7 @@ First, enable required repositories on CentOS Stream 9:
 
 ```shell
 sudo dnf install -y dnf-plugin-config-manager
-sudo dnf install -y --set-enabled crb
+sudo dnf config-manager -y --set-enabled crb
 sudo dnf install -y epel-release
 ```
 
