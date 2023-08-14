@@ -5,8 +5,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "libhirte/common/opt.h"
-#include "libhirte/log/log.h"
+#include "libbluechi/common/opt.h"
+#include "libbluechi/log/log.h"
 
 #include "agent.h"
 
@@ -38,14 +38,14 @@ static void usage(char *argv[]) {
                "\t%s [options...] \n"
                "Available options are:\n"
                "\t-%c %s\t\t Print this help message.\n"
-               "\t-%c %s\t\t The host of hirte to connect to. Must be a valid IPv4 or IPv6.\n"
-               "\t-%c %s\t\t The port of hirte to connect to.\n"
-               "\t-%c %s\t The DBus address of hirte to connect to. Overrides host and port.\n"
-               "\t-%c %s\t\t The unique name of this hirte-agent used to register at hirte.\n"
+               "\t-%c %s\t\t The host of bluechi to connect to. Must be a valid IPv4 or IPv6.\n"
+               "\t-%c %s\t\t The port of bluechi to connect to.\n"
+               "\t-%c %s\t The DBus address of bluechi to connect to. Overrides host and port.\n"
+               "\t-%c %s\t\t The unique name of this bluechi-agent used to register at bluechi.\n"
                "\t-%c %s\t The interval between two heartbeat signals in milliseconds.\n"
-               "\t-%c %s\t A path to a config file used to bootstrap hirte-agent.\n"
+               "\t-%c %s\t A path to a config file used to bootstrap bluechi-agent.\n"
                "\t-%c %s\t\t Connect to the user systemd instance instead of the system one.\n"
-               "\t-%c %s\t\t Print current version of hirte-agent.\n",
+               "\t-%c %s\t\t Print current version of bluechi-agent.\n",
                argv[0],
                ARG_HELP_SHORT,
                ARG_HELP,
@@ -77,7 +77,7 @@ static int get_opts(int argc, char *argv[]) {
                         return 1;
 
                 case ARG_VERSION_SHORT:
-                        printf("%s\n", CONFIG_H_HIRTE_VERSION);
+                        printf("%s\n", CONFIG_H_BC_VERSION);
                         return 1;
 
                 case ARG_NAME_SHORT:

@@ -1,5 +1,5 @@
 
-# Hirte
+# BlueChi
 
 - [Development](#development)
   - [Environment Setup](#environment-setup)
@@ -12,9 +12,9 @@
   - [Unit Tests](#unit-tests)
   - [Integration Tests](#integration-tests)
   - [Running](#running)
-    - [hirte](#hirte)
-    - [hirte-agent](#hirte-agent)
-    - [hirtectl](#hirtectl)
+    - [bluechi](#bluechi)
+    - [bluechi-agent](#bluechi-agent)
+    - [bluechictl](#bluechictl)
 - [Documentation](#documentation)
   - [Building MAN Pages](#building-man-pages)
 - [Packaging](#packaging)
@@ -111,15 +111,15 @@ meson install -C builddir --destdir bin
 
 After building, the following binaries are available:
 
-- `hirte`: the systemd service controller which is run on the main machine, sending commands to the agents and
+- `bluechi`: the systemd service controller which is run on the main machine, sending commands to the agents and
   monitoring the progress
-- `hirte-agent`: the node agent unit which connects with the controller and executes commands on the node machine
-- `hirte-proxy`: an internally used application to resolve cross-node dependencies
-- `hirtectl`: a helper (CLI) program to send an commands to the controller
+- `bluechi-agent`: the node agent unit which connects with the controller and executes commands on the node machine
+- `bluechi-proxy`: an internally used application to resolve cross-node dependencies
+- `bluechictl`: a helper (CLI) program to send an commands to the controller
 
 #### Bindings
 
-Bindings for the D-Bus API of `hirte` are located in [src/bindings](./src/bindings/). Please refer to the
+Bindings for the D-Bus API of `BlueChi` are located in [src/bindings](./src/bindings/). Please refer to the
 [README.md](./src/bindings/README.md) for more details.
 
 A complete set of typed python bindings for the D-Bus API is auto-generated. On any change to any of the [interfaces](./data/),
@@ -135,12 +135,12 @@ In some cases, developers might need a debug session with tools like gdb, here a
 
 First, make sure **meson.build** contains **debug=true**.  
 
-Rebuild the hirte project with debug symbols included:
+Rebuild the BlueChi project with debug symbols included:
 
 ```bash
-hirte> make clean
-hirte> meson install -C builddir --dest=bin
-hirte> gdb --args ./builddir/bin/usr/local/bin/hirte -c /etc/hirte/hirte.conf
+bluechi> make clean
+bluechi> meson install -C builddir --dest=bin
+bluechi> gdb --args ./builddir/bin/usr/local/bin/bluechi -c /etc/bluechi/bluechi.conf
 ```
 
 ### Unit tests
@@ -161,7 +161,7 @@ will produce a coverage report in `builddir/meson-logs/coveragereport/index.html
 
 All files related to the integration tests are located in [tests](./tests/) and are organized via
 [tmt](https://tmt.readthedocs.io/en/stable/). How to get started with running and developing
-integration tests for hirte is described in [tests/README](./tests/README.md).
+integration tests for BlueChi is described in [tests/README](./tests/README.md).
 
 ### Running
 
@@ -181,55 +181,55 @@ meson install -C builddir --destdir bin
 Meson will output the artifacts to `./builddir/bin/usr/local/`. This directory is referred to in the following sections
 simply as `<builddir>`.
 
-To allow `hirte` and `hirte-agent` to own a name on the local system D-Bus, the provided configuration
+To allow `BlueChi` and `bluechi-agent` to own a name on the local system D-Bus, the provided configuration
 files need to be copied (if not already existing):
 
 ```bash
-cp <builddir>/share/dbus-1/system.d/org.containers.hirte.Agent.conf /etc/dbus-1/system.d/
-cp <builddir>/share/dbus-1/system.d/org.containers.hirte.conf /etc/dbus-1/system.d/
+cp <builddir>/share/dbus-1/system.d/io.github.eclipse-bluechi.bluechi.Agent.conf /etc/dbus-1/system.d/
+cp <builddir>/share/dbus-1/system.d/io.github.eclipse-bluechi.bluechi.conf /etc/dbus-1/system.d/
 ```
 
 **Note:** Make sure to reload the dbus service so these changes take effect: `systemctl reload dbus-broker.service` (or
 `systemctl reload dbus.service`)
 
-#### hirte
+#### bluechi
 
-The newly built controller can simply be run via `./<builddir>/bin/hirte`, but it is recommended to use a specific
+The newly built controller can simply be run via `./<builddir>/bin/bluechi`, but it is recommended to use a specific
 configuration for development. This file can be passed in with the `-c` CLI option:
 
 ```bash
-./<builddir>/bin/hirte -c <path-to-cfg-file>
+./<builddir>/bin/bluechi -c <path-to-cfg-file>
 ```
 
-#### hirte-agent
+#### bluechi-agent
 
-Before starting the agent, it is best to have the hirte controller already running. However, `hirte-agent` will
+Before starting the agent, it is best to have the BlueChi controller already running. However, `bluechi-agent` will
 try to reconnect in the configured heartbeat interval.
 
-Similar to `hirte`, it is recommended to use a dedicated configuration file for development:
+Similar to `BlueChi`, it is recommended to use a dedicated configuration file for development:
 
 ```bash
-./<builddir>/bin/hirte -c <path-to-cfg-file>
+./<builddir>/bin/bluechi -c <path-to-cfg-file>
 ```
 
-#### hirtectl
+#### bluechictl
 
-The newly built `hirtectl` can be used via:
+The newly built `bluechictl` can be used via:
 
 ```bash
-./<builddir>/bin/hirtectl COMMANDS
+./<builddir>/bin/bluechictl COMMANDS
 ```
 
 ## Documentation
 
 Files for documentation of this project are located in the [doc](./doc/) directory comprising:
 
-- [api examples](./doc/api-examples/): directory containing python files that use the D-Bus API of hirte, e.g. for starting
+- [api examples](./doc/api-examples/): directory containing python files that use the D-Bus API of BlueChi, e.g. for starting
 a systemd unit
 - [man](./doc/man/): directory containing the markdown files for generating the man pages
 (see [Building MAN pages](#building-man-pages) for more information)
-- readthedocs files for building the documentation website of hirte (see [the README](./doc/README.md) for further information)
-- [diagrams.drawio](./doc/diagrams.drawio) file containing all diagrams used for hirte
+- readthedocs files for building the documentation website of BlueChi (see [the README](./doc/README.md) for further information)
+- [diagrams.drawio](./doc/diagrams.drawio) file containing all diagrams used for BlueChi
 
 ### Building MAN pages
 
@@ -244,7 +244,7 @@ After executing a `meson install` the MAN pages are located in the `man/man*` di
 
 ## Packaging
 
-Hirte is packaged as an RPM. The scripts used to create the SRPM and RPM may be found in [.build-scripts](./build-scripts).
+BlueChi is packaged as an RPM. The scripts used to create the SRPM and RPM may be found in [.build-scripts](./build-scripts).
 
 The RPM creation [script](./build-scripts/build-rpm.sh) requires one environment variable:
 

@@ -7,8 +7,8 @@
 
 #include <hashmap.h>
 
-#include "libhirte/common/cfg.h"
-#include "libhirte/common/common.h"
+#include "libbluechi/common/cfg.h"
+#include "libbluechi/common/common.h"
 
 #include "types.h"
 

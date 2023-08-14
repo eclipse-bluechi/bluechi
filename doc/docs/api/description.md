@@ -1,16 +1,16 @@
 <!-- markdownlint-disable-file MD013 MD007 MD024 -->
 # D-Bus API Description
 
-The main way to interact with Hirte is using [D-Bus](https://www.freedesktop.org/wiki/Software/dbus/). It exposes a name on the system bus called `org.containers.hirte` that other programs can use to control the system. It is expected that high-level control planes use this API directly, but there is also a `hirtectl` program that is useful for debugging and testing.
+The main way to interact with BlueChi is using [D-Bus](https://www.freedesktop.org/wiki/Software/dbus/). It exposes a name on the system bus called `io.github.eclipse-bluechi.bluechi` that other programs can use to control the system. It is expected that high-level control planes use this API directly, but there is also a `bluechictl` program that is useful for debugging and testing.
 
-## Hirte public D-Bus API
+## BlueChi public D-Bus API
 
-The main entry point is at the `/org/containers/hirte` object path and implements the `org.containers.hirte.Manager`
+The main entry point is at the `/io/github/eclipse_bluechi/bluechi` object path and implements the `io.github.eclipse-bluechi.bluechi.Manager`
 interface.
 
 Note that all properties also come with change events, so you can easily track when they change.
 
-### interface org.containers.hirte.Manager
+### interface io.github.eclipse-bluechi.bluechi.Manager
 
 #### Methods
 
@@ -43,34 +43,34 @@ Note that all properties also come with change events, so you can easily track w
 
   * `SetLogLevel(in s log_level)`
 
-    Set the new log level for hirte controller. This change is persistent as long as hirte not restarted.
+    Set the new log level for bluechi controller. This change is persistent as long as bluechi not restarted.
 
 #### Signals
 
   * `JobNew(u id, o job, s node_name, s unit)`
 
-    Emitted each time a new Hirte job is queued.
+    Emitted each time a new BlueChi job is queued.
 
   * `JobRemoved(u id, o job, s node_name, s unit, s result)`
 
     Emitted each time a new job is dequeued or the underlying systemd job finished. `result` is one of: `done`,
     `failed`, `cancelled`, `timeout`, `dependency`, `skipped`. This is either the result from systemd on the node, or
-    `cancelled` if the job was cancelled in Hirte before any systemd job was started for it.
+    `cancelled` if the job was cancelled in BlueChi before any systemd job was started for it.
 
   * `NodeConnectionStateChanged(s node, s state)`
 
-    Emitted each time a listed node in Hirte changes its connection state from offline to online and vice versa. A node is considered online only when its registration at Hirte succeeds.
+    Emitted each time a listed node in BlueChi changes its connection state from offline to online and vice versa. A node is considered online only when its registration at BlueChi succeeds.
 
 #### Properties
 
   * `Nodes` - `as`
 
-    A list with the names of all configured nodes managed by Hirte. Each name listed here also has a corresponding
-    object under `/org/containers/hirte/node/$name` which implements the `org.containers.hirte.Node` interface.
+    A list with the names of all configured nodes managed by BlueChi. Each name listed here also has a corresponding
+    object under `/io/github/eclipse_bluechi/bluechi/node/$name` which implements the `io.github.eclipse-bluechi.bluechi.Node` interface.
 
-### interface org.containers.hirte.Monitor
+### interface io.github.eclipse-bluechi.bluechi.Monitor
 
-Object path: `/org/containers/hirte/monitor/$id`
+Object path: `/io/github/eclipse_bluechi/bluechi/monitor/$id`
 
 #### Methods
 
@@ -107,10 +107,10 @@ Object path: `/org/containers/hirte/monitor/$id`
   * `UnitNew(s node, s unit, s reason)`
 
      Emitted when a new unit is loaded by systemd, for example when a
-     service is started (reason=`real`), or if hirte learns of an
+     service is started (reason=`real`), or if bluechi learns of an
      already loaded unit (reason=`virtual`).
 
-    The latter can happen for two reasons, either hirte already knows
+    The latter can happen for two reasons, either bluechi already knows
     that the unit is loaded. Or, at a later time a new agent connects
     to a previously offline node and the unit was already running
     on the node.
@@ -128,12 +128,12 @@ Object path: `/org/containers/hirte/monitor/$id`
     when the agent disconnects and we previously reported the unit
     as loaded (reason=`virtual`).
 
-### interface org.containers.hirte.Node
+### interface io.github.eclipse-bluechi.bluechi.Node
 
 Each node object represents a configured node in the system, independent of whether that node is connected to the
 manager or not, and the status can change over time.
 
-Object path: `/org/containers/hirte/node/$name`
+Object path: `/io/github/eclipse_bluechi/bluechi/node/$name`
 
 #### Methods
 
@@ -143,7 +143,7 @@ Object path: `/org/containers/hirte/node/$name`
     ever one active job per unit. Mode can be one of `replace` or `fail`. If there is an outstanding queued (but not
     running) job, that is replaced if mode is `replace`, or the job fails if mode is `fail`.
 
-    The job returned is an object path for an object implementing `org.containers.hirte.Job`, and which be monitored for
+    The job returned is an object path for an object implementing `io.github.eclipse-bluechi.bluechi.Job`, and which be monitored for
     the progress of the job, or used to cancel the job. To track the result of the job, follow the `JobRemoved` signal
     on the Manager.
 
@@ -200,7 +200,7 @@ Object path: `/org/containers/hirte/node/$name`
 
   * `SetLogLevel(in s log_level)`
 
-    Set the new log level for hirte-agent by invoking the internal hirte-agent API.
+    Set the new log level for bluechi-agent by invoking the internal bluechi-agent API.
 
 #### Properties
 
@@ -216,19 +216,19 @@ Object path: `/org/containers/hirte/node/$name`
 
     Timestamp of the last successfully received heartbeat of the node.
 
-### interface org.containers.hirte.Job
+### interface io.github.eclipse-bluechi.bluechi.Job
 
 Each potentially long-running operation returns a job object, which can be used to monitor the status of the job as well
 as cancelling it.
 
-Object path: `/org/containers/hirte/job/$id`
+Object path: `/io/github/eclipse_bluechi/bluechi/job/$id`
 
 #### Methods
 
   * `Cancel()`
 
     Cancel the job, which means either cancelling the corresponding systemd job if it was started, or directly
-    cancelling or replacing the Hirte job if no systemd job was started for it yet (i.e. it is in the queue).
+    cancelling or replacing the BlueChi job if no systemd job was started for it yet (i.e. it is in the queue).
 
 #### Properties
 
@@ -252,19 +252,19 @@ Object path: `/org/containers/hirte/job/$id`
 
     The current state of the job, one of: `waiting` or `running`. Waiting is for queued jobs.
 
-## Hirte-Agent public D-Bus API
+## BlueChi-Agent public D-Bus API
 
-The main entry point is at the `/org/containers/hirte` object path and implements the `org.containers.hirte.Agent`
+The main entry point is at the `/io/github/eclipse_bluechi/bluechi` object path and implements the `io.github.eclipse-bluechi.bluechi.Agent`
 interface.
 
-### interface org.containers.hirte.Agent
+### interface io.github.eclipse-bluechi.bluechi.Agent
 
 #### Methods
 
   * `CreateProxy(in s service_name, in s node_name, in s unit_name)`
 
     Whenever a service on the agent requires a service on another node it creates a proxy service and calls this method.
-    It then creates a new `org.containers.internal.Proxy` object and emits the `ProxyNew` signal on the internal bus to
+    It then creates a new `io.github.eclipse-bluechi.internal.Proxy` object and emits the `ProxyNew` signal on the internal bus to
     tell the manager about it. The manager will then try to arrange that the requested unit on the specified node is
     running and notifies the initial agent about the status by calling `Ready` on the internal bus.
 
@@ -272,32 +272,32 @@ interface.
 
     When a proxy is not needed anymore it is being removed on the node and a `ProxyRemoved` is emitted to notify the manager.
 
-### interface org.containers.hirte.Metrics
+### interface io.github.eclipse-bluechi.bluechi.Metrics
 
-This interface is provides signals for collecting metrics. It is created by calling `EnableMetrics` on the `org.containers.hirte.Manager` interface and removed by calling `DisableMetrics`.
+This interface is provides signals for collecting metrics. It is created by calling `EnableMetrics` on the `io.github.eclipse-bluechi.bluechi.Manager` interface and removed by calling `DisableMetrics`.
 
 #### Signals
 
   * `StartUnitJobMetrics(s node_name, s job_id, s unit, t job_measured_time_micros, t unit_start_prop_time_micros)`
 
-    `StartUnitJobMetrics` will be emitted when a `Start` operation processed by Hirte finishes and the collection of metrics has been enabled previously.
+    `StartUnitJobMetrics` will be emitted when a `Start` operation processed by BlueChi finishes and the collection of metrics has been enabled previously.
 
   * `AgentJobMetrics(s node_name, s unit, s method, t systemd_job_time_micros)`
 
-    `AgentJobMetrics` will be emitted for all unit lifecycle operations (e.g. `Start`, `Stop`, `Reload`, etc.) processed by Hirte when these finish and the collection of metrics has been enabled previously.
+    `AgentJobMetrics` will be emitted for all unit lifecycle operations (e.g. `Start`, `Stop`, `Reload`, etc.) processed by BlueChi when these finish and the collection of metrics has been enabled previously.
 
 ## Internal D-Bus APIs
 
-The above APIs are the public facing ones that users of Hirte would use. Additionally there are additional APIs that are
+The above APIs are the public facing ones that users of BlueChi would use. Additionally there are additional APIs that are
 used internally to synchronize between the manager and the nodes, and sometimes internally on a node. We here describe
 these APIs.
 
-### interface org.containers.hirte.internal.Manager
+### interface io.github.eclipse-bluechi.bluechi.internal.Manager
 
 When a node connects to the manager it does so not via the public API, but via a direct peer-to-peer connection. On this
 connection the regular Manager API is not available, instead we're using internal Manager object as the basic data.
 
-Object path: `/org/containers/hirte/internal`
+Object path: `/io/github/eclipse_bluechi/bluechi/internal`
 
 #### Methods
 
@@ -306,7 +306,7 @@ Object path: `/org/containers/hirte/internal`
     Before anything else can happen the node must call this method to register with the manager, giving its unique name.
     If this succeeds, then the manager will consider the node online and start forwarding operations to it.
 
-### interface org.containers.hirte.internal.Agent
+### interface io.github.eclipse-bluechi.bluechi.internal.Agent
 
 This is the main interface that the node implements and that is used by the manager to affect change on the node.
 
@@ -324,7 +324,7 @@ This is the main interface that the node implements and that is used by the mana
 
   * `ListUnits(out a(ssssssouso) units);`
 
-    These are all API mirrors of the respective method in `org.containers.hirte.Node`, and all they do is forward the
+    These are all API mirrors of the respective method in `io.github.eclipse-bluechi.bluechi.Node`, and all they do is forward the
     same operation to the local systemd instance. Similarly, any changes in the systemd job will be forwarded to signals
     on the node job which will then be forwarded to the manager job and reach the user.
 
@@ -362,7 +362,7 @@ This is the main interface that the node implements and that is used by the mana
   
   * `SetLogLevel(in s log_level)`
 
-    Set the new log level for hirte-agent node. This change is persistent as long as hirte-agent not restarted.
+    Set the new log level for bluechi-agent node. This change is persistent as long as bluechi-agent not restarted.
 
 #### Signals
 
@@ -382,7 +382,7 @@ This is the main interface that the node implements and that is used by the mana
   * `ProxyNew(s node_name, s unit_name, o proxy)`
 
     Whenever a proxy service is running on the system with the node it calls into the node service, and the node service
-    creates a new `org.containers.internal.Proxy` object and emits this signal to tell the manager about it. The manager
+    creates a new `io.github.eclipse-bluechi.internal.Proxy` object and emits this signal to tell the manager about it. The manager
     will notice this and try to arrange that the requested unit is running on the requested node. If the unit is already
     running, when it is started, or when the start fails, the manager will call the `Ready()` method on it.
 
@@ -395,7 +395,7 @@ This is the main interface that the node implements and that is used by the mana
 
     This is a periodic signal from the node to the manager.
 
-### interface org.containers.hirte.internal.Proxy
+### interface io.github.eclipse-bluechi.bluechi.internal.Proxy
 
 The node creates one of these by request from a proxy service, it is used to synchronize the state of the remote service
 with the proxy.
@@ -408,7 +408,7 @@ with the proxy.
     it failed. result is `done` if it was already running, otherwise it is the same value as the remote node returned in
     result from its start job.
 
-### interface org.containers.hirte.internal.Agent.Metrics
+### interface io.github.eclipse-bluechi.bluechi.internal.Agent.Metrics
 
 This is the interface that provides signals sent from the agent to the manager to collect metrics, e.g. time measurements.
 

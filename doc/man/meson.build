@@ -8,15 +8,15 @@ endif
 want_man = want_man and md2man.found()
 
 man1 = [
-  'hirte',
-  'hirte-agent',
-  'hirtectl',
-  'hirte-proxy',
+  'bluechi',
+  'bluechi-agent',
+  'bluechictl',
+  'bluechi-proxy',
 ]
 
 man5 = [
-    'hirte.conf',
-    'hirte-agent.conf',
+    'bluechi.conf',
+    'bluechi-agent.conf',
 ]
 
 if want_man

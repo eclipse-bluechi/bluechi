@@ -3,14 +3,14 @@
 
 set -x
 
-podman build -f ./containers/$CONTAINER_USED -t $HIRTE_IMAGE_NAME .
+podman build -f ./containers/$CONTAINER_USED -t $BLUECHI_IMAGE_NAME .
 if [[ $? -ne 0 ]]; then
     exit 1
 fi
 
-podman network exists hirte-test
+podman network exists bluechi-test
 if [[ $? -ne 0 ]]; then
-    podman network create --subnet $TEST_NET_RANGE hirte-test
+    podman network create --subnet $TEST_NET_RANGE bluechi-test
 fi
 
 if [ "$(systemctl --user is-active podman.socket)" != "active" ]; then

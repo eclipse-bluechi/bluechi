@@ -20,20 +20,20 @@ RELEASE="0.$(date +%04Y%02m%02d%02H%02M).git$(git rev-parse --short ${GITHUB_SHA
 sed \
     -e "s|@VERSION@|${VERSION}|g" \
     -e "s|@RELEASE@|${RELEASE}|g" \
-    < hirte.spec.in \
-    > hirte.spec
+    < bluechi.spec.in \
+    > bluechi.spec
 
 # Prepare source archive
 [[ -d rpmbuild/SOURCES ]] || mkdir -p rpmbuild/SOURCES
 
-git archive --format=tar --prefix=hirte-$VERSION/ --add-file=hirte.spec -o hirte-$VERSION.tar HEAD
+git archive --format=tar --prefix=bluechi-$VERSION/ --add-file=bluechi.spec -o bluechi-$VERSION.tar HEAD
 git submodule foreach --recursive \
-    "git archive --prefix=hirte-$VERSION/\$path/ --output=\$sha1.tar HEAD && \
-     tar --concatenate --file=$(pwd)/hirte-$VERSION.tar \$sha1.tar && rm \$sha1.tar"
-gzip hirte-$VERSION.tar
-mv hirte-$VERSION.tar.gz rpmbuild/SOURCES/
+    "git archive --prefix=bluechi-$VERSION/\$path/ --output=\$sha1.tar HEAD && \
+     tar --concatenate --file=$(pwd)/bluechi-$VERSION.tar \$sha1.tar && rm \$sha1.tar"
+gzip bluechi-$VERSION.tar
+mv bluechi-$VERSION.tar.gz rpmbuild/SOURCES/
 
 # Build source package
 rpmbuild \
     -D "_topdir rpmbuild" \
-    -bs hirte.spec
+    -bs bluechi.spec

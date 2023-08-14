@@ -1,9 +1,9 @@
-# hirte python bindings
+# bluechi python bindings
 
-The hirte python bindings provides a python module to interact with the D-Bus API of hirte. It consists of the following
+The bluechi python bindings provides a python module to interact with the D-Bus API of bluechi. It consists of the following
 subpackages:
 
-- `api`: auto-generated code based the hirte D-BUS API description
+- `api`: auto-generated code based the bluechi D-BUS API description
 - `ext`: custom written code to simplify common tasks
 
 ## Installation
@@ -12,9 +12,9 @@ Using `pip3`:
 
 ```sh
 # from PyPi
-pip3 install pyhirte
+pip3 install bluechi
 # or from cloned git repo
-pip3 install --force dist/pyhirte-<version>-py3-none-any.whl 
+pip3 install --force dist/bluechi-<version>-py3-none-any.whl 
 ```
 
 ## Examples
@@ -22,7 +22,7 @@ pip3 install --force dist/pyhirte-<version>-py3-none-any.whl
 Listing all connected nodes and their current state:
 
 ```python
-from pyhirte.api import Manager
+from bluechi.api import Manager
 
 for node in Manager().list_nodes():
     # node[name, obj_path, status]
@@ -33,7 +33,7 @@ Starting and stopping of a systemd unit on a specific node using the `Unit` clas
 implicitly wait for the job to finish:
 
 ```python
-from pyhirte.ext import Unit
+from bluechi.ext import Unit
 
 hu = Unit("my-node-name")
 

@@ -2,15 +2,15 @@
 #include <string.h>
 #include <systemd/sd-daemon.h>
 
-#include "libhirte/bus/bus.h"
-#include "libhirte/bus/utils.h"
-#include "libhirte/common/cfg.h"
-#include "libhirte/common/common.h"
-#include "libhirte/common/parse-util.h"
-#include "libhirte/common/time-util.h"
-#include "libhirte/log/log.h"
-#include "libhirte/service/shutdown.h"
-#include "libhirte/socket.h"
+#include "libbluechi/bus/bus.h"
+#include "libbluechi/bus/utils.h"
+#include "libbluechi/common/cfg.h"
+#include "libbluechi/common/common.h"
+#include "libbluechi/common/parse-util.h"
+#include "libbluechi/common/time-util.h"
+#include "libbluechi/log/log.h"
+#include "libbluechi/service/shutdown.h"
+#include "libbluechi/socket.h"
 
 #include "job.h"
 #include "manager.h"
@@ -25,13 +25,13 @@ Manager *manager_new(void) {
         _cleanup_sd_event_ sd_event *event = NULL;
         r = sd_event_default(&event);
         if (r < 0) {
-                hirte_log_errorf("Failed to create event loop: %s", strerror(-r));
+                bc_log_errorf("Failed to create event loop: %s", strerror(-r));
                 return NULL;
         }
 
-        _cleanup_free_ char *service_name = strdup(HIRTE_DBUS_NAME);
+        _cleanup_free_ char *service_name = strdup(BC_DBUS_NAME);
         if (service_name == NULL) {
-                hirte_log_error("Out of memory");
+                bc_log_error("Out of memory");
                 return NULL;
         }
 
@@ -125,7 +125,7 @@ void manager_add_subscription(Manager *manager, Subscription *sub) {
         if (node) {
                 node_subscribe(node, sub);
         } else {
-                hirte_log_errorf("Warning: Subscription to non-existing node %s", sub->node);
+                bc_log_errorf("Warning: Subscription to non-existing node %s", sub->node);
         }
 }
 
@@ -189,14 +189,14 @@ bool manager_add_job(Manager *manager, Job *job) {
 
         int r = sd_bus_emit_signal(
                         manager->api_bus,
-                        HIRTE_MANAGER_OBJECT_PATH,
+                        BC_MANAGER_OBJECT_PATH,
                         MANAGER_INTERFACE,
                         "JobNew",
                         "uo",
                         job->id,
                         job->object_path);
         if (r < 0) {
-                hirte_log_errorf("Failed to emit JobNew signal: %s", strerror(-r));
+                bc_log_errorf("Failed to emit JobNew signal: %s", strerror(-r));
                 return false;
         }
 
@@ -207,7 +207,7 @@ bool manager_add_job(Manager *manager, Job *job) {
 void manager_remove_job(Manager *manager, Job *job, const char *result) {
         int r = sd_bus_emit_signal(
                         manager->api_bus,
-                        HIRTE_MANAGER_OBJECT_PATH,
+                        BC_MANAGER_OBJECT_PATH,
                         MANAGER_INTERFACE,
                         "JobRemoved",
                         "uosss",
@@ -217,7 +217,7 @@ void manager_remove_job(Manager *manager, Job *job, const char *result) {
                         job->unit,
                         result);
         if (r < 0) {
-                hirte_log_errorf("Warning: Failed to send JobRemoved event: %s", strerror(-r));
+                bc_log_errorf("Warning: Failed to send JobRemoved event: %s", strerror(-r));
                 /* We can't really return a failure here */
         }
 
@@ -248,18 +248,17 @@ void manager_node_connection_state_changed(Manager *manager, const char *node_na
 
         int r = sd_bus_emit_signal(
                         manager->api_bus,
-                        HIRTE_MANAGER_OBJECT_PATH,
+                        BC_MANAGER_OBJECT_PATH,
                         MANAGER_INTERFACE,
                         "NodeConnectionStateChanged",
                         "ss",
                         node_name,
                         state);
         if (r < 0) {
-                hirte_log_debugf(
-                                "Failed to emit NodeConnectionStateChanged signal for node %s and new state %s: %s",
-                                node_name,
-                                state,
-                                strerror(-r));
+                bc_log_debugf("Failed to emit NodeConnectionStateChanged signal for node %s and new state %s: %s",
+                              node_name,
+                              state,
+                              strerror(-r));
         }
 }
 
@@ -296,7 +295,7 @@ bool manager_set_port(Manager *manager, const char *port_s) {
         uint16_t port = 0;
 
         if (!parse_port(port_s, &port)) {
-                hirte_log_errorf("Invalid port format '%s'", port_s);
+                bc_log_errorf("Invalid port format '%s'", port_s);
                 return false;
         }
         manager->port = port;
@@ -319,7 +318,7 @@ bool manager_parse_config(Manager *manager, const char *configfile) {
         }
 
         result = cfg_load_complete_configuration(
-                        manager->config, CFG_HIRTE_DEFAULT_CONFIG, CFG_ETC_HIRTE_CONF, CFG_ETC_HIRTE_CONF_DIR);
+                        manager->config, CFG_BC_DEFAULT_CONFIG, CFG_ETC_BC_CONF, CFG_ETC_BC_CONF_DIR);
         if (result != 0) {
                 return false;
         }
@@ -339,7 +338,7 @@ bool manager_parse_config(Manager *manager, const char *configfile) {
         }
 
         // set logging configuration
-        hirte_log_init(manager->config);
+        bc_log_init(manager->config);
 
         const char *port = NULL;
         port = cfg_get_value(manager->config, CFG_MANAGER_PORT);
@@ -368,7 +367,7 @@ bool manager_parse_config(Manager *manager, const char *configfile) {
         }
 
         _cleanup_free_ const char *dumped_cfg = cfg_dump(manager->config);
-        hirte_log_debug_with_data("Final configuration used", "\n%s", dumped_cfg);
+        bc_log_debug_with_data("Final configuration used", "\n%s", dumped_cfg);
 
         /* TODO: Handle per-node-name option section */
 
@@ -381,23 +380,23 @@ static int manager_accept_node_connection(
         Node *node = NULL;
         _cleanup_fd_ int nfd = accept_tcp_connection_request(fd);
         if (nfd < 0) {
-                hirte_log_errorf("Failed to accept TCP connection request: %s", strerror(-nfd));
+                bc_log_errorf("Failed to accept TCP connection request: %s", strerror(-nfd));
                 return -1;
         }
 
         _cleanup_sd_bus_ sd_bus *dbus_server = peer_bus_open_server(
-                        manager->event, "managed-node", HIRTE_DBUS_NAME, steal_fd(&nfd));
+                        manager->event, "managed-node", BC_DBUS_NAME, steal_fd(&nfd));
         if (dbus_server == NULL) {
                 return -1;
         }
 
         int r = bus_socket_set_no_delay(dbus_server);
         if (r < 0) {
-                hirte_log_warn("Failed to set NO_DELAY on socket");
+                bc_log_warn("Failed to set NO_DELAY on socket");
         }
         r = bus_socket_set_keepalive(dbus_server);
         if (r < 0) {
-                hirte_log_warn("Failed to set KEEPALIVE on socket");
+                bc_log_warn("Failed to set KEEPALIVE on socket");
         }
 
         /* Add anonymous node */
@@ -422,7 +421,7 @@ static bool manager_setup_node_connection_handler(Manager *manager) {
 
         int n = sd_listen_fds(0);
         if (n > 1) {
-                hirte_log_errorf("Received too many file descriptors - %d", n);
+                bc_log_errorf("Received too many file descriptors - %d", n);
                 return false;
         }
 
@@ -431,7 +430,7 @@ static bool manager_setup_node_connection_handler(Manager *manager) {
         } else {
                 tcp_fd = create_tcp_socket(manager->port);
                 if (tcp_fd < 0) {
-                        hirte_log_errorf("Failed to create TCP socket: %s", strerror(errno));
+                        bc_log_errorf("Failed to create TCP socket: %s", strerror(errno));
                         return false;
                 }
                 accept_fd = tcp_fd;
@@ -440,12 +439,12 @@ static bool manager_setup_node_connection_handler(Manager *manager) {
         r = sd_event_add_io(
                         manager->event, &event_source, accept_fd, EPOLLIN, manager_accept_node_connection, manager);
         if (r < 0) {
-                hirte_log_errorf("Failed to add io event: %s", strerror(-r));
+                bc_log_errorf("Failed to add io event: %s", strerror(-r));
                 return false;
         }
         r = sd_event_source_set_io_fd_own(event_source, true);
         if (r < 0) {
-                hirte_log_errorf("Failed to set io fd own: %s", strerror(-r));
+                bc_log_errorf("Failed to set io fd own: %s", strerror(-r));
                 return false;
         }
 
@@ -459,8 +458,8 @@ static bool manager_setup_node_connection_handler(Manager *manager) {
         return true;
 }
 
-/*************************************************************************
- ************** org.containers.hirte.Manager.Ping ************************
+/************************************************************************
+ ****** io.github.eclipse-bluechi.bluechi.Manager.Ping ******************
  ************************************************************************/
 
 /* This is a test method for now, it just returns what you passed */
@@ -475,8 +474,8 @@ static int manager_method_ping(sd_bus_message *m, UNUSED void *userdata, UNUSED 
 }
 
 
-/*************************************************************************
- ************** org.containers.hirte.Manager.ListUnits *******************
+/************************************************************************
+ ************** io.github.eclipse-bluechi.bluechi.Manager.ListUnits *****
  ************************************************************************/
 
 typedef struct ListUnitsRequest {
@@ -594,7 +593,7 @@ static void manager_method_list_units_done(ListUnitsRequest *req) {
 
         r = sd_bus_message_send(reply);
         if (r < 0) {
-                hirte_log_errorf("Failed to send reply: %s", strerror(-r));
+                bc_log_errorf("Failed to send reply: %s", strerror(-r));
                 return;
         }
 }
@@ -654,8 +653,8 @@ static int manager_method_list_units(sd_bus_message *m, void *userdata, UNUSED s
         return 1;
 }
 
-/*************************************************************************
- ************** org.containers.hirte.Manager.ListNodes *******************
+/************************************************************************
+ ***** io.github.eclipse-bluechi.bluechi.Manager.ListNodes **************
  ************************************************************************/
 
 static int manager_method_list_encode_node(sd_bus_message *reply, Node *node) {
@@ -701,8 +700,8 @@ static int manager_method_list_nodes(sd_bus_message *m, void *userdata, UNUSED s
         return sd_bus_message_send(reply);
 }
 
-/*************************************************************************
- ************** org.containers.hirte.Manager.GetNode *********************
+/************************************************************************
+ **** io.github.eclipse-bluechi.bluechi.Manager.GetNode *****************
  ************************************************************************/
 
 static int manager_method_get_node(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error) {
@@ -734,8 +733,8 @@ static int manager_method_get_node(sd_bus_message *m, void *userdata, UNUSED sd_
         return sd_bus_message_send(reply);
 }
 
-/*************************************************************************
- ************** org.containers.hirte.Manager.CreateMonitor ***************
+/************************************************************************
+ ***** io.github.eclipse-bluechi.bluechi.Manager.CreateMonitor **********
  ************************************************************************/
 
 static int manager_method_create_monitor(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error) {
@@ -771,8 +770,8 @@ static int manager_method_create_monitor(sd_bus_message *m, void *userdata, UNUS
         return 1;
 }
 
-/*************************************************************************
- ************** org.containers.hirte.Manager.EnableMetrics ***************
+/************************************************************************
+ ***** io.github.eclipse-bluechi.bluechi.Manager.EnableMetrics **********
  ************************************************************************/
 static int manager_method_metrics_enable(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error) {
         Manager *manager = userdata;
@@ -791,12 +790,12 @@ static int manager_method_metrics_enable(sd_bus_message *m, void *userdata, UNUS
         LIST_FOREACH(nodes, node, manager->nodes) {
                 node_enable_metrics(node);
         }
-        hirte_log_debug("Metrics enabled");
+        bc_log_debug("Metrics enabled");
         return sd_bus_reply_method_return(m, "");
 }
 
-/*************************************************************************
- ************** org.containers.hirte.Manager.DisableMetrics **************
+/************************************************************************
+ ***** io.github.eclipse-bluechi.bluechi.Manager.DisableMetrics *********
  ************************************************************************/
 static int manager_method_metrics_disable(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error) {
         Manager *manager = userdata;
@@ -811,30 +810,30 @@ static int manager_method_metrics_disable(sd_bus_message *m, void *userdata, UNU
         LIST_FOREACH(nodes, node, manager->nodes) {
                 node_disable_metrics(node);
         }
-        hirte_log_debug("Metrics disabled");
+        bc_log_debug("Metrics disabled");
         return sd_bus_reply_method_return(m, "");
 }
 
 /*************************************************************************
- ************** org.containers.hirte.Manager.SetLogLevel ***************
- ************************************************************************/
+ *** io.github.eclipse-bluechi.bluechi.Manager.SetLogLevel ***************
+ *************************************************************************/
 
 static int manager_method_set_log_level(sd_bus_message *m, UNUSED void *userdata, UNUSED sd_bus_error *ret_error) {
         const char *level = NULL;
 
         int r = sd_bus_message_read(m, "s", &level);
         if (r < 0) {
-                hirte_log_errorf("Failed to read the parameter: %s", strerror(-r));
+                bc_log_errorf("Failed to read the parameter: %s", strerror(-r));
                 return sd_bus_reply_method_errorf(
                                 m, SD_BUS_ERROR_FAILED, "Failed to read the parameter: %s", strerror(-r));
         }
         LogLevel loglevel = string_to_log_level(level);
         if (loglevel == LOG_LEVEL_INVALID) {
-                hirte_log_errorf("Invalid input for log level: %s", loglevel);
+                bc_log_errorf("Invalid input for log level: %s", loglevel);
                 return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_INVALID_ARGS, "Invalid input for log level");
         }
-        hirte_log_set_level(loglevel);
-        hirte_log_infof("Log level changed to %s", level);
+        bc_log_set_level(loglevel);
+        bc_log_infof("Log level changed to %s", level);
         return sd_bus_reply_method_return(m, "");
 }
 
@@ -866,11 +865,11 @@ static int manager_dbus_filter(UNUSED sd_bus_message *m, void *userdata, UNUSED 
         const char *iface = sd_bus_message_get_interface(m);
 
         if (DEBUG_MESSAGES) {
-                hirte_log_infof("Incoming public message: path: %s, iface: %s, member: %s, signature: '%s'",
-                                object_path,
-                                iface,
-                                sd_bus_message_get_member(m),
-                                sd_bus_message_get_signature(m, true));
+                bc_log_infof("Incoming public message: path: %s, iface: %s, member: %s, signature: '%s'",
+                             object_path,
+                             iface,
+                             sd_bus_message_get_member(m),
+                             sd_bus_message_get_signature(m, true));
         }
 
         if (iface != NULL && streq(iface, NODE_INTERFACE)) {
@@ -878,7 +877,7 @@ static int manager_dbus_filter(UNUSED sd_bus_message *m, void *userdata, UNUSED 
 
                 /* All Node interface objects fail if the node is offline */
                 if (node && !node_has_agent(node)) {
-                        return sd_bus_reply_method_errorf(m, HIRTE_BUS_ERROR_OFFLINE, "Node is offline");
+                        return sd_bus_reply_method_errorf(m, BC_BUS_ERROR_OFFLINE, "Node is offline");
                 }
         }
 
@@ -922,7 +921,7 @@ static int manager_name_owner_changed(sd_bus_message *m, void *userdata, UNUSED 
 }
 
 bool manager_start(Manager *manager) {
-        hirte_log_infof("Starting hirte %s", CONFIG_H_HIRTE_VERSION);
+        bc_log_infof("Starting bluechi %s", CONFIG_H_BC_VERSION);
         if (manager == NULL) {
                 return false;
         }
@@ -933,7 +932,7 @@ bool manager_start(Manager *manager) {
         manager->api_bus = system_bus_open(manager->event);
 #endif
         if (manager->api_bus == NULL) {
-                hirte_log_error("Failed to open api dbus");
+                bc_log_error("Failed to open api dbus");
                 return false;
         }
 
@@ -948,13 +947,13 @@ bool manager_start(Manager *manager) {
         int r = sd_bus_request_name(
                         manager->api_bus, manager->api_bus_service_name, SD_BUS_NAME_REPLACE_EXISTING);
         if (r < 0) {
-                hirte_log_errorf("Failed to acquire service name on api dbus: %s", strerror(-r));
+                bc_log_errorf("Failed to acquire service name on api dbus: %s", strerror(-r));
                 return false;
         }
 
         r = sd_bus_add_filter(manager->api_bus, &manager->filter_slot, manager_dbus_filter, manager);
         if (r < 0) {
-                hirte_log_errorf("Failed to add manager filter: %s", strerror(-r));
+                bc_log_errorf("Failed to add manager filter: %s", strerror(-r));
                 return false;
         }
 
@@ -968,19 +967,19 @@ bool manager_start(Manager *manager) {
                         manager_name_owner_changed,
                         manager);
         if (r < 0) {
-                hirte_log_errorf("Failed to add nameloist filter: %s", strerror(-r));
+                bc_log_errorf("Failed to add nameloist filter: %s", strerror(-r));
                 return false;
         }
 
         r = sd_bus_add_object_vtable(
                         manager->api_bus,
                         &manager->manager_slot,
-                        HIRTE_MANAGER_OBJECT_PATH,
+                        BC_MANAGER_OBJECT_PATH,
                         MANAGER_INTERFACE,
                         manager_vtable,
                         manager);
         if (r < 0) {
-                hirte_log_errorf("Failed to add manager vtable: %s", strerror(-r));
+                bc_log_errorf("Failed to add manager vtable: %s", strerror(-r));
                 return false;
         }
 
@@ -990,19 +989,19 @@ bool manager_start(Manager *manager) {
 
         r = shutdown_service_register(manager->api_bus, manager->event);
         if (r < 0) {
-                hirte_log_errorf("Failed to register shutdown service: %s", strerror(-r));
+                bc_log_errorf("Failed to register shutdown service: %s", strerror(-r));
                 return false;
         }
 
         r = event_loop_add_shutdown_signals(manager->event);
         if (r < 0) {
-                hirte_log_errorf("Failed to add signals to manager event loop: %s", strerror(-r));
+                bc_log_errorf("Failed to add signals to manager event loop: %s", strerror(-r));
                 return false;
         }
 
         r = sd_event_loop(manager->event);
         if (r < 0) {
-                hirte_log_errorf("Starting event loop failed: %s", strerror(-r));
+                bc_log_errorf("Starting event loop failed: %s", strerror(-r));
                 return false;
         }
 

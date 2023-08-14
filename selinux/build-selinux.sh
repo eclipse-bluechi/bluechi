@@ -10,7 +10,7 @@ output="$1"
 shift
 cp -- "$@" "$TMP/"
 
-make -C "$TMP" -f /usr/share/selinux/devel/Makefile hirte.pp
-bzip2 -9 "$TMP/hirte.pp"
-cp "$TMP/hirte.pp.bz2" "$output"
+make -C "$TMP" -f /usr/share/selinux/devel/Makefile bluechi.pp
+bzip2 -9 "$TMP/bluechi.pp"
+cp "$TMP/bluechi.pp.bz2" "$output"
 rm -fr "$TMP"

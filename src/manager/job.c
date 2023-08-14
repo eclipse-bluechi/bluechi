@@ -2,7 +2,7 @@
 #include <stddef.h>
 
 #include "job.h"
-#include "libhirte/log/log.h"
+#include "libbluechi/log/log.h"
 #include "manager.h"
 #include "node.h"
 
@@ -61,7 +61,7 @@ Job *job_new(Node *node, const char *unit, const char *type) {
 
         int r = asprintf(&job->object_path, "%s/%u", JOB_OBJECT_PATH_PREFIX, job->id);
         if (r < 0) {
-                hirte_log_error("Out of memory");
+                bc_log_error("Out of memory");
                 return NULL;
         }
 
@@ -97,7 +97,7 @@ bool job_export(Job *job) {
         int r = sd_bus_add_object_vtable(
                         manager->api_bus, &job->export_slot, job->object_path, JOB_INTERFACE, job_vtable, job);
         if (r < 0) {
-                hirte_log_errorf("Failed to add job vtable: %s", strerror(-r));
+                bc_log_errorf("Failed to add job vtable: %s", strerror(-r));
                 return false;
         }
 
@@ -113,7 +113,7 @@ void job_set_state(Job *job, JobState state) {
         int r = sd_bus_emit_properties_changed(
                         manager->api_bus, job->object_path, JOB_INTERFACE, "State", NULL);
         if (r < 0) {
-                hirte_log_errorf("Failed to emit status property changed: %s", strerror(-r));
+                bc_log_errorf("Failed to emit status property changed: %s", strerror(-r));
         }
 }
 

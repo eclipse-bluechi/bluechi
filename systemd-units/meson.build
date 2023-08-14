@@ -4,12 +4,12 @@ systemd_unit_dir = join_paths(get_option('prefix'), 'lib', 'systemd', 'system')
 systemd_user_unit_dir = join_paths(get_option('prefix'), 'lib', 'systemd', 'user')
 
 install_data(
-  ['hirte.service', 'hirte-agent.service', 'hirte.socket', 'hirte-proxy@.service', 'hirte-dep@.service'],
+  ['bluechi.service', 'bluechi-agent.service', 'bluechi.socket', 'bluechi-proxy@.service', 'bluechi-dep@.service'],
   install_dir : systemd_unit_dir
 )
 
 install_data(
-  ['hirte-agent-user.service', 'hirte-proxy-user@.service', 'hirte-dep@.service'],
-  rename  : ['hirte-agent.service', 'hirte-proxy@.service', 'hirte-dep@.service'],
+  ['bluechi-agent-user.service', 'bluechi-proxy-user@.service', 'bluechi-dep@.service'],
+  rename  : ['bluechi-agent.service', 'bluechi-proxy@.service', 'bluechi-dep@.service'],
   install_dir : systemd_user_unit_dir
 )

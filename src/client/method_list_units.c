@@ -1,5 +1,5 @@
 /* SPDX-License-Identifier: GPL-2.0-or-later */
-#include "libhirte/common/string-util.h"
+#include "libbluechi/common/string-util.h"
 
 #include "method_list_units.h"
 
@@ -17,14 +17,7 @@ static int
         _cleanup_sd_bus_message_ sd_bus_message *message = NULL;
 
         r = sd_bus_call_method(
-                        api_bus,
-                        HIRTE_INTERFACE_BASE_NAME,
-                        object_path,
-                        interface,
-                        "ListUnits",
-                        &error,
-                        &message,
-                        "");
+                        api_bus, BC_INTERFACE_BASE_NAME, object_path, interface, "ListUnits", &error, &message, "");
         if (r < 0) {
                 fprintf(stderr, "Failed to issue method call: %s\n", error.message);
                 return r;
@@ -63,7 +56,7 @@ int method_list_units_on_all(sd_bus *api_bus, print_unit_list_fn print, const ch
         int r = fetch_unit_list(
                         api_bus,
                         NULL,
-                        HIRTE_OBJECT_PATH,
+                        BC_OBJECT_PATH,
                         MANAGER_INTERFACE,
                         NODE_AND_UNIT_INFO_STRUCT_TYPESTRING,
                         &bus_parse_unit_on_node_info,

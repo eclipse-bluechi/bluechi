@@ -9,7 +9,7 @@ from xml.etree.ElementTree import Element
 
 from model import Interface, Method, MethodArg, Signal, SignalArg, Property
 
-API_FILENAME_PREFIX = "org.containers.hirte"
+API_FILENAME_PREFIX = "io.github.eclipse-bluechi.bluechi"
 API_EXTENSION = ".xml"
 
 

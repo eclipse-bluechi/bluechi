@@ -8,22 +8,22 @@ def readme():
 
 
 setup(
-    name="pyhirte",
+    name="bluechi",
     version="@VERSION@",
-    description="Python bindings for hirte's D-Bus API",
+    description="Python bindings for bluechi's D-Bus API",
     long_description=readme(),
     long_description_content_type="text/markdown",
-    author="Hirte developers",
-    url="https://github.com/containers/hirte/",
+    author="BlueChi developers",
+    url="https://github.com/containers/bluechi/",
     license="LGPL-2.0-or-later",
     install_requires=[
         "dasbus",
     ],
     packages=find_packages(),
     include_package_data=True,
-    package_data={"hirte": ["py.typed"]},
+    package_data={"bluechi": ["py.typed"]},
     zip_safe=True,
-    keywords=['hirte', 'python', 'D-Bus', 'systemd'],
+    keywords=['bluechi', 'python', 'D-Bus', 'systemd'],
     classifiers=[
         "Programming Language :: Python",
         "Programming Language :: Python :: 3",

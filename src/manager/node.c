@@ -1,8 +1,8 @@
 /* SPDX-License-Identifier: GPL-2.0-or-later */
-#include "libhirte/bus/utils.h"
-#include "libhirte/common/parse-util.h"
-#include "libhirte/common/time-util.h"
-#include "libhirte/log/log.h"
+#include "libbluechi/bus/utils.h"
+#include "libbluechi/common/parse-util.h"
+#include "libbluechi/common/time-util.h"
+#include "libbluechi/log/log.h"
 
 #include "job.h"
 #include "manager.h"
@@ -214,7 +214,7 @@ bool node_export(Node *node) {
         int r = sd_bus_add_object_vtable(
                         manager->api_bus, &node->export_slot, node->object_path, NODE_INTERFACE, node_vtable, node);
         if (r < 0) {
-                hirte_log_errorf("Failed to add node vtable: %s", strerror(-r));
+                bc_log_errorf("Failed to add node vtable: %s", strerror(-r));
                 return false;
         }
 
@@ -224,20 +224,20 @@ bool node_export(Node *node) {
 static int debug_messages_handler(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error) {
         Node *node = userdata;
         if (node->name) {
-                hirte_log_infof("Incoming message from node '%s' (fd %d): path: %s, iface: %s, member: %s, signature: '%s'",
-                                node->name,
-                                sd_bus_get_fd(node->agent_bus),
-                                sd_bus_message_get_path(m),
-                                sd_bus_message_get_interface(m),
-                                sd_bus_message_get_member(m),
-                                sd_bus_message_get_signature(m, true));
+                bc_log_infof("Incoming message from node '%s' (fd %d): path: %s, iface: %s, member: %s, signature: '%s'",
+                             node->name,
+                             sd_bus_get_fd(node->agent_bus),
+                             sd_bus_message_get_path(m),
+                             sd_bus_message_get_interface(m),
+                             sd_bus_message_get_member(m),
+                             sd_bus_message_get_signature(m, true));
         } else {
-                hirte_log_infof("Incoming message from node fd %d: path: %s, iface: %s, member: %s, signature: '%s'",
-                                sd_bus_get_fd(node->agent_bus),
-                                sd_bus_message_get_path(m),
-                                sd_bus_message_get_interface(m),
-                                sd_bus_message_get_member(m),
-                                sd_bus_message_get_signature(m, true));
+                bc_log_infof("Incoming message from node fd %d: path: %s, iface: %s, member: %s, signature: '%s'",
+                             sd_bus_get_fd(node->agent_bus),
+                             sd_bus_message_get_path(m),
+                             sd_bus_message_get_interface(m),
+                             sd_bus_message_get_member(m),
+                             sd_bus_message_get_signature(m, true));
         }
         return 0;
 }
@@ -281,7 +281,7 @@ static struct hashmap *node_compute_unique_monitor_subscriptions(Node *node, con
                         Subscription *sub = usub->sub;
                         hashmap_set(unique_subs, &sub);
                         if (hashmap_oom(unique_subs)) {
-                                hirte_log_error("Failed to compute vector of unique monitors, OOM");
+                                bc_log_error("Failed to compute vector of unique monitors, OOM");
 
                                 hashmap_free(unique_subs);
                                 unique_subs = NULL;
@@ -301,7 +301,7 @@ static struct hashmap *node_compute_unique_monitor_subscriptions(Node *node, con
                                 Subscription *sub = usub->sub;
                                 hashmap_set(unique_subs, &sub);
                                 if (hashmap_oom(unique_subs)) {
-                                        hirte_log_error("Failed to compute vector of unique monitors, OOM");
+                                        bc_log_error("Failed to compute vector of unique monitors, OOM");
 
                                         hashmap_free(unique_subs);
                                         unique_subs = NULL;
@@ -318,16 +318,16 @@ static struct hashmap *node_compute_unique_monitor_subscriptions(Node *node, con
 static int node_match_job_state_changed(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *error) {
         Node *node = userdata;
         Manager *manager = node->manager;
-        uint32_t hirte_job_id = 0;
+        uint32_t bc_job_id = 0;
         const char *state = NULL;
 
-        int r = sd_bus_message_read(m, "us", &hirte_job_id, &state);
+        int r = sd_bus_message_read(m, "us", &bc_job_id, &state);
         if (r < 0) {
-                hirte_log_errorf("Invalid JobStateChange signal: %s", strerror(-r));
+                bc_log_errorf("Invalid JobStateChange signal: %s", strerror(-r));
                 return 0;
         }
 
-        manager_job_state_changed(manager, hirte_job_id, state);
+        manager_job_state_changed(manager, bc_job_id, state);
         return 1;
 }
 
@@ -341,7 +341,7 @@ static int node_match_unit_properties_changed(sd_bus_message *m, void *userdata,
                 r = sd_bus_message_rewind(m, false);
         }
         if (r < 0) {
-                hirte_log_error("Invalid UnitPropertiesChanged signal");
+                bc_log_error("Invalid UnitPropertiesChanged signal");
                 return 0;
         }
 
@@ -353,7 +353,7 @@ static int node_match_unit_properties_changed(sd_bus_message *m, void *userdata,
                         Subscription *sub = *subp;
                         int r = sub->handle_unit_property_changed(sub->monitor, node->name, unit, interface, m);
                         if (r < 0) {
-                                hirte_log_error("Failed to emit UnitPropertyChanged signal");
+                                bc_log_error("Failed to emit UnitPropertyChanged signal");
                         }
                 }
                 hashmap_free(unique_subs);
@@ -370,7 +370,7 @@ static int node_match_unit_new(sd_bus_message *m, void *userdata, UNUSED sd_bus_
 
         int r = sd_bus_message_read(m, "ss", &unit, &reason);
         if (r < 0) {
-                hirte_log_errorf("Invalid UnitNew signal: %s", strerror(-r));
+                bc_log_errorf("Invalid UnitNew signal: %s", strerror(-r));
                 return 0;
         }
 
@@ -393,7 +393,7 @@ static int node_match_unit_new(sd_bus_message *m, void *userdata, UNUSED sd_bus_
                         Subscription *sub = *subp;
                         int r = sub->handle_unit_new(sub->monitor, node->name, unit, reason);
                         if (r < 0) {
-                                hirte_log_errorf("Failed to emit UnitNew signal: %s", strerror(-r));
+                                bc_log_errorf("Failed to emit UnitNew signal: %s", strerror(-r));
                         }
                 }
                 hashmap_free(unique_subs);
@@ -411,7 +411,7 @@ static int node_match_unit_state_changed(sd_bus_message *m, void *userdata, UNUS
 
         int r = sd_bus_message_read(m, "ssss", &unit, &active_state, &substate, &reason);
         if (r < 0) {
-                hirte_log_errorf("Invalid UnitStateChanged signal: %s", strerror(-r));
+                bc_log_errorf("Invalid UnitStateChanged signal: %s", strerror(-r));
                 return 0;
         }
 
@@ -433,7 +433,7 @@ static int node_match_unit_state_changed(sd_bus_message *m, void *userdata, UNUS
                         int r = sub->handle_unit_state_changed(
                                         sub->monitor, node->name, unit, active_state, substate, reason);
                         if (r < 0) {
-                                hirte_log_errorf("Failed to emit UnitStateChanged signal: %s", strerror(-r));
+                                bc_log_errorf("Failed to emit UnitStateChanged signal: %s", strerror(-r));
                         }
                 }
                 hashmap_free(unique_subs);
@@ -448,7 +448,7 @@ static int node_match_unit_removed(sd_bus_message *m, void *userdata, UNUSED sd_
 
         int r = sd_bus_message_read(m, "s", &unit);
         if (r < 0) {
-                hirte_log_errorf("Invalid UnitRemoved signal: %s", strerror(-r));
+                bc_log_errorf("Invalid UnitRemoved signal: %s", strerror(-r));
                 return 0;
         }
 
@@ -466,7 +466,7 @@ static int node_match_unit_removed(sd_bus_message *m, void *userdata, UNUSED sd_
                         Subscription *sub = *subp;
                         int r = sub->handle_unit_removed(sub->monitor, node->name, unit, "real");
                         if (r < 0) {
-                                hirte_log_errorf("Failed to emit UnitRemoved signal: %s", strerror(-r));
+                                bc_log_errorf("Failed to emit UnitRemoved signal: %s", strerror(-r));
                         }
                 }
                 hashmap_free(unique_subs);
@@ -478,16 +478,16 @@ static int node_match_unit_removed(sd_bus_message *m, void *userdata, UNUSED sd_
 static int node_match_job_done(UNUSED sd_bus_message *m, UNUSED void *userdata, UNUSED sd_bus_error *error) {
         Node *node = userdata;
         Manager *manager = node->manager;
-        uint32_t hirte_job_id = 0;
+        uint32_t bc_job_id = 0;
         const char *result = NULL;
 
-        int r = sd_bus_message_read(m, "us", &hirte_job_id, &result);
+        int r = sd_bus_message_read(m, "us", &bc_job_id, &result);
         if (r < 0) {
-                hirte_log_errorf("Invalid JobDone signal: %s", strerror(-r));
+                bc_log_errorf("Invalid JobDone signal: %s", strerror(-r));
                 return 0;
         }
 
-        manager_finish_job(manager, hirte_job_id, result);
+        manager_finish_job(manager, bc_job_id, result);
         return 1;
 }
 
@@ -496,7 +496,7 @@ static int node_match_heartbeat(UNUSED sd_bus_message *m, void *userdata, UNUSED
 
         int r = get_time_seconds(&node->last_seen);
         if (r < 0) {
-                hirte_log_errorf("Failed to get current time on heartbeat: %s", strerror(-r));
+                bc_log_errorf("Failed to get current time on heartbeat: %s", strerror(-r));
                 return 0;
         }
         return 1;
@@ -524,39 +524,39 @@ static int node_on_match_proxy_new(sd_bus_message *m, void *userdata, UNUSED sd_
 
         int r = sd_bus_message_read(m, "sso", &target_node_name, &unit_name, &proxy_object_path);
         if (r < 0) {
-                hirte_log_errorf("Invalid arguments in ProxyNew signal: %s", strerror(-r));
+                bc_log_errorf("Invalid arguments in ProxyNew signal: %s", strerror(-r));
                 return r;
         }
-        hirte_log_infof("Node '%s' registered new proxy for unit '%s' on node '%s'",
-                        node->name,
-                        unit_name,
-                        target_node_name);
+        bc_log_infof("Node '%s' registered new proxy for unit '%s' on node '%s'",
+                     node->name,
+                     unit_name,
+                     target_node_name);
 
         _cleanup_proxy_monitor_ ProxyMonitor *monitor = proxy_monitor_new(
                         node, target_node_name, unit_name, proxy_object_path);
         if (monitor == NULL) {
-                hirte_log_error("Failed to create proxy monitor, OOM");
+                bc_log_error("Failed to create proxy monitor, OOM");
                 return -ENOMEM;
         }
 
         Node *target_node = manager_find_node(manager, target_node_name);
         if (target_node == NULL) {
-                hirte_log_error("Proxy requested for non-existing node");
+                bc_log_error("Proxy requested for non-existing node");
                 proxy_monitor_send_error(monitor, "No such node");
                 return 0;
         }
 
         ProxyMonitor *old_monitor = node_find_proxy_monitor(node, target_node_name, unit_name);
         if (old_monitor != NULL) {
-                hirte_log_warnf("Proxy for '%s' (on '%s') requested, but old proxy already exists, removing it",
-                                unit_name,
-                                target_node_name);
+                bc_log_warnf("Proxy for '%s' (on '%s') requested, but old proxy already exists, removing it",
+                             unit_name,
+                             target_node_name);
                 node_remove_proxy_monitor(node, old_monitor);
         }
 
         r = proxy_monitor_set_target_node(monitor, target_node);
         if (r < 0) {
-                hirte_log_errorf("Failed to add proxy dependency: %s", strerror(-r));
+                bc_log_errorf("Failed to add proxy dependency: %s", strerror(-r));
                 proxy_monitor_send_error(monitor, "Failed to add proxy dependency");
                 return 0;
         }
@@ -589,17 +589,17 @@ static int node_on_match_proxy_removed(sd_bus_message *m, void *userdata, UNUSED
 
         int r = sd_bus_message_read(m, "ss", &target_node_name, &unit_name);
         if (r < 0) {
-                hirte_log_errorf("Invalid arguments in ProxyRemoved signal: %s", strerror(-r));
+                bc_log_errorf("Invalid arguments in ProxyRemoved signal: %s", strerror(-r));
                 return r;
         }
-        hirte_log_infof("Node '%s' unregistered proxy for unit '%s' on node '%s'",
-                        node->name,
-                        unit_name,
-                        target_node_name);
+        bc_log_infof("Node '%s' unregistered proxy for unit '%s' on node '%s'",
+                     node->name,
+                     unit_name,
+                     target_node_name);
 
         ProxyMonitor *proxy_monitor = node_find_proxy_monitor(node, target_node_name, unit_name);
         if (proxy_monitor == NULL) {
-                hirte_log_error("Got ProxyRemoved for unknown monitor");
+                bc_log_error("Got ProxyRemoved for unknown monitor");
                 return 0;
         }
 
@@ -611,7 +611,7 @@ bool node_set_agent_bus(Node *node, sd_bus *bus) {
         int r = 0;
 
         if (node->agent_bus != NULL) {
-                hirte_log_error("Error: Trying to add two agents for a node");
+                bc_log_error("Error: Trying to add two agents for a node");
                 return false;
         }
 
@@ -628,7 +628,7 @@ bool node_set_agent_bus(Node *node, sd_bus *bus) {
                                 node);
                 if (r < 0) {
                         node_unset_agent_bus(node);
-                        hirte_log_errorf("Failed to add peer bus vtable: %s", strerror(-r));
+                        bc_log_errorf("Failed to add peer bus vtable: %s", strerror(-r));
                         return false;
                 }
         } else {
@@ -643,7 +643,7 @@ bool node_set_agent_bus(Node *node, sd_bus *bus) {
                                 node_match_job_done,
                                 node);
                 if (r < 0) {
-                        hirte_log_errorf("Failed to add JobDone peer bus match: %s", strerror(-r));
+                        bc_log_errorf("Failed to add JobDone peer bus match: %s", strerror(-r));
                         return false;
                 }
 
@@ -657,7 +657,7 @@ bool node_set_agent_bus(Node *node, sd_bus *bus) {
                                 node_match_job_state_changed,
                                 node);
                 if (r < 0) {
-                        hirte_log_errorf("Failed to add JobStateChanged peer bus match: %s", strerror(-r));
+                        bc_log_errorf("Failed to add JobStateChanged peer bus match: %s", strerror(-r));
                         return false;
                 }
 
@@ -671,7 +671,7 @@ bool node_set_agent_bus(Node *node, sd_bus *bus) {
                                 node_match_unit_properties_changed,
                                 node);
                 if (r < 0) {
-                        hirte_log_errorf("Failed to add UnitPropertiesChanged peer bus match: %s", strerror(-r));
+                        bc_log_errorf("Failed to add UnitPropertiesChanged peer bus match: %s", strerror(-r));
                         return false;
                 }
 
@@ -685,7 +685,7 @@ bool node_set_agent_bus(Node *node, sd_bus *bus) {
                                 node_match_unit_new,
                                 node);
                 if (r < 0) {
-                        hirte_log_errorf("Failed to add UnitNew peer bus match: %s", strerror(-r));
+                        bc_log_errorf("Failed to add UnitNew peer bus match: %s", strerror(-r));
                         return false;
                 }
 
@@ -699,7 +699,7 @@ bool node_set_agent_bus(Node *node, sd_bus *bus) {
                                 node_match_unit_state_changed,
                                 node);
                 if (r < 0) {
-                        hirte_log_errorf("Failed to add UnitStateChanged peer bus match: %s", strerror(-r));
+                        bc_log_errorf("Failed to add UnitStateChanged peer bus match: %s", strerror(-r));
                         return false;
                 }
 
@@ -713,7 +713,7 @@ bool node_set_agent_bus(Node *node, sd_bus *bus) {
                                 node_match_unit_removed,
                                 node);
                 if (r < 0) {
-                        hirte_log_errorf("Failed to add UnitRemoved peer bus match: %s", strerror(-r));
+                        bc_log_errorf("Failed to add UnitRemoved peer bus match: %s", strerror(-r));
                         return false;
                 }
 
@@ -727,7 +727,7 @@ bool node_set_agent_bus(Node *node, sd_bus *bus) {
                                 node_on_match_proxy_new,
                                 node);
                 if (r < 0) {
-                        hirte_log_errorf("Failed to add ProxyNew peer bus match: %s", strerror(-r));
+                        bc_log_errorf("Failed to add ProxyNew peer bus match: %s", strerror(-r));
                         return false;
                 }
 
@@ -741,14 +741,14 @@ bool node_set_agent_bus(Node *node, sd_bus *bus) {
                                 node_on_match_proxy_removed,
                                 node);
                 if (r < 0) {
-                        hirte_log_errorf("Failed to add ProxyNew peer bus match: %s", strerror(-r));
+                        bc_log_errorf("Failed to add ProxyNew peer bus match: %s", strerror(-r));
                         return false;
                 }
 
                 r = sd_bus_emit_properties_changed(
                                 node->manager->api_bus, node->object_path, NODE_INTERFACE, "Status", NULL);
                 if (r < 0) {
-                        hirte_log_errorf("Failed to emit status property changed: %s", strerror(-r));
+                        bc_log_errorf("Failed to emit status property changed: %s", strerror(-r));
                 }
 
                 sd_bus_match_signal(
@@ -761,7 +761,7 @@ bool node_set_agent_bus(Node *node, sd_bus *bus) {
                                 node_match_heartbeat,
                                 node);
                 if (r < 0) {
-                        hirte_log_errorf("Failed to add heartbeat signal match: %s", strerror(-r));
+                        bc_log_errorf("Failed to add heartbeat signal match: %s", strerror(-r));
                         return false;
                 }
         }
@@ -778,7 +778,7 @@ bool node_set_agent_bus(Node *node, sd_bus *bus) {
                         node);
         if (r < 0) {
                 node_unset_agent_bus(node);
-                hirte_log_errorf("Failed to request match for Disconnected message: %s", strerror(-r));
+                bc_log_errorf("Failed to request match for Disconnected message: %s", strerror(-r));
                 return false;
         }
 
@@ -815,12 +815,12 @@ void node_unset_agent_bus(Node *node) {
                 int r = sd_bus_emit_properties_changed(
                                 node->manager->api_bus, node->object_path, NODE_INTERFACE, "Status", NULL);
                 if (r < 0) {
-                        hirte_log_errorf("Failed to emit status property changed: %s", strerror(-r));
+                        bc_log_errorf("Failed to emit status property changed: %s", strerror(-r));
                 }
         }
 }
 
-/* org.containers.hirte.internal.Manager.Register(in s name)) */
+/* io.github.eclipse-bluechi.bluechi.internal.Manager.Register(in s name)) */
 static int node_method_register(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error) {
         Node *node = userdata;
         Manager *manager = node->manager;
@@ -835,7 +835,7 @@ static int node_method_register(sd_bus_message *m, void *userdata, UNUSED sd_bus
         /* Read the parameters */
         int r = sd_bus_message_read(m, "s", &name);
         if (r < 0) {
-                hirte_log_errorf("Failed to parse parameters: %s", strerror(-r));
+                bc_log_errorf("Failed to parse parameters: %s", strerror(-r));
                 return r;
         }
 
@@ -867,7 +867,7 @@ static int node_method_register(sd_bus_message *m, void *userdata, UNUSED sd_bus
 
         node_unset_agent_bus(node);
 
-        hirte_log_infof("Registered managed node from fd %d as '%s'", sd_bus_get_fd(agent_bus), name);
+        bc_log_infof("Registered managed node from fd %d as '%s'", sd_bus_get_fd(agent_bus), name);
         manager_node_connection_state_changed(named_node->manager, named_node->name, "online");
 
         return sd_bus_reply_method_return(m, "");
@@ -916,7 +916,7 @@ static int node_disconnected(UNUSED sd_bus_message *message, void *userdata, UNU
                                                         usubs->substate,
                                                         "virtual");
                                         if (r < 0) {
-                                                hirte_log_error("Failed to emit UnitStateChanged signal");
+                                                bc_log_error("Failed to emit UnitStateChanged signal");
                                         }
                                 }
                                 hashmap_free(unique_subs);
@@ -933,7 +933,7 @@ static int node_disconnected(UNUSED sd_bus_message *message, void *userdata, UNU
                                 Subscription *sub = *subp;
                                 r = sub->handle_unit_removed(sub->monitor, node->name, usubs->unit, "virtual");
                                 if (r < 0) {
-                                        hirte_log_error("Failed to emit UnitRemoved signal");
+                                        bc_log_error("Failed to emit UnitRemoved signal");
                                 }
                         }
                         hashmap_free(unique_subs);
@@ -957,7 +957,7 @@ static int node_disconnected(UNUSED sd_bus_message *message, void *userdata, UNU
                         Job *next_job = NULL;
                         LIST_FOREACH_SAFE(jobs, job, next_job, manager->jobs) {
                                 if (strcmp(job->node->name, node->name) == 0) {
-                                        hirte_log_debugf("Removing job %d from node %s", job->id, job->node->name);
+                                        bc_log_debugf("Removing job %d from node %s", job->id, job->node->name);
                                         LIST_REMOVE(jobs, manager->jobs, job);
                                         job_unref(job);
                                 }
@@ -967,9 +967,9 @@ static int node_disconnected(UNUSED sd_bus_message *message, void *userdata, UNU
         }
 
         if (node->name) {
-                hirte_log_infof("Node '%s' disconnected", node->name);
+                bc_log_infof("Node '%s' disconnected", node->name);
         } else {
-                hirte_log_info("Anonymous node disconnected");
+                bc_log_info("Anonymous node disconnected");
         }
         manager_node_connection_state_changed(node->manager, node->name, "offline");
 
@@ -1071,7 +1071,7 @@ int node_create_request(
         int r = sd_bus_message_new_method_call(
                         node->agent_bus,
                         &req->message,
-                        HIRTE_AGENT_DBUS_NAME,
+                        BC_AGENT_DBUS_NAME,
                         INTERNAL_AGENT_OBJECT_PATH,
                         INTERNAL_AGENT_INTERFACE,
                         method);
@@ -1098,7 +1098,7 @@ int agent_request_start(AgentRequest *req) {
                         req->message,
                         agent_request_callback,
                         req,
-                        HIRTE_DEFAULT_DBUS_TIMEOUT);
+                        BC_DEFAULT_DBUS_TIMEOUT);
         if (r < 0) {
                 return r;
         }
@@ -1127,7 +1127,7 @@ AgentRequest *node_request_list_units(
 }
 
 /*************************************************************************
- ********** org.containers.hirte.Node.ListUnits **************************
+ ********** io.github.eclipse-bluechi.bluechi.Node.ListUnits **************************
  ************************************************************************/
 
 static int method_list_units_callback(AgentRequest *req, sd_bus_message *m, UNUSED sd_bus_error *ret_error) {
@@ -1168,7 +1168,7 @@ static int node_method_list_units(sd_bus_message *m, void *userdata, UNUSED sd_b
 }
 
 /*************************************************************************
- ********** org.containers.hirte.Node.GetUnitProperties ******************
+ ********** io.github.eclipse-bluechi.bluechi.Node.GetUnitProperties ******************
  ************************************************************************/
 
 static int node_method_get_unit_properties_callback(
@@ -1229,7 +1229,7 @@ static int node_method_get_unit_properties(sd_bus_message *m, void *userdata, UN
 }
 
 /*************************************************************************
- ********** org.containers.hirte.Node.GetUnitProperty ******************
+ ********** io.github.eclipse-bluechi.bluechi.Node.GetUnitProperty ******************
  ************************************************************************/
 
 static int node_method_get_unit_property_callback(
@@ -1291,7 +1291,7 @@ static int node_method_get_unit_property(sd_bus_message *m, void *userdata, UNUS
 }
 
 /*************************************************************************
- ********** org.containers.hirte.Node.SetUnitProperty ******************
+ ********** io.github.eclipse-bluechi.bluechi.Node.SetUnitProperty ******************
  ************************************************************************/
 
 static int node_method_set_unit_properties_callback(
@@ -1503,7 +1503,7 @@ static int node_run_unit_lifecycle_method(
 
 
 /*************************************************************************
- ********** org.containers.hirte.Node.StartUnit **************************
+ ********** io.github.eclipse-bluechi.bluechi.Node.StartUnit **************************
  ************************************************************************/
 
 static int node_method_start_unit(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error) {
@@ -1511,7 +1511,7 @@ static int node_method_start_unit(sd_bus_message *m, void *userdata, UNUSED sd_b
 }
 
 /*************************************************************************
- ********** org.containers.hirte.Node.StopUnit ***************************
+ ********** io.github.eclipse-bluechi.bluechi.Node.StopUnit ***************************
  ************************************************************************/
 
 
@@ -1520,7 +1520,7 @@ static int node_method_stop_unit(sd_bus_message *m, void *userdata, UNUSED sd_bu
 }
 
 /*************************************************************************
- ********** org.containers.hirte.Node.RestartUnit ************************
+ ********** io.github.eclipse-bluechi.bluechi.Node.RestartUnit ************************
  ************************************************************************/
 
 static int node_method_restart_unit(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error) {
@@ -1528,7 +1528,7 @@ static int node_method_restart_unit(sd_bus_message *m, void *userdata, UNUSED sd
 }
 
 /*************************************************************************
- ********** org.containers.hirte.Node.ReloadUnit **************************
+ ********** io.github.eclipse-bluechi.bluechi.Node.ReloadUnit **************************
  ************************************************************************/
 
 static int node_method_reload_unit(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error) {
@@ -1536,7 +1536,7 @@ static int node_method_reload_unit(sd_bus_message *m, void *userdata, UNUSED sd_
 }
 
 /*************************************************************************
- ********** org.containers.hirte.Node.SetLogLevel *******************
+ ********** io.github.eclipse-bluechi.bluechi.Node.SetLogLevel *******************
  ************************************************************************/
 
 static int node_method_set_log_level(sd_bus_message *m, UNUSED void *userdata, UNUSED sd_bus_error *ret_error) {
@@ -1558,7 +1558,7 @@ static int node_method_set_log_level(sd_bus_message *m, UNUSED void *userdata, U
         }
         r = sd_bus_call_method(
                         node->agent_bus,
-                        HIRTE_AGENT_DBUS_NAME,
+                        BC_AGENT_DBUS_NAME,
                         INTERNAL_AGENT_OBJECT_PATH,
                         INTERNAL_AGENT_INTERFACE,
                         "SetLogLevel",
@@ -1567,7 +1567,7 @@ static int node_method_set_log_level(sd_bus_message *m, UNUSED void *userdata, U
                         "s",
                         level);
         if (r < 0) {
-                hirte_log_errorf("Failed to set log level call: %s", error.message);
+                bc_log_errorf("Failed to set log level call: %s", error.message);
                 return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "Internal error");
         }
         return sd_bus_reply_method_return(m, "");
@@ -1578,7 +1578,7 @@ static int send_agent_simple_message(Node *node, const char *method, const char 
         int r = sd_bus_message_new_method_call(
                         node->agent_bus,
                         &m,
-                        HIRTE_AGENT_DBUS_NAME,
+                        BC_AGENT_DBUS_NAME,
                         INTERNAL_AGENT_OBJECT_PATH,
                         INTERNAL_AGENT_INTERFACE,
                         method);
@@ -1603,7 +1603,7 @@ static void node_send_agent_subscribe(Node *node, const char *unit) {
 
         int r = send_agent_simple_message(node, "Subscribe", unit);
         if (r < 0) {
-                hirte_log_error("Failed to subscribe w/ agent");
+                bc_log_error("Failed to subscribe w/ agent");
         }
 }
 
@@ -1615,7 +1615,7 @@ static void node_send_agent_unsubscribe(Node *node, const char *unit) {
 
         int r = send_agent_simple_message(node, "Unsubscribe", unit);
         if (r < 0) {
-                hirte_log_error("Failed to subscribe w/ agent");
+                bc_log_error("Failed to subscribe w/ agent");
         }
 }
 
@@ -1639,7 +1639,7 @@ void node_subscribe(Node *node, Subscription *sub) {
 
                 _cleanup_free_ UnitSubscription *usub = malloc0(sizeof(UnitSubscription));
                 if (usub == NULL) {
-                        hirte_log_error("Failed to subscribe to unit, OOM");
+                        bc_log_error("Failed to subscribe to unit, OOM");
                         return;
                 }
                 usub->sub = sub;
@@ -1649,14 +1649,14 @@ void node_subscribe(Node *node, Subscription *sub) {
                         UnitSubscriptions v = { NULL, NULL, false, _UNIT_ACTIVE_STATE_INVALID, NULL };
                         v.unit = strdup(key.unit);
                         if (v.unit == NULL) {
-                                hirte_log_error("Failed to subscribe to unit, OOM");
+                                bc_log_error("Failed to subscribe to unit, OOM");
                                 return;
                         }
 
                         usubs = hashmap_set(node->unit_subscriptions, &v);
                         if (usubs == NULL && hashmap_oom(node->unit_subscriptions)) {
                                 free(v.unit);
-                                hirte_log_error("Failed to subscribe to unit, OOM");
+                                bc_log_error("Failed to subscribe to unit, OOM");
                                 return;
                         }
 
@@ -1673,7 +1673,7 @@ void node_subscribe(Node *node, Subscription *sub) {
                 if (usubs->loaded) {
                         int r = sub->handle_unit_new(sub->monitor, node->name, sub_unit->name, "virtual");
                         if (r < 0) {
-                                hirte_log_error("Failed to emit UnitNew signal");
+                                bc_log_error("Failed to emit UnitNew signal");
                         }
 
                         if (usubs->active_state >= 0) {
@@ -1685,7 +1685,7 @@ void node_subscribe(Node *node, Subscription *sub) {
                                                 usubs->substate ? usubs->substate : "invalid",
                                                 "virtual");
                                 if (r < 0) {
-                                        hirte_log_error("Failed to emit UnitNew signal");
+                                        bc_log_error("Failed to emit UnitNew signal");
                                 }
                         }
                 }
@@ -1741,11 +1741,11 @@ static void node_start_proxy_dependency(Node *node, ProxyDependency *dep) {
                 return;
         }
 
-        hirte_log_infof("Starting dependency %s on node %s", dep->unit_name, node->name);
+        bc_log_infof("Starting dependency %s on node %s", dep->unit_name, node->name);
 
         int r = send_agent_simple_message(node, "StartDep", dep->unit_name);
         if (r < 0) {
-                hirte_log_error("Failed to send StartDep to agent");
+                bc_log_error("Failed to send StartDep to agent");
         }
 }
 
@@ -1761,11 +1761,11 @@ static void node_stop_proxy_dependency(Node *node, ProxyDependency *dep) {
                 return;
         }
 
-        hirte_log_infof("Stopping dependency %s on node %s", dep->unit_name, node->name);
+        bc_log_infof("Stopping dependency %s on node %s", dep->unit_name, node->name);
 
         int r = send_agent_simple_message(node, "StopDep", dep->unit_name);
         if (r < 0) {
-                hirte_log_error("Failed to send StopDep to agent");
+                bc_log_error("Failed to send StopDep to agent");
         }
 }
 
@@ -1839,7 +1839,7 @@ int node_method_get_unit_uint64_property_sync(Node *node, char *unit, char *prop
         sd_bus_error error = SD_BUS_ERROR_NULL;
         r = sd_bus_call_method(
                         node->agent_bus,
-                        HIRTE_AGENT_DBUS_NAME,
+                        BC_AGENT_DBUS_NAME,
                         INTERNAL_AGENT_OBJECT_PATH,
                         INTERNAL_AGENT_INTERFACE,
                         "GetUnitProperty",
@@ -1850,26 +1850,26 @@ int node_method_get_unit_uint64_property_sync(Node *node, char *unit, char *prop
                         "org.freedesktop.systemd1.Unit",
                         property);
         if (r < 0) {
-                hirte_log_errorf("Failed to issue GetUnitProperty call: %s", error.message);
+                bc_log_errorf("Failed to issue GetUnitProperty call: %s", error.message);
                 sd_bus_error_free(&error);
                 return r;
         }
 
         r = sd_bus_message_enter_container(message, SD_BUS_TYPE_VARIANT, "t");
         if (r < 0) {
-                hirte_log_errorf("Failed to parse response message: %s", strerror(-r));
+                bc_log_errorf("Failed to parse response message: %s", strerror(-r));
                 return r;
         }
 
         r = sd_bus_message_read_basic(message, SD_BUS_TYPE_UINT64, value);
         if (r < 0) {
-                hirte_log_errorf("Failed to parse response message: %s", strerror(-r));
+                bc_log_errorf("Failed to parse response message: %s", strerror(-r));
                 return r;
         }
 
         r = sd_bus_message_exit_container(message);
         if (r < 0) {
-                hirte_log_errorf("Failed to parse response message: %s", strerror(-r));
+                bc_log_errorf("Failed to parse response message: %s", strerror(-r));
                 return r;
         }
 
@@ -1883,11 +1883,11 @@ void node_enable_metrics(Node *node) {
 
         int r = send_agent_simple_message(node, "EnableMetrics", NULL);
         if (r < 0) {
-                hirte_log_error("Failed to enable metrics on agent");
+                bc_log_error("Failed to enable metrics on agent");
         }
 
         if (!metrics_node_signal_matching_register(node)) {
-                hirte_log_error("Failed to enable metrics on agent");
+                bc_log_error("Failed to enable metrics on agent");
         }
 }
 
@@ -1898,7 +1898,7 @@ void node_disable_metrics(Node *node) {
 
         int r = send_agent_simple_message(node, "DisableMetrics", NULL);
         if (r < 0) {
-                hirte_log_error("Failed to disable metrics on agent");
+                bc_log_error("Failed to disable metrics on agent");
         }
 
         sd_bus_slot_unrefp(&node->metrics_matching_slot);

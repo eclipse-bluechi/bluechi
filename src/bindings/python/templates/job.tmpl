@@ -10,7 +10,7 @@ class Job(ApiBase):
     def get_proxy(self) -> InterfaceProxy | ObjectProxy:
         if self.job_proxy is None:
             self.job_proxy = self.bus.get_proxy(
-                HIRTE_DBUS_INTERFACE,
+                BLUECHI_DBUS_INTERFACE,
                 self.job_path
             )
         

@@ -1,0 +1,16 @@
+#  SPDX-License-Identifier: GPL-2.0-or-later
+#
+#  This file is part of bluechi-agent.
+#
+[Unit]
+Description=BlueChi systemd service controller agent daemon
+Documentation=man:bluechi-agent(1) man:bluechi-agent.conf(5)
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/bluechi-agent
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target

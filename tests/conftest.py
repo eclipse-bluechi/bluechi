@@ -2,5 +2,5 @@
 # GPL-2.0-or-later
 
 pytest_plugins = [
-    "hirte_test.fixtures"
+    "bluechi_test.fixtures"
 ]

@@ -1,6 +1,6 @@
 [Unit]
-Wants=hirte-proxy@node-bar_simple.service
-After=hirte-proxy@node-bar_simple.service
+Wants=bluechi-proxy@node-bar_simple.service
+After=bluechi-proxy@node-bar_simple.service
 
 [Service]
 ExecStart=/bin/true

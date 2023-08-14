@@ -1,8 +1,8 @@
 /* SPDX-License-Identifier: GPL-2.0-or-later */
 
-#include "libhirte/common/common.h"
-#include "libhirte/common/parse-util.h"
-#include "libhirte/log/log.h"
+#include "libbluechi/common/common.h"
+#include "libbluechi/common/parse-util.h"
+#include "libbluechi/log/log.h"
 
 #include "job.h"
 #include "manager.h"
@@ -36,7 +36,7 @@ int metrics_export(Manager *manager) {
                         metrics_api_vtable,
                         NULL);
         if (r < 0) {
-                hirte_log_errorf("Failed to add API metrics vtable: %s", strerror(-r));
+                bc_log_errorf("Failed to add API metrics vtable: %s", strerror(-r));
                 return r;
         }
 
@@ -50,15 +50,14 @@ static int node_metrics_match_agent_job(sd_bus_message *m, void *userdata, UNUSE
         uint64_t systemd_job_time = 0;
         int r = sd_bus_message_read(m, "sst", &unit, &method, &systemd_job_time);
         if (r < 0) {
-                hirte_log_errorf("Invalid generic int64 metric signal: %s", strerror(-r));
+                bc_log_errorf("Invalid generic int64 metric signal: %s", strerror(-r));
                 return r;
         }
-        hirte_log_debugf(
-                        "Reporting agent %s job metrics on unit %s: %ldus for node %s",
-                        unit,
-                        method,
-                        systemd_job_time,
-                        node->name);
+        bc_log_debugf("Reporting agent %s job metrics on unit %s: %ldus for node %s",
+                      unit,
+                      method,
+                      systemd_job_time,
+                      node->name);
         r = sd_bus_emit_signal(
                         node->manager->api_bus,
                         METRICS_OBJECT_PATH,
@@ -70,7 +69,7 @@ static int node_metrics_match_agent_job(sd_bus_message *m, void *userdata, UNUSE
                         method,
                         systemd_job_time);
         if (r < 0) {
-                hirte_log_errorf("Failed to emit StartUnitJobMetrics signal: %s", strerror(-r));
+                bc_log_errorf("Failed to emit StartUnitJobMetrics signal: %s", strerror(-r));
                 return r;
         }
 
@@ -88,7 +87,7 @@ bool metrics_node_signal_matching_register(Node *node) {
                         node_metrics_match_agent_job,
                         node);
         if (r < 0) {
-                hirte_log_errorf("Failed to add metrics signal matching: %s", strerror(-r));
+                bc_log_errorf("Failed to add metrics signal matching: %s", strerror(-r));
                 return false;
         }
 
@@ -102,24 +101,23 @@ void metrics_produce_job_report(Job *job) {
         r = node_method_get_unit_uint64_property_sync(
                         job->node, job->unit, "InactiveExitTimestampMonotonic", &inactive_exit_timestamp);
         if (r < 0) {
-                hirte_log_errorf("Failed to get unit property InactiveExitTimestampMonotonic: %s", strerror(-r));
+                bc_log_errorf("Failed to get unit property InactiveExitTimestampMonotonic: %s", strerror(-r));
                 return;
         }
 
         r = node_method_get_unit_uint64_property_sync(
                         job->node, job->unit, "ActiveEnterTimestampMonotonic", &active_enter_timestamp);
         if (r < 0) {
-                hirte_log_errorf("Failed to get unit property ActiveEnterTimestampMonotonic: %s", strerror(-r));
+                bc_log_errorf("Failed to get unit property ActiveEnterTimestampMonotonic: %s", strerror(-r));
                 return;
         }
 
         unit_net_start_time_micros = (active_enter_timestamp - inactive_exit_timestamp);
         job_measured_time_micros = job->job_end_micros - job->job_start_micros;
 
-        hirte_log_debugf(
-                        "Reporting job metrics: Job measured time: %ldus, Unit start time from properties: %ldus",
-                        job_measured_time_micros,
-                        unit_net_start_time_micros);
+        bc_log_debugf("Reporting job metrics: Job measured time: %ldus, Unit start time from properties: %ldus",
+                      job_measured_time_micros,
+                      unit_net_start_time_micros);
 
         r = sd_bus_emit_signal(
                         job->node->manager->api_bus,
@@ -133,6 +131,6 @@ void metrics_produce_job_report(Job *job) {
                         job_measured_time_micros,
                         unit_net_start_time_micros);
         if (r < 0) {
-                hirte_log_errorf("Failed to emit StartUnitJobMetrics signal: %s", strerror(-r));
+                bc_log_errorf("Failed to emit StartUnitJobMetrics signal: %s", strerror(-r));
         }
 }

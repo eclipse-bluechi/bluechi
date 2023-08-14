@@ -29,10 +29,10 @@ if len(sys.argv) > 2:
 
 bus = dasbus.connection.SystemMessageBus()
 
-manager = bus.get_proxy("org.containers.hirte",  "/org/containers/hirte")
+manager = bus.get_proxy("io.github.eclipse-bluechi.bluechi", "/io/github/eclipse_bluechi/bluechi")
 
 monitor_path = manager.CreateMonitor()
-monitor = bus.get_proxy("org.containers.hirte",  monitor_path)
+monitor = bus.get_proxy("io.github.eclipse-bluechi.bluechi", monitor_path)
 
 old_values = {}
 
