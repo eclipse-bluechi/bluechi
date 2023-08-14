@@ -4,6 +4,7 @@ import os
 import pytest
 
 from podman import PodmanClient
+from typing import Union
 
 from hirte_test.test import HirteTest
 from hirte_test.config import HirteControllerConfig, HirteNodeConfig
@@ -59,7 +60,7 @@ def podman_client() -> PodmanClient:
 
 
 @pytest.fixture(scope='session')
-def hirte_image_id(podman_client: PodmanClient, hirte_image_name: str) -> (str | None):
+def hirte_image_id(podman_client: PodmanClient, hirte_image_name: str) -> (Union[str, None]):
     """Returns the image ID of hirte testing containers"""
     image = next(
         iter(

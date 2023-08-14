@@ -31,6 +31,8 @@ dnf install \
     -y
 ```
 
+**_NOTE:_** Integration tests code should be compatible with Python 3.9, please don't use features from newer versions.
+
 ### Installing packages using pip
 
 All required python packages are listed in the [requirements.txt](./requirements.txt) and can be installed using `pip`:
@@ -43,8 +45,8 @@ Instead of installing the required packages directly, it is recommended to creat
 the following snippet uses the built-in [venv](https://docs.python.org/3/library/venv.html):
 
 ```bash
-python -m venv env
-source env/bin/activate
+python -m venv ~/bluechi-env
+source ~/bluechi-env/bin/activate
 pip install -U -r requirements.txt
 # ...
 
