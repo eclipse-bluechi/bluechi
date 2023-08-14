@@ -63,7 +63,7 @@ class HirteContainer():
             self.container.stop()
         self.container.remove()
 
-    def exec_run(self, command: (str | list[str]), raw_output: bool = False) -> \
+    def exec_run(self, command: (Union[str, list[str]]), raw_output: bool = False) -> \
             Tuple[Optional[int], Union[Iterator[bytes], Any, Tuple[bytes, bytes]]]:
 
         result, output = self.container.exec_run(command)

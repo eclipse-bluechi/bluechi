@@ -2,8 +2,10 @@
 
 import socket
 
+from typing import Union
 
-def read_file(local_file: str) -> (str | None):
+
+def read_file(local_file: str) -> (Union[str, None]):
     content = None
     with open(local_file, 'r') as fh:
         content = fh.read()
