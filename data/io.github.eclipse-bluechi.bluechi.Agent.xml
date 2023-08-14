@@ -1,0 +1,16 @@
+<!DOCTYPE node PUBLIC "-//freedesktop//DTD D-BUS Object Introspection 1.0//EN" "http://www.freedesktop.org/standards/dbus/1.0/introspect.dtd">
+<!-- SPDX-License-Identifier: GPL-2.0-or-later -->
+<node>
+  <interface name="io.github.eclipse-bluechi.bluechi.Agent">
+    <method name="CreateProxy">
+      <arg name="local_service_name" type="s" direction="in" />
+      <arg name="node" type="s" direction="in" />
+      <arg name="unit" type="s" direction="in" />
+    </method>
+    <method name="RemoveProxy">
+      <arg name="local_service_name" type="s" direction="in" />
+      <arg name="node" type="s" direction="in" />
+      <arg name="unit" type="s" direction="in" />
+    </method>
+  </interface>
+</node>

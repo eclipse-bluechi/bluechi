@@ -1,0 +1,91 @@
+policy_module(bluechi, 1.0.0)
+
+########################################
+#
+# Declarations
+#
+
+type bluechi_t;
+type bluechi_exec_t;
+init_daemon_domain(bluechi_t, bluechi_exec_t)
+
+type bluechi_agent_t alias hirte_agent_t;
+type bluechi_agent_exec_t;
+init_daemon_domain(bluechi_agent_t, bluechi_agent_exec_t)
+
+type bluechi_port_t;
+corenet_port(bluechi_port_t)
+
+permissive bluechi_t;
+permissive bluechi_agent_t;
+
+########################################
+#
+# bluechi local policy
+#
+allow bluechi_t self:fifo_file rw_fifo_file_perms;
+allow bluechi_t self:unix_stream_socket create_stream_socket_perms;
+
+domain_use_interactive_fds(bluechi_t)
+
+files_read_etc_files(bluechi_t)
+
+miscfiles_read_localization(bluechi_t)
+
+allow bluechi_t port_type:tcp_socket name_bind;
+allow bluechi_t self:capability net_bind_service;
+allow bluechi_t self:tcp_socket create_stream_socket_perms;
+allow bluechi_t self:unix_dgram_socket create_socket_perms;
+
+corenet_tcp_bind_generic_node(bluechi_t)
+
+dbus_acquire_svc_system_dbusd(bluechi_t)
+dbus_system_bus_client(bluechi_t)
+
+kernel_dgram_send(bluechi_t)
+
+logging_send_syslog_msg(bluechi_t)
+logging_read_syslog_pid(bluechi_t)
+
+allow haproxy_t bluechi_t:unix_stream_socket connectto;
+
+########################################
+#
+# bluechi_agent local policy
+#
+allow bluechi_agent_t self:fifo_file rw_fifo_file_perms;
+allow bluechi_agent_t self:unix_stream_socket create_stream_socket_perms;
+allow bluechi_agent_t self:unix_dgram_socket create_socket_perms;
+
+kernel_dgram_send(bluechi_agent_t)
+
+domain_use_interactive_fds(bluechi_agent_t)
+
+files_read_etc_files(bluechi_agent_t)
+
+miscfiles_read_localization(bluechi_agent_t)
+
+logging_send_syslog_msg(bluechi_agent_t)
+logging_read_syslog_pid(bluechi_agent_t)
+
+allow bluechi_agent_t self:tcp_socket create_stream_socket_perms;
+allow bluechi_agent_t bluechi_port_t:tcp_socket name_connect;
+
+dbus_acquire_svc_system_dbusd(bluechi_agent_t)
+dbus_system_bus_client(bluechi_agent_t)
+
+init_status(bluechi_agent_t)
+
+rhcs_stream_connect_haproxy(bluechi_agent_t)
+
+gen_require(`
+       type haproxy_t, haproxy_var_lib_t;
+       type haproxy_var_run_t;
+       type init_t;
+')
+stream_connect_pattern(bluechi_agent_t, haproxy_var_lib_t, haproxy_var_lib_t, haproxy_t)
+
+manage_sock_files_pattern(init_t, haproxy_var_lib_t, haproxy_var_lib_t)
+manage_sock_files_pattern(init_t, haproxy_var_run_t, haproxy_var_run_t)
+
+unconfined_dbus_chat(bluechi_t)

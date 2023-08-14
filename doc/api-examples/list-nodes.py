@@ -7,7 +7,7 @@ bus = dasbus.connection.SystemMessageBus()
 
 NodeInfo = namedtuple("NodeInfo", ["name", "object_path", "status"])
 
-manager = bus.get_proxy("org.containers.hirte",  "/org/containers/hirte")
+manager = bus.get_proxy("io.github.eclipse-bluechi.bluechi", "/io/github/eclipse_bluechi/bluechi")
 nodes = manager.ListNodes()
 for n in nodes:
     info = NodeInfo(*n)

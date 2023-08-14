@@ -1,9 +1,9 @@
-# Subprojects used by hirte
+# Subprojects used by bluechi
 
-This directory contains all external subprojects used by hirte as git submodules. These are integrated into the main
+This directory contains all external subprojects used by bluechi as git submodules. These are integrated into the main
 project using mesons [subproject feature](https://mesonbuild.com/Subprojects.html).
 
-Currently, hirte uses the following external projects:
+Currently, bluechi uses the following external projects:
 
 - [hashmap.c](https://github.com/engelmi/hashmap.c.git)
 - [inih](https://github.com/benhoyt/inih.git)
@@ -25,9 +25,9 @@ After adding the new repository, checkout the desired tag to be used:
 git -C subprojects/<repository name> checkout <tag>
 ```
 
-For the new subproject to be usable by hirte, it needs to be integrated in the main [meson.build](../meson.build). One
+For the new subproject to be usable by bluechi, it needs to be integrated in the main [meson.build](../meson.build). One
 requirement for this is that the subproject itself uses meson and provides a `meson.build`. If the subproject itself is
 a `meson` project, include it as [subproject](https://mesonbuild.com/Subprojects.html). The included `inih` or
-`hashmap.c` can serve as a reference here. Otherwise the `subdir` function can be used (similar to hirte internal projects).
+`hashmap.c` can serve as a reference here. Otherwise the `subdir` function can be used (similar to bluechi internal projects).
 
 And, finally, add and commit the changes. The same procedure can be used to upgrade a submodule to a newer tag.

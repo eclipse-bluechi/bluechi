@@ -8,7 +8,7 @@ NodeUnitInfo = namedtuple("NodeUnitInfo", ["node", "name",
                                            "description", "load_state", "active_state", "sub_state", "follower",
                                            "object_path", "job_id", "job_type", "job_object_path"])
 
-manager = bus.get_proxy("org.containers.hirte",  "/org/containers/hirte")
+manager = bus.get_proxy("io.github.eclipse-bluechi.bluechi",  "/io/github/eclipse_bluechi/bluechi")
 units = manager.ListUnits()
 for u in units:
     info = NodeUnitInfo(*u)

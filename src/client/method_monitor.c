@@ -1,8 +1,8 @@
 /* SPDX-License-Identifier: GPL-2.0-or-later */
-#include "libhirte/common/common.h"
-#include "libhirte/common/list.h"
-#include "libhirte/common/time-util.h"
-#include "libhirte/service/shutdown.h"
+#include "libbluechi/common/common.h"
+#include "libbluechi/common/list.h"
+#include "libbluechi/common/time-util.h"
+#include "libbluechi/service/shutdown.h"
 
 #include "method_monitor.h"
 
@@ -169,8 +169,8 @@ int method_monitor_units_on_nodes(sd_bus *api_bus, char *node, char *units) {
 
         r = sd_bus_call_method(
                         api_bus,
-                        HIRTE_INTERFACE_BASE_NAME,
-                        HIRTE_OBJECT_PATH,
+                        BC_INTERFACE_BASE_NAME,
+                        BC_OBJECT_PATH,
                         MANAGER_INTERFACE,
                         "CreateMonitor",
                         &error,
@@ -192,7 +192,7 @@ int method_monitor_units_on_nodes(sd_bus *api_bus, char *node, char *units) {
         r = sd_bus_match_signal(
                         api_bus,
                         NULL,
-                        HIRTE_INTERFACE_BASE_NAME,
+                        BC_INTERFACE_BASE_NAME,
                         monitor_path,
                         MONITOR_INTERFACE,
                         "UnitNew",
@@ -206,7 +206,7 @@ int method_monitor_units_on_nodes(sd_bus *api_bus, char *node, char *units) {
         r = sd_bus_match_signal(
                         api_bus,
                         NULL,
-                        HIRTE_INTERFACE_BASE_NAME,
+                        BC_INTERFACE_BASE_NAME,
                         monitor_path,
                         MONITOR_INTERFACE,
                         "UnitRemoved",
@@ -220,7 +220,7 @@ int method_monitor_units_on_nodes(sd_bus *api_bus, char *node, char *units) {
         r = sd_bus_match_signal(
                         api_bus,
                         NULL,
-                        HIRTE_INTERFACE_BASE_NAME,
+                        BC_INTERFACE_BASE_NAME,
                         monitor_path,
                         MONITOR_INTERFACE,
                         "UnitStateChanged",
@@ -234,7 +234,7 @@ int method_monitor_units_on_nodes(sd_bus *api_bus, char *node, char *units) {
         r = sd_bus_match_signal(
                         api_bus,
                         NULL,
-                        HIRTE_INTERFACE_BASE_NAME,
+                        BC_INTERFACE_BASE_NAME,
                         monitor_path,
                         MONITOR_INTERFACE,
                         "UnitPropertiesChanged",
@@ -247,7 +247,7 @@ int method_monitor_units_on_nodes(sd_bus *api_bus, char *node, char *units) {
 
         _cleanup_sd_bus_message_ sd_bus_message *m = NULL;
         r = sd_bus_message_new_method_call(
-                        api_bus, &m, HIRTE_INTERFACE_BASE_NAME, monitor_path, MONITOR_INTERFACE, "SubscribeList");
+                        api_bus, &m, BC_INTERFACE_BASE_NAME, monitor_path, MONITOR_INTERFACE, "SubscribeList");
         if (r < 0) {
                 fprintf(stderr, "Failed creating subscription call: %s\n", strerror(-r));
                 return r;
@@ -281,7 +281,7 @@ int method_monitor_units_on_nodes(sd_bus *api_bus, char *node, char *units) {
                 return r;
         }
 
-        r = sd_bus_call(api_bus, m, HIRTE_DEFAULT_DBUS_TIMEOUT, &error, &reply);
+        r = sd_bus_call(api_bus, m, BC_DEFAULT_DBUS_TIMEOUT, &error, &reply);
         if (r < 0) {
                 fprintf(stderr, "Failed to subscribe to monitor: %s\n", error.message);
                 return r;
@@ -402,7 +402,7 @@ static int fetch_last_seen_timestamp_property(
 
         int r = sd_bus_get_property(
                         api_bus,
-                        HIRTE_INTERFACE_BASE_NAME,
+                        BC_INTERFACE_BASE_NAME,
                         node_path,
                         NODE_INTERFACE,
                         "LastSeenTimestamp",
@@ -462,8 +462,8 @@ int method_monitor_node_connection_state(sd_bus *api_bus) {
 
         r = sd_bus_call_method(
                         api_bus,
-                        HIRTE_INTERFACE_BASE_NAME,
-                        HIRTE_OBJECT_PATH,
+                        BC_INTERFACE_BASE_NAME,
+                        BC_OBJECT_PATH,
                         MANAGER_INTERFACE,
                         "ListNodes",
                         &error,
@@ -512,8 +512,8 @@ int method_monitor_node_connection_state(sd_bus *api_bus) {
         r = sd_bus_match_signal(
                         api_bus,
                         NULL,
-                        HIRTE_INTERFACE_BASE_NAME,
-                        HIRTE_OBJECT_PATH,
+                        BC_INTERFACE_BASE_NAME,
+                        BC_OBJECT_PATH,
                         MANAGER_INTERFACE,
                         "NodeConnectionStateChanged",
                         on_node_connection_state_changed,

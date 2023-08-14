@@ -1,9 +1,0 @@
-#!/usr/bin/env python
-# SPDX-License-Identifier: GPL-2.0-or-later
-#
-# vim:sw=4:ts=4:et
-from pyhirte.api import Manager
-
-for node in Manager().list_nodes():
-    # node[name, obj_path, status]
-    print(f"Node: {node[0]}, State: {node[2]}")

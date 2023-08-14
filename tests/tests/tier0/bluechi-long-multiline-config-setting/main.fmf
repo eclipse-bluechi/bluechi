@@ -1,0 +1,1 @@
+summary: Test if bluechi can properly parse a very long setting value spread across multiple lines, e.g. for the allowed node names

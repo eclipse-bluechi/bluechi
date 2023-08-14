@@ -3,9 +3,9 @@
 #include <getopt.h>
 #include <stdlib.h>
 
-#include "libhirte/common/opt.h"
-#include "libhirte/common/parse-util.h"
-#include "libhirte/service/shutdown.h"
+#include "libbluechi/common/opt.h"
+#include "libbluechi/common/parse-util.h"
+#include "libbluechi/service/shutdown.h"
 
 #include "manager.h"
 
@@ -25,9 +25,9 @@ static void usage(char *argv[]) {
                "\t%s [options...] \n"
                "Available options are:\n"
                "\t-%c %s\t\t Print this help message.\n"
-               "\t-%c %s\t\t The port of hirte to connect to.\n"
-               "\t-%c %s\t A path to a config file used to bootstrap hirte-agent.\n"
-               "\t-%c %s\t Print current hirte version.\n",
+               "\t-%c %s\t\t The port of bluechi to connect to.\n"
+               "\t-%c %s\t A path to a config file used to bootstrap bluechi-agent.\n"
+               "\t-%c %s\t Print current bluechi version.\n",
                argv[0],
                ARG_HELP_SHORT,
                ARG_HELP,
@@ -49,7 +49,7 @@ static int get_opts(int argc, char *argv[]) {
                         return 1;
 
                 case ARG_VERSION_SHORT:
-                        printf("%s\n", CONFIG_H_HIRTE_VERSION);
+                        printf("%s\n", CONFIG_H_BC_VERSION);
                         return 1;
 
                 case ARG_PORT_SHORT:

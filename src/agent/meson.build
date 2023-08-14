@@ -9,7 +9,7 @@ node_src = [
 ]
 
 executable(
-  'hirte-agent',
+  'bluechi-agent',
   node_src,
   dependencies: [
     systemd_dep,
@@ -17,7 +17,7 @@ executable(
     hashmapc_dep,
   ],
   link_with: [
-    hirte_lib,
+    bluechi_lib,
   ],
   c_args: common_cflags,
   include_directories: include_directories('..'),

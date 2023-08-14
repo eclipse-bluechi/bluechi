@@ -3,11 +3,11 @@
 # Installing the public DBus API
 install_data(
     [
-        'org.containers.hirte.Job.xml',
-        'org.containers.hirte.Manager.xml',
-        'org.containers.hirte.Monitor.xml',
-        'org.containers.hirte.Node.xml',
-        'org.containers.hirte.Agent.xml'
+        'io.github.eclipse-bluechi.bluechi.Job.xml',
+        'io.github.eclipse-bluechi.bluechi.Manager.xml',
+        'io.github.eclipse-bluechi.bluechi.Monitor.xml',
+        'io.github.eclipse-bluechi.bluechi.Node.xml',
+        'io.github.eclipse-bluechi.bluechi.Agent.xml'
     ],
     install_dir: join_paths(get_option('datadir'), 'dbus-1', 'interfaces'), 
 )
@@ -23,14 +23,14 @@ conf = configuration_data()
 conf.set('dbus_srv_user', dbus_srv_user)
 
 configure_file(
-    output: 'org.containers.hirte.conf',
-    input: 'org.containers.hirte.conf.in',
+    output: 'io.github.eclipse-bluechi.bluechi.conf',
+    input: 'io.github.eclipse-bluechi.bluechi.conf.in',
     configuration: conf,
     install_dir: dbus_service_dir,
 )
 configure_file(
-    output: 'org.containers.hirte.Agent.conf',
-    input: 'org.containers.hirte.Agent.conf.in',
+    output: 'io.github.eclipse-bluechi.bluechi.Agent.conf',
+    input: 'io.github.eclipse-bluechi.bluechi.Agent.conf.in',
     configuration: conf,
     install_dir: dbus_service_dir,
 )

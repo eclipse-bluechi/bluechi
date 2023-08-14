@@ -8,15 +8,10 @@ CHECKED_FILES=".*\(\.c\|\.h\|\.sh\|\.xml\|meson\.build\)"
 # List of licenses which are OK when found in a source code
 #
 APPROVED_LICENSES=""
-# Used for hirte original code
+# Used for bluechi original code
 APPROVED_LICENSES="${APPROVED_LICENSES} GPL-2.0-or-later"
-# Used in src/libhirte/common/list.h
+# Used in src/libbluechi/common/list.h
 APPROVED_LICENSES="${APPROVED_LICENSES} LGPL-2.1-or-later"
-# Used in src/libhirte/ini/
-APPROVED_LICENSES="${APPROVED_LICENSES} BSD-3-Clause"
-# Used in src/libhirte/hasmap/
-APPROVED_LICENSES="${APPROVED_LICENSES} MIT"
-
 
 result=0
 found_files="

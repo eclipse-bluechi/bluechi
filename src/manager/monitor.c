@@ -1,5 +1,5 @@
 /* SPDX-License-Identifier: GPL-2.0-or-later */
-#include "libhirte/log/log.h"
+#include "libbluechi/log/log.h"
 
 #include "job.h"
 #include "manager.h"
@@ -179,7 +179,7 @@ bool monitor_export(Monitor *monitor) {
                         monitor_vtable,
                         monitor);
         if (r < 0) {
-                hirte_log_errorf("Failed to add monitor vtable: %s", strerror(-r));
+                bc_log_errorf("Failed to add monitor vtable: %s", strerror(-r));
                 return false;
         }
 
@@ -202,8 +202,8 @@ void monitor_close(Monitor *monitor) {
 }
 
 /*************************************************************************
- **************** org.containers.hirte.Monitor.Close *********************
- ************************************************************************/
+ *** io.github.eclipse-bluechi.bluechi.Monitor.Close *********************
+ *************************************************************************/
 
 static int monitor_method_close(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error) {
         _cleanup_monitor_ Monitor *monitor = monitor_ref(userdata);
@@ -221,8 +221,8 @@ static int monitor_method_close(sd_bus_message *m, void *userdata, UNUSED sd_bus
 }
 
 /*************************************************************************
- **************** org.containers.hirte.Monitor.Subscribe *****************
- ************************************************************************/
+ *** io.github.eclipse-bluechi.bluechi.Monitor.Subscribe *****************
+ *************************************************************************/
 
 static int monitor_method_subscribe(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error) {
         Monitor *monitor = userdata;
@@ -257,8 +257,8 @@ static int monitor_method_subscribe(sd_bus_message *m, void *userdata, UNUSED sd
 }
 
 /*************************************************************************
- **************** org.containers.hirte.Monitor.SubscribeList *************
- ************************************************************************/
+ ***** io.github.eclipse-bluechi.bluechi.Monitor.SubscribeList ***********
+ *************************************************************************/
 
 static int monitor_method_subscribe_list(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error) {
         Monitor *monitor = userdata;
@@ -317,8 +317,8 @@ static int monitor_method_subscribe_list(sd_bus_message *m, void *userdata, UNUS
 }
 
 /*************************************************************************
- **************** org.containers.hirte.Monitor.Unsubscribe ***************
- ************************************************************************/
+ ********* io.github.eclipse-bluechi.bluechi.Monitor.Unsubscribe *********
+ *************************************************************************/
 
 static Subscription *monitor_find_subscription(Monitor *monitor, uint32_t sub_id) {
         Subscription *sub = NULL;

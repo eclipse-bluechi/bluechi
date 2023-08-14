@@ -1,5 +1,5 @@
 /* SPDX-License-Identifier: GPL-2.0-or-later */
-#include "libhirte/log/log.h"
+#include "libbluechi/log/log.h"
 
 #include "job.h"
 #include "manager.h"
@@ -98,7 +98,7 @@ static void proxy_monitor_drop_dep(ProxyMonitor *monitor) {
         if (monitor->added_dep) {
                 int res = node_remove_proxy_dependency(monitor->target_node, monitor->unit_name);
                 if (res < 0) {
-                        hirte_log_error("Failed to remove proxy dependency");
+                        bc_log_error("Failed to remove proxy dependency");
                 }
                 monitor->added_dep = false;
         }
@@ -111,7 +111,7 @@ void proxy_monitor_close(ProxyMonitor *monitor) {
 int proxy_monitor_on_unit_new(
                 UNUSED void *userdata, UNUSED const char *node, UNUSED const char *unit, const char *reason) {
         ProxyMonitor *monitor = (ProxyMonitor *) userdata;
-        hirte_log_debugf("ProxyMonitor processing unit new %s %s %s", node, unit, reason);
+        bc_log_debugf("ProxyMonitor processing unit new %s %s %s", node, unit, reason);
         proxy_monitor_send_new(monitor, reason);
         return 0;
 }
@@ -125,13 +125,12 @@ int proxy_monitor_on_unit_state_changed(
                 const char *reason) {
         ProxyMonitor *monitor = (ProxyMonitor *) userdata;
 
-        hirte_log_debugf(
-                        "ProxyMonitor processing unit state changed %s %s %s %s %s",
-                        node,
-                        unit,
-                        active_state,
-                        substate,
-                        reason);
+        bc_log_debugf("ProxyMonitor processing unit state changed %s %s %s %s %s",
+                      node,
+                      unit,
+                      active_state,
+                      substate,
+                      reason);
         proxy_monitor_send_state_changed(monitor, active_state, substate, reason);
 
         return 0;
@@ -140,7 +139,7 @@ int proxy_monitor_on_unit_state_changed(
 int proxy_monitor_on_unit_removed(
                 UNUSED void *userdata, UNUSED const char *node, UNUSED const char *unit, const char *reason) {
         ProxyMonitor *monitor = (ProxyMonitor *) userdata;
-        hirte_log_debugf("ProxyMonitor processing unit removed %s %s %s", node, unit, reason);
+        bc_log_debugf("ProxyMonitor processing unit removed %s %s %s", node, unit, reason);
         proxy_monitor_send_removed(monitor, reason);
         return 0;
 }
@@ -158,11 +157,10 @@ static int proxy_monitor_send_error_callback(sd_bus_message *m, void *userdata, 
         _cleanup_proxy_monitor_ ProxyMonitor *monitor = userdata;
 
         if (sd_bus_message_is_method_error(m, NULL)) {
-                hirte_log_errorf(
-                                "Failed to send proxy error on node %s with object path %s: %s",
-                                monitor->node->name,
-                                monitor->proxy_object_path,
-                                sd_bus_message_get_error(m)->message);
+                bc_log_errorf("Failed to send proxy error on node %s with object path %s: %s",
+                              monitor->node->name,
+                              monitor->proxy_object_path,
+                              sd_bus_message_get_error(m)->message);
         }
         return 0;
 }
@@ -171,7 +169,7 @@ void proxy_monitor_send_error(ProxyMonitor *monitor, const char *message) {
         int r = sd_bus_call_method_async(
                         monitor->node->agent_bus,
                         NULL,
-                        HIRTE_INTERFACE_BASE_NAME,
+                        BC_INTERFACE_BASE_NAME,
                         monitor->proxy_object_path,
                         INTERNAL_PROXY_INTERFACE,
                         "Error",
@@ -180,12 +178,11 @@ void proxy_monitor_send_error(ProxyMonitor *monitor, const char *message) {
                         "s",
                         message);
         if (r < 0) {
-                hirte_log_errorf(
-                                "Failed to call Error on node %s object %s with message '%s': %s",
-                                monitor->node->name,
-                                monitor->proxy_object_path,
-                                message,
-                                strerror(-r));
+                bc_log_errorf("Failed to call Error on node %s object %s with message '%s': %s",
+                              monitor->node->name,
+                              monitor->proxy_object_path,
+                              message,
+                              strerror(-r));
         }
 }
 
@@ -194,11 +191,10 @@ static int proxy_monitor_send_state_changed_callback(
         _cleanup_proxy_monitor_ ProxyMonitor *monitor = userdata;
 
         if (sd_bus_message_is_method_error(m, NULL)) {
-                hirte_log_errorf(
-                                "Failed to send proxy state change node %s with object path %s: %s",
-                                monitor->node->name,
-                                monitor->proxy_object_path,
-                                sd_bus_message_get_error(m)->message);
+                bc_log_errorf("Failed to send proxy state change node %s with object path %s: %s",
+                              monitor->node->name,
+                              monitor->proxy_object_path,
+                              sd_bus_message_get_error(m)->message);
         }
         return 0;
 }
@@ -210,7 +206,7 @@ int proxy_monitor_send_state_changed(
         int r = sd_bus_call_method_async(
                         monitor->node->agent_bus,
                         NULL,
-                        HIRTE_INTERFACE_BASE_NAME,
+                        BC_INTERFACE_BASE_NAME,
                         monitor->proxy_object_path,
                         INTERNAL_PROXY_INTERFACE,
                         "TargetStateChanged",
@@ -221,11 +217,10 @@ int proxy_monitor_send_state_changed(
                         substate,
                         reason);
         if (r < 0) {
-                hirte_log_errorf(
-                                "Failed to send proxy state changed on node %s object %s: %s",
-                                monitor->node->name,
-                                monitor->proxy_object_path,
-                                error.message);
+                bc_log_errorf("Failed to send proxy state changed on node %s object %s: %s",
+                              monitor->node->name,
+                              monitor->proxy_object_path,
+                              error.message);
         }
         return r;
 }
@@ -234,11 +229,10 @@ static int proxy_monitor_send_new_callback(sd_bus_message *m, void *userdata, UN
         _cleanup_proxy_monitor_ ProxyMonitor *monitor = userdata;
 
         if (sd_bus_message_is_method_error(m, NULL)) {
-                hirte_log_errorf(
-                                "Failed to send proxy new %s with object path %s: %s",
-                                monitor->node->name,
-                                monitor->proxy_object_path,
-                                sd_bus_message_get_error(m)->message);
+                bc_log_errorf("Failed to send proxy new %s with object path %s: %s",
+                              monitor->node->name,
+                              monitor->proxy_object_path,
+                              sd_bus_message_get_error(m)->message);
         }
         return 0;
 }
@@ -249,7 +243,7 @@ int proxy_monitor_send_new(ProxyMonitor *monitor, const char *reason) {
         int r = sd_bus_call_method_async(
                         monitor->node->agent_bus,
                         NULL,
-                        HIRTE_INTERFACE_BASE_NAME,
+                        BC_INTERFACE_BASE_NAME,
                         monitor->proxy_object_path,
                         INTERNAL_PROXY_INTERFACE,
                         "TargetNew",
@@ -258,11 +252,10 @@ int proxy_monitor_send_new(ProxyMonitor *monitor, const char *reason) {
                         "s",
                         reason);
         if (r < 0) {
-                hirte_log_errorf(
-                                "Failed to send proxy new on node %s object %s: %s",
-                                monitor->node->name,
-                                monitor->proxy_object_path,
-                                error.message);
+                bc_log_errorf("Failed to send proxy new on node %s object %s: %s",
+                              monitor->node->name,
+                              monitor->proxy_object_path,
+                              error.message);
         }
         return r;
 }
@@ -271,11 +264,10 @@ static int proxy_monitor_send_removed_callback(sd_bus_message *m, void *userdata
         _cleanup_proxy_monitor_ ProxyMonitor *monitor = userdata;
 
         if (sd_bus_message_is_method_error(m, NULL)) {
-                hirte_log_errorf(
-                                "Failed to send proxy removed %s with object path %s: %s",
-                                monitor->node->name,
-                                monitor->proxy_object_path,
-                                sd_bus_message_get_error(m)->message);
+                bc_log_errorf("Failed to send proxy removed %s with object path %s: %s",
+                              monitor->node->name,
+                              monitor->proxy_object_path,
+                              sd_bus_message_get_error(m)->message);
         }
         return 0;
 }
@@ -286,7 +278,7 @@ int proxy_monitor_send_removed(ProxyMonitor *monitor, const char *reason) {
         int r = sd_bus_call_method_async(
                         monitor->node->agent_bus,
                         NULL,
-                        HIRTE_INTERFACE_BASE_NAME,
+                        BC_INTERFACE_BASE_NAME,
                         monitor->proxy_object_path,
                         INTERNAL_PROXY_INTERFACE,
                         "TargetRemoved",
@@ -295,11 +287,10 @@ int proxy_monitor_send_removed(ProxyMonitor *monitor, const char *reason) {
                         "s",
                         reason);
         if (r < 0) {
-                hirte_log_errorf(
-                                "Failed to send proxy removed on node %s object %s: %s",
-                                monitor->node->name,
-                                monitor->proxy_object_path,
-                                error.message);
+                bc_log_errorf("Failed to send proxy removed on node %s object %s: %s",
+                              monitor->node->name,
+                              monitor->proxy_object_path,
+                              error.message);
         }
         return r;
 }

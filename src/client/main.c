@@ -3,8 +3,8 @@
 #include <getopt.h>
 #include <stdlib.h>
 
-#include "libhirte/common/common.h"
-#include "libhirte/common/opt.h"
+#include "libbluechi/common/common.h"
+#include "libbluechi/common/opt.h"
 
 #include "client.h"
 

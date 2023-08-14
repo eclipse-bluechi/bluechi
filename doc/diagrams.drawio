@@ -7,7 +7,7 @@
         <mxCell id="cNh8NexcxSdfIfK-n4i8-1" value="Node - Manager" style="rounded=1;whiteSpace=wrap;html=1;arcSize=7;align=left;verticalAlign=top;spacingLeft=35;fontSize=20;fontStyle=4" vertex="1" parent="1">
           <mxGeometry x="20" y="310" width="280" height="180" as="geometry" />
         </mxCell>
-        <mxCell id="cNh8NexcxSdfIfK-n4i8-2" value="hirte" style="rounded=0;whiteSpace=wrap;html=1;fontSize=18;" vertex="1" parent="1">
+        <mxCell id="cNh8NexcxSdfIfK-n4i8-2" value="bluechi" style="rounded=0;whiteSpace=wrap;html=1;fontSize=18;" vertex="1" parent="1">
           <mxGeometry x="90" y="385" width="140" height="50" as="geometry" />
         </mxCell>
         <mxCell id="cNh8NexcxSdfIfK-n4i8-3" value="Managed Node: bar" style="rounded=1;whiteSpace=wrap;html=1;arcSize=7;align=left;verticalAlign=top;spacingLeft=35;fontSize=20;fontStyle=4" vertex="1" parent="1">
@@ -16,7 +16,7 @@
         <mxCell id="cNh8NexcxSdfIfK-n4i8-4" value="dbus&lt;br style=&quot;font-size: 13px;&quot;&gt;(unix domain)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=1;entryDx=0;entryDy=0;strokeWidth=2;fontSize=13;" edge="1" parent="1" source="cNh8NexcxSdfIfK-n4i8-5" target="cNh8NexcxSdfIfK-n4i8-7">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="cNh8NexcxSdfIfK-n4i8-5" value="hirte-agent" style="rounded=0;whiteSpace=wrap;html=1;fontSize=18;" vertex="1" parent="1">
+        <mxCell id="cNh8NexcxSdfIfK-n4i8-5" value="bluechi-agent" style="rounded=0;whiteSpace=wrap;html=1;fontSize=18;" vertex="1" parent="1">
           <mxGeometry x="550" y="290" width="140" height="50" as="geometry" />
         </mxCell>
         <mxCell id="cNh8NexcxSdfIfK-n4i8-6" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;strokeWidth=2;fillColor=#dae8fc;strokeColor=#000000;" edge="1" parent="1" source="cNh8NexcxSdfIfK-n4i8-7" target="cNh8NexcxSdfIfK-n4i8-8">
@@ -34,7 +34,7 @@
         <mxCell id="cNh8NexcxSdfIfK-n4i8-10" value="dbus&lt;br style=&quot;font-size: 13px;&quot;&gt;(unix domain)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;strokeWidth=2;fontSize=13;" edge="1" parent="1" source="cNh8NexcxSdfIfK-n4i8-11" target="cNh8NexcxSdfIfK-n4i8-13">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="cNh8NexcxSdfIfK-n4i8-11" value="hirte-agent" style="rounded=0;whiteSpace=wrap;html=1;fontSize=18;" vertex="1" parent="1">
+        <mxCell id="cNh8NexcxSdfIfK-n4i8-11" value="bluechi-agent" style="rounded=0;whiteSpace=wrap;html=1;fontSize=18;" vertex="1" parent="1">
           <mxGeometry x="550" y="540" width="140" height="50" as="geometry" />
         </mxCell>
         <mxCell id="cNh8NexcxSdfIfK-n4i8-12" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;strokeWidth=2;" edge="1" parent="1" target="cNh8NexcxSdfIfK-n4i8-14">
@@ -69,31 +69,31 @@
         <mxCell id="cNh8NexcxSdfIfK-n4i8-20" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=1;entryY=0.5;entryDx=0;entryDy=0;fillColor=#dae8fc;strokeColor=#000000;strokeWidth=2;" edge="1" parent="1" source="cNh8NexcxSdfIfK-n4i8-21" target="cNh8NexcxSdfIfK-n4i8-29">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="cNh8NexcxSdfIfK-n4i8-21" value="hirte-proxy@.service" style="rounded=0;whiteSpace=wrap;html=1;fontSize=18;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+        <mxCell id="cNh8NexcxSdfIfK-n4i8-21" value="bluechi-proxy@.service" style="rounded=0;whiteSpace=wrap;html=1;fontSize=18;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
           <mxGeometry x="900" y="540" width="195" height="50" as="geometry" />
         </mxCell>
         <mxCell id="cNh8NexcxSdfIfK-n4i8-22" value="requires" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;strokeWidth=2;fillColor=#dae8fc;strokeColor=#000000;fontSize=14;" edge="1" parent="1" source="cNh8NexcxSdfIfK-n4i8-23" target="cNh8NexcxSdfIfK-n4i8-18">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="cNh8NexcxSdfIfK-n4i8-23" value="hirte-dep@.service" style="rounded=0;whiteSpace=wrap;html=1;fontSize=18;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+        <mxCell id="cNh8NexcxSdfIfK-n4i8-23" value="bluechi-dep@.service" style="rounded=0;whiteSpace=wrap;html=1;fontSize=18;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
           <mxGeometry x="820" y="170" width="195" height="50" as="geometry" />
         </mxCell>
         <mxCell id="cNh8NexcxSdfIfK-n4i8-24" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.75;entryY=0;entryDx=0;entryDy=0;strokeWidth=2;endArrow=none;endFill=0;dashed=1;exitX=0;exitY=0;exitDx=270;exitDy=28.5;exitPerimeter=0;" edge="1" parent="1" source="cNh8NexcxSdfIfK-n4i8-25" target="cNh8NexcxSdfIfK-n4i8-21">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="cNh8NexcxSdfIfK-n4i8-25" value="hirte-proxy@bar_db.service" style="shape=note;whiteSpace=wrap;html=1;backgroundOutline=1;darkOpacity=0.05;align=left;spacingLeft=8;fontSize=15;size=17;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+        <mxCell id="cNh8NexcxSdfIfK-n4i8-25" value="bluechi-proxy@bar_db.service" style="shape=note;whiteSpace=wrap;html=1;backgroundOutline=1;darkOpacity=0.05;align=left;spacingLeft=8;fontSize=15;size=17;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
           <mxGeometry x="745" y="410" width="270" height="40" as="geometry" />
         </mxCell>
         <mxCell id="cNh8NexcxSdfIfK-n4i8-26" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.75;entryY=0;entryDx=0;entryDy=0;dashed=1;endArrow=none;endFill=0;exitX=0;exitY=0;exitDx=210;exitDy=28.5;exitPerimeter=0;strokeWidth=2;" edge="1" parent="1" source="cNh8NexcxSdfIfK-n4i8-27" target="cNh8NexcxSdfIfK-n4i8-23">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="cNh8NexcxSdfIfK-n4i8-27" value="hirte-dep@db.service" style="shape=note;whiteSpace=wrap;html=1;backgroundOutline=1;darkOpacity=0.05;align=left;spacingLeft=8;fontSize=15;size=17;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+        <mxCell id="cNh8NexcxSdfIfK-n4i8-27" value="bluechi-dep@db.service" style="shape=note;whiteSpace=wrap;html=1;backgroundOutline=1;darkOpacity=0.05;align=left;spacingLeft=8;fontSize=15;size=17;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
           <mxGeometry x="730" y="30" width="210" height="40" as="geometry" />
         </mxCell>
         <mxCell id="cNh8NexcxSdfIfK-n4i8-28" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=1;entryY=0.5;entryDx=0;entryDy=0;strokeWidth=2;" edge="1" parent="1" source="cNh8NexcxSdfIfK-n4i8-29" target="cNh8NexcxSdfIfK-n4i8-11">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="cNh8NexcxSdfIfK-n4i8-29" value="hirte-proxy" style="rounded=0;whiteSpace=wrap;html=1;fontSize=18;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+        <mxCell id="cNh8NexcxSdfIfK-n4i8-29" value="bluechi-proxy" style="rounded=0;whiteSpace=wrap;html=1;fontSize=18;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
           <mxGeometry x="737.5" y="540" width="110" height="50" as="geometry" />
         </mxCell>
       </root>

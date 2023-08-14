@@ -1,0 +1,78 @@
+
+## <summary>policy for bluechi</summary>
+
+########################################
+## <summary>
+##	Execute bluechi_exec_t in the bluechi domain.
+## </summary>
+## <param name="domain">
+## <summary>
+##	Domain allowed to transition.
+## </summary>
+## </param>
+#
+interface(`bluechi_domtrans',`
+	gen_require(`
+		type bluechi_t, bluechi_exec_t;
+	')
+
+	corecmd_search_bin($1)
+	domtrans_pattern($1, bluechi_exec_t, bluechi_t)
+')
+
+######################################
+## <summary>
+##	Execute bluechi in the caller domain.
+## </summary>
+## <param name="domain">
+##	<summary>
+##	Domain allowed access.
+##	</summary>
+## </param>
+#
+interface(`bluechi_exec',`
+	gen_require(`
+		type bluechi_exec_t;
+	')
+
+	corecmd_search_bin($1)
+	can_exec($1, bluechi_exec_t)
+')
+
+########################################
+## <summary>
+##	Execute bluechi_agent_exec_t in the bluechi_agent domain.
+## </summary>
+## <param name="domain">
+## <summary>
+##	Domain allowed to transition.
+## </summary>
+## </param>
+#
+interface(`bluechi_agent_domtrans',`
+	gen_require(`
+		type bluechi_agent_t, bluechi_agent_exec_t;
+	')
+
+	corecmd_search_bin($1)
+	domtrans_pattern($1, bluechi_agent_exec_t, bluechi_agent_t)
+')
+
+######################################
+## <summary>
+##	Execute bluechi_agent in the caller domain.
+## </summary>
+## <param name="domain">
+##	<summary>
+##	Domain allowed access.
+##	</summary>
+## </param>
+#
+interface(`bluechi_agent_exec',`
+	gen_require(`
+		type bluechi_agent_exec_t;
+	')
+
+	corecmd_search_bin($1)
+	can_exec($1, bluechi_agent_exec_t)
+')

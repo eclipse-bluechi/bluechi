@@ -1,8 +1,8 @@
-# Hirte Project Licensing
+# BlueChi Project Licensing
 
 ## Main License
 
-The Hirte project uses single-line references to Unique License Identifiers as
+The BlueChi project uses single-line references to Unique License Identifiers as
 defined by the Linux Foundation's [SPDX project](https://spdx.org/). The line in
 each individual source file identifies the license applicable to that file.
 
@@ -16,13 +16,13 @@ Unless otherwise noted, the systemd project sources are licensed under the terms
 and conditions of the **GNU GENERAL PUBLIC LICENSE Version 2 or later**.
 
 New sources that cannot be distributed under **GPL-2.0-or-later** will no longer
-be accepted for inclusion in the Hirte project to maintain license uniformity.
+be accepted for inclusion in the BlueChi project to maintain license uniformity.
 
 ## Other Licenses
 
 The following exceptions apply:
 
-* Header file `src/libhirte/common/list.h` is copied from [systemd](https://github.com/systemd/systemd) project
+* Header file `src/libbluechi/common/list.h` is copied from [systemd](https://github.com/systemd/systemd) project
   and it's licensed under the original license, **LGPL-2.1-or-later**.
 * Files `selinux/meson.build` and `selinux/build-selinux.sh` are copied from
   [flatpak](https://github.com/flatpak/flatpak) project and they are licensed under the original license,

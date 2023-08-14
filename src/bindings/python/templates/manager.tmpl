@@ -9,8 +9,8 @@ class Manager(ApiBase):
     def get_proxy(self) -> InterfaceProxy | ObjectProxy:
         if self.manager_proxy is None:
             self.manager_proxy = self.bus.get_proxy(
-                HIRTE_DBUS_INTERFACE,
-                HIRTE_OBJECT_PATH
+                BLUECHI_DBUS_INTERFACE,
+                BLUECHI_OBJECT_PATH
             )
         
         return self.manager_proxy

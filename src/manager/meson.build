@@ -19,7 +19,7 @@ orch_src = [
 ]
 
 executable(
-  'hirte',
+  'bluechi',
   orch_src,
   dependencies: [
     systemd_dep,
@@ -27,7 +27,7 @@ executable(
     hashmapc_dep,
   ],
   link_with: [
-    hirte_lib,
+    bluechi_lib,
   ],
   install: true,
   c_args: common_cflags,

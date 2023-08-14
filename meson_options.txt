@@ -1,9 +1,9 @@
 option('api_bus', type: 'combo', 
     choices: ['user', 'system'], value: 'system',
-    description: 'The D-Bus daemon on which the public hirte API is provided')
+    description: 'The D-Bus daemon on which the public bluechi API is provided')
 
 option('man', type : 'combo', 
     choices : ['true', 'false'], value : 'true',
     description : 'Build and install man pages')
 
-option('dbus-srv-user', type: 'string', description: 'The (existing) user which runs hirte')
+option('dbus-srv-user', type: 'string', description: 'The (existing) user which runs bluechi')

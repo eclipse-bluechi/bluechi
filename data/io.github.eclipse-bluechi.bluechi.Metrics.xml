@@ -1,0 +1,19 @@
+<!DOCTYPE node PUBLIC "-//freedesktop//DTD D-BUS Object Introspection 1.0//EN" "http://www.freedesktop.org/standards/dbus/1.0/introspect.dtd">
+<!-- SPDX-License-Identifier: GPL-2.0-or-later -->
+<node>
+  <interface name="io.github.eclipse-bluechi.bluechi.Metrics">
+    <signal name="StartUnitJobMetrics">
+      <arg name="node_name" type="s" />
+      <arg name="job_id" type="s" />
+      <arg name="unit" type="s" />
+      <arg name="job_measured_time_micros" type="t" />
+      <arg name="unit_start_prop_time_micros" type="t" />
+    </signal>
+    <signal name="AgentJobMetrics">
+      <arg name="node_name" type="s" />
+      <arg name="unit" type="s" />
+      <arg name="method" type="s" />
+      <arg name="systemd_job_time_micros" type="t" />
+    </signal>
+  </interface>
+</node>

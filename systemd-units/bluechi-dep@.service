@@ -1,0 +1,14 @@
+#  SPDX-License-Identifier: GPL-2.0-or-later
+#
+#  This file is part of bluechi-agent.
+#
+[Unit]
+Description=BlueChi proxy dependency service
+Documentation=man:bluechi-proxy(1)
+BindsTo=%i.service
+After=%i.service
+
+[Service]
+ExecStart=true
+Type=oneshot
+RemainAfterExit=yes

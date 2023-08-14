@@ -1,9 +1,9 @@
 <!-- markdownlint-disable-file MD013 -->
-# Hirte integration test
+# BlueChi integration test
 
 ## Installation
 
-The integration tests use the RESTful API of [podman](https://podman.io/getting-started/installation) to isolate hirte
+The integration tests use the RESTful API of [podman](https://podman.io/getting-started/installation) to isolate BlueChi
 and the agents on multiple, containerized nodes. Therefore, a working installation of podman is required. Please refer
 to [podman installation instructions](https://podman.io/getting-started/installation).
 
@@ -73,38 +73,38 @@ To run integration tests please execute below command of the top level directory
 tmt run
 ```
 
-This will use latest hirte packages from
+This will use latest BlueChi packages from
 [hirte-snapshot](https://copr.fedorainfracloud.org/coprs/mperina/hirte-snapshot/) repository.
 
-## Running integration tests with local hirte build
+## Running integration tests with local bluechi build
 
-In order to run integration tests for your local hirte build, you need have hirte RPM packages built from your source
-code. The details about hirte development can be found at
+In order to run integration tests for your local BlueChi build, you need have BlueChi RPM packages built from your source
+code. The details about BlueChi development can be found at
 [README.developer.md](https://github.com/containers/hirte/blob/main/README.developer.md), the most important part for
 running integration tests is [Packaging](https://github.com/containers/hirte/blob/main/README.developer.md#packaging)
 section.
 
-In the following steps hirte source codes are located in `~/hirte` directory.
+In the following steps BlueChi source codes are located in `~/bluechi` directory.
 
-Integration tests are expecting, that local hirte RPMs are located in `tests/hirte-rpms` top level subdirectory, so hirte
+Integration tests are expecting, that local BlueChi RPMs are located in `tests/bluechi-rpms` top level subdirectory, so BlueChi
 packages should be built using following commands:
 
 ```shell
-mkdir ~/hirte/tests/hirte-rpms
-cd ~/hirte
-sudo ARTIFACTS_DIR=~/hirte/tests/hirte-rpms ./build-scripts/build-rpm.sh
+mkdir ~/bluechi/tests/bluechi-rpms
+cd ~/bluechi
+sudo ARTIFACTS_DIR=~/bluechi/tests/bluechi-rpms ./build-scripts/build-rpm.sh
 ```
 
 When done it's required to create DNF repository from those RPMs:
 
 ```shell
-createrepo_c ~/hirte/tests/hirte-rpms
+createrepo_c ~/bluechi/tests/bluechi-rpms
 ```
 
 After that step integration tests can be executed using following command:
 
 ```shell
-cd ~/hirte/tests
+cd ~/bluechi/tests
 tmt run -eCONTAINER_USED=integration-test-local
 ```
 
@@ -116,13 +116,13 @@ tmt run -eCONTAINER_USED=integration-test-local
 the [.pep8](./.pep8) file. All source files can be formatted via:
 
 ```bash
-# navigate into hirte/tests directory
+# navigate into bluechi/tests directory
 autopep8 ./
 ```
 
 ## Usage of containers
 
-The integration tests rely on containers as separate compute entities. These containers are used to simulate hirte's
+The integration tests rely on containers as separate compute entities. These containers are used to simulate BlueChi's
 functional behavior on a single runner.
 
 The [containers](./containers/) directory contains two container files.

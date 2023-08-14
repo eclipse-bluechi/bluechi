@@ -1,6 +1,6 @@
 /* SPDX-License-Identifier: GPL-2.0-or-later */
-#include "libhirte/bus/utils.h"
-#include "libhirte/common/common.h"
+#include "libbluechi/bus/utils.h"
+#include "libbluechi/common/common.h"
 
 #include "client.h"
 #include "method_status.h"
@@ -242,7 +242,7 @@ static int get_status_unit_on(Client *client, char *node_name, char *unit_name, 
                 return r;
         }
 
-        r = sd_bus_call(client->api_bus, outgoing_message, HIRTE_DEFAULT_DBUS_TIMEOUT, &error, &result);
+        r = sd_bus_call(client->api_bus, outgoing_message, BC_DEFAULT_DBUS_TIMEOUT, &error, &result);
         if (r < 0) {
                 fprintf(stderr, "Failed to issue call: %s\n", error.message);
                 return r;

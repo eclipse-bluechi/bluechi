@@ -9,8 +9,8 @@ BUILD_DIR=$SCRIPT_DIR/../builddir
 SUBPROJECTS_DIR=$SCRIPT_DIR/../subprojects
 
 ALL_SRC_FILES=$(find $SRC_DIR -name "*.[ch]" \
-        ! -path "$SRC_DIR/libhirte/ini/ini.[ch]" \
-        ! -path "$SRC_DIR/libhirte/hashmap/hashmap.[ch]" \
+        ! -path "$SRC_DIR/libbluechi/ini/ini.[ch]" \
+        ! -path "$SRC_DIR/libbluechi/hashmap/hashmap.[ch]" \
         ! -path "$SRC_DIR/*/test/**" \
         ! -path "$BUILD_DIR/**")
 

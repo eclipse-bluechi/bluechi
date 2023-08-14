@@ -1,7 +1,0 @@
-[Unit]
-Wants=hirte-proxy@node-bar_simple.service
-After=hirte-proxy@node-bar_simple.service
-
-[Service]
-ExecStart=/bin/true
-RemainAfterExit=yes

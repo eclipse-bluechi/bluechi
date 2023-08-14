@@ -1,0 +1,229 @@
+Name:    bluechi
+Version: @VERSION@
+Release: @RELEASE@%{?dist}
+Summary: A systemd service controller for multi-nodes environments
+License: GPLv2+
+URL:     https://github.com/containers/bluechi
+Source0: %{url}/archive/v%{version}/%{name}-%{version}.tar.gz
+
+BuildRequires: gcc
+BuildRequires: meson
+BuildRequires: systemd-devel
+BuildRequires: systemd-rpm-macros
+BuildRequires: golang-github-cpuguy83-md2man
+
+Requires: systemd
+Recommends: bluechi-selinux
+Obsoletes: hirte < 0.6.0
+Provides: hirte = %{version}-%{release}
+
+%description
+BlueChi is a systemd service controller for multi-nodes environements with a
+predefined number of nodes and with a focus on highly regulated environment
+such as those requiring functional safety (for example in cars).
+This package contains the controller and command line tool.
+
+%post
+%systemd_post bluechi.service
+
+%preun
+%systemd_preun bluechi.service
+
+%postun
+%systemd_postun_with_restart bluechi.service
+
+%files
+%ghost %{_sysconfdir}/bluechi/bluechi.conf
+%dir %{_sysconfdir}/bluechi
+%dir %{_sysconfdir}/bluechi/bluechi.conf.d
+%doc README.md
+%doc README.developer.md
+%license LICENSE
+%{_bindir}/bluechi
+%{_datadir}/dbus-1/interfaces/io.github.eclipse-bluechi.bluechi.Job.xml
+%{_datadir}/dbus-1/interfaces/io.github.eclipse-bluechi.bluechi.Manager.xml
+%{_datadir}/dbus-1/interfaces/io.github.eclipse-bluechi.bluechi.Monitor.xml
+%{_datadir}/dbus-1/interfaces/io.github.eclipse-bluechi.bluechi.Node.xml
+%{_datadir}/dbus-1/system.d/io.github.eclipse-bluechi.bluechi.conf
+%{_datadir}/bluechi/config/bluechi.conf
+%{_mandir}/man1/bluechi.*
+%{_mandir}/man5/bluechi.conf.*
+%{_sysconfdir}/bluechi/bluechi.conf.d/README.md
+%{_unitdir}/bluechi.service
+%{_unitdir}/bluechi.socket
+
+
+%package agent
+Summary:  BlueChi service controller agent
+Requires: systemd
+Recommends: bluechi-selinux
+
+%description agent
+BlueChi is a systemd service controller for multi-nodes environements with a
+predefined number of nodes and with a focus on highly regulated environment
+such as those requiring functional safety (for example in cars).
+This package contains the node agent.
+
+%post agent
+%systemd_post bluechi-agent.service
+
+%preun agent
+%systemd_preun bluechi-agent.service
+
+%postun agent
+%systemd_postun_with_restart bluechi-agent.service
+
+%files agent
+%ghost %{_sysconfdir}/bluechi/agent.conf
+%dir %{_sysconfdir}/bluechi
+%dir %{_sysconfdir}/bluechi/agent.conf.d
+%doc README.md
+%license LICENSE
+%{_bindir}/bluechi-agent
+%{_bindir}/bluechi-proxy
+%{_datadir}/dbus-1/system.d/io.github.eclipse-bluechi.bluechi.Agent.conf
+%{_datadir}/bluechi-agent/config/agent.conf
+%{_datadir}/dbus-1/interfaces/io.github.eclipse-bluechi.bluechi.Agent.xml
+%{_mandir}/man1/bluechi-agent.*
+%{_mandir}/man1/bluechi-proxy.*
+%{_mandir}/man5/bluechi-agent.conf.*
+%{_sysconfdir}/bluechi/agent.conf.d/README.md
+%{_unitdir}/bluechi-agent.service
+%{_userunitdir}/bluechi-agent.service
+%{_unitdir}/bluechi-proxy@.service
+%{_userunitdir}/bluechi-proxy@.service
+%{_unitdir}/bluechi-dep@.service
+%{_userunitdir}/bluechi-dep@.service
+
+
+%package selinux
+Summary:  BlueChi SELinux policy
+BuildRequires: checkpolicy
+BuildRequires: selinux-policy-devel
+
+%if "%{_selinux_policy_version}" != ""
+Requires: selinux-policy >= %{_selinux_policy_version}
+%endif
+
+Requires(post): policycoreutils
+Requires(post): policycoreutils-python-utils
+Requires(postun): policycoreutils-python-utils
+
+%global selinuxtype	targeted
+
+%description selinux
+SELinux policy associated with the bluechi and bluechi-agent daemons
+
+%files selinux
+%{_datadir}/selinux/devel/include/services/bluechi.if
+%{_datadir}/selinux/packages/bluechi.pp.bz2
+%{_mandir}/man8/bluechi*selinux.*
+
+%post selinux
+%selinux_modules_install -s %{selinuxtype} %{_datadir}/selinux/packages/bluechi.pp.bz2
+restorecon -R %{_bindir}/bluechi* &> /dev/null || :
+semanage port -a -t bluechi_port_t -p udp 842 || true
+semanage port -a -t bluechi_port_t -p tcp 842 || true
+
+%postun selinux
+if [ $1 -eq 0 ]; then
+   %selinux_modules_uninstall -s %{selinuxtype} bluechi
+   semanage port -d -p udp 842 || true
+   semanage port -d -p tcp 842 || true
+   restorecon -R %{_bindir}/bluechi* &> /dev/null || :
+fi
+
+
+%package ctl
+Summary:  BlueChi service controller command line tool
+Requires: %{name} = %{version}-%{release}
+
+%description ctl
+BlueChi is a systemd service controller for multi-nodes environements with a
+predefined number of nodes and with a focus on highly regulated environment
+such as those requiring functional safety (for example in cars).
+This package contains the service controller command line tool.
+
+%files ctl
+%doc README.md
+%license LICENSE
+%{_bindir}/bluechictl
+%{_mandir}/man1/bluechictl.*
+
+
+%package -n python3-bluechi
+Summary: Python bindings for BlueChi
+BuildRequires:  python3-devel
+BuildRequires:  python3-setuptools
+Requires:       python3-dasbus
+
+%description -n python3-bluechi
+bluechi is a python module to access the public D-Bus API of bluechi. 
+It contains typed python code that is auto-generated from bluechi's 
+API description and manually written code to simplify recurring tasks. 
+
+%files -n python3-bluechi
+%license LICENSE
+%doc README.md
+%{python3_sitelib}/bluechi-*.egg-info/
+%{python3_sitelib}/bluechi/
+
+
+%prep
+%autosetup
+cp -r src/bindings/python/* ./
+
+
+%build
+%meson -Dapi_bus=system
+%meson_build
+%py3_build
+
+
+%install
+%meson_install
+%py3_install
+
+
+%check
+%meson_test
+
+
+%changelog
+* Mon Jul 10 2023 Michael Engel <mengel@redhat.com> - 0.4.0-1
+- Defaults for hirtectl monitor defaults defined and documented
+- Dedicated signal is emitted when a node changes its connection state
+- Added a last seen timestamp of a node as a D-Bus property
+- Added new command to hirtectl to monitor node connections
+- Support of FQDN in ManagerHost
+- Support of IPv6 in ManagerHost
+- Added hirtectl command to get the status of a unit
+- Autogenerated, typed python bindings
+- New rpm package for the typed python bindings of hirte's D-Bus API
+- API and hirtectl commands for setting the loglevel at runtime
+- Fixes in the D-Bus API description
+
+* Wed May 31 2023 Michael Engel <mengel@redhat.com> - 0.3.0-1
+- API and hirtectl commands for enabling, disabling and reloading of systemd units added
+- Glob filter option to hirtectl list-units
+- Collecting metrics for unit startup time
+- Improvements for building hirte RPMs
+- Allow hirte to run with unconfined user
+- Aligned naming of hirte config files
+- Fixed for invalid type cast of ProxyMonitor
+- Mkdocs-based documentation added
+- Wildcard support for monitoring units
+
+* Wed May 03 2023 Michael Engel <mengel@redhat.com> - 0.2.1-1
+- RPM and unit test fixes
+
+* Tue Apr 25 2023 Michael Engel <mengel@redhat.com> - 0.2.0-1
+- Heartbeat interval configurable
+- Restart for hirte and hirte-agent systemd unit added
+- Logging improvements
+- SELinux policy added
+- Defaults for node name and manager host in code
+- Fix conf.d usage and memory leaks
+
+* Tue Mar 21 2023 Martin Perina <mperina@redhat.com> - 0.1.0-1
+- Initial release

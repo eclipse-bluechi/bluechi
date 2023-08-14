@@ -1,8 +1,8 @@
 /* SPDX-License-Identifier: GPL-2.0-or-later */
 #include <systemd/sd-bus.h>
 
-#include "libhirte/bus/utils.h"
-#include "libhirte/common/common.h"
+#include "libbluechi/bus/utils.h"
+#include "libbluechi/common/common.h"
 
 #include "types.h"
 

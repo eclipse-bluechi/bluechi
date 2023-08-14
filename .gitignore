@@ -4,16 +4,16 @@
 # Build
 tags
 builddir/
-hirte.spec
+bluechi.spec
 rpmbuild/
 artifacts/
 ## python build artifacts
 build/
 dist/
-pyhirte.egg-info/
+bluechi.egg-info/
 
 # Integration test
-hirte-rpms/
+bluechi-rpms/
 __pycache__/
 ## virtual env directories
 env/

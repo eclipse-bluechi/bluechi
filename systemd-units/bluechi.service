@@ -1,0 +1,16 @@
+#  SPDX-License-Identifier: GPL-2.0-or-later
+#
+#  This file is part of bluechi.
+#
+[Unit]
+Description=BlueChi systemd service controller manager daemon
+Documentation=man:bluechi(1) man:bluechi.conf(5)
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/bluechi
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target

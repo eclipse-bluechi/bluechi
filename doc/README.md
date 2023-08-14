@@ -1,7 +1,7 @@
-Hirte's documentation pages
+BlueChi's documentation pages
 ===========================
 
-Here are stored the source for hirte's documentation.
+Here are stored the source for BlueChi's documentation.
 
 This documentation is built using [mkdocs](https://www.mkdocs.org/) and thus
 relies on [markdown](https://daringfireball.net/projects/markdown/) for its

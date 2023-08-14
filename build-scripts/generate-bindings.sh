@@ -11,7 +11,7 @@ data_dir=$SCRIPT_DIR"../data/"
 function python(){
     # Generate python bindings
     template_dir=$BINDINGS_DIR"/python/templates/"
-    output_file_path=$BINDINGS_DIR"/python/pyhirte/api.py"
+    output_file_path=$BINDINGS_DIR"/python/bluechi/api.py"
     python3 "$generator" "$data_dir" "$template_dir" "$output_file_path"
     black "$output_file_path"
 }

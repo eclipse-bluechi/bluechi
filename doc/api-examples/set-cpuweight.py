@@ -16,8 +16,8 @@ value = int(sys.argv[3])
 # Don't persist change
 runtime = True
 
-manager = bus.get_proxy("org.containers.hirte",  "/org/containers/hirte")
+manager = bus.get_proxy("io.github.eclipse-bluechi.bluechi", "/io/github/eclipse_bluechi/bluechi")
 node_path = manager.GetNode(node_name)
-node = bus.get_proxy("org.containers.hirte",  node_path)
+node = bus.get_proxy("io.github.eclipse-bluechi.bluechi", node_path)
 
 node.SetUnitProperties(unit_name, runtime, [("CPUWeight", Variant("t", value))])

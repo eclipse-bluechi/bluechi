@@ -1,7 +1,7 @@
-site_name: Hirte Documentation
+site_name: BlueChi Documentation
 
-repo_url: https://github.com/containers/hirte
-repo_name: hirte
+repo_url: https://github.com/containers/bluechi
+repo_name: bluechi
 edit_uri: blob/main/doc/docs/
 
 copyright: © Red Hat
@@ -16,13 +16,13 @@ nav:
   - Proxy Services: proxy_services.md
   - MAN Pages:
     - Binaries:
-      - hirte(1): man/hirte.md
-      - hirte-agent(1): man/hirte-agent.md
-      - hirte-proxy(1): man/hirte-proxy.md
-      - hirtectl(1): man/hirtectl.md
+      - bluechi(1): man/bluechi.md
+      - bluechi-agent(1): man/bluechi-agent.md
+      - bluechi-proxy(1): man/bluechi-proxy.md
+      - bluechictl(1): man/bluechictl.md
     - Configuration:
-      - hirte(5): man/hirte_conf.md
-      - hirte-agent(5): man/hirte_agent_conf.md
+      - bluechi(5): man/bluechi_conf.md
+      - bluechi-agent(5): man/bluechi_agent_conf.md
 
 theme:
   name: readthedocs

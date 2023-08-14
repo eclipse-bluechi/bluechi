@@ -1,11 +1,11 @@
 # Proxy Services
 
-In order to support cross-node systemd unit dependencies, hirte
+In order to support cross-node systemd unit dependencies, bluechi
 introduces something called proxy services.
 
 ## Using Proxy Services
 
-The hirte-agent comes with a template service called `hirte-proxy@.service` which is the core of this mechanism.
+The bluechi-agent comes with a template service called `bluechi-proxy@.service` which is the core of this mechanism.
 
 Suppose there is a regular service file on node 'foo', which
 looks looks like this
@@ -23,20 +23,20 @@ ExecStart=/bin/db-user
 
 When this service is started, `db.service` is also started. But,
 suppose you want to start `db.service` on another node `bar`.
-With hirte you can do this like this:
+With bluechi you can do this like this:
 
 **`need-db.service`**
 
 ``` INI
 [Unit]
-Wants=hirte-proxy@bar_db.service
-After=hirte-proxy@bar_db.service
+Wants=bluechi-proxy@bar_db.service
+After=bluechi-proxy@bar_db.service
 
 [Service]
 ExecStart=/bin/db-user
 ```
 
-When the `hirte-proxy@bar_db.service` is started it will talk to hirte
+When the `bluechi-proxy@bar_db.service` is started it will talk to bluechi
 and initiate the process of starting `db.service` (if needed) on node
 `bar`, and when it is becomes active (or it is detected it was already
 active), the proxy service also becomes active.
@@ -53,56 +53,56 @@ service restarts.
 
 After a successful start, the proxy service will continue to be active
 as long as some other service depends on it, until the target service
-on the other node stops. When hirte detects that the target service
+on the other node stops. When bluechi detects that the target service
 becomes inactive, the proxy service will be stopped. This can be used
 with even stronger dependency options like `BindTo=` to cause the
 need-db service to stop when the db service stops.
 
 In addition, when the last dependency of the proxy server on a node
 exits, the proxy service will stop too (as it has
-`StopWhenUnneeded=yes`), and hirte will propagate this information to
+`StopWhenUnneeded=yes`), and bluechi will propagate this information to
 the target node. By default, in systemd this doesn't do anything, even
 if there are no other dependencies on the target service. However you
 can use `StopWhenUnneeded=yes` in the service to make it stop when
 the last dependency (local or via proxy) stops.
 
 Based on the described example, the following diagram visualizes the
-architecture of the hirte proxy services:
+architecture of the bluechi proxy services:
 
-![Hirte-Proxy Architecture diagram](./img/hirte_proxy_architecture.png)
+![BlueChi-Proxy Architecture diagram](./img/bluechi_proxy_architecture.png)
 
 ## Internal Details on the source node
 
-The proxy service is a template service called `hirte-proxy@.service`
+The proxy service is a template service called `bluechi-proxy@.service`
 of type `oneshoot` with `RemainAfterExit=yes`. This means that when it
 is started it will change into `activating` stage, and then start the
 `ExecStart` command. If this fails, it will go to `failed` state, but
 when it eventually succeeds it will go into `active` state (even though
 no process is running).
 
-The `ExecStart` command starts the hirte-proxy helper app that talks
-to the local agent, which in turn talks to the main hirte service,
-starting the target service. Once it is running hirte notifies the
-agent which in turns replies to the hirte-proxy which then exits with
+The `ExecStart` command starts the bluechi-proxy helper app that talks
+to the local agent, which in turn talks to the main bluechi service,
+starting the target service. Once it is running bluechi notifies the
+agent which in turns replies to the bluechi-proxy which then exits with
 the correct (failed or activated) exit status.
 
 The proxy can be stopped on the local system (explicitly, or when the
 last dependency to is stops), which will trigger the `ExecPost` command,
-which tells the agent to unregister the proxy with hirte, which in turn
+which tells the agent to unregister the proxy with bluechi, which in turn
 stops the dependency on the target service on the target node.
 
-Alternatively, if hirte notices that the target service stopped, after
+Alternatively, if bluechi notices that the target service stopped, after
 we returned successfully in the `ExecStart` command, then the agent
 explicitly stops the proxy service (via systemd).
 
 ## Internal Details on the target node
 
-The hirte agent also contains another template service called
-`hirte-dep@.service` which is used on the target node. This service is
+The bluechi agent also contains another template service called
+`bluechi-dep@.service` which is used on the target node. This service is
 templated on the target service name, such that whenever
-`hirte-dep@XXX.service` it depends on `XXX.service` causing it to
+`bluechi-dep@XXX.service` it depends on `XXX.service` causing it to
 start. Whenever there is a proxy service running on some other node,
-hirte starts a dep service like this to mirror it, which makes systemd
+bluechi starts a dep service like this to mirror it, which makes systemd
 consider the target needed.
 
 The dependency used for the dep service is `BindsTo` and `After`,
@@ -131,7 +131,7 @@ will re-send the registering of the proxy.
 
 In addition to the monitoring, each time a proxy is registered the
 manager will tell the target node to start the dep service for the
-target service. Hirte keeps track of how many proxies are outstanding
+target service. BlueChi keeps track of how many proxies are outstanding
 for the target service and only tell the agent to stop the dep service
 when this reaches zero. Similar to the above, when the target node
 reconnect we re-sent starts for any outstanding proxies.

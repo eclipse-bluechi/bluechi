@@ -1,6 +1,6 @@
 # agent configuration directory
 
-This directory is used for user configuration of `hirte-agent`.
+This directory is used for user configuration of `bluechi-agent`.
 Each configuration file should end with `.conf` suffix, otherwise it's ignored.
 Configuration files from this directory are loaded by alphabetical order,
 configuration from a file loaded later overwrites the previous configuration.

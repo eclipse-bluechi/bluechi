@@ -2,9 +2,9 @@
 # SPDX-License-Identifier: LGPL-2.1-or-later
 
 custom_target(
-  'hirte.pp.bz2',
-  input : ['hirte.te', 'hirte.fc'],
-  output : ['hirte.pp.bz2'],
+  'bluechi.pp.bz2',
+  input : ['bluechi.te', 'bluechi.fc'],
+  output : ['bluechi.pp.bz2'],
   build_by_default : true,
   command : [
     files('build-selinux.sh'),
@@ -16,12 +16,12 @@ custom_target(
 )
 
 install_data(
-  'hirte.if',
+  'bluechi.if',
   install_dir : join_paths(get_option('datadir'), 'selinux', 'devel', 'include', 'services'),
 )
 
 install_data(
-  ['hirte_agent_selinux.8', 'hirte_selinux.8'],
+  ['bluechi_agent_selinux.8', 'bluechi_selinux.8'],
   install_dir : join_paths(get_option('mandir'), ('man8')),
 )
 

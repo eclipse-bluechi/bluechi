@@ -1,7 +1,7 @@
 /* SPDX-License-Identifier: GPL-2.0-or-later */
 #pragma once
 
-#include "libhirte/common/common.h"
+#include "libbluechi/common/common.h"
 
 #include "types.h"
 

@@ -5,10 +5,10 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "libhirte/bus/bus.h"
-#include "libhirte/common/common.h"
-#include "libhirte/common/opt.h"
-#include "libhirte/log/log.h"
+#include "libbluechi/bus/bus.h"
+#include "libbluechi/common/common.h"
+#include "libbluechi/common/opt.h"
+#include "libbluechi/log/log.h"
 
 const struct option options[] = { { ARG_USER, no_argument, 0, ARG_USER_SHORT },
                                   { ARG_HELP, no_argument, 0, ARG_HELP_SHORT },
@@ -35,7 +35,7 @@ static void usage(char *argv[]) {
                "\t[-h help]\t\t Print this help message.\n"
                "\t<operation>\t\t Required. Operation to perform. Must be one of [%s,%s].\n"
                "\t<node>_<service>\t Required. Input the name of the node the required service is supposed to run on.\n"
-               "\t<[-v version]\t Print current version of hirte-proxy\n",
+               "\t<[-v version]\t Print current version of bluechi-proxy\n",
                argv[0],
                OPT_OPERATION_CREATE,
                OPT_OPERATION_REMOVE);
@@ -76,7 +76,7 @@ static int get_opts(int argc, char *argv[]) {
                         return 1;
 
                 case ARG_VERSION_SHORT:
-                        printf("%s\n", CONFIG_H_HIRTE_VERSION);
+                        printf("%s\n", CONFIG_H_BC_VERSION);
                         return 1;
 
                 case ARG_USER_SHORT:
@@ -113,12 +113,12 @@ static int call_proxy_method(
                 const char *unit_name) {
         _cleanup_sd_bus_error_ sd_bus_error error = SD_BUS_ERROR_NULL;
         _cleanup_sd_bus_message_ sd_bus_message *message = NULL;
-        _cleanup_free_ char *proxy_service = strcat_dup("hirte-proxy@", service_name);
+        _cleanup_free_ char *proxy_service = strcat_dup("bluechi-proxy@", service_name);
 
         int r = sd_bus_call_method(
                         api_bus,
-                        HIRTE_AGENT_DBUS_NAME,
-                        HIRTE_AGENT_OBJECT_PATH,
+                        BC_AGENT_DBUS_NAME,
+                        BC_AGENT_OBJECT_PATH,
                         AGENT_INTERFACE,
                         method,
                         &error,
@@ -128,7 +128,7 @@ static int call_proxy_method(
                         node_name,
                         unit_name);
         if (r < 0) {
-                if (streq(error.name, HIRTE_BUS_ERROR_ACTIVATION_FAILED)) {
+                if (streq(error.name, BC_BUS_ERROR_ACTIVATION_FAILED)) {
                         fprintf(stderr,
                                 "Failed to activate %s (on %s): %s\n",
                                 proxy_service,
@@ -143,9 +143,9 @@ static int call_proxy_method(
 }
 
 int main(int argc, char *argv[]) {
-        hirte_log_set_quiet(false);
-        hirte_log_set_level(LOG_LEVEL_INFO);
-        hirte_log_set_log_fn(hirte_log_to_stderr_with_location);
+        bc_log_set_quiet(false);
+        bc_log_set_level(LOG_LEVEL_INFO);
+        bc_log_set_log_fn(bc_log_to_stderr_with_location);
 
         int r = get_opts(argc, argv);
         if (r < 0) {
@@ -172,7 +172,7 @@ int main(int argc, char *argv[]) {
                 api_bus = system_bus_open(event);
         }
         if (api_bus == NULL) {
-                hirte_log_error("Failed to create api bus");
+                bc_log_error("Failed to create api bus");
                 return EXIT_FAILURE;
         }
 

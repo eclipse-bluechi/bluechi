@@ -2,7 +2,7 @@
 
 from typing import List
 
-BASE_INTERFACE_NAME = "org.containers.hirte"
+BASE_INTERFACE_NAME = "io.github.eclipse-bluechi.bluechi"
 
 
 class Interface:

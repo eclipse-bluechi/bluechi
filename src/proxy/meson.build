@@ -6,13 +6,13 @@ proxy_src = [
 ]
 
 executable(
-  'hirte-proxy',
+  'bluechi-proxy',
   proxy_src,
   dependencies: [
     systemd_dep,
   ],
   link_with: [
-    hirte_lib,
+    bluechi_lib,
   ],
   c_args: common_cflags,
   include_directories: include_directories('..'),

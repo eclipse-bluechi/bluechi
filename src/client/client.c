@@ -2,10 +2,10 @@
 #include <errno.h>
 #include <getopt.h>
 
-#include "libhirte/bus/utils.h"
-#include "libhirte/common/opt.h"
-#include "libhirte/common/time-util.h"
-#include "libhirte/service/shutdown.h"
+#include "libbluechi/bus/utils.h"
+#include "libbluechi/common/opt.h"
+#include "libbluechi/common/time-util.h"
+#include "libbluechi/service/shutdown.h"
 
 #include "client.h"
 #include "method_list_units.h"
@@ -122,8 +122,8 @@ int method_lifecycle_action_on(Client *client, char *node_name, char *unit, char
         r = sd_bus_match_signal(
                         client->api_bus,
                         NULL,
-                        HIRTE_INTERFACE_BASE_NAME,
-                        HIRTE_MANAGER_OBJECT_PATH,
+                        BC_INTERFACE_BASE_NAME,
+                        BC_MANAGER_OBJECT_PATH,
                         MANAGER_INTERFACE,
                         "JobRemoved",
                         match_job_removed_signal,
@@ -136,7 +136,7 @@ int method_lifecycle_action_on(Client *client, char *node_name, char *unit, char
 
         r = sd_bus_call_method(
                         client->api_bus,
-                        HIRTE_INTERFACE_BASE_NAME,
+                        BC_INTERFACE_BASE_NAME,
                         client->object_path,
                         NODE_INTERFACE,
                         method,
@@ -179,8 +179,8 @@ int method_metrics_toggle(Client *client, char *method) {
 
         r = sd_bus_call_method(
                         client->api_bus,
-                        HIRTE_INTERFACE_BASE_NAME,
-                        HIRTE_OBJECT_PATH,
+                        BC_INTERFACE_BASE_NAME,
+                        BC_OBJECT_PATH,
                         MANAGER_INTERFACE,
                         method,
                         &error,
@@ -212,7 +212,7 @@ static int match_start_unit_job_metrics_signal(
         }
 
         printf("[%s] Job %s to start unit %s:\n\t"
-               "Hirte job gross measured time: %.1lfms\n\t"
+               "BlueChi job gross measured time: %.1lfms\n\t"
                "Unit net start time (from properties): %.1lfms\n",
                node_name,
                job_path,
@@ -262,7 +262,7 @@ int method_metrics_listen(Client *client) {
         r = sd_bus_match_signal(
                         client->api_bus,
                         NULL,
-                        HIRTE_INTERFACE_BASE_NAME,
+                        BC_INTERFACE_BASE_NAME,
                         METRICS_OBJECT_PATH,
                         METRICS_INTERFACE,
                         "StartUnitJobMetrics",
@@ -276,7 +276,7 @@ int method_metrics_listen(Client *client) {
         r = sd_bus_match_signal(
                         client->api_bus,
                         NULL,
-                        HIRTE_INTERFACE_BASE_NAME,
+                        BC_INTERFACE_BASE_NAME,
                         METRICS_OBJECT_PATH,
                         METRICS_INTERFACE,
                         "AgentJobMetrics",
@@ -316,7 +316,7 @@ int create_message_new_method_call(
         r = sd_bus_message_new_method_call(
                         client->api_bus,
                         &outgoing_message,
-                        HIRTE_INTERFACE_BASE_NAME,
+                        BC_INTERFACE_BASE_NAME,
                         client->object_path,
                         NODE_INTERFACE,
                         member);
@@ -410,7 +410,7 @@ static int method_enable_unit_on(
                 return r;
         }
 
-        r = sd_bus_call(client->api_bus, outgoing_message, HIRTE_DEFAULT_DBUS_TIMEOUT, &error, &result);
+        r = sd_bus_call(client->api_bus, outgoing_message, BC_DEFAULT_DBUS_TIMEOUT, &error, &result);
         if (r < 0) {
                 fprintf(stderr, "Failed to issue call: %s\n", error.message);
                 return r;
@@ -461,7 +461,7 @@ static int method_disable_unit_on(Client *client, char *node_name, char **units,
                 return r;
         }
 
-        r = sd_bus_call(client->api_bus, outgoing_message, HIRTE_DEFAULT_DBUS_TIMEOUT, &error, &result);
+        r = sd_bus_call(client->api_bus, outgoing_message, BC_DEFAULT_DBUS_TIMEOUT, &error, &result);
         if (r < 0) {
                 fprintf(stderr, "Failed to issue call: %s\n", error.message);
                 return r;
@@ -488,7 +488,7 @@ static int method_daemon_reload_on(Client *client, char *node_name) {
 
         r = sd_bus_call_method(
                         client->api_bus,
-                        HIRTE_INTERFACE_BASE_NAME,
+                        BC_INTERFACE_BASE_NAME,
                         client->object_path,
                         NODE_INTERFACE,
                         "Reload",
@@ -522,7 +522,7 @@ static int method_set_log_level(Client *client, char *node_name, char *loglevel)
 
                 r = sd_bus_call_method(
                                 client->api_bus,
-                                HIRTE_INTERFACE_BASE_NAME,
+                                BC_INTERFACE_BASE_NAME,
                                 path,
                                 NODE_INTERFACE,
                                 "SetLogLevel",
@@ -538,8 +538,8 @@ static int method_set_log_level(Client *client, char *node_name, char *loglevel)
         } else {
                 r = sd_bus_call_method(
                                 client->api_bus,
-                                HIRTE_INTERFACE_BASE_NAME,
-                                HIRTE_OBJECT_PATH,
+                                BC_INTERFACE_BASE_NAME,
+                                BC_OBJECT_PATH,
                                 MANAGER_INTERFACE,
                                 "SetLogLevel",
                                 &error,
@@ -568,7 +568,7 @@ int client_call_manager(Client *client) {
         }
 
         if (streq(client->op, "help")) {
-                r = print_client_usage("hirte");
+                r = print_client_usage("bluechi");
         } else if (streq(client->op, "list-units")) {
                 if (client->opargc == 0) {
                         r = method_list_units_on_all(
@@ -680,7 +680,7 @@ int client_call_manager(Client *client) {
                         return -EINVAL;
                 }
         } else if (streq(client->op, "version")) {
-                printf("%s\n", CONFIG_H_HIRTE_VERSION);
+                printf("%s\n", CONFIG_H_BC_VERSION);
         } else {
                 return -EINVAL;
         }
@@ -689,7 +689,7 @@ int client_call_manager(Client *client) {
 }
 
 int print_client_usage(char *argv) {
-        printf("hirtectl is a convenience CLI tool to interact with hirte\n");
+        printf("bluechictl is a convenience CLI tool to interact with bluechi\n");
         printf("Usage: %s COMMAND\n\n", argv);
         printf("Available command:\n");
         printf("  - help: shows this help message\n");

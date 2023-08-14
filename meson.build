@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
 
 project(
-  'hirte',
+  'bluechi',
   'c',
   version: '0.5.0',
   license: 'GPL-2.0-or-later',
@@ -37,7 +37,7 @@ prefixdir = get_option('prefix')
 
 conf.set_quoted('CONFIG_H_SYSCONFDIR', join_paths(prefixdir, get_option('sysconfdir')))
 conf.set_quoted('CONFIG_H_DATADIR', join_paths(prefixdir, get_option('datadir')))
-conf.set_quoted('CONFIG_H_HIRTE_VERSION', meson.project_version())
+conf.set_quoted('CONFIG_H_BC_VERSION', meson.project_version())
 
 config_h = configure_file(
         output : 'config.h',
@@ -47,7 +47,7 @@ config_h = configure_file(
 add_project_arguments('-include', 'config.h', language : 'c')
 
 
-# (External) subprojects used by hirte
+# (External) subprojects used by bluechi
 inih = subproject('inih', default_options: [
   'default_library=static',           # include it as static library
   '-Dinih:distro_install=false',      # disable distro install so other options are used
@@ -64,7 +64,7 @@ hashmapc_dep = hashmapc.get_variable('hashmapc_dep')
 
 
 # Subdirectory for the shared library.
-subdir('src/libhirte')
+subdir('src/libbluechi')
 
 # Configuration files
 subdir('config')

@@ -1,5 +1,5 @@
 /* SPDX-License-Identifier: GPL-2.0-or-later */
-#include "libhirte/log/log.h"
+#include "libbluechi/log/log.h"
 
 #include "agent.h"
 #include "proxy.h"
@@ -30,19 +30,19 @@ static void proxy_service_initial_state_reached(ProxyService *proxy, bool succes
         assert(proxy->request_message != NULL);
 
         if (success) {
-                hirte_log_infof("Replying to %s successfully", proxy->local_service_name);
+                bc_log_infof("Replying to %s successfully", proxy->local_service_name);
                 proxy->sent_successful_ready = true;
                 r = sd_bus_reply_method_return(proxy->request_message, "");
         } else {
-                hirte_log_infof("Replying to %s with failure", proxy->local_service_name);
+                bc_log_infof("Replying to %s with failure", proxy->local_service_name);
                 r = sd_bus_reply_method_errorf(
                                 proxy->request_message,
-                                HIRTE_BUS_ERROR_ACTIVATION_FAILED,
+                                BC_BUS_ERROR_ACTIVATION_FAILED,
                                 "Proxy service failed to start");
         }
 
         if (r < 0) {
-                hirte_log_errorf("Failed to send reply to proxy request: %s", strerror(-r));
+                bc_log_errorf("Failed to send reply to proxy request: %s", strerror(-r));
         }
 
         sd_bus_message_unrefp(&proxy->request_message);
@@ -56,7 +56,7 @@ static void proxy_service_initial_state_reached(ProxyService *proxy, bool succes
 static void proxy_service_target_stopped(ProxyService *proxy) {
         Agent *agent = proxy->agent;
 
-        hirte_log_infof("Proxy for %s stopping due to target stopped", proxy->local_service_name);
+        bc_log_infof("Proxy for %s stopping due to target stopped", proxy->local_service_name);
 
         assert(proxy->request_message == NULL);
         agent_remove_proxy(agent, proxy, true);
@@ -82,12 +82,11 @@ static int proxy_service_method_target_state_changed(
 
         UnitActiveState active_state = active_state_from_string(active_state_str);
 
-        hirte_log_debugf(
-                        "Proxy service '%s' got TargetStateChanged from manager: %s %s %s",
-                        proxy->local_service_name,
-                        active_state_str,
-                        substate,
-                        reason);
+        bc_log_debugf("Proxy service '%s' got TargetStateChanged from manager: %s %s %s",
+                      proxy->local_service_name,
+                      active_state_str,
+                      substate,
+                      reason);
 
         if (proxy->request_message) {
                 /* We're waiting for the initial start-or-fail to report back
@@ -142,7 +141,7 @@ static int proxy_service_method_target_new(sd_bus_message *m, void *userdata, UN
                 return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_INVALID_ARGS, "Invalid arguments");
         }
 
-        hirte_log_debugf("Proxy service '%s' got TargetNew from manager: %s", proxy->local_service_name, reason);
+        bc_log_debugf("Proxy service '%s' got TargetNew from manager: %s", proxy->local_service_name, reason);
 
         return sd_bus_reply_method_return(m, "");
 }
@@ -160,10 +159,9 @@ static int proxy_service_method_target_removed(sd_bus_message *m, void *userdata
                 return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_INVALID_ARGS, "Invalid arguments");
         }
 
-        hirte_log_debugf(
-                        "Proxy service '%s' got TargetRemoved from manager: %s",
-                        proxy->local_service_name,
-                        reason);
+        bc_log_debugf("Proxy service '%s' got TargetRemoved from manager: %s",
+                      proxy->local_service_name,
+                      reason);
 
         /* See above in state_changed for details */
 
@@ -192,7 +190,7 @@ static int proxy_service_method_error(sd_bus_message *m, void *userdata, UNUSED 
                 message = "Got no message";
         }
 
-        hirte_log_errorf("Got proxy start error: %s", message);
+        bc_log_errorf("Got proxy start error: %s", message);
 
         proxy_service_initial_state_reached(proxy, false);
 
@@ -273,7 +271,7 @@ bool proxy_service_export(ProxyService *proxy) {
                         proxy_service_vtable,
                         proxy);
         if (r < 0) {
-                hirte_log_errorf("Failed to add service proxy vtable: %s", strerror(-r));
+                bc_log_errorf("Failed to add service proxy vtable: %s", strerror(-r));
                 return false;
         }
         return true;
@@ -291,7 +289,7 @@ int proxy_service_emit_proxy_new(ProxyService *proxy) {
                 return -ENOTCONN;
         }
 
-        hirte_log_infof("Registering new proxy for %s (on %s)", proxy->unit_name, proxy->node_name);
+        bc_log_infof("Registering new proxy for %s (on %s)", proxy->unit_name, proxy->node_name);
         int res = sd_bus_emit_signal(
                         agent->peer_dbus,
                         INTERNAL_AGENT_OBJECT_PATH,
@@ -319,7 +317,7 @@ int proxy_service_emit_proxy_removed(ProxyService *proxy) {
                 return -ENOTCONN;
         }
 
-        hirte_log_infof("Unregistering proxy for %s (on %s)", proxy->unit_name, proxy->node_name);
+        bc_log_infof("Unregistering proxy for %s (on %s)", proxy->unit_name, proxy->node_name);
         return sd_bus_emit_signal(
                         proxy->agent->peer_dbus,
                         INTERNAL_AGENT_OBJECT_PATH,

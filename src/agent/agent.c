@@ -4,17 +4,17 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "libhirte/bus/bus.h"
-#include "libhirte/bus/utils.h"
-#include "libhirte/common/cfg.h"
-#include "libhirte/common/common.h"
-#include "libhirte/common/event-util.h"
-#include "libhirte/common/network.h"
-#include "libhirte/common/opt.h"
-#include "libhirte/common/parse-util.h"
-#include "libhirte/common/time-util.h"
-#include "libhirte/log/log.h"
-#include "libhirte/service/shutdown.h"
+#include "libbluechi/bus/bus.h"
+#include "libbluechi/bus/utils.h"
+#include "libbluechi/common/cfg.h"
+#include "libbluechi/common/common.h"
+#include "libbluechi/common/event-util.h"
+#include "libbluechi/common/network.h"
+#include "libbluechi/common/opt.h"
+#include "libbluechi/common/parse-util.h"
+#include "libbluechi/common/time-util.h"
+#include "libbluechi/log/log.h"
+#include "libbluechi/service/shutdown.h"
 
 #include "agent.h"
 #include "proxy.h"
@@ -48,12 +48,12 @@ static bool
                                 free_func_t free_userdata);
 
 /* Keep track of outstanding systemd job and connect it back to
-   the originating hirte job id so we can proxy changes to it. */
+   the originating bluechi job id so we can proxy changes to it. */
 typedef struct {
         int ref_count;
 
         Agent *agent;
-        uint32_t hirte_job_id;
+        uint32_t bc_job_id;
         uint64_t job_start_micros;
         char *unit;
         char *method;
@@ -79,12 +79,12 @@ static void agent_job_op_unref(AgentJobOp *op) {
 DEFINE_CLEANUP_FUNC(AgentJobOp, agent_job_op_unref)
 #define _cleanup_agent_job_op_ _cleanup_(agent_job_op_unrefp)
 
-static AgentJobOp *agent_job_new(Agent *agent, uint32_t hirte_job_id, const char *unit, const char *method) {
+static AgentJobOp *agent_job_new(Agent *agent, uint32_t bc_job_id, const char *unit, const char *method) {
         AgentJobOp *op = malloc0(sizeof(AgentJobOp));
         if (op) {
                 op->ref_count = 1;
                 op->agent = agent_ref(agent);
-                op->hirte_job_id = hirte_job_id;
+                op->bc_job_id = bc_job_id;
                 op->job_start_micros = 0;
                 op->unit = strdup(unit);
                 op->method = strdup(method);
@@ -103,7 +103,7 @@ static bool agent_reconnect(Agent *agent);
 static int agent_disconnected(UNUSED sd_bus_message *message, void *userdata, UNUSED sd_bus_error *error) {
         Agent *agent = (Agent *) userdata;
 
-        hirte_log_error("Disconnected from manager");
+        bc_log_error("Disconnected from manager");
 
         if (!agent_reconnect(agent)) {
                 agent->connection_state = AGENT_CONNECTION_STATE_RETRY;
@@ -125,19 +125,19 @@ static int agent_heartbeat_timer_callback(sd_event_source *event_source, UNUSED 
                                 "Heartbeat",
                                 "");
                 if (r < 0) {
-                        hirte_log_errorf("Failed to emit heartbeat signal: %s", strerror(-r));
+                        bc_log_errorf("Failed to emit heartbeat signal: %s", strerror(-r));
                 }
         } else if (agent->connection_state == AGENT_CONNECTION_STATE_RETRY) {
                 agent->connection_retry_count++;
-                hirte_log_infof("Trying to connect to manager (try %d)", agent->connection_retry_count);
+                bc_log_infof("Trying to connect to manager (try %d)", agent->connection_retry_count);
                 if (!agent_reconnect(agent)) {
-                        hirte_log_debugf("Connection retry %d failed", agent->connection_retry_count);
+                        bc_log_debugf("Connection retry %d failed", agent->connection_retry_count);
                 }
         }
 
         int r = agent_reset_heartbeat_timer(agent, &event_source);
         if (r < 0) {
-                hirte_log_errorf("Failed to reset agent heartbeat timer: %s", strerror(-r));
+                bc_log_errorf("Failed to reset agent heartbeat timer: %s", strerror(-r));
                 return r;
         }
 
@@ -165,13 +165,13 @@ static int agent_setup_heartbeat_timer(Agent *agent) {
         assert(agent);
 
         if (agent->heartbeat_interval_msec <= 0) {
-                hirte_log_warnf("Heartbeat disabled since interval is '%d', ", agent->heartbeat_interval_msec);
+                bc_log_warnf("Heartbeat disabled since interval is '%d', ", agent->heartbeat_interval_msec);
                 return 0;
         }
 
         r = agent_reset_heartbeat_timer(agent, &event_source);
         if (r < 0) {
-                hirte_log_errorf("Failed to reset agent heartbeat timer: %s", strerror(-r));
+                bc_log_errorf("Failed to reset agent heartbeat timer: %s", strerror(-r));
                 return r;
         }
 
@@ -225,7 +225,7 @@ static SystemdRequest *agent_create_request_full(
         int r = sd_bus_message_new_method_call(
                         agent->systemd_dbus, &req->message, SYSTEMD_BUS_NAME, object_path, iface, method);
         if (r < 0) {
-                hirte_log_errorf("Failed to create new bus message: %s", strerror(-r));
+                bc_log_errorf("Failed to create new bus message: %s", strerror(-r));
                 return NULL;
         }
 
@@ -250,9 +250,9 @@ static bool systemd_request_start(SystemdRequest *req, sd_bus_message_handler_t 
         }
 
         int r = sd_bus_call_async(
-                        agent->systemd_dbus, &req->slot, req->message, callback, req, HIRTE_DEFAULT_DBUS_TIMEOUT);
+                        agent->systemd_dbus, &req->slot, req->message, callback, req, BC_DEFAULT_DBUS_TIMEOUT);
         if (r < 0) {
-                hirte_log_errorf("Failed to call async: %s", strerror(-r));
+                bc_log_errorf("Failed to call async: %s", strerror(-r));
                 return false;
         }
 
@@ -362,13 +362,13 @@ Agent *agent_new(void) {
         _cleanup_sd_event_ sd_event *event = NULL;
         r = sd_event_default(&event);
         if (r < 0) {
-                hirte_log_errorf("Failed to create event loop: %s", strerror(-r));
+                bc_log_errorf("Failed to create event loop: %s", strerror(-r));
                 return NULL;
         }
 
-        _cleanup_free_ char *service_name = strdup(HIRTE_AGENT_DBUS_NAME);
+        _cleanup_free_ char *service_name = strdup(BC_AGENT_DBUS_NAME);
         if (service_name == NULL) {
-                hirte_log_error("Out of memory");
+                bc_log_error("Out of memory");
                 return NULL;
         }
 
@@ -405,15 +405,14 @@ Agent *agent_ref(Agent *agent) {
 void agent_remove_proxy(Agent *agent, ProxyService *proxy, bool emit_removed) {
         assert(proxy->agent == agent);
 
-        hirte_log_debugf("Removing proxy %s %s", proxy->node_name, proxy->unit_name);
+        bc_log_debugf("Removing proxy %s %s", proxy->node_name, proxy->unit_name);
 
         if (emit_removed) {
                 int r = proxy_service_emit_proxy_removed(proxy);
                 if (r < 0) {
-                        hirte_log_errorf(
-                                        "Failed to emit ProxyRemoved signal for node %s and unit %s",
-                                        proxy->node_name,
-                                        proxy->unit_name);
+                        bc_log_errorf("Failed to emit ProxyRemoved signal for node %s and unit %s",
+                                      proxy->node_name,
+                                      proxy->unit_name);
                 }
         }
 
@@ -421,7 +420,7 @@ void agent_remove_proxy(Agent *agent, ProxyService *proxy, bool emit_removed) {
                 int r = sd_bus_reply_method_errorf(
                                 proxy->request_message, SD_BUS_ERROR_FAILED, "Proxy service stopped");
                 if (r < 0) {
-                        hirte_log_errorf("Failed to sent ready status message to proxy: %s", strerror(-r));
+                        bc_log_errorf("Failed to sent ready status message to proxy: %s", strerror(-r));
                 }
                 sd_bus_message_unrefp(&proxy->request_message);
                 proxy->request_message = NULL;
@@ -431,7 +430,7 @@ void agent_remove_proxy(Agent *agent, ProxyService *proxy, bool emit_removed) {
         if (proxy->sent_successful_ready) {
                 int r = agent_stop_local_proxy_service(agent, proxy);
                 if (r < 0) {
-                        hirte_log_errorf("Failed to stop proxy service: %s", strerror(-r));
+                        bc_log_errorf("Failed to stop proxy service: %s", strerror(-r));
                 }
         }
 
@@ -450,7 +449,7 @@ void agent_unref(Agent *agent) {
                 return;
         }
 
-        hirte_log_debug("Finalizing agent");
+        bc_log_debug("Finalizing agent");
 
         /* These are removed in agent_stop */
         assert(agent->proxy_services == NULL);
@@ -491,7 +490,7 @@ bool agent_set_port(Agent *agent, const char *port_s) {
         uint16_t port = 0;
 
         if (!parse_port(port_s, &port)) {
-                hirte_log_errorf("Invalid port format '%s'", port_s);
+                bc_log_errorf("Invalid port format '%s'", port_s);
                 return false;
         }
         agent->port = port;
@@ -514,7 +513,7 @@ bool agent_set_heartbeat_interval(Agent *agent, const char *interval_msec) {
         long interval = 0;
 
         if (!parse_long(interval_msec, &interval)) {
-                hirte_log_errorf("Invalid heartbeat interval format '%s'", interval_msec);
+                bc_log_errorf("Invalid heartbeat interval format '%s'", interval_msec);
                 return false;
         }
         agent->heartbeat_interval_msec = interval;
@@ -541,10 +540,7 @@ bool agent_parse_config(Agent *agent, const char *configfile) {
                 return false;
         }
         result = cfg_load_complete_configuration(
-                        agent->config,
-                        CFG_AGENT_DEFAULT_CONFIG,
-                        CFG_ETC_HIRTE_AGENT_CONF,
-                        CFG_ETC_AGENT_CONF_DIR);
+                        agent->config, CFG_AGENT_DEFAULT_CONFIG, CFG_ETC_BC_AGENT_CONF, CFG_ETC_AGENT_CONF_DIR);
         if (result != 0) {
                 return false;
         }
@@ -565,7 +561,7 @@ bool agent_parse_config(Agent *agent, const char *configfile) {
 
 
         // set logging configuration
-        hirte_log_init(agent->config);
+        bc_log_init(agent->config);
 
         const char *value = NULL;
         value = cfg_get_value(agent->config, CFG_NODE_NAME);
@@ -604,7 +600,7 @@ bool agent_parse_config(Agent *agent, const char *configfile) {
         }
 
         _cleanup_free_ const char *dumped_cfg = cfg_dump(agent->config);
-        hirte_log_debug_with_data("Final configuration used", "\n%s", dumped_cfg);
+        bc_log_debug_with_data("Final configuration used", "\n%s", dumped_cfg);
 
         return true;
 }
@@ -695,8 +691,8 @@ static int agent_method_passthrough_to_systemd(sd_bus_message *m, void *userdata
         return 1;
 }
 
-/*************************************************************************
- ********** org.containers.hirte.internal.Agent.ListUnits ****************
+/************************************************************************
+ ********** io.github.eclipse-bluechi.bluechi.internal.Agent.ListUnits **
  ************************************************************************/
 
 static int list_units_callback(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error) {
@@ -737,8 +733,8 @@ static int agent_method_list_units(sd_bus_message *m, void *userdata, UNUSED sd_
         return 1;
 }
 
-/*************************************************************************
- ******** org.containers.hirte.internal.Agent.GetUnitProperties **********
+/************************************************************************
+ ******** io.github.eclipse-bluechi.bluechi.internal.Agent.GetUnitProperties ************
  ************************************************************************/
 
 static int get_unit_properties_got_properties(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error) {
@@ -797,9 +793,9 @@ static int agent_method_get_unit_properties(sd_bus_message *m, void *userdata, U
         return 1;
 }
 
-/*************************************************************************
- ******** org.containers.hirte.internal.Agent.GetUnitProperty **********
- ************************************************************************/
+/***************************************************************************
+ ******** io.github.eclipse-bluechi.bluechi.internal.Agent.GetUnitProperty *
+ ***************************************************************************/
 
 static int get_unit_property_got_property(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error) {
         _cleanup_systemd_request_ SystemdRequest *req = userdata;
@@ -858,9 +854,9 @@ static int agent_method_get_unit_property(sd_bus_message *m, void *userdata, UNU
         return 1;
 }
 
-/*************************************************************************
- ******** org.containers.hirte.internal.Agent.SetUnitProperties **********
- *************************************************************************/
+/******************************************************************************
+ ******** io.github.eclipse-bluechi.bluechi.internal.Agent.SetUnitProperties  *
+ ******************************************************************************/
 
 static int set_unit_properties_cb(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error) {
         _cleanup_systemd_request_ SystemdRequest *req = userdata;
@@ -936,7 +932,7 @@ static void agent_job_done(UNUSED sd_bus_message *m, const char *result, void *u
                                 finalize_time_interval_micros(op->job_start_micros));
         }
 
-        hirte_log_infof("Sending JobDone %u, result: %s", op->hirte_job_id, result);
+        bc_log_infof("Sending JobDone %u, result: %s", op->bc_job_id, result);
 
         int r = sd_bus_emit_signal(
                         agent->peer_dbus,
@@ -944,10 +940,10 @@ static void agent_job_done(UNUSED sd_bus_message *m, const char *result, void *u
                         INTERNAL_AGENT_INTERFACE,
                         "JobDone",
                         "us",
-                        op->hirte_job_id,
+                        op->bc_job_id,
                         result);
         if (r < 0) {
-                hirte_log_errorf("Failed to emit JobDone: %s", strerror(-r));
+                bc_log_errorf("Failed to emit JobDone: %s", strerror(-r));
         }
 }
 
@@ -990,7 +986,7 @@ static int agent_run_unit_lifecycle_method(sd_bus_message *m, Agent *agent, cons
                 return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_INVALID_ARGS, "Invalid arguments");
         }
 
-        hirte_log_infof("Request to %s unit: %s - Action: %s", method, name, mode);
+        bc_log_infof("Request to %s unit: %s - Action: %s", method, name, mode);
 
         _cleanup_systemd_request_ SystemdRequest *req = agent_create_request(agent, m, method);
         if (req == NULL) {
@@ -1017,43 +1013,43 @@ static int agent_run_unit_lifecycle_method(sd_bus_message *m, Agent *agent, cons
 }
 
 /*************************************************************************
- ********** org.containers.hirte.internal.Agent.StartUnit ****************
- ************************************************************************/
+ ********** io.github.eclipse-bluechi.bluechi.internal.Agent.StartUnit   *
+ *************************************************************************/
 
 static int agent_method_start_unit(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error) {
         return agent_run_unit_lifecycle_method(m, (Agent *) userdata, "StartUnit");
 }
 
 /*************************************************************************
- ********** org.containers.hirte.internal.Agent.StopUnit ****************
- ************************************************************************/
+ ********** io.github.eclipse-bluechi.bluechi.internal.Agent.StopUnit    *
+ *************************************************************************/
 
 static int agent_method_stop_unit(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error) {
         return agent_run_unit_lifecycle_method(m, (Agent *) userdata, "StopUnit");
 }
 
 /*************************************************************************
- ********** org.containers.hirte.internal.Agent.RestartUnit **************
- ************************************************************************/
+ ********** io.github.eclipse-bluechi.bluechi.internal.Agent.RestartUnit *
+ *************************************************************************/
 
 static int agent_method_restart_unit(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error) {
         return agent_run_unit_lifecycle_method(m, (Agent *) userdata, "RestartUnit");
 }
 
 /*************************************************************************
- ********** org.containers.hirte.internal.Agent.ReloadUnit ***************
- ************************************************************************/
+ ********** io.github.eclipse-bluechi.bluechi.internal.Agent.ReloadUnit  *
+ *************************************************************************/
 
 static int agent_method_reload_unit(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error) {
         return agent_run_unit_lifecycle_method(m, (Agent *) userdata, "ReloadUnit");
 }
 
 /*************************************************************************
- ********** org.containers.hirte.internal.Agent.Subscribe ****************
- ************************************************************************/
+ ********** io.github.eclipse-bluechi.bluechi.internal.Agent.Subscribe ***
+ *************************************************************************/
 
 static void agent_emit_unit_new(Agent *agent, AgentUnitInfo *info, const char *reason) {
-        hirte_log_debugf("Sending UnitNew %s, reason: %s", info->unit, reason);
+        bc_log_debugf("Sending UnitNew %s, reason: %s", info->unit, reason);
         int r = sd_bus_emit_signal(
                         agent->peer_dbus,
                         INTERNAL_AGENT_OBJECT_PATH,
@@ -1063,12 +1059,12 @@ static void agent_emit_unit_new(Agent *agent, AgentUnitInfo *info, const char *r
                         info->unit,
                         reason);
         if (r < 0) {
-                hirte_log_warn("Failed to emit UnitNew");
+                bc_log_warn("Failed to emit UnitNew");
         }
 }
 
 static void agent_emit_unit_removed(Agent *agent, AgentUnitInfo *info) {
-        hirte_log_debugf("Sending UnitRemoved %s", info->unit);
+        bc_log_debugf("Sending UnitRemoved %s", info->unit);
 
         int r = sd_bus_emit_signal(
                         agent->peer_dbus,
@@ -1078,17 +1074,16 @@ static void agent_emit_unit_removed(Agent *agent, AgentUnitInfo *info) {
                         "s",
                         info->unit);
         if (r < 0) {
-                hirte_log_warn("Failed to emit UnitRemoved");
+                bc_log_warn("Failed to emit UnitRemoved");
         }
 }
 
 static void agent_emit_unit_state_changed(Agent *agent, AgentUnitInfo *info, const char *reason) {
-        hirte_log_debugf(
-                        "Sending UnitStateChanged %s %s(%s) reason: %s",
-                        info->unit,
-                        active_state_to_string(info->active_state),
-                        unit_info_get_substate(info),
-                        reason);
+        bc_log_debugf("Sending UnitStateChanged %s %s(%s) reason: %s",
+                      info->unit,
+                      active_state_to_string(info->active_state),
+                      unit_info_get_substate(info),
+                      reason);
         int r = sd_bus_emit_signal(
                         agent->peer_dbus,
                         INTERNAL_AGENT_OBJECT_PATH,
@@ -1100,7 +1095,7 @@ static void agent_emit_unit_state_changed(Agent *agent, AgentUnitInfo *info, con
                         unit_info_get_substate(info),
                         reason);
         if (r < 0) {
-                hirte_log_warn("Failed to emit UnitStateChanged");
+                bc_log_warn("Failed to emit UnitStateChanged");
         }
 }
 
@@ -1149,8 +1144,8 @@ static int agent_method_subscribe(sd_bus_message *m, void *userdata, UNUSED sd_b
 }
 
 /*************************************************************************
- ********** org.containers.hirte.internal.Agent.Unsubscribe **************
- ************************************************************************/
+ *** io.github.eclipse-bluechi.bluechi.internal.Agent.Unsubscribe ********
+ *************************************************************************/
 
 static int agent_method_unsubscribe(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error) {
         Agent *agent = userdata;
@@ -1185,18 +1180,18 @@ static int agent_method_unsubscribe(sd_bus_message *m, void *userdata, UNUSED sd
 }
 
 /*************************************************************************
- ********** org.containers.hirte.internal.Agent.StartDep *****************
- ************************************************************************/
+ ********** io.github.eclipse-bluechi.bluechi.internal.Agent.StartDep ****
+ *************************************************************************/
 
 static char *get_dep_unit(const char *unit_name) {
-        return strcat_dup("hirte-dep@", unit_name);
+        return strcat_dup("bluechi-dep@", unit_name);
 }
 
 static int start_dep_callback(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error) {
         _cleanup_systemd_request_ SystemdRequest *req = userdata;
 
         if (sd_bus_message_is_method_error(m, NULL)) {
-                hirte_log_errorf("Error starting dep service: %s", sd_bus_message_get_error(m)->message);
+                bc_log_errorf("Error starting dep service: %s", sd_bus_message_get_error(m)->message);
         }
         return 0;
 }
@@ -1215,7 +1210,7 @@ static int agent_method_start_dep(sd_bus_message *m, void *userdata, UNUSED sd_b
                 return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "Internal error");
         }
 
-        hirte_log_infof("Starting dependency %s", dep_unit);
+        bc_log_infof("Starting dependency %s", dep_unit);
 
         _cleanup_systemd_request_ SystemdRequest *req = agent_create_request(agent, m, "StartUnit");
         if (req == NULL) {
@@ -1235,14 +1230,14 @@ static int agent_method_start_dep(sd_bus_message *m, void *userdata, UNUSED sd_b
 }
 
 /*************************************************************************
- ********** org.containers.hirte.internal.Agent.StopDep ******************
- ************************************************************************/
+ **** io.github.eclipse-bluechi.bluechi.internal.Agent.StopDep ***********
+ *************************************************************************/
 
 static int stop_dep_callback(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error) {
         _cleanup_systemd_request_ SystemdRequest *req = userdata;
 
         if (sd_bus_message_is_method_error(m, NULL)) {
-                hirte_log_errorf("Error stopping dep service: %s", sd_bus_message_get_error(m)->message);
+                bc_log_errorf("Error stopping dep service: %s", sd_bus_message_get_error(m)->message);
         }
         return 0;
 }
@@ -1261,7 +1256,7 @@ static int agent_method_stop_dep(sd_bus_message *m, void *userdata, UNUSED sd_bu
                 return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "Internal error");
         }
 
-        hirte_log_infof("Stopping dependency %s", dep_unit);
+        bc_log_infof("Stopping dependency %s", dep_unit);
 
         _cleanup_systemd_request_ SystemdRequest *req = agent_create_request(agent, m, "StopUnit");
         if (req == NULL) {
@@ -1282,8 +1277,8 @@ static int agent_method_stop_dep(sd_bus_message *m, void *userdata, UNUSED sd_bu
 
 
 /***************************************************************************
- ********** org.containers.hirte.internal.Agent.EnableMetrics **************
- **************************************************************************/
+ **** io.github.eclipse-bluechi.bluechi.internal.Agent.EnableMetrics *******
+ ***************************************************************************/
 
 static const sd_bus_vtable agent_metrics_vtable[] = {
         SD_BUS_VTABLE_START(0),
@@ -1311,15 +1306,15 @@ static int agent_method_enable_metrics(sd_bus_message *m, void *userdata, UNUSED
                         agent_metrics_vtable,
                         NULL);
         if (r < 0) {
-                hirte_log_errorf("Failed to add metrics vtable: %s", strerror(-r));
+                bc_log_errorf("Failed to add metrics vtable: %s", strerror(-r));
                 return r;
         }
-        hirte_log_debug("Metrics enabled");
+        bc_log_debug("Metrics enabled");
         return sd_bus_reply_method_return(m, "");
 }
 
-/****************************************************************************
- ********** org.containers.hirte.internal.Agent.DisableMetrics **************
+/***************************************************************************
+ **** io.github.eclipse-bluechi.bluechi.internal.Agent.DisableMetrics ******
  ***************************************************************************/
 
 static int agent_method_disable_metrics(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error) {
@@ -1330,30 +1325,30 @@ static int agent_method_disable_metrics(sd_bus_message *m, void *userdata, UNUSE
         }
         agent->metrics_enabled = false;
         sd_bus_slot_unrefp(&agent->metrics_slot);
-        hirte_log_debug("Metrics disabled");
+        bc_log_debug("Metrics disabled");
         return sd_bus_reply_method_return(m, "");
 }
 
 /*************************************************************************
- ************** org.containers.hirte.Agent.SetNodeLogLevel ***************
- ************************************************************************/
+ ************** io.github.eclipse-bluechi.bluechi.Agent.SetNodeLogLevel  *
+ *************************************************************************/
 
 static int agent_method_set_log_level(
                 UNUSED sd_bus_message *m, UNUSED void *userdata, UNUSED sd_bus_error *ret_error) {
         const char *level = NULL;
         int r = sd_bus_message_read(m, "s", &level);
         if (r < 0) {
-                hirte_log_errorf("Failed to read Loglevel parameter: %s", strerror(-r));
+                bc_log_errorf("Failed to read Loglevel parameter: %s", strerror(-r));
                 return sd_bus_reply_method_errorf(
                                 m, SD_BUS_ERROR_FAILED, "Failed to read Loglevel parameter: %s", strerror(-r));
         }
         LogLevel loglevel = string_to_log_level(level);
         if (loglevel == LOG_LEVEL_INVALID) {
-                hirte_log_errorf("Invalid input for log level: %s", loglevel);
+                bc_log_errorf("Invalid input for log level: %s", loglevel);
                 return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "Invalid input for log level");
         }
-        hirte_log_set_level(loglevel);
-        hirte_log_infof("Log level changed to %s", level);
+        bc_log_set_level(loglevel);
+        bc_log_infof("Log level changed to %s", level);
         return sd_bus_reply_method_return(m, "");
 }
 
@@ -1398,8 +1393,8 @@ static const sd_bus_vtable internal_agent_vtable[] = {
 };
 
 /*************************************************************************
- ********** org.containers.hirte.Agent.CreateProxy ***********************
- ************************************************************************/
+ ********** io.github.eclipse-bluechi.bluechi.Agent.CreateProxy **********
+ *************************************************************************/
 
 static ProxyService *agent_find_proxy(
                 Agent *agent, const char *local_service_name, const char *node_name, const char *unit_name) {
@@ -1426,7 +1421,7 @@ static int agent_method_create_proxy(UNUSED sd_bus_message *m, void *userdata, U
                 return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_INVALID_ARGS, "Invalid arguments");
         }
 
-        hirte_log_infof("CreateProxy request from %s", local_service_name);
+        bc_log_infof("CreateProxy request from %s", local_service_name);
 
         ProxyService *old_proxy = agent_find_proxy(agent, local_service_name, node_name, unit_name);
         if (old_proxy) {
@@ -1445,7 +1440,7 @@ static int agent_method_create_proxy(UNUSED sd_bus_message *m, void *userdata, U
 
         r = proxy_service_emit_proxy_new(proxy);
         if (r < 0 && r != -ENOTCONN) {
-                hirte_log_errorf("Failed to emit ProxyNew signal: %s", strerror(-r));
+                bc_log_errorf("Failed to emit ProxyNew signal: %s", strerror(-r));
                 return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "Internal error");
         }
 
@@ -1455,11 +1450,11 @@ static int agent_method_create_proxy(UNUSED sd_bus_message *m, void *userdata, U
 }
 
 /*************************************************************************
- ********** org.containers.hirte.Agent.RemoveProxy ***********************
- ************************************************************************/
+ **** io.github.eclipse-bluechi.bluechi.Agent.RemoveProxy ****************
+ *************************************************************************/
 
 /* This is called when the proxy service is shut down, via the
- * `ExecStop=hirte-proxy remove` command being called. This will
+ * `ExecStop=bluechi-proxy remove` command being called. This will
  * happen when no services depends on the proxy anymore, as well as
  * when the agent explicitly tells the proxy to stop.
  */
@@ -1474,7 +1469,7 @@ static int agent_method_remove_proxy(sd_bus_message *m, UNUSED void *userdata, U
                 return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_INVALID_ARGS, "Invalid arguments");
         }
 
-        hirte_log_infof("RemoveProxy request from %s", local_service_name);
+        bc_log_infof("RemoveProxy request from %s", local_service_name);
 
         ProxyService *proxy = agent_find_proxy(agent, local_service_name, node_name, unit_name);
         if (proxy == NULL) {
@@ -1553,7 +1548,7 @@ static int agent_match_job_changed(sd_bus_message *m, void *userdata, UNUSED sd_
 
         int r = sd_bus_message_read(m, "s", &interface);
         if (r < 0) {
-                hirte_log_errorf("Failed to read job property: %s", strerror(-r));
+                bc_log_errorf("Failed to read job property: %s", strerror(-r));
                 return r;
         }
 
@@ -1579,7 +1574,7 @@ static int agent_match_job_changed(sd_bus_message *m, void *userdata, UNUSED sd_
                 if (r == -ENOENT) {
                         return 0; /* Some other property changed */
                 }
-                hirte_log_errorf("Failed to get job property: %s", strerror(-r));
+                bc_log_errorf("Failed to get job property: %s", strerror(-r));
                 return r;
         }
 
@@ -1589,10 +1584,10 @@ static int agent_match_job_changed(sd_bus_message *m, void *userdata, UNUSED sd_
                         INTERNAL_AGENT_INTERFACE,
                         "JobStateChanged",
                         "us",
-                        op->hirte_job_id,
+                        op->bc_job_id,
                         state);
         if (r < 0) {
-                hirte_log_errorf("Failed to emit JobStateChanged: %s", strerror(-r));
+                bc_log_errorf("Failed to emit JobStateChanged: %s", strerror(-r));
         }
 
         return 0;
@@ -1627,7 +1622,7 @@ static int agent_match_unit_changed(sd_bus_message *m, void *userdata, UNUSED sd
         (void) sd_bus_message_rewind(m, true);
         (void) sd_bus_message_skip(m, "s"); // re-skip interface
 
-        hirte_log_debugf("Sending UnitPropertiesChanged %s", info->unit);
+        bc_log_debugf("Sending UnitPropertiesChanged %s", info->unit);
 
         /* Forward the property changes */
         _cleanup_sd_bus_message_ sd_bus_message *sig = NULL;
@@ -1733,7 +1728,7 @@ static int agent_match_job_removed(sd_bus_message *m, void *userdata, UNUSED sd_
 
         r = sd_bus_message_read(m, "uoss", &id, &job_path, &unit, &result);
         if (r < 0) {
-                hirte_log_errorf("Can't parse job result: %s", strerror(-r));
+                bc_log_errorf("Can't parse job result: %s", strerror(-r));
                 return r;
         }
 
@@ -1753,11 +1748,11 @@ static int agent_match_job_removed(sd_bus_message *m, void *userdata, UNUSED sd_
 
 static int debug_systemd_message_handler(
                 sd_bus_message *m, UNUSED void *userdata, UNUSED sd_bus_error *ret_error) {
-        hirte_log_infof("Incoming message from systemd: path: %s, iface: %s, member: %s, signature: '%s'",
-                        sd_bus_message_get_path(m),
-                        sd_bus_message_get_interface(m),
-                        sd_bus_message_get_member(m),
-                        sd_bus_message_get_signature(m, true));
+        bc_log_infof("Incoming message from systemd: path: %s, iface: %s, member: %s, signature: '%s'",
+                     sd_bus_message_get_path(m),
+                     sd_bus_message_get_interface(m),
+                     sd_bus_message_get_member(m),
+                     sd_bus_message_get_signature(m, true));
         if (DEBUG_SYSTEMD_MESSAGES_CONTENT) {
                 sd_bus_message_dump(m, stderr, 0);
                 sd_bus_message_rewind(m, true);
@@ -1830,7 +1825,7 @@ static bool ensure_orch_address(Agent *agent) {
                 return true;
         }
         if (agent->host == NULL) {
-                hirte_log_errorf("No manager host specified for agent '%s'", agent->name);
+                bc_log_errorf("No manager host specified for agent '%s'", agent->name);
                 return false;
         }
 
@@ -1842,13 +1837,10 @@ static bool ensure_orch_address(Agent *agent) {
         if (!host_is_ipv4 && !host_is_ipv6) {
                 int r = get_address(ip_address, &resolved_ip_address, getaddrinfo);
                 if (r < 0) {
-                        hirte_log_errorf(
-                                        "Failed to get IP address from host '%s': %s",
-                                        agent->host,
-                                        strerror(-r));
+                        bc_log_errorf("Failed to get IP address from host '%s': %s", agent->host, strerror(-r));
                         return false;
                 }
-                hirte_log_infof("Translated '%s' to '%s'", ip_address, resolved_ip_address);
+                bc_log_infof("Translated '%s' to '%s'", ip_address, resolved_ip_address);
                 ip_address = resolved_ip_address;
         }
 
@@ -1859,7 +1851,7 @@ static bool ensure_orch_address(Agent *agent) {
                 host.sin_port = htons(agent->port);
                 r = inet_pton(AF_INET, ip_address, &host.sin_addr);
                 if (r < 1) {
-                        hirte_log_errorf("INET4: Invalid host option '%s'", ip_address);
+                        bc_log_errorf("INET4: Invalid host option '%s'", ip_address);
                         return false;
                 }
                 _cleanup_free_ char *orch_addr = assemble_tcp_address(&host);
@@ -1874,7 +1866,7 @@ static bool ensure_orch_address(Agent *agent) {
                 host6.sin6_port = htons(agent->port);
                 r = inet_pton(AF_INET6, ip_address, &host6.sin6_addr);
                 if (r < 1) {
-                        hirte_log_errorf("INET6: Invalid host option '%s'", ip_address);
+                        bc_log_errorf("INET6: Invalid host option '%s'", ip_address);
                         return false;
                 }
                 _cleanup_free_ char *orch_addr = assemble_tcp_address_v6(&host6);
@@ -1883,7 +1875,7 @@ static bool ensure_orch_address(Agent *agent) {
                 }
                 agent_set_orch_address(agent, orch_addr);
         } else {
-                hirte_log_errorf("Unknown protocol for '%s'", ip_address);
+                bc_log_errorf("Unknown protocol for '%s'", ip_address);
         }
 
         return agent->orch_addr != NULL;
@@ -1893,14 +1885,14 @@ bool agent_start(Agent *agent) {
         int r = 0;
         sd_bus_error error = SD_BUS_ERROR_NULL;
 
-        hirte_log_infof("Starting hirte-agent %s", CONFIG_H_HIRTE_VERSION);
+        bc_log_infof("Starting bluechi-agent %s", CONFIG_H_BC_VERSION);
 
         if (agent == NULL) {
                 return false;
         }
 
         if (agent->name == NULL) {
-                hirte_log_error("No agent name specified");
+                bc_log_error("No agent name specified");
                 return false;
         }
 
@@ -1916,20 +1908,20 @@ bool agent_start(Agent *agent) {
         }
 
         if (agent->api_bus == NULL) {
-                hirte_log_error("Failed to open api dbus");
+                bc_log_error("Failed to open api dbus");
                 return false;
         }
 
         r = sd_bus_add_object_vtable(
-                        agent->api_bus, NULL, HIRTE_AGENT_OBJECT_PATH, AGENT_INTERFACE, agent_vtable, agent);
+                        agent->api_bus, NULL, BC_AGENT_OBJECT_PATH, AGENT_INTERFACE, agent_vtable, agent);
         if (r < 0) {
-                hirte_log_errorf("Failed to add agent vtable: %s", strerror(-r));
+                bc_log_errorf("Failed to add agent vtable: %s", strerror(-r));
                 return false;
         }
 
         r = sd_bus_request_name(agent->api_bus, agent->api_bus_service_name, SD_BUS_NAME_REPLACE_EXISTING);
         if (r < 0) {
-                hirte_log_errorf("Failed to acquire service name on api dbus: %s", strerror(-r));
+                bc_log_errorf("Failed to acquire service name on api dbus: %s", strerror(-r));
                 return false;
         }
 
@@ -1939,7 +1931,7 @@ bool agent_start(Agent *agent) {
                 agent->systemd_dbus = systemd_bus_open(agent->event);
         }
         if (agent->systemd_dbus == NULL) {
-                hirte_log_error("Failed to open systemd dbus");
+                bc_log_error("Failed to open systemd dbus");
                 return false;
         }
 
@@ -1954,7 +1946,7 @@ bool agent_start(Agent *agent) {
                         &sub_m,
                         "");
         if (r < 0) {
-                hirte_log_errorf("Failed to issue subscribe call: %s", error.message);
+                bc_log_errorf("Failed to issue subscribe call: %s", error.message);
                 sd_bus_error_free(&error);
                 return false;
         }
@@ -1966,7 +1958,7 @@ bool agent_start(Agent *agent) {
                         agent_match_job_changed,
                         agent);
         if (r < 0) {
-                hirte_log_errorf("Failed to add match: %s", strerror(-r));
+                bc_log_errorf("Failed to add match: %s", strerror(-r));
                 return false;
         }
 
@@ -1977,7 +1969,7 @@ bool agent_start(Agent *agent) {
                         agent_match_unit_changed,
                         agent);
         if (r < 0) {
-                hirte_log_errorf("Failed to add match: %s", strerror(-r));
+                bc_log_errorf("Failed to add match: %s", strerror(-r));
                 return false;
         }
 
@@ -1991,7 +1983,7 @@ bool agent_start(Agent *agent) {
                         agent_match_unit_new,
                         agent);
         if (r < 0) {
-                hirte_log_errorf("Failed to add unit-new peer bus match: %s", strerror(-r));
+                bc_log_errorf("Failed to add unit-new peer bus match: %s", strerror(-r));
                 return false;
         }
 
@@ -2005,7 +1997,7 @@ bool agent_start(Agent *agent) {
                         agent_match_unit_removed,
                         agent);
         if (r < 0) {
-                hirte_log_errorf("Failed to add unit-removed peer bus match: %s", strerror(-r));
+                bc_log_errorf("Failed to add unit-removed peer bus match: %s", strerror(-r));
                 return false;
         }
 
@@ -2019,7 +2011,7 @@ bool agent_start(Agent *agent) {
                         agent_match_job_removed,
                         agent);
         if (r < 0) {
-                hirte_log_errorf("Failed to add job-removed peer bus match: %s", strerror(-r));
+                bc_log_errorf("Failed to add job-removed peer bus match: %s", strerror(-r));
                 return false;
         }
 
@@ -2034,7 +2026,7 @@ bool agent_start(Agent *agent) {
                         &list_units_m,
                         "");
         if (r < 0) {
-                hirte_log_errorf("Failed to issue list_units call: %s", error.message);
+                bc_log_errorf("Failed to issue list_units call: %s", error.message);
                 sd_bus_error_free(&error);
                 return false;
         }
@@ -2050,30 +2042,30 @@ bool agent_start(Agent *agent) {
 
         r = shutdown_service_register(agent->api_bus, agent->event);
         if (r < 0) {
-                hirte_log_errorf("Failed to register shutdown service: %s", strerror(-r));
+                bc_log_errorf("Failed to register shutdown service: %s", strerror(-r));
                 return false;
         }
 
         r = event_loop_add_shutdown_signals(agent->event);
         if (r < 0) {
-                hirte_log_errorf("Failed to add signals to agent event loop: %s", strerror(-r));
+                bc_log_errorf("Failed to add signals to agent event loop: %s", strerror(-r));
                 return false;
         }
 
         r = agent_setup_heartbeat_timer(agent);
         if (r < 0) {
-                hirte_log_errorf("Failed to set up agent heartbeat timer: %s", strerror(-r));
+                bc_log_errorf("Failed to set up agent heartbeat timer: %s", strerror(-r));
                 return false;
         }
 
         if (!agent_connect(agent)) {
-                hirte_log_error("Initial manager connection failed, retrying");
+                bc_log_error("Initial manager connection failed, retrying");
                 agent->connection_state = AGENT_CONNECTION_STATE_RETRY;
         }
 
         r = sd_event_loop(agent->event);
         if (r < 0) {
-                hirte_log_errorf("Starting event loop failed: %s", strerror(-r));
+                bc_log_errorf("Starting event loop failed: %s", strerror(-r));
                 return false;
         }
 
@@ -2097,22 +2089,22 @@ bool agent_stop(Agent *agent) {
 static bool agent_connect(Agent *agent) {
         peer_bus_close(agent->peer_dbus);
 
-        hirte_log_infof("Connecting to manager on %s", agent->orch_addr);
+        bc_log_infof("Connecting to manager on %s", agent->orch_addr);
 
         agent->peer_dbus = peer_bus_open(agent->event, "peer-bus-to-controller", agent->orch_addr);
         if (agent->peer_dbus == NULL) {
-                hirte_log_error("Failed to open peer dbus");
+                bc_log_error("Failed to open peer dbus");
                 return false;
         }
 
         int r = bus_socket_set_no_delay(agent->peer_dbus);
         if (r < 0) {
-                hirte_log_warn("Failed to set NO_DELAY on socket");
+                bc_log_warn("Failed to set NO_DELAY on socket");
         }
 
         r = bus_socket_set_keepalive(agent->peer_dbus);
         if (r < 0) {
-                hirte_log_warn("Failed to set KEEPALIVE on socket");
+                bc_log_warn("Failed to set KEEPALIVE on socket");
         }
 
         r = sd_bus_add_object_vtable(
@@ -2123,7 +2115,7 @@ static bool agent_connect(Agent *agent) {
                         internal_agent_vtable,
                         agent);
         if (r < 0) {
-                hirte_log_errorf("Failed to add agent vtable: %s", strerror(-r));
+                bc_log_errorf("Failed to add agent vtable: %s", strerror(-r));
                 return false;
         }
 
@@ -2131,7 +2123,7 @@ static bool agent_connect(Agent *agent) {
         sd_bus_error error = SD_BUS_ERROR_NULL;
         r = sd_bus_call_method(
                         agent->peer_dbus,
-                        HIRTE_DBUS_NAME,
+                        BC_DBUS_NAME,
                         INTERNAL_MANAGER_OBJECT_PATH,
                         INTERNAL_MANAGER_INTERFACE,
                         "Register",
@@ -2140,18 +2132,18 @@ static bool agent_connect(Agent *agent) {
                         "s",
                         agent->name);
         if (r < 0) {
-                hirte_log_errorf("Registering as '%s' failed: %s", agent->name, error.message);
+                bc_log_errorf("Registering as '%s' failed: %s", agent->name, error.message);
                 sd_bus_error_free(&error);
                 return false;
         }
 
         r = sd_bus_message_read(bus_msg, "");
         if (r < 0) {
-                hirte_log_errorf("Failed to parse response message: %s", strerror(-r));
+                bc_log_errorf("Failed to parse response message: %s", strerror(-r));
                 return false;
         }
 
-        hirte_log_infof("Connected to manager as '%s'", agent->name);
+        bc_log_infof("Connected to manager as '%s'", agent->name);
 
         agent->connection_state = AGENT_CONNECTION_STATE_CONNECTED;
         agent->connection_retry_count = 0;
@@ -2167,7 +2159,7 @@ static bool agent_connect(Agent *agent) {
                         NULL,
                         agent);
         if (r < 0) {
-                hirte_log_errorf("Failed to request match for Disconnected signal: %s", strerror(-r));
+                bc_log_errorf("Failed to request match for Disconnected signal: %s", strerror(-r));
                 return false;
         }
 
@@ -2178,11 +2170,10 @@ static bool agent_connect(Agent *agent) {
         LIST_FOREACH_SAFE(proxy_services, proxy, next_proxy, agent->proxy_services) {
                 r = proxy_service_emit_proxy_new(proxy);
                 if (r < 0) {
-                        hirte_log_errorf(
-                                        "Failed to re-emit ProxyNew signal for proxy %u requesting unit %s on %s",
-                                        proxy->id,
-                                        proxy->unit_name,
-                                        proxy->node_name);
+                        bc_log_errorf("Failed to re-emit ProxyNew signal for proxy %u requesting unit %s on %s",
+                                      proxy->id,
+                                      proxy->unit_name,
+                                      proxy->node_name);
                 }
         }
 
@@ -2191,7 +2182,7 @@ static bool agent_connect(Agent *agent) {
 
 static bool agent_reconnect(Agent *agent) {
         // resolve FQDN again in case the system changed
-        // e.g. hirte controller has been migrated to a different host
+        // e.g. bluechi controller has been migrated to a different host
         if (agent->orch_addr != NULL) {
                 free(agent->orch_addr);
                 agent->orch_addr = NULL;
@@ -2207,7 +2198,7 @@ static int stop_proxy_callback(sd_bus_message *m, void *userdata, UNUSED sd_bus_
         _cleanup_systemd_request_ SystemdRequest *req = userdata;
 
         if (sd_bus_message_is_method_error(m, NULL)) {
-                hirte_log_errorf("Error stopping proxy service: %s", sd_bus_message_get_error(m)->message);
+                bc_log_errorf("Error stopping proxy service: %s", sd_bus_message_get_error(m)->message);
         }
 
         return 0;
@@ -2219,7 +2210,7 @@ static int agent_stop_local_proxy_service(Agent *agent, ProxyService *proxy) {
                 return 0;
         }
 
-        hirte_log_infof("Stopping proxy service %s", proxy->local_service_name);
+        bc_log_infof("Stopping proxy service %s", proxy->local_service_name);
 
         /* Don't stop twice */
         proxy->dont_stop_proxy = true;
@@ -2242,7 +2233,7 @@ static int agent_stop_local_proxy_service(Agent *agent, ProxyService *proxy) {
 }
 
 int agent_send_job_metrics(Agent *agent, char *unit, char *method, uint64_t systemd_job_time) {
-        hirte_log_debugf("Sending agent %s job metrics on unit %s: %ldus", unit, method, systemd_job_time);
+        bc_log_debugf("Sending agent %s job metrics on unit %s: %ldus", unit, method, systemd_job_time);
         int r = sd_bus_emit_signal(
                         agent->peer_dbus,
                         INTERNAL_AGENT_METRICS_OBJECT_PATH,
@@ -2253,7 +2244,7 @@ int agent_send_job_metrics(Agent *agent, char *unit, char *method, uint64_t syst
                         method,
                         systemd_job_time);
         if (r < 0) {
-                hirte_log_errorf("Failed to emit metric signal: %s", strerror(-r));
+                bc_log_errorf("Failed to emit metric signal: %s", strerror(-r));
         }
 
         return 0;
