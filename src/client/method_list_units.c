@@ -1,4 +1,4 @@
-/* SPDX-License-Identifier: GPL-2.0-or-later */
+/* SPDX-License-Identifier: LGPL-2.1-or-later */
 #include "libbluechi/common/string-util.h"
 
 #include "method_list_units.h"

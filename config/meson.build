@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: GPL-2.0-or-later
+# SPDX-License-Identifier: LGPL-2.1-or-later
 
 install_data(
   install_dir : get_option('sysconfdir') / 'bluechi'

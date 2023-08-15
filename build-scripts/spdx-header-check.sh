@@ -1,5 +1,5 @@
 #!/usr/bin/bash -e
-# SPDX-License-Identifier: GPL-2.0-or-later
+# SPDX-License-Identifier: LGPL-2.1-or-later
 
 # Checked files regex
 CHECKED_FILES=".*\(\.c\|\.h\|\.py\|\.sh\|\.xml\|meson\.build\)"
@@ -8,12 +8,8 @@ CHECKED_FILES=".*\(\.c\|\.h\|\.py\|\.sh\|\.xml\|meson\.build\)"
 # List of licenses which are OK when found in a source code
 #
 APPROVED_LICENSES=""
-# Used for bluechi original code
-APPROVED_LICENSES="${APPROVED_LICENSES} GPL-2.0-or-later"
-# Used in src/libbluechi/common/list.h
+# Used for bluechi original code and in src/libbluechi/common/list.h
 APPROVED_LICENSES="${APPROVED_LICENSES} LGPL-2.1-or-later"
-# Used in generated files in pyhirte
-APPROVED_LICENSES="${APPROVED_LICENSES} LGPL-3.0-or-later"
 # Used for examples in doc/api-examples and doc/bluechi-examples
 APPROVED_LICENSES="${APPROVED_LICENSES} CC0-1.0"
 

@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: GPL-2.0-or-later
+# SPDX-License-Identifier: LGPL-2.1-or-later
 
 systemd_unit_dir = join_paths(get_option('prefix'), 'lib', 'systemd', 'system')
 systemd_user_unit_dir = join_paths(get_option('prefix'), 'lib', 'systemd', 'user')
