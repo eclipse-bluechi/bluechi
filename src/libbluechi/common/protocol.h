@@ -6,17 +6,17 @@
 #define BC_DEFAULT_PORT "842"
 #define BC_DEFAULT_HOST "127.0.0.1"
 
-#define BC_DBUS_NAME "io.github.eclipse-bluechi.bluechi"
-#define BC_AGENT_DBUS_NAME "io.github.eclipse-bluechi.bluechi.Agent"
+#define BC_DBUS_NAME "org.eclipse.bluechi"
+#define BC_AGENT_DBUS_NAME "org.eclipse.bluechi.Agent"
 
-#define BC_OBJECT_PATH "/io/github/eclipse-bluechi/bluechi"
+#define BC_OBJECT_PATH "/org/eclipse/bluechi"
 
 /* Public objects */
 #define BC_MANAGER_OBJECT_PATH BC_OBJECT_PATH
 #define BC_AGENT_OBJECT_PATH BC_OBJECT_PATH
 
 /* Public interfaces */
-#define BC_INTERFACE_BASE_NAME "io.github.eclipse-bluechi.bluechi"
+#define BC_INTERFACE_BASE_NAME "org.eclipse.bluechi"
 #define MANAGER_INTERFACE BC_INTERFACE_BASE_NAME ".Manager"
 #define AGENT_INTERFACE BC_INTERFACE_BASE_NAME ".Agent"
 #define NODE_INTERFACE BC_INTERFACE_BASE_NAME ".Node"
@@ -41,9 +41,9 @@
 #define INTERNAL_PROXY_INTERFACE BC_INTERFACE_BASE_NAME ".internal.Proxy"
 #define INTERNAL_AGENT_METRICS_INTERFACE INTERNAL_AGENT_INTERFACE ".Metrics"
 
-#define BC_BUS_ERROR_OFFLINE "io.github.eclipse-bluechi.bluechi.Offline"
-#define BC_BUS_ERROR_NO_SUCH_SUBSCRIPTION "io.github.eclipse-bluechi.bluechi.NoSuchSubscription"
-#define BC_BUS_ERROR_ACTIVATION_FAILED "io.github.eclipse-bluechi.bluechi.ActivationFailed"
+#define BC_BUS_ERROR_OFFLINE "org.eclipse.bluechi.Offline"
+#define BC_BUS_ERROR_NO_SUCH_SUBSCRIPTION "org.eclipse.bluechi.NoSuchSubscription"
+#define BC_BUS_ERROR_ACTIVATION_FAILED "org.eclipse.bluechi.ActivationFailed"
 
 /* Systemd protocol */
 

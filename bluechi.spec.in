@@ -41,11 +41,11 @@ This package contains the controller and command line tool.
 %doc README.developer.md
 %license LICENSE
 %{_bindir}/bluechi
-%{_datadir}/dbus-1/interfaces/io.github.eclipse-bluechi.bluechi.Job.xml
-%{_datadir}/dbus-1/interfaces/io.github.eclipse-bluechi.bluechi.Manager.xml
-%{_datadir}/dbus-1/interfaces/io.github.eclipse-bluechi.bluechi.Monitor.xml
-%{_datadir}/dbus-1/interfaces/io.github.eclipse-bluechi.bluechi.Node.xml
-%{_datadir}/dbus-1/system.d/io.github.eclipse-bluechi.bluechi.conf
+%{_datadir}/dbus-1/interfaces/org.eclipse.bluechi.Job.xml
+%{_datadir}/dbus-1/interfaces/org.eclipse.bluechi.Manager.xml
+%{_datadir}/dbus-1/interfaces/org.eclipse.bluechi.Monitor.xml
+%{_datadir}/dbus-1/interfaces/org.eclipse.bluechi.Node.xml
+%{_datadir}/dbus-1/system.d/org.eclipse.bluechi.conf
 %{_datadir}/bluechi/config/bluechi.conf
 %{_mandir}/man1/bluechi.*
 %{_mandir}/man5/bluechi.conf.*
@@ -85,9 +85,9 @@ This package contains the node agent.
 %license LICENSE
 %{_bindir}/bluechi-agent
 %{_bindir}/bluechi-proxy
-%{_datadir}/dbus-1/system.d/io.github.eclipse-bluechi.bluechi.Agent.conf
+%{_datadir}/dbus-1/system.d/org.eclipse.bluechi.Agent.conf
 %{_datadir}/bluechi-agent/config/agent.conf
-%{_datadir}/dbus-1/interfaces/io.github.eclipse-bluechi.bluechi.Agent.xml
+%{_datadir}/dbus-1/interfaces/org.eclipse.bluechi.Agent.xml
 %{_mandir}/man1/bluechi-agent.*
 %{_mandir}/man1/bluechi-proxy.*
 %{_mandir}/man5/bluechi-agent.conf.*

@@ -185,8 +185,8 @@ To allow `bluechi` and `bluechi-agent` to own a name on the local system D-Bus, 
 files need to be copied (if not already existing):
 
 ```bash
-cp <builddir>/share/dbus-1/system.d/io.github.eclipse-bluechi.bluechi.Agent.conf /etc/dbus-1/system.d/
-cp <builddir>/share/dbus-1/system.d/io.github.eclipse-bluechi.bluechi.conf /etc/dbus-1/system.d/
+cp <builddir>/share/dbus-1/system.d/org.eclipse.bluechi.Agent.conf /etc/dbus-1/system.d/
+cp <builddir>/share/dbus-1/system.d/org.eclipse.bluechi.conf /etc/dbus-1/system.d/
 ```
 
 **Note:** Make sure to reload the dbus service so these changes take effect: `systemctl reload dbus-broker.service` (or

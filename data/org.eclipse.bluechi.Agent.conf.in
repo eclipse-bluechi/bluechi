@@ -3,22 +3,22 @@
 <busconfig>
 
   <policy user="@dbus_srv_user@">
-    <allow own="io.github.eclipse-bluechi.bluechi"/>
-    <allow send_destination="io.github.eclipse-bluechi.bluechi"/>
-    <allow receive_sender="io.github.eclipse-bluechi.bluechi"/>
+    <allow own="org.eclipse.bluechi.Agent"/>
+    <allow send_destination="org.eclipse.bluechi.Agent"/>
+    <allow receive_sender="org.eclipse.bluechi.Agent"/>
   </policy>
 
   <policy context="default">
-    <deny send_destination="io.github.eclipse-bluechi.bluechi"/>
+    <deny send_destination="org.eclipse.bluechi.Agent"/>
 
     <!-- Completely open to anyone: org.freedesktop.DBus.* introspaction  -->
-    <allow send_destination="io.github.eclipse-bluechi.bluechi"
+    <allow send_destination="org.eclipse.bluechi.Agent"
            send_interface="org.freedesktop.DBus.Introspectable"/>
 
-    <allow send_destination="io.github.eclipse-bluechi.bluechi"
+    <allow send_destination="org.eclipse.bluechi.Agent"
            send_interface="org.freedesktop.DBus.Peer"/>
 
-    <allow receive_sender="io.github.eclipse-bluechi.bluechi"/>
+    <allow receive_sender="org.eclipse.bluechi.Agent"/>
   </policy>
 
 </busconfig>

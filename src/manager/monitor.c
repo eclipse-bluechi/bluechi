@@ -202,7 +202,7 @@ void monitor_close(Monitor *monitor) {
 }
 
 /*************************************************************************
- *** io.github.eclipse-bluechi.bluechi.Monitor.Close *********************
+ *** org.eclipse.bluechi.Monitor.Close *********************
  *************************************************************************/
 
 static int monitor_method_close(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error) {
@@ -221,7 +221,7 @@ static int monitor_method_close(sd_bus_message *m, void *userdata, UNUSED sd_bus
 }
 
 /*************************************************************************
- *** io.github.eclipse-bluechi.bluechi.Monitor.Subscribe *****************
+ *** org.eclipse.bluechi.Monitor.Subscribe *****************
  *************************************************************************/
 
 static int monitor_method_subscribe(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error) {
@@ -257,7 +257,7 @@ static int monitor_method_subscribe(sd_bus_message *m, void *userdata, UNUSED sd
 }
 
 /*************************************************************************
- ***** io.github.eclipse-bluechi.bluechi.Monitor.SubscribeList ***********
+ ***** org.eclipse.bluechi.Monitor.SubscribeList ***********
  *************************************************************************/
 
 static int monitor_method_subscribe_list(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error) {
@@ -317,7 +317,7 @@ static int monitor_method_subscribe_list(sd_bus_message *m, void *userdata, UNUS
 }
 
 /*************************************************************************
- ********* io.github.eclipse-bluechi.bluechi.Monitor.Unsubscribe *********
+ ********* org.eclipse.bluechi.Monitor.Unsubscribe *********
  *************************************************************************/
 
 static Subscription *monitor_find_subscription(Monitor *monitor, uint32_t sub_id) {

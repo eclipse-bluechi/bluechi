@@ -14,9 +14,9 @@ unit_name = sys.argv[2]
 iface_name = sys.argv[3]
 property_name = sys.argv[4]
 
-manager = bus.get_proxy("io.github.eclipse-bluechi.bluechi", "/io/github/eclipse-bluechi/bluechi")
+manager = bus.get_proxy("org.eclipse.bluechi", "/org/eclipse/bluechi")
 node_path = manager.GetNode(node_name)
-node = bus.get_proxy("io.github.eclipse-bluechi.bluechi", node_path)
+node = bus.get_proxy("org.eclipse.bluechi", node_path)
 
 val = node.GetUnitProperty(unit_name, iface_name, property_name)
 print(f"{property_name}: {get_native(val)}")

@@ -1,16 +1,16 @@
 <!-- markdownlint-disable-file MD013 MD007 MD024 -->
 # D-Bus API Description
 
-The main way to interact with BlueChi is using [D-Bus](https://www.freedesktop.org/wiki/Software/dbus/). It exposes a name on the system bus called `io.github.eclipse-bluechi.bluechi` that other programs can use to control the system. It is expected that high-level control planes use this API directly, but there is also a `bluechictl` program that is useful for debugging and testing.
+The main way to interact with BlueChi is using [D-Bus](https://www.freedesktop.org/wiki/Software/dbus/). It exposes a name on the system bus called `org.eclipse.bluechi` that other programs can use to control the system. It is expected that high-level control planes use this API directly, but there is also a `bluechictl` program that is useful for debugging and testing.
 
 ## BlueChi public D-Bus API
 
-The main entry point is at the `/io/github/eclipse-bluechi/bluechi` object path and implements the `io.github.eclipse-bluechi.bluechi.Manager`
+The main entry point is at the `/org/eclipse/bluechi` object path and implements the `org.eclipse.bluechi.Manager`
 interface.
 
 Note that all properties also come with change events, so you can easily track when they change.
 
-### interface io.github.eclipse-bluechi.bluechi.Manager
+### interface org.eclipse.bluechi.Manager
 
 #### Methods
 
@@ -66,11 +66,11 @@ Note that all properties also come with change events, so you can easily track w
   * `Nodes` - `as`
 
     A list with the names of all configured nodes managed by BlueChi. Each name listed here also has a corresponding
-    object under `/io/github/eclipse-bluechi/bluechi/node/$name` which implements the `io.github.eclipse-bluechi.bluechi.Node` interface.
+    object under `/org/eclipse/bluechi/node/$name` which implements the `org.eclipse.bluechi.Node` interface.
 
-### interface io.github.eclipse-bluechi.bluechi.Monitor
+### interface org.eclipse.bluechi.Monitor
 
-Object path: `/io/github/eclipse-bluechi/bluechi/monitor/$id`
+Object path: `/org/eclipse/bluechi/monitor/$id`
 
 #### Methods
 
@@ -128,12 +128,12 @@ Object path: `/io/github/eclipse-bluechi/bluechi/monitor/$id`
     when the agent disconnects and we previously reported the unit
     as loaded (reason=`virtual`).
 
-### interface io.github.eclipse-bluechi.bluechi.Node
+### interface org.eclipse.bluechi.Node
 
 Each node object represents a configured node in the system, independent of whether that node is connected to the
 manager or not, and the status can change over time.
 
-Object path: `/io/github/eclipse-bluechi/bluechi/node/$name`
+Object path: `/org/eclipse/bluechi/node/$name`
 
 #### Methods
 
@@ -143,7 +143,7 @@ Object path: `/io/github/eclipse-bluechi/bluechi/node/$name`
     ever one active job per unit. Mode can be one of `replace` or `fail`. If there is an outstanding queued (but not
     running) job, that is replaced if mode is `replace`, or the job fails if mode is `fail`.
 
-    The job returned is an object path for an object implementing `io.github.eclipse-bluechi.bluechi.Job`, and which be monitored for
+    The job returned is an object path for an object implementing `org.eclipse.bluechi.Job`, and which be monitored for
     the progress of the job, or used to cancel the job. To track the result of the job, follow the `JobRemoved` signal
     on the Manager.
 
@@ -216,12 +216,12 @@ Object path: `/io/github/eclipse-bluechi/bluechi/node/$name`
 
     Timestamp of the last successfully received heartbeat of the node.
 
-### interface io.github.eclipse-bluechi.bluechi.Job
+### interface org.eclipse.bluechi.Job
 
 Each potentially long-running operation returns a job object, which can be used to monitor the status of the job as well
 as cancelling it.
 
-Object path: `/io/github/eclipse-bluechi/bluechi/job/$id`
+Object path: `/org/eclipse/bluechi/job/$id`
 
 #### Methods
 
@@ -254,17 +254,17 @@ Object path: `/io/github/eclipse-bluechi/bluechi/job/$id`
 
 ## BlueChi-Agent public D-Bus API
 
-The main entry point is at the `/io/github/eclipse-bluechi/bluechi` object path and implements the `io.github.eclipse-bluechi.bluechi.Agent`
+The main entry point is at the `/org/eclipse/bluechi` object path and implements the `org.eclipse.bluechi.Agent`
 interface.
 
-### interface io.github.eclipse-bluechi.bluechi.Agent
+### interface org.eclipse.bluechi.Agent
 
 #### Methods
 
   * `CreateProxy(in s service_name, in s node_name, in s unit_name)`
 
     Whenever a service on the agent requires a service on another node it creates a proxy service and calls this method.
-    It then creates a new `io.github.eclipse-bluechi.internal.Proxy` object and emits the `ProxyNew` signal on the internal bus to
+    It then creates a new `org.eclipse.bluechi.internal.Proxy` object and emits the `ProxyNew` signal on the internal bus to
     tell the manager about it. The manager will then try to arrange that the requested unit on the specified node is
     running and notifies the initial agent about the status by calling `Ready` on the internal bus.
 
@@ -272,9 +272,9 @@ interface.
 
     When a proxy is not needed anymore it is being removed on the node and a `ProxyRemoved` is emitted to notify the manager.
 
-### interface io.github.eclipse-bluechi.bluechi.Metrics
+### interface org.eclipse.bluechi.Metrics
 
-This interface is provides signals for collecting metrics. It is created by calling `EnableMetrics` on the `io.github.eclipse-bluechi.bluechi.Manager` interface and removed by calling `DisableMetrics`.
+This interface is provides signals for collecting metrics. It is created by calling `EnableMetrics` on the `org.eclipse.bluechi.Manager` interface and removed by calling `DisableMetrics`.
 
 #### Signals
 
@@ -292,12 +292,12 @@ The above APIs are the public facing ones that users of BlueChi would use. Addit
 used internally to synchronize between the manager and the nodes, and sometimes internally on a node. We here describe
 these APIs.
 
-### interface io.github.eclipse-bluechi.bluechi.internal.Manager
+### interface org.eclipse.bluechi.internal.Manager
 
 When a node connects to the manager it does so not via the public API, but via a direct peer-to-peer connection. On this
 connection the regular Manager API is not available, instead we're using internal Manager object as the basic data.
 
-Object path: `/io/github/eclipse-bluechi/bluechi/internal`
+Object path: `/org/eclipse/bluechi/internal`
 
 #### Methods
 
@@ -306,7 +306,7 @@ Object path: `/io/github/eclipse-bluechi/bluechi/internal`
     Before anything else can happen the node must call this method to register with the manager, giving its unique name.
     If this succeeds, then the manager will consider the node online and start forwarding operations to it.
 
-### interface io.github.eclipse-bluechi.bluechi.internal.Agent
+### interface org.eclipse.bluechi.internal.Agent
 
 This is the main interface that the node implements and that is used by the manager to affect change on the node.
 
@@ -324,7 +324,7 @@ This is the main interface that the node implements and that is used by the mana
 
   * `ListUnits(out a(ssssssouso) units);`
 
-    These are all API mirrors of the respective method in `io.github.eclipse-bluechi.bluechi.Node`, and all they do is forward the
+    These are all API mirrors of the respective method in `org.eclipse.bluechi.Node`, and all they do is forward the
     same operation to the local systemd instance. Similarly, any changes in the systemd job will be forwarded to signals
     on the node job which will then be forwarded to the manager job and reach the user.
 
@@ -382,7 +382,7 @@ This is the main interface that the node implements and that is used by the mana
   * `ProxyNew(s node_name, s unit_name, o proxy)`
 
     Whenever a proxy service is running on the system with the node it calls into the node service, and the node service
-    creates a new `io.github.eclipse-bluechi.internal.Proxy` object and emits this signal to tell the manager about it. The manager
+    creates a new `org.eclipse.bluechi.internal.Proxy` object and emits this signal to tell the manager about it. The manager
     will notice this and try to arrange that the requested unit is running on the requested node. If the unit is already
     running, when it is started, or when the start fails, the manager will call the `Ready()` method on it.
 
@@ -395,7 +395,7 @@ This is the main interface that the node implements and that is used by the mana
 
     This is a periodic signal from the node to the manager.
 
-### interface io.github.eclipse-bluechi.bluechi.internal.Proxy
+### interface org.eclipse.bluechi.internal.Proxy
 
 The node creates one of these by request from a proxy service, it is used to synchronize the state of the remote service
 with the proxy.
@@ -408,7 +408,7 @@ with the proxy.
     it failed. result is `done` if it was already running, otherwise it is the same value as the remote node returned in
     result from its start job.
 
-### interface io.github.eclipse-bluechi.bluechi.internal.Agent.Metrics
+### interface org.eclipse.bluechi.internal.Agent.Metrics
 
 This is the interface that provides signals sent from the agent to the manager to collect metrics, e.g. time measurements.
 
