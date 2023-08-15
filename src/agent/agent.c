@@ -692,7 +692,7 @@ static int agent_method_passthrough_to_systemd(sd_bus_message *m, void *userdata
 }
 
 /************************************************************************
- ********** io.github.eclipse-bluechi.bluechi.internal.Agent.ListUnits **
+ ********** org.eclipse.bluechi.internal.Agent.ListUnits **
  ************************************************************************/
 
 static int list_units_callback(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error) {
@@ -734,7 +734,7 @@ static int agent_method_list_units(sd_bus_message *m, void *userdata, UNUSED sd_
 }
 
 /************************************************************************
- ******** io.github.eclipse-bluechi.bluechi.internal.Agent.GetUnitProperties ************
+ ******** org.eclipse.bluechi.internal.Agent.GetUnitProperties ************
  ************************************************************************/
 
 static int get_unit_properties_got_properties(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error) {
@@ -794,7 +794,7 @@ static int agent_method_get_unit_properties(sd_bus_message *m, void *userdata, U
 }
 
 /***************************************************************************
- ******** io.github.eclipse-bluechi.bluechi.internal.Agent.GetUnitProperty *
+ ******** org.eclipse.bluechi.internal.Agent.GetUnitProperty *
  ***************************************************************************/
 
 static int get_unit_property_got_property(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error) {
@@ -855,7 +855,7 @@ static int agent_method_get_unit_property(sd_bus_message *m, void *userdata, UNU
 }
 
 /******************************************************************************
- ******** io.github.eclipse-bluechi.bluechi.internal.Agent.SetUnitProperties  *
+ ******** org.eclipse.bluechi.internal.Agent.SetUnitProperties  *
  ******************************************************************************/
 
 static int set_unit_properties_cb(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error) {
@@ -1013,7 +1013,7 @@ static int agent_run_unit_lifecycle_method(sd_bus_message *m, Agent *agent, cons
 }
 
 /*************************************************************************
- ********** io.github.eclipse-bluechi.bluechi.internal.Agent.StartUnit   *
+ ********** org.eclipse.bluechi.internal.Agent.StartUnit   *
  *************************************************************************/
 
 static int agent_method_start_unit(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error) {
@@ -1021,7 +1021,7 @@ static int agent_method_start_unit(sd_bus_message *m, void *userdata, UNUSED sd_
 }
 
 /*************************************************************************
- ********** io.github.eclipse-bluechi.bluechi.internal.Agent.StopUnit    *
+ ********** org.eclipse.bluechi.internal.Agent.StopUnit    *
  *************************************************************************/
 
 static int agent_method_stop_unit(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error) {
@@ -1029,7 +1029,7 @@ static int agent_method_stop_unit(sd_bus_message *m, void *userdata, UNUSED sd_b
 }
 
 /*************************************************************************
- ********** io.github.eclipse-bluechi.bluechi.internal.Agent.RestartUnit *
+ ********** org.eclipse.bluechi.internal.Agent.RestartUnit *
  *************************************************************************/
 
 static int agent_method_restart_unit(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error) {
@@ -1037,7 +1037,7 @@ static int agent_method_restart_unit(sd_bus_message *m, void *userdata, UNUSED s
 }
 
 /*************************************************************************
- ********** io.github.eclipse-bluechi.bluechi.internal.Agent.ReloadUnit  *
+ ********** org.eclipse.bluechi.internal.Agent.ReloadUnit  *
  *************************************************************************/
 
 static int agent_method_reload_unit(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error) {
@@ -1045,7 +1045,7 @@ static int agent_method_reload_unit(sd_bus_message *m, void *userdata, UNUSED sd
 }
 
 /*************************************************************************
- ********** io.github.eclipse-bluechi.bluechi.internal.Agent.Subscribe ***
+ ********** org.eclipse.bluechi.internal.Agent.Subscribe ***
  *************************************************************************/
 
 static void agent_emit_unit_new(Agent *agent, AgentUnitInfo *info, const char *reason) {
@@ -1144,7 +1144,7 @@ static int agent_method_subscribe(sd_bus_message *m, void *userdata, UNUSED sd_b
 }
 
 /*************************************************************************
- *** io.github.eclipse-bluechi.bluechi.internal.Agent.Unsubscribe ********
+ *** org.eclipse.bluechi.internal.Agent.Unsubscribe ********
  *************************************************************************/
 
 static int agent_method_unsubscribe(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error) {
@@ -1180,7 +1180,7 @@ static int agent_method_unsubscribe(sd_bus_message *m, void *userdata, UNUSED sd
 }
 
 /*************************************************************************
- ********** io.github.eclipse-bluechi.bluechi.internal.Agent.StartDep ****
+ ********** org.eclipse.bluechi.internal.Agent.StartDep ****
  *************************************************************************/
 
 static char *get_dep_unit(const char *unit_name) {
@@ -1230,7 +1230,7 @@ static int agent_method_start_dep(sd_bus_message *m, void *userdata, UNUSED sd_b
 }
 
 /*************************************************************************
- **** io.github.eclipse-bluechi.bluechi.internal.Agent.StopDep ***********
+ **** org.eclipse.bluechi.internal.Agent.StopDep ***********
  *************************************************************************/
 
 static int stop_dep_callback(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error) {
@@ -1277,7 +1277,7 @@ static int agent_method_stop_dep(sd_bus_message *m, void *userdata, UNUSED sd_bu
 
 
 /***************************************************************************
- **** io.github.eclipse-bluechi.bluechi.internal.Agent.EnableMetrics *******
+ **** org.eclipse.bluechi.internal.Agent.EnableMetrics *******
  ***************************************************************************/
 
 static const sd_bus_vtable agent_metrics_vtable[] = {
@@ -1314,7 +1314,7 @@ static int agent_method_enable_metrics(sd_bus_message *m, void *userdata, UNUSED
 }
 
 /***************************************************************************
- **** io.github.eclipse-bluechi.bluechi.internal.Agent.DisableMetrics ******
+ **** org.eclipse.bluechi.internal.Agent.DisableMetrics ******
  ***************************************************************************/
 
 static int agent_method_disable_metrics(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error) {
@@ -1330,7 +1330,7 @@ static int agent_method_disable_metrics(sd_bus_message *m, void *userdata, UNUSE
 }
 
 /*************************************************************************
- ************** io.github.eclipse-bluechi.bluechi.Agent.SetNodeLogLevel  *
+ ************** org.eclipse.bluechi.Agent.SetNodeLogLevel  *
  *************************************************************************/
 
 static int agent_method_set_log_level(
@@ -1393,7 +1393,7 @@ static const sd_bus_vtable internal_agent_vtable[] = {
 };
 
 /*************************************************************************
- ********** io.github.eclipse-bluechi.bluechi.Agent.CreateProxy **********
+ ********** org.eclipse.bluechi.Agent.CreateProxy **********
  *************************************************************************/
 
 static ProxyService *agent_find_proxy(
@@ -1450,7 +1450,7 @@ static int agent_method_create_proxy(UNUSED sd_bus_message *m, void *userdata, U
 }
 
 /*************************************************************************
- **** io.github.eclipse-bluechi.bluechi.Agent.RemoveProxy ****************
+ **** org.eclipse.bluechi.Agent.RemoveProxy ****************
  *************************************************************************/
 
 /* This is called when the proxy service is shut down, via the

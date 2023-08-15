@@ -12,9 +12,9 @@ if len(sys.argv) != 3:
 node_name = sys.argv[1]
 unit_name = sys.argv[2]
 
-manager = bus.get_proxy("io.github.eclipse-bluechi.bluechi", "/io/github/eclipse-bluechi/bluechi")
+manager = bus.get_proxy("org.eclipse.bluechi", "/org/eclipse/bluechi")
 node_path = manager.GetNode(node_name)
-node = bus.get_proxy("io.github.eclipse-bluechi.bluechi", node_path)
+node = bus.get_proxy("org.eclipse.bluechi", node_path)
 
 properties = node.GetUnitProperties(unit_name, "org.freedesktop.systemd1.Unit")
 print("Unit properties:")

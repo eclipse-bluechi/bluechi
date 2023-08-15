@@ -34,9 +34,9 @@ from gi.repository.GLib import Variant  # noqa: E402
 BC_DEFAULT_PORT = 842
 BC_DEFAULT_HOST = "127.0.0.1"
 
-BC_DBUS_INTERFACE = "io.github.eclipse-bluechi.bluechi"
-BC_OBJECT_PATH = "/io/github/eclipse-bluechi/bluechi"
-BC_AGENT_DBUS_INTERFACE = "io.github.eclipse-bluechi.bluechi.Agent"
+BC_DBUS_INTERFACE = "org.eclipse.bluechi"
+BC_OBJECT_PATH = "/org/eclipse/bluechi"
+BC_AGENT_DBUS_INTERFACE = "org.eclipse.bluechi.Agent"
 
 
 class ApiBase:

@@ -820,7 +820,7 @@ void node_unset_agent_bus(Node *node) {
         }
 }
 
-/* io.github.eclipse-bluechi.bluechi.internal.Manager.Register(in s name)) */
+/* org.eclipse.bluechi.internal.Manager.Register(in s name)) */
 static int node_method_register(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error) {
         Node *node = userdata;
         Manager *manager = node->manager;
@@ -1127,7 +1127,7 @@ AgentRequest *node_request_list_units(
 }
 
 /*************************************************************************
- ********** io.github.eclipse-bluechi.bluechi.Node.ListUnits **************************
+ ********** org.eclipse.bluechi.Node.ListUnits **************************
  ************************************************************************/
 
 static int method_list_units_callback(AgentRequest *req, sd_bus_message *m, UNUSED sd_bus_error *ret_error) {
@@ -1168,7 +1168,7 @@ static int node_method_list_units(sd_bus_message *m, void *userdata, UNUSED sd_b
 }
 
 /*************************************************************************
- ********** io.github.eclipse-bluechi.bluechi.Node.GetUnitProperties ******************
+ ********** org.eclipse.bluechi.Node.GetUnitProperties ******************
  ************************************************************************/
 
 static int node_method_get_unit_properties_callback(
@@ -1229,7 +1229,7 @@ static int node_method_get_unit_properties(sd_bus_message *m, void *userdata, UN
 }
 
 /*************************************************************************
- ********** io.github.eclipse-bluechi.bluechi.Node.GetUnitProperty ******************
+ ********** org.eclipse.bluechi.Node.GetUnitProperty ******************
  ************************************************************************/
 
 static int node_method_get_unit_property_callback(
@@ -1291,7 +1291,7 @@ static int node_method_get_unit_property(sd_bus_message *m, void *userdata, UNUS
 }
 
 /*************************************************************************
- ********** io.github.eclipse-bluechi.bluechi.Node.SetUnitProperty ******************
+ ********** org.eclipse.bluechi.Node.SetUnitProperty ******************
  ************************************************************************/
 
 static int node_method_set_unit_properties_callback(
@@ -1503,7 +1503,7 @@ static int node_run_unit_lifecycle_method(
 
 
 /*************************************************************************
- ********** io.github.eclipse-bluechi.bluechi.Node.StartUnit **************************
+ ********** org.eclipse.bluechi.Node.StartUnit **************************
  ************************************************************************/
 
 static int node_method_start_unit(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error) {
@@ -1511,7 +1511,7 @@ static int node_method_start_unit(sd_bus_message *m, void *userdata, UNUSED sd_b
 }
 
 /*************************************************************************
- ********** io.github.eclipse-bluechi.bluechi.Node.StopUnit ***************************
+ ********** org.eclipse.bluechi.Node.StopUnit ***************************
  ************************************************************************/
 
 
@@ -1520,7 +1520,7 @@ static int node_method_stop_unit(sd_bus_message *m, void *userdata, UNUSED sd_bu
 }
 
 /*************************************************************************
- ********** io.github.eclipse-bluechi.bluechi.Node.RestartUnit ************************
+ ********** org.eclipse.bluechi.Node.RestartUnit ************************
  ************************************************************************/
 
 static int node_method_restart_unit(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error) {
@@ -1528,7 +1528,7 @@ static int node_method_restart_unit(sd_bus_message *m, void *userdata, UNUSED sd
 }
 
 /*************************************************************************
- ********** io.github.eclipse-bluechi.bluechi.Node.ReloadUnit **************************
+ ********** org.eclipse.bluechi.Node.ReloadUnit **************************
  ************************************************************************/
 
 static int node_method_reload_unit(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error) {
@@ -1536,7 +1536,7 @@ static int node_method_reload_unit(sd_bus_message *m, void *userdata, UNUSED sd_
 }
 
 /*************************************************************************
- ********** io.github.eclipse-bluechi.bluechi.Node.SetLogLevel *******************
+ ********** org.eclipse.bluechi.Node.SetLogLevel *******************
  ************************************************************************/
 
 static int node_method_set_log_level(sd_bus_message *m, UNUSED void *userdata, UNUSED sd_bus_error *ret_error) {

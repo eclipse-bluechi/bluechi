@@ -459,7 +459,7 @@ static bool manager_setup_node_connection_handler(Manager *manager) {
 }
 
 /************************************************************************
- ****** io.github.eclipse-bluechi.bluechi.Manager.Ping ******************
+ ****** org.eclipse.bluechi.Manager.Ping ******************
  ************************************************************************/
 
 /* This is a test method for now, it just returns what you passed */
@@ -475,7 +475,7 @@ static int manager_method_ping(sd_bus_message *m, UNUSED void *userdata, UNUSED 
 
 
 /************************************************************************
- ************** io.github.eclipse-bluechi.bluechi.Manager.ListUnits *****
+ ************** org.eclipse.bluechi.Manager.ListUnits *****
  ************************************************************************/
 
 typedef struct ListUnitsRequest {
@@ -654,7 +654,7 @@ static int manager_method_list_units(sd_bus_message *m, void *userdata, UNUSED s
 }
 
 /************************************************************************
- ***** io.github.eclipse-bluechi.bluechi.Manager.ListNodes **************
+ ***** org.eclipse.bluechi.Manager.ListNodes **************
  ************************************************************************/
 
 static int manager_method_list_encode_node(sd_bus_message *reply, Node *node) {
@@ -701,7 +701,7 @@ static int manager_method_list_nodes(sd_bus_message *m, void *userdata, UNUSED s
 }
 
 /************************************************************************
- **** io.github.eclipse-bluechi.bluechi.Manager.GetNode *****************
+ **** org.eclipse.bluechi.Manager.GetNode *****************
  ************************************************************************/
 
 static int manager_method_get_node(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error) {
@@ -734,7 +734,7 @@ static int manager_method_get_node(sd_bus_message *m, void *userdata, UNUSED sd_
 }
 
 /************************************************************************
- ***** io.github.eclipse-bluechi.bluechi.Manager.CreateMonitor **********
+ ***** org.eclipse.bluechi.Manager.CreateMonitor **********
  ************************************************************************/
 
 static int manager_method_create_monitor(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error) {
@@ -771,7 +771,7 @@ static int manager_method_create_monitor(sd_bus_message *m, void *userdata, UNUS
 }
 
 /************************************************************************
- ***** io.github.eclipse-bluechi.bluechi.Manager.EnableMetrics **********
+ ***** org.eclipse.bluechi.Manager.EnableMetrics **********
  ************************************************************************/
 static int manager_method_metrics_enable(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error) {
         Manager *manager = userdata;
@@ -795,7 +795,7 @@ static int manager_method_metrics_enable(sd_bus_message *m, void *userdata, UNUS
 }
 
 /************************************************************************
- ***** io.github.eclipse-bluechi.bluechi.Manager.DisableMetrics *********
+ ***** org.eclipse.bluechi.Manager.DisableMetrics *********
  ************************************************************************/
 static int manager_method_metrics_disable(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error) {
         Manager *manager = userdata;
@@ -815,7 +815,7 @@ static int manager_method_metrics_disable(sd_bus_message *m, void *userdata, UNU
 }
 
 /*************************************************************************
- *** io.github.eclipse-bluechi.bluechi.Manager.SetLogLevel ***************
+ *** org.eclipse.bluechi.Manager.SetLogLevel ***************
  *************************************************************************/
 
 static int manager_method_set_log_level(sd_bus_message *m, UNUSED void *userdata, UNUSED sd_bus_error *ret_error) {
