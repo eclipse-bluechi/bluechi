@@ -6,23 +6,23 @@ on:
 
 jobs:
   pypipublish:
-    name: Publish pyhirte on PyPi
+    name: Publish bluechi on PyPi
     runs-on: ubuntu-latest
     container:
       image: quay.io/hirte/build-base:latest
-    
+
     steps:
       - name: Checkout sources
         uses: actions/checkout@v3
         with:
           submodules: 'true'
-      
+
       - name: Install dependencies
-        run: | 
+        run: |
           python3 -m ensurepip --default-pip
           python3 -m pip install --upgrade pip setuptools wheel build
           python3 -m pip install -r src/bindings/generator/requirements.txt
-      
+
       - name: Generate python bindings
         run: |
           bash build-scripts/generate-bindings.sh python
@@ -31,17 +31,17 @@ jobs:
         run: |
           git config --global --add safe.directory $(pwd)
           git diff --exit-code src/bindings/python/
-      
+
       - name: Prompt rebuilding python bindings
         if: ${{ failure() }}
         run: |
           echo "Changes in D-Bus API spec detected. Please generated them."
-      
+
       - name: Build python bindings package
         run: |
           bash build-scripts/build-bindings.sh python
 
-      - name: Publish pyhirte to PyPI
+      - name: Publish bluechi to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           password: ${{ secrets.PYPI_API_TOKEN }}

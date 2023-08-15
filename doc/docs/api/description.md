@@ -5,7 +5,7 @@ The main way to interact with BlueChi is using [D-Bus](https://www.freedesktop.o
 
 ## BlueChi public D-Bus API
 
-The main entry point is at the `/io/github/eclipse_bluechi/bluechi` object path and implements the `io.github.eclipse-bluechi.bluechi.Manager`
+The main entry point is at the `/io/github/eclipse-bluechi/bluechi` object path and implements the `io.github.eclipse-bluechi.bluechi.Manager`
 interface.
 
 Note that all properties also come with change events, so you can easily track when they change.
@@ -66,11 +66,11 @@ Note that all properties also come with change events, so you can easily track w
   * `Nodes` - `as`
 
     A list with the names of all configured nodes managed by BlueChi. Each name listed here also has a corresponding
-    object under `/io/github/eclipse_bluechi/bluechi/node/$name` which implements the `io.github.eclipse-bluechi.bluechi.Node` interface.
+    object under `/io/github/eclipse-bluechi/bluechi/node/$name` which implements the `io.github.eclipse-bluechi.bluechi.Node` interface.
 
 ### interface io.github.eclipse-bluechi.bluechi.Monitor
 
-Object path: `/io/github/eclipse_bluechi/bluechi/monitor/$id`
+Object path: `/io/github/eclipse-bluechi/bluechi/monitor/$id`
 
 #### Methods
 
@@ -133,7 +133,7 @@ Object path: `/io/github/eclipse_bluechi/bluechi/monitor/$id`
 Each node object represents a configured node in the system, independent of whether that node is connected to the
 manager or not, and the status can change over time.
 
-Object path: `/io/github/eclipse_bluechi/bluechi/node/$name`
+Object path: `/io/github/eclipse-bluechi/bluechi/node/$name`
 
 #### Methods
 
@@ -211,7 +211,7 @@ Object path: `/io/github/eclipse_bluechi/bluechi/node/$name`
   * `Status` - `s`
 
     Status of the node, currently one of: `online`, `offline`. Emits changed when this changes.
-  
+
   * `LastSeenTimestamp` - `t`
 
     Timestamp of the last successfully received heartbeat of the node.
@@ -221,7 +221,7 @@ Object path: `/io/github/eclipse_bluechi/bluechi/node/$name`
 Each potentially long-running operation returns a job object, which can be used to monitor the status of the job as well
 as cancelling it.
 
-Object path: `/io/github/eclipse_bluechi/bluechi/job/$id`
+Object path: `/io/github/eclipse-bluechi/bluechi/job/$id`
 
 #### Methods
 
@@ -254,7 +254,7 @@ Object path: `/io/github/eclipse_bluechi/bluechi/job/$id`
 
 ## BlueChi-Agent public D-Bus API
 
-The main entry point is at the `/io/github/eclipse_bluechi/bluechi` object path and implements the `io.github.eclipse-bluechi.bluechi.Agent`
+The main entry point is at the `/io/github/eclipse-bluechi/bluechi` object path and implements the `io.github.eclipse-bluechi.bluechi.Agent`
 interface.
 
 ### interface io.github.eclipse-bluechi.bluechi.Agent
@@ -297,7 +297,7 @@ these APIs.
 When a node connects to the manager it does so not via the public API, but via a direct peer-to-peer connection. On this
 connection the regular Manager API is not available, instead we're using internal Manager object as the basic data.
 
-Object path: `/io/github/eclipse_bluechi/bluechi/internal`
+Object path: `/io/github/eclipse-bluechi/bluechi/internal`
 
 #### Methods
 
@@ -339,7 +339,7 @@ This is the main interface that the node implements and that is used by the mana
   * `Unsubscribe(in unit s)`
 
     Remove a subscription added via `Subscribe()`. If there are none left, call `Unsubscribe()` in the systemd API.
-  
+
   * `EnableMetrics()`
 
     Enables the collection of metrics on this agent.
@@ -359,7 +359,7 @@ This is the main interface that the node implements and that is used by the mana
   * `Reload()`
 
     `Reload` causes systemd on the agent to reload all unit files.
-  
+
   * `SetLogLevel(in s log_level)`
 
     Set the new log level for bluechi-agent node. This change is persistent as long as bluechi-agent not restarted.

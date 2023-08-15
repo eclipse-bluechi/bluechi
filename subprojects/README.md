@@ -1,9 +1,9 @@
-# Subprojects used by bluechi
+# Subprojects used by BlueChi
 
-This directory contains all external subprojects used by bluechi as git submodules. These are integrated into the main
+This directory contains all external subprojects used by BlueChi as git submodules. These are integrated into the main
 project using mesons [subproject feature](https://mesonbuild.com/Subprojects.html).
 
-Currently, bluechi uses the following external projects:
+Currently BlueChi uses the following external projects:
 
 - [hashmap.c](https://github.com/engelmi/hashmap.c.git)
 - [inih](https://github.com/benhoyt/inih.git)
@@ -25,7 +25,7 @@ After adding the new repository, checkout the desired tag to be used:
 git -C subprojects/<repository name> checkout <tag>
 ```
 
-For the new subproject to be usable by bluechi, it needs to be integrated in the main [meson.build](../meson.build). One
+For the new subproject to be usable by BlueChi, it needs to be integrated in the main [meson.build](../meson.build). One
 requirement for this is that the subproject itself uses meson and provides a `meson.build`. If the subproject itself is
 a `meson` project, include it as [subproject](https://mesonbuild.com/Subprojects.html). The included `inih` or
 `hashmap.c` can serve as a reference here. Otherwise the `subdir` function can be used (similar to bluechi internal projects).

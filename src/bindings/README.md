@@ -1,6 +1,6 @@
-# bluechi bindings
+# BlueChi bindings
 
-This directory contains bindings for the D-Bus API of bluechi. The [API description](./../../data/) of bluechi is used to
+This directory contains bindings for the D-Bus API of BlueChi. The [API description](./../../data/) of BlueChi is used to
 generate basic client stub code that provides the complete set of functionality. Based on the generated code, custom
 functions are written to simplify recurring tasks.
 

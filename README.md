@@ -32,7 +32,7 @@ dnf copr enable mperina/hirte-snapshot
 When done you can install relevant BlueChi packages using:
 
 ```bash
-dnf install hirte hirte-agent hirtectl
+dnf install bluechi bluechi-agent bluechi-ctl
 ```
 
 ### Submitting patches

@@ -439,7 +439,7 @@ int cfg_agent_def_conf(struct config *config) {
 int cfg_manager_def_conf(struct config *config) {
         int result = 0;
 
-        result = cfg_set_default_section(config, CFG_SECT_BC);
+        result = cfg_set_default_section(config, CFG_SECT_BLUECHI);
         if (result != 0) {
                 return result;
         }

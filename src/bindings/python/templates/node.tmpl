@@ -6,20 +6,20 @@ class Node(ApiBase):
 
         self.node_name = node_name
         self.node_proxy = None
-    
+
     def get_proxy(self) -> InterfaceProxy | ObjectProxy:
         if self.node_proxy is None:
             manager = self.bus.get_proxy(
-            BLUECHI_DBUS_INTERFACE,
-            BLUECHI_OBJECT_PATH
+            BC_DBUS_INTERFACE,
+            BC_OBJECT_PATH
             )
 
             node_path = manager.GetNode(self.node_name)
             self.node_proxy = self.bus.get_proxy(
-                BLUECHI_DBUS_INTERFACE,
+                BC_DBUS_INTERFACE,
                 node_path
             )
-        
+
         return self.node_proxy
 
 

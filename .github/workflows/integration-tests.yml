@@ -72,7 +72,7 @@ jobs:
         uses: actions/download-artifact@v3
         with:
           name: rpm-artifacts
-          path: 'tests/hirte-rpms'
+          path: 'tests/bluechi-rpms'
 
       - name: Run integration tests
         run: |

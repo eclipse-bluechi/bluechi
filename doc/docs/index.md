@@ -1,6 +1,6 @@
 # BlueChi
 
-## What is bluechi?
+## What is BlueChi?
 
 BlueChi is a deterministic multi-node service manager
 
@@ -48,6 +48,6 @@ administrators from interacting with bluechi via D-Bus directly.
 
 ## Overview
 
-Here is a generic overview of the bluechi architecture:
+Here is a generic overview of the BlueChi architecture:
 
 ![BlueChi Architecture diagrma](img/bluechi_architecture.jpg)

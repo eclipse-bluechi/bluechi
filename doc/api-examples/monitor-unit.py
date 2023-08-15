@@ -29,7 +29,7 @@ if len(sys.argv) > 2:
 
 bus = dasbus.connection.SystemMessageBus()
 
-manager = bus.get_proxy("io.github.eclipse-bluechi.bluechi", "/io/github/eclipse_bluechi/bluechi")
+manager = bus.get_proxy("io.github.eclipse-bluechi.bluechi", "/io/github/eclipse-bluechi/bluechi")
 
 monitor_path = manager.CreateMonitor()
 monitor = bus.get_proxy("io.github.eclipse-bluechi.bluechi", monitor_path)

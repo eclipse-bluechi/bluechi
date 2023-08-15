@@ -54,7 +54,7 @@ of all source files can be checked via:
 # only check for formatting
 make check-fmt
 
-# apply formatting to files 
+# apply formatting to files
 make fmt
 ```
 
@@ -133,7 +133,7 @@ bash build-scripts/generate-bindings.sh python
 
 In some cases, developers might need a debug session with tools like gdb, here an example:
 
-First, make sure **meson.build** contains **debug=true**.  
+First, make sure **meson.build** contains **debug=true**.
 
 Rebuild the BlueChi project with debug symbols included:
 
@@ -181,7 +181,7 @@ meson install -C builddir --destdir bin
 Meson will output the artifacts to `./builddir/bin/usr/local/`. This directory is referred to in the following sections
 simply as `<builddir>`.
 
-To allow `BlueChi` and `bluechi-agent` to own a name on the local system D-Bus, the provided configuration
+To allow `bluechi` and `bluechi-agent` to own a name on the local system D-Bus, the provided configuration
 files need to be copied (if not already existing):
 
 ```bash
@@ -203,13 +203,13 @@ configuration for development. This file can be passed in with the `-c` CLI opti
 
 #### bluechi-agent
 
-Before starting the agent, it is best to have the BlueChi controller already running. However, `bluechi-agent` will
+Before starting the agent, it is best to have the `bluechi` controller already running. However, `bluechi-agent` will
 try to reconnect in the configured heartbeat interval.
 
-Similar to `BlueChi`, it is recommended to use a dedicated configuration file for development:
+Similar to `bluechi`, it is recommended to use a dedicated configuration file for development:
 
 ```bash
-./<builddir>/bin/bluechi -c <path-to-cfg-file>
+./<builddir>/bin/bluechi-agent -c <path-to-cfg-file>
 ```
 
 #### bluechictl
