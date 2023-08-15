@@ -15,7 +15,7 @@ if len(sys.argv) != 2:
 
 node_name = sys.argv[1]
 
-manager = bus.get_proxy("io.github.eclipse-bluechi.bluechi", "/io/github/eclipse_bluechi/bluechi")
+manager = bus.get_proxy("io.github.eclipse-bluechi.bluechi", "/io/github/eclipse-bluechi/bluechi")
 node_path = manager.GetNode(node_name)
 node = bus.get_proxy("io.github.eclipse-bluechi.bluechi", node_path)
 

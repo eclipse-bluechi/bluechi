@@ -1,6 +1,6 @@
 # Proxy Services
 
-In order to support cross-node systemd unit dependencies, bluechi
+In order to support cross-node systemd unit dependencies, BlueChi
 introduces something called proxy services.
 
 ## Using Proxy Services
@@ -23,7 +23,7 @@ ExecStart=/bin/db-user
 
 When this service is started, `db.service` is also started. But,
 suppose you want to start `db.service` on another node `bar`.
-With bluechi you can do this like this:
+With BlueChi you can do this like this:
 
 **`need-db.service`**
 
@@ -67,7 +67,7 @@ can use `StopWhenUnneeded=yes` in the service to make it stop when
 the last dependency (local or via proxy) stops.
 
 Based on the described example, the following diagram visualizes the
-architecture of the bluechi proxy services:
+architecture of the BlueChi proxy services:
 
 ![BlueChi-Proxy Architecture diagram](./img/bluechi_proxy_architecture.png)
 

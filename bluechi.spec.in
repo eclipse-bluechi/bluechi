@@ -14,6 +14,7 @@ BuildRequires: golang-github-cpuguy83-md2man
 
 Requires: systemd
 Recommends: bluechi-selinux
+
 Obsoletes: hirte < 0.6.0
 Provides: hirte = %{version}-%{release}
 
@@ -57,6 +58,9 @@ This package contains the controller and command line tool.
 Summary:  BlueChi service controller agent
 Requires: systemd
 Recommends: bluechi-selinux
+
+Obsoletes: hirte-agent < 0.6.0
+Provides: hirte-agent = %{version}-%{release}
 
 %description agent
 BlueChi is a systemd service controller for multi-nodes environements with a
@@ -109,6 +113,9 @@ Requires(post): policycoreutils
 Requires(post): policycoreutils-python-utils
 Requires(postun): policycoreutils-python-utils
 
+Obsoletes: hirte-selinux < 0.6.0
+Provides: hirte-selinux = %{version}-%{release}
+
 %global selinuxtype	targeted
 
 %description selinux
@@ -138,6 +145,9 @@ fi
 Summary:  BlueChi service controller command line tool
 Requires: %{name} = %{version}-%{release}
 
+Obsoletes: hirte-ctl < 0.6.0
+Provides: hirte-ctl = %{version}-%{release}
+
 %description ctl
 BlueChi is a systemd service controller for multi-nodes environements with a
 predefined number of nodes and with a focus on highly regulated environment
@@ -157,10 +167,13 @@ BuildRequires:  python3-devel
 BuildRequires:  python3-setuptools
 Requires:       python3-dasbus
 
+Obsoletes: python3-hirte < 0.6.0
+Provides: python3-hirte = %{version}-%{release}
+
 %description -n python3-bluechi
-bluechi is a python module to access the public D-Bus API of bluechi. 
-It contains typed python code that is auto-generated from bluechi's 
-API description and manually written code to simplify recurring tasks. 
+bluechi is a python module to access the public D-Bus API of BlueChi project.
+It contains typed python code that is auto-generated from BlueChi's
+API description and manually written code to simplify recurring tasks.
 
 %files -n python3-bluechi
 %license LICENSE

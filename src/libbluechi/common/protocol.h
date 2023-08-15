@@ -9,7 +9,7 @@
 #define BC_DBUS_NAME "io.github.eclipse-bluechi.bluechi"
 #define BC_AGENT_DBUS_NAME "io.github.eclipse-bluechi.bluechi.Agent"
 
-#define BC_OBJECT_PATH "/io/github/eclipse_bluechi/bluechi"
+#define BC_OBJECT_PATH "/io/github/eclipse-bluechi/bluechi"
 
 /* Public objects */
 #define BC_MANAGER_OBJECT_PATH BC_OBJECT_PATH

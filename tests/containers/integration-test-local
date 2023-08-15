@@ -1,19 +1,19 @@
 FROM quay.io/hirte/integration-test-base:latest
 
-RUN mkdir -p /tmp/hirte-rpms
-COPY ./hirte-rpms /tmp/hirte-rpms
+RUN mkdir -p /tmp/bluechi-rpms
+COPY ./bluechi-rpms /tmp/bluechi-rpms
 
-RUN dnf install -y --repo hirte-rpms \
-        --repofrompath hirte-rpms,file:///tmp/hirte-rpms/ \
+RUN dnf install -y --repo bluechi-rpms \
+        --repofrompath bluechi-rpms,file:///tmp/bluechi-rpms/ \
         --nogpgcheck \
         --nodocs \
-        hirte \
-        hirte-debuginfo \
-        hirte-agent \
-        hirte-agent-debuginfo \
-        hirte-ctl \
-        hirte-ctl-debuginfo \
-        hirte-selinux && \
+        bluechi \
+        bluechi-debuginfo \
+        bluechi-agent \
+        bluechi-agent-debuginfo \
+        bluechi-ctl \
+        bluechi-ctl-debuginfo \
+        bluechi-selinux && \
     dnf -y clean all
 
 CMD [ "/sbin/init" ]

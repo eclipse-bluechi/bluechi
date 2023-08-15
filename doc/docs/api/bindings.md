@@ -16,7 +16,7 @@ For example:
 
 For `python`, the dynamically generated proxies (e.g. from [dasbus](https://github.com/rhinstaller/dasbus)) don't
 require such a generation and work well on their own. These proxies, however, don't provide type hints. Because of that
-the bluechi project provides `bluechi` - auto-generated, typed python bindings.
+the BlueChi project provides `bluechi` - auto-generated, typed python bindings.
 
 ### Installation
 

@@ -44,7 +44,8 @@ class BluechiTest():
         ctrl_container: BluechiControllerContainer = None
         node_container: Dict[str, BluechiNodeContainer] = dict()
         try:
-            print(f"Starting container for bluechi-controller with config:\n{self.bluechi_controller_config.serialize()}")
+            print(
+                f"Starting container for bluechi-controller with config:\n{self.bluechi_controller_config.serialize()}")
 
             c = self.podman_client.containers.run(
                 name=self.bluechi_controller_config.name,

@@ -1,9 +1,9 @@
-# bluechi python bindings
+# BlueChi Python bindings
 
-The bluechi python bindings provides a python module to interact with the D-Bus API of bluechi. It consists of the following
-subpackages:
+The BlueChi Python bindings provides a Python module to interact with the D-Bus API of BlueChi. It consists of the
+following subpackages:
 
-- `api`: auto-generated code based the bluechi D-BUS API description
+- `api`: auto-generated code based the BlueChi D-BUS API description
 - `ext`: custom written code to simplify common tasks
 
 ## Installation
@@ -14,7 +14,7 @@ Using `pip3`:
 # from PyPi
 pip3 install bluechi
 # or from cloned git repo
-pip3 install --force dist/bluechi-<version>-py3-none-any.whl 
+pip3 install --force dist/bluechi-<version>-py3-none-any.whl
 ```
 
 ## Examples

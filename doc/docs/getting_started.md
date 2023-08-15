@@ -1,14 +1,14 @@
 <!-- markdownlint-disable-file MD013 MD010 -->
 # Getting started with BlueChi
 
-## Installing bluechi
+## Installing BlueChi
 
 On Fedora systems, BlueChi can be directly installed from the Fedora repository.
 On CentOS-Stream systems, it can be installed using the COPR repository shipping
 the latest BlueChi code. That repository can be enabled using:
 
 ```bash
-dnf copr enable mperina/bluechi-snapshot centos-stream-9
+dnf copr enable mperina/hirte-snapshot centos-stream-9
 ```
 
 This should no longer be necessary once BlueChi is made available in EPEL.
@@ -16,7 +16,7 @@ This should no longer be necessary once BlueChi is made available in EPEL.
 On the laptop install both bluechi and the bluechi-agent via this command:
 
 ```bash
-dnf install bluechi bluechi-agent bluechictl
+dnf install bluechi bluechi-agent bluechi-ctl
 ```
 
 On the Raspberry Pi 4, install only the agent via this command:
@@ -25,7 +25,7 @@ On the Raspberry Pi 4, install only the agent via this command:
 dnf install bluechi-agent
 ```
 
-## Configuring bluechi
+## Configuring BlueChi
 
 Once BlueChi and its agents are installed, they need to be configured so the
 agents know where the primary node is located and the BlueChi can identify each
@@ -74,8 +74,8 @@ In this case, the IP in the ManagerHost line refers to the IP address of the
 laptop, since that's where BlueChi runs.
 
 ```text
-Starting BlueChi and the agent
-Starting BlueChi and the agent is now as simple as starting normal systemd services.
+Starting bluechi and bluechi-agent
+Starting bluechi and bluechi-agent is now as simple as starting normal systemd services.
 ```
 
 Run on the primary system (here the  laptop):
@@ -102,7 +102,7 @@ Or
 journalctl -lfu bluechi-agent
 ```
 
-## Testing bluechi
+## Testing BlueChi
 
 Once the services are up and running, the logs of the laptop show that the
 Raspberry Pi successfully connects to the laptop:

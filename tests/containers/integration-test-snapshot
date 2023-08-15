@@ -4,13 +4,13 @@ RUN dnf install -y --repo hirte-snapshot \
     --repofrompath hirte-snapshot,https://download.copr.fedorainfracloud.org/results/mperina/hirte-snapshot/centos-stream-9-$(uname -m)/ \
     --nogpgcheck \
     --nodocs \
-        hirte \
-        hirte-debuginfo \
-        hirte-agent \
-        hirte-agent-debuginfo \
-        hirte-ctl \
-        hirte-ctl-debuginfo \
-        hirte-selinux && \
+        bluechi \
+        bluechi-debuginfo \
+        bluechi-agent \
+        bluechi-agent-debuginfo \
+        bluechi-ctl \
+        bluechi-ctl-debuginfo \
+        bluechi-selinux && \
     dnf -y clean all
 
 CMD [ "/sbin/init" ]

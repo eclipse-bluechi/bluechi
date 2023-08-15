@@ -76,12 +76,12 @@ tmt run
 This will use latest BlueChi packages from
 [hirte-snapshot](https://copr.fedorainfracloud.org/coprs/mperina/hirte-snapshot/) repository.
 
-## Running integration tests with local bluechi build
+## Running integration tests with local BlueChi build
 
 In order to run integration tests for your local BlueChi build, you need have BlueChi RPM packages built from your source
 code. The details about BlueChi development can be found at
-[README.developer.md](https://github.com/containers/hirte/blob/main/README.developer.md), the most important part for
-running integration tests is [Packaging](https://github.com/containers/hirte/blob/main/README.developer.md#packaging)
+[README.developer.md](https://github.com/containers/bluechi/blob/main/README.developer.md), the most important part for
+running integration tests is [Packaging](https://github.com/containers/bluechi/blob/main/README.developer.md#packaging)
 section.
 
 In the following steps BlueChi source codes are located in `~/bluechi` directory.

@@ -6,14 +6,14 @@ class Metrics(ApiBase):
 
         self.metrics_path = metrics_path
         self.metrics_proxy = None
-    
+
     def get_proxy(self) -> InterfaceProxy | ObjectProxy:
         if self.metrics_proxy is None:
             self.metrics_proxy = self.bus.get_proxy(
-                BLUECHI_DBUS_INTERFACE,
+                BC_DBUS_INTERFACE,
                 self.metrics_path
             )
-        
+
         return self.metrics_proxy
 
     {%- include 'skeleton_method.tmpl' %}

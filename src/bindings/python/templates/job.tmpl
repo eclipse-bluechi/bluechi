@@ -10,10 +10,10 @@ class Job(ApiBase):
     def get_proxy(self) -> InterfaceProxy | ObjectProxy:
         if self.job_proxy is None:
             self.job_proxy = self.bus.get_proxy(
-                BLUECHI_DBUS_INTERFACE,
+                BC_DBUS_INTERFACE,
                 self.job_path
             )
-        
+
         return self.job_proxy
 
     {%- include 'skeleton_method.tmpl' %}

@@ -6,16 +6,16 @@ class Monitor(ApiBase):
 
         self.monitor_path = monitor_path
         self.monitor_proxy = None
-    
+
     def get_proxy(self) -> InterfaceProxy | ObjectProxy:
         if self.monitor_proxy is None:
             self.monitor_proxy = self.bus.get_proxy(
-                BLUECHI_DBUS_INTERFACE,
+                BC_DBUS_INTERFACE,
                 self.monitor_path
             )
-        
+
         return self.monitor_proxy
-    
+
     {%- include 'skeleton_method.tmpl' %}
     {%- include 'skeleton_signal.tmpl' %}
     {%- include 'skeleton_property.tmpl' %}

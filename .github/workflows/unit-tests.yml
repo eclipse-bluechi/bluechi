@@ -19,7 +19,7 @@ jobs:
         with:
           submodules: 'true'
 
-      - name: Building hirte
+      - name: Building BlueChi
         run: |
           meson setup builddir
           meson configure -Db_coverage=true builddir

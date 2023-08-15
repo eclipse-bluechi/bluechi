@@ -16,7 +16,7 @@ value = int(sys.argv[3])
 # Don't persist change
 runtime = True
 
-manager = bus.get_proxy("io.github.eclipse-bluechi.bluechi", "/io/github/eclipse_bluechi/bluechi")
+manager = bus.get_proxy("io.github.eclipse-bluechi.bluechi", "/io/github/eclipse-bluechi/bluechi")
 node_path = manager.GetNode(node_name)
 node = bus.get_proxy("io.github.eclipse-bluechi.bluechi", node_path)
 

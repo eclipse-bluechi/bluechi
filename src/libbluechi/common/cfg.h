@@ -27,7 +27,7 @@
 /*
  * Configuration section for bluechi manager.
  */
-#define CFG_SECT_BC "bluechi"
+#define CFG_SECT_BLUECHI "bluechi"
 
 /*
  * Configuration section for bluechi agent.

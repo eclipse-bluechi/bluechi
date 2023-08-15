@@ -31,12 +31,12 @@ gi.require_version("GLib", "2.0")
 from gi.repository.GLib import Variant  # noqa: E402
 
 
-BLUECHI_DEFAULT_PORT = 842
-BLUECHI_DEFAULT_HOST = "127.0.0.1"
+BC_DEFAULT_PORT = 842
+BC_DEFAULT_HOST = "127.0.0.1"
 
-BLUECHI_DBUS_INTERFACE = "io.github.eclipse-bluechi.bluechi"
-BLUECHI_OBJECT_PATH = "/io/github/eclipse_bluechi/bluechi"
-BLUECHI_AGENT_DBUS_INTERFACE = "io.github.eclipse-bluechi.bluechi.Agent"
+BC_DBUS_INTERFACE = "io.github.eclipse-bluechi.bluechi"
+BC_OBJECT_PATH = "/io/github/eclipse-bluechi/bluechi"
+BC_AGENT_DBUS_INTERFACE = "io.github.eclipse-bluechi.bluechi.Agent"
 
 
 class ApiBase:
@@ -65,7 +65,7 @@ class Job(ApiBase):
 
     def get_proxy(self) -> InterfaceProxy | ObjectProxy:
         if self.job_proxy is None:
-            self.job_proxy = self.bus.get_proxy(BLUECHI_DBUS_INTERFACE, self.job_path)
+            self.job_proxy = self.bus.get_proxy(BC_DBUS_INTERFACE, self.job_path)
 
         return self.job_proxy
 
@@ -100,7 +100,7 @@ class Monitor(ApiBase):
     def get_proxy(self) -> InterfaceProxy | ObjectProxy:
         if self.monitor_proxy is None:
             self.monitor_proxy = self.bus.get_proxy(
-                BLUECHI_DBUS_INTERFACE, self.monitor_path
+                BC_DBUS_INTERFACE, self.monitor_path
             )
 
         return self.monitor_proxy
@@ -204,7 +204,7 @@ class Metrics(ApiBase):
     def get_proxy(self) -> InterfaceProxy | ObjectProxy:
         if self.metrics_proxy is None:
             self.metrics_proxy = self.bus.get_proxy(
-                BLUECHI_DBUS_INTERFACE, self.metrics_path
+                BC_DBUS_INTERFACE, self.metrics_path
             )
 
         return self.metrics_proxy
@@ -254,7 +254,7 @@ class Agent(ApiBase):
     def get_proxy(self) -> InterfaceProxy | ObjectProxy:
         if self.agent_proxy is None:
             self.agent_proxy = self.bus.get_proxy(
-                BLUECHI_AGENT_DBUS_INTERFACE, BLUECHI_OBJECT_PATH
+                BC_AGENT_DBUS_INTERFACE, BC_OBJECT_PATH
             )
 
         return self.agent_proxy
@@ -283,7 +283,7 @@ class Manager(ApiBase):
     def get_proxy(self) -> InterfaceProxy | ObjectProxy:
         if self.manager_proxy is None:
             self.manager_proxy = self.bus.get_proxy(
-                BLUECHI_DBUS_INTERFACE, BLUECHI_OBJECT_PATH
+                BC_DBUS_INTERFACE, BC_OBJECT_PATH
             )
 
         return self.manager_proxy
@@ -375,10 +375,10 @@ class Node(ApiBase):
 
     def get_proxy(self) -> InterfaceProxy | ObjectProxy:
         if self.node_proxy is None:
-            manager = self.bus.get_proxy(BLUECHI_DBUS_INTERFACE, BLUECHI_OBJECT_PATH)
+            manager = self.bus.get_proxy(BC_DBUS_INTERFACE, BC_OBJECT_PATH)
 
             node_path = manager.GetNode(self.node_name)
-            self.node_proxy = self.bus.get_proxy(BLUECHI_DBUS_INTERFACE, node_path)
+            self.node_proxy = self.bus.get_proxy(BC_DBUS_INTERFACE, node_path)
 
         return self.node_proxy
 
