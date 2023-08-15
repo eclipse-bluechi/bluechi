@@ -127,19 +127,28 @@ SELinux policy associated with the bluechi and bluechi-agent daemons
 %{_mandir}/man8/bluechi*selinux.*
 
 %post selinux
+# Remove hirte policy
+if [ $1 -eq 1 ]; then
+   semanage port -N -d -p udp 842 2>/dev/null || true
+   semanage port -N -d -p tcp 842 2>/dev/null || true
+   semodule -N -X 200 -r hirte 2>/dev/null || true
+fi
 %selinux_modules_install -s %{selinuxtype} %{_datadir}/selinux/packages/bluechi.pp.bz2
 restorecon -R %{_bindir}/bluechi* &> /dev/null || :
-semanage port -a -t bluechi_port_t -p udp 842 || true
-semanage port -a -t bluechi_port_t -p tcp 842 || true
+semanage port -a -t bluechi_port_t -p udp 842 2>/dev/null || semanage port -m -t bluechi_port_t -p udp 842
+semanage port -a -t bluechi_port_t -p tcp 842 2>/dev/null || semanage port -m -t bluechi_port_t -p tcp 842
 
 %postun selinux
 if [ $1 -eq 0 ]; then
+   semanage port -d -p udp 842 2>/dev/null || true
+   semanage port -d -p tcp 842 2>/dev/null || true
    %selinux_modules_uninstall -s %{selinuxtype} bluechi
-   semanage port -d -p udp 842 || true
-   semanage port -d -p tcp 842 || true
    restorecon -R %{_bindir}/bluechi* &> /dev/null || :
 fi
 
+%triggerpostun selinux -- hirte-selinux
+semanage port -a -t bluechi_port_t -p udp 842 2>/dev/null || semanage port -m -t bluechi_port_t -p udp 842
+semanage port -a -t bluechi_port_t -p tcp 842 2>/dev/null || semanage port -m -t bluechi_port_t -p tcp 842
 
 %package ctl
 Summary:  BlueChi service controller command line tool

@@ -5,15 +5,15 @@ policy_module(bluechi, 1.0.0)
 # Declarations
 #
 
-type bluechi_t;
-type bluechi_exec_t;
+type bluechi_t alias hirte_t;
+type bluechi_exec_t  alias hirte_exec_t;
 init_daemon_domain(bluechi_t, bluechi_exec_t)
 
 type bluechi_agent_t alias hirte_agent_t;
-type bluechi_agent_exec_t;
+type bluechi_agent_exec_t alias hirte_agent_exec_t;
 init_daemon_domain(bluechi_agent_t, bluechi_agent_exec_t)
 
-type bluechi_port_t;
+type bluechi_port_t alias hirte_port_t;
 corenet_port(bluechi_port_t)
 
 permissive bluechi_t;
