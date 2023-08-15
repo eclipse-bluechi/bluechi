@@ -13,9 +13,9 @@ The `LICENSES/` directory contains all the licenses used by the sources included
 the systemd project source tree.
 
 Unless otherwise noted, the systemd project sources are licensed under the terms
-and conditions of the **GNU GENERAL PUBLIC LICENSE Version 2 or later**.
+and conditions of the **GNU LESSER GENERAL PUBLIC LICENSE Version 2.1 or later**.
 
-New sources that cannot be distributed under **GPL-2.0-or-later** will no longer
+New sources that cannot be distributed under **LGPL-2.1-or-later** will no longer
 be accepted for inclusion in the BlueChi project to maintain license uniformity.
 
 ## Other Licenses

@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: GPL-2.0-or-later
+# SPDX-License-Identifier: LGPL-2.1-or-later
 from setuptools import setup, find_packages
 
 
@@ -15,7 +15,7 @@ setup(
     long_description_content_type="text/markdown",
     author="BlueChi developers",
     url="https://github.com/containers/bluechi/",
-    license="LGPL-2.0-or-later",
+    license="LGPL-2.1-or-later",
     install_requires=[
         "dasbus",
     ],

@@ -1,10 +1,10 @@
-# SPDX-License-Identifier: GPL-2.0-or-later
+# SPDX-License-Identifier: LGPL-2.1-or-later
 
 project(
   'bluechi',
   'c',
   version: '0.5.0',
-  license: 'GPL-2.0-or-later',
+  license: 'LGPL-2.1-or-later',
   default_options: [
     'c_std=gnu17',     # Adds "-std=gnu17".  Includes GNU 17 extensions.
     'warning_level=2', # Adds "-Wextra".  Enables additional warnings.
