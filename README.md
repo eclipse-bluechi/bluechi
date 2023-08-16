@@ -2,9 +2,9 @@
 
 [![Copr build status](https://copr.fedorainfracloud.org/coprs/mperina/hirte-snapshot/package/hirte/status_image/last_build.png)](https://copr.fedorainfracloud.org/coprs/mperina/hirte-snapshot/package/hirte/)
 
-BlueChi is a systemd service controller intended for multi-node environments with
-a predefined number of nodes and with a focus on highly regulated ecosystems
-such as those requiring functional safety.
+BlueChi (formerly know as hirte) is a systemd service controller intended for
+multi-node environments with a predefined number of nodes and with a focus on
+highly regulated ecosystems such as those requiring functional safety.
 Potential use cases can be found in domains such as transportation, where
 services need to be controlled across different edge devices and where
 traditional orchestration tools are not compliant with regulatory requirements.
