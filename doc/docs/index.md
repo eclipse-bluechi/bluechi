@@ -2,7 +2,7 @@
 
 ## What is BlueChi?
 
-BlueChi is a deterministic multi-node service manager
+BlueChi (formerly known as hirte) is a deterministic multi-node service manager
 
 BlueChi can manage the states of different services across multiple nodes with a
 focus on highly regulated industries, such as those requiring function safety.
