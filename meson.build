@@ -13,6 +13,11 @@ project(
   ]
 )
 
+gcovr = find_program('gcovr', required: false)
+if not gcovr.found()
+   find_program('lcov', required: true)
+endif
+
 test_cflags = [ '-Wno-cast-function-type' ]
 
 cc = meson.get_compiler('c')
