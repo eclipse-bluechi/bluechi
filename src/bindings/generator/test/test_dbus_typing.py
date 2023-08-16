@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: GPL-2.0-or-later
+#
 # todo: write proper tests using those cases
 # if __name__ == "__main__":
 #    # success cases
