@@ -27,6 +27,7 @@ The following exceptions apply:
 * Files `selinux/meson.build` and `selinux/build-selinux.sh` are copied from
   [flatpak](https://github.com/flatpak/flatpak) project and they are licensed under the original license,
   **LGPL-2.1-or-later**.
+* Files under [`doc/api-examples`](../doc/api-examples/) are licensed under **CC0-1.0**
 * Files under [`subprojects/`](../subprojects/) are integrated as git submodules and they are licensed under
 their respective original license as follows:
 
