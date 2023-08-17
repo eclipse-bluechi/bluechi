@@ -132,4 +132,17 @@ The `integration-test-base` file describes the builder base image that is publis
 
 Both, `integration-test-local` as well as `integration-test-snapshot`, are based on the builder base image for the integration tests and contain compiled products and configurations for integration testing.
 
-**_NOTE:_** Currently, the images are pushed manually to the quay.io container repository. If any updates are required, please reach out to the [code owners](../.github/CODEOWNERS).
+### Updating container images in registry
+
+Currently, the base images are pushed manually to the [bluechi on quay.io](https://quay.io/organization/bluechi) organization and its repositories. If any updates are required, please reach out to the [code owners](../.github/CODEOWNERS).
+
+**Note to codeowners:**
+
+The base images [build-base](./containers/build-base) and [integration-test-base](./containers/integration-test-base) can be built for multiple platforms (arm64 and amd64) using the [build-containers.sh](../build-scripts/build-containers.sh) script. It'll build images for the given platforms as well as a manifest with the same name, which can then be pushed to the registry. From the root directory of the project run the following commands:
+
+```bash
+# building and publishing build-base image
+bash build-scripts/build-containers.sh build_base
+podman login -u="someuser" -p="topsecret" quay.io
+podman manifest push quay.io/bluechi/build-base:latest docker://quay.io/bluechi/build-base:latest
+```
