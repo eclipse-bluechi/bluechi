@@ -1,4 +1,4 @@
-FROM quay.io/centos/centos:stream9
+FROM --platform=$TARGETPLATFORM quay.io/centos/centos:stream9
 
 # CRB is required for meson
 # EPEL is required for lcov, python3-flake8, python3-html2text and codespell
