@@ -128,7 +128,7 @@ functional behavior on a single runner.
 The [containers](./containers/) directory contains two container files.
 
 The `integration-test-base` file describes the builder base image that is published to
-[https://quay.io/repository/hirte/integration-test-base](https://quay.io/repository/hirte/integration-test-base). It contains core dependencies such as systemd and devel packages.
+[https://quay.io/repository/bluechi/integration-test-base](https://quay.io/repository/bluechi/integration-test-base). It contains core dependencies such as systemd and devel packages.
 
 Both, `integration-test-local` as well as `integration-test-snapshot`, are based on the builder base image for the integration tests and contain compiled products and configurations for integration testing.
 
