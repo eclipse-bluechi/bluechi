@@ -9,7 +9,7 @@ jobs:
     name: Publish bluechi on PyPi
     runs-on: ubuntu-latest
     container:
-      image: quay.io/hirte/build-base:latest
+      image: quay.io/bluechi/build-base:latest
 
     steps:
       - name: Checkout sources
