@@ -1,4 +1,5 @@
 #!/usr/bin/python3
+# SPDX-License-Identifier: CC0-1.0
 
 import sys
 from dasbus.typing import get_native
