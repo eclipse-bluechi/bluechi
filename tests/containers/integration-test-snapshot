@@ -1,4 +1,4 @@
-FROM quay.io/hirte/integration-test-base:latest
+FROM quay.io/bluechi/integration-test-base:latest
 
 RUN dnf install -y --repo hirte-snapshot \
     --repofrompath hirte-snapshot,https://download.copr.fedorainfracloud.org/results/mperina/hirte-snapshot/centos-stream-9-$(uname -m)/ \

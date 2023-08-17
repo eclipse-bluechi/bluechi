@@ -1,4 +1,4 @@
-FROM quay.io/hirte/integration-test-base:latest
+FROM quay.io/bluechi/integration-test-base:latest
 
 RUN mkdir -p /tmp/bluechi-rpms
 COPY ./bluechi-rpms /tmp/bluechi-rpms
