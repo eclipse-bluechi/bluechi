@@ -38,7 +38,17 @@ sudo dnf install -y epel-release
 #### Dependencies installation
 
 ```bash
-sudo dnf install clang-tools-extra gcc make meson systemd-devel selinux-policy-devel
+sudo dnf install \
+    bzip2 \
+    clang-tools-extra \
+    gcc \
+    gcc-c++ \
+    git \
+    golang-github-cpuguy83-md2man \
+    make \
+    meson \
+    systemd-devel \
+    selinux-policy-devel
 ```
 
 [markdownlint-cli2](https://github.com/DavidAnson/markdownlint-cli2) can be used for static analysis of markdown files.
