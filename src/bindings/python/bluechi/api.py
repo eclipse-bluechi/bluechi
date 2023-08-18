@@ -54,40 +54,6 @@ class ApiBase:
         raise Exception("Not implemented!")
 
 
-class Job(ApiBase):
-    def __init__(
-        self, job_path: ObjPath, bus: MessageBus = None, use_systembus=True
-    ) -> None:
-        super().__init__(bus, use_systembus)
-
-        self.job_path = job_path
-        self.job_proxy = None
-
-    def get_proxy(self) -> InterfaceProxy | ObjectProxy:
-        if self.job_proxy is None:
-            self.job_proxy = self.bus.get_proxy(BC_DBUS_INTERFACE, self.job_path)
-
-        return self.job_proxy
-
-    def cancel(self) -> None:
-        self.get_proxy().Cancel()
-
-    def get_id(self) -> UInt32:
-        self.get_proxy().Id
-
-    def get_node(self) -> str:
-        self.get_proxy().Node
-
-    def get_unit(self) -> str:
-        self.get_proxy().Unit
-
-    def get_job_type(self) -> str:
-        self.get_proxy().JobType
-
-    def get_state(self) -> str:
-        self.get_proxy().State
-
-
 class Monitor(ApiBase):
     def __init__(
         self, monitor_path: ObjPath, bus: MessageBus = None, use_systembus=True
@@ -245,33 +211,38 @@ class Metrics(ApiBase):
         self.get_proxy().AgentJobMetrics.connect(callback)
 
 
-class Agent(ApiBase):
-    def __init__(self, bus: MessageBus = None, use_systembus=True) -> None:
+class Job(ApiBase):
+    def __init__(
+        self, job_path: ObjPath, bus: MessageBus = None, use_systembus=True
+    ) -> None:
         super().__init__(bus, use_systembus)
 
-        self.agent_proxy = None
+        self.job_path = job_path
+        self.job_proxy = None
 
     def get_proxy(self) -> InterfaceProxy | ObjectProxy:
-        if self.agent_proxy is None:
-            self.agent_proxy = self.bus.get_proxy(
-                BC_AGENT_DBUS_INTERFACE, BC_OBJECT_PATH
-            )
+        if self.job_proxy is None:
+            self.job_proxy = self.bus.get_proxy(BC_DBUS_INTERFACE, self.job_path)
 
-        return self.agent_proxy
+        return self.job_proxy
 
-    def create_proxy(self, local_service_name: str, node: str, unit: str) -> None:
-        self.get_proxy().CreateProxy(
-            local_service_name,
-            node,
-            unit,
-        )
+    def cancel(self) -> None:
+        self.get_proxy().Cancel()
 
-    def remove_proxy(self, local_service_name: str, node: str, unit: str) -> None:
-        self.get_proxy().RemoveProxy(
-            local_service_name,
-            node,
-            unit,
-        )
+    def get_id(self) -> UInt32:
+        self.get_proxy().Id
+
+    def get_node(self) -> str:
+        self.get_proxy().Node
+
+    def get_unit(self) -> str:
+        self.get_proxy().Unit
+
+    def get_job_type(self) -> str:
+        self.get_proxy().JobType
+
+    def get_state(self) -> str:
+        self.get_proxy().State
 
 
 class Manager(ApiBase):
@@ -282,9 +253,7 @@ class Manager(ApiBase):
 
     def get_proxy(self) -> InterfaceProxy | ObjectProxy:
         if self.manager_proxy is None:
-            self.manager_proxy = self.bus.get_proxy(
-                BC_DBUS_INTERFACE, BC_OBJECT_PATH
-            )
+            self.manager_proxy = self.bus.get_proxy(BC_DBUS_INTERFACE, BC_OBJECT_PATH)
 
         return self.manager_proxy
 
@@ -466,3 +435,32 @@ class Node(ApiBase):
 
     def get_last_seen_timestamp(self) -> UInt64:
         self.get_proxy().LastSeenTimestamp
+
+
+class Agent(ApiBase):
+    def __init__(self, bus: MessageBus = None, use_systembus=True) -> None:
+        super().__init__(bus, use_systembus)
+
+        self.agent_proxy = None
+
+    def get_proxy(self) -> InterfaceProxy | ObjectProxy:
+        if self.agent_proxy is None:
+            self.agent_proxy = self.bus.get_proxy(
+                BC_AGENT_DBUS_INTERFACE, BC_OBJECT_PATH
+            )
+
+        return self.agent_proxy
+
+    def create_proxy(self, local_service_name: str, node: str, unit: str) -> None:
+        self.get_proxy().CreateProxy(
+            local_service_name,
+            node,
+            unit,
+        )
+
+    def remove_proxy(self, local_service_name: str, node: str, unit: str) -> None:
+        self.get_proxy().RemoveProxy(
+            local_service_name,
+            node,
+            unit,
+        )
