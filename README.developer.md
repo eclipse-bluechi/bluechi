@@ -275,12 +275,10 @@ The package build process can be adjusted using following environment variables:
 
 - `ARTIFACTS_DIR`
   - A full path to a directory where the RPMs will be saved. The script will create the directory if it does not exist.
-- `BUILD_RPM_OPTS`
-  - Additional options passed to RPM creation, following options are available:
-    - `--without python`
-      - Disable building of python bluechi module RPM package
 - `SKIP_BUILDDEP`
   - To skip installation of build dependencies this option should contain `yes` value.
+- `WITH_PYTHON`
+  - To skip building python bluechi modules this option should contain `0`.
 
 So for example following command will skip build dependencies installation and store create RPM packages into `output`
 subdirectory:

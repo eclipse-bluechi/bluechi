@@ -12,7 +12,7 @@ fi
 rpmbuild \
     --define "_topmdir rpmbuild" \
     --define "_rpmdir rpmbuild" \
-    ${BUILD_RPM_OPTS} \
+    --define "with_python ${WITH_PYTHON:=1}" \
     --rebuild rpmbuild/SRPMS/*src.rpm
 
 # Move RPMs to exported artifacts
