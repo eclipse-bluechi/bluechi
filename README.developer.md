@@ -254,23 +254,32 @@ After executing a `meson install` the MAN pages are located in the `man/man*` di
 
 ## Packaging
 
-BlueChi is packaged as an RPM. The scripts used to create the SRPM and RPM may be found in [.build-scripts](./build-scripts).
-
-The RPM creation [script](./build-scripts/build-rpm.sh) requires one environment variable:
-
-- `ARTIFACTS_DIR` - full path to a directory where the RPMs will be saved.
-  The script will create the directory if it does not exist
-
-Please note that the RPM creation script also installs all build dependencies and therefore requires running with root privileges
-
-In order to build an RPM locally use the following command:
+BlueChi is packaged as an RPM. To build RPM packages following additional dependencies are required:
 
 ```bash
-sudo ARTIFACTS_DIR=${PWD}/output ./build-scripts/build-rpm.sh
+sudo dnf install \
+    jq \
+    rpm-build
 ```
 
-Alternatively, by setting the environment variable `SKIP_BUILDDEP=yes`,
-the installation process is skipped, allowing regular user permissions
+The scripts used to create the SRPM and RPM may be found in [build-scripts](./build-scripts) directory. Executing
+following command will create RPM packages for the current content of the project:
+
+```bash
+sudo ./build-scripts/build-rpm.sh
+```
+
+Created RPM packages can be found under `artifacts/rpms*` subdirectories according to the timestamp of the execution.
+
+The package build process can be adjusted using following environment variables:
+
+- `ARTIFACTS_DIR`
+  - A full path to a directory where the RPMs will be saved. The script will create the directory if it does not exist.
+- `SKIP_BUILDDEP`
+  - To skip installation of build dependencies this option should contain `yes` value.
+
+So for example following command will skip build dependencies installation and store create RPM packages into `output`
+subdirectory:
 
 ```bash
 SKIP_BUILDDEP=yes ARTIFACTS_DIR=${PWD}/output ./build-scripts/build-rpm.sh
