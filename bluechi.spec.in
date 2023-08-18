@@ -1,5 +1,7 @@
-# python bluechi module is enabled by default, it can be disabled passing `--without python` option to rpmbuild
-%bcond_without python
+# python bluechi module is enabled by default, it can be disabled passing `--define "with_python 0"` option to rpmbuild
+%if 0%{!?with_python:1}
+%global with_python 1
+%endif
 
 
 Name:    bluechi
@@ -175,7 +177,7 @@ This package contains the service controller command line tool.
 %{_bindir}/bluechictl
 %{_mandir}/man1/bluechictl.*
 
-%if %{with python}
+%if %{with_python}
 %package -n python3-bluechi
 Summary: Python bindings for BlueChi
 BuildRequires:  python3-devel
@@ -200,23 +202,23 @@ API description and manually written code to simplify recurring tasks.
 %prep
 %autosetup
 
-%if %{with python}
-cp -r src/bindings/python/* ./
-%endif
-
 %build
 %meson -Dapi_bus=system
 %meson_build
 
-%if %{with python}
+%if %{with_python}
+pushd src/bindings/python
 %py3_build
+popd
 %endif
 
 %install
 %meson_install
 
-%if %{with python}
+%if %{with_python}
+pushd src/bindings/python
 %py3_install
+popd
 %endif
 
 %check
