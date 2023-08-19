@@ -1,4 +1,4 @@
-.PHONY: build fmt check-fmt lint lint-c-fix codespell rpm srpm
+.PHONY: build fmt check-fmt lint lint-c-fix codespell rpm srpm check-coverage-tools test-with-coverage
 
 DESTDIR ?=
 BUILDDIR=builddir
@@ -16,7 +16,12 @@ test:
 	meson configure -Db_coverage=true $(BUILDDIR)
 	meson compile -C $(BUILDDIR)
 	meson test -C $(BUILDDIR)
-	ninja coverage-html -C $(BUILDDIR)
+
+check-coverage-tools:
+	@build-scripts/check-required-tools-for-coverage
+
+test-with-coverage: check-coverage-tools test
+	@ninja coverage-html -C $(BUILDDIR)
 
 test-with-valgrind: build
 	meson test --wrap='valgrind --leak-check=full --error-exitcode=1 --track-origins=yes' -C $(BUILDDIR)

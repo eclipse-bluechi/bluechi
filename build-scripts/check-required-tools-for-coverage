@@ -1,0 +1,20 @@
+#!/bin/bash
+# SPDX-License-Identifier: GPL-2.0-or-later
+
+TOOLS_COVERAGE_REPORT=("lcov" "gcovr" "genhtml")
+FOUND=0
+
+for cmd in "${TOOLS_COVERAGE_REPORT[@]}"; do
+    if command -v "$cmd" &> /dev/null; then
+        FOUND=1
+    fi
+done
+
+if [ "$FOUND" -eq 0 ]; then
+    RED="\033[91m"
+    ENDCOLOR="\033[0m"
+    echo -e "[ ${RED}FAILED${ENDCOLOR} ] None of the following tools were found: ${TOOLS_COVERAGE_REPORT[*]}."
+    echo -e "[ ${RED}FAILED${ENDCOLOR} ] To generate a coverage report, at least one tool is required in the system."
+    exit 1
+fi
+
