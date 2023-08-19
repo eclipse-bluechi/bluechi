@@ -52,21 +52,32 @@ class BluechiTest():
                 image=self.bluechi_image_id,
                 detach=True,
                 ports={self.bluechi_ctrl_svc_port: self.bluechi_ctrl_host_port},
-                networks={self.bluechi_network_name: {}},
+                networks={self.bluechi_network_name: {"ip": "10.10.0.50"}},
             )
             c.wait(condition="running")
 
             ctrl_container = BluechiControllerContainer(c, self.bluechi_controller_config)
             ctrl_container.exec_run('systemctl start bluechi')
 
+            ip="10.10.0.51"
             for cfg in self.bluechi_node_configs:
+                # Split the IP address into its octets
+                octets = ip.split(".")
+
+                # Convert each octet to an integer
+                octets = [int(octet) for octet in octets]
+
+                #Ensure that the octet doesn't exceed 255
+                octets[-1] = octets[-1] % 256
+
+
                 print(f"Starting container bluechi-node '{cfg.node_name}' with config:\n{cfg.serialize()}")
 
                 c = self.podman_client.containers.run(
                     name=cfg.node_name,
                     image=self.bluechi_image_id,
                     detach=True,
-                    networks={self.bluechi_network_name: {}},
+                    networks={self.bluechi_network_name: {"ip": ".".join(map(str, octets)) }},
                 )
                 c.wait(condition="running")
 

@@ -48,6 +48,8 @@ jobs:
 
       - name: Install dependencies
         run: |
+          sudo echo "deb https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/unstable/xUbuntu_22.04 /" | sudo tee /etc/apt/sources.list.d/devel:kubic:libcontainers:unstable.list
+          sudo curl -fsSL "https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/unstable/xUbuntu_22.04/Release.key" | sudo gpg --dearmor | sudo tee /etc/apt/trusted.gpg.d/devel_kubic_libcontainers_unstable.gpg > /dev/null
           sudo apt-get update
           sudo apt-get install \
                   genisoimage \

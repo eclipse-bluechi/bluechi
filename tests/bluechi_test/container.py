@@ -5,6 +5,7 @@ import os
 import time
 import tarfile
 
+from podman import PodmanClient
 from podman.domain.containers import Container
 from typing import Any, Iterator, Optional, Tuple, Union, IO
 
@@ -73,6 +74,54 @@ class BluechiContainer():
 
         return result, output
 
+    def list_containers(self) -> str:
+        container_ip = None
+
+        with PodmanClient() as client:
+            container = client.containers.list()
+            if container:
+                for i in container:
+                    print(i.name)
+
+        return container_ip
+
+    def get_ip(self) -> str:
+        container_ip = None
+
+        print("==== DOUG entering PodManClient")
+        with PodmanClient() as client:
+            container = client.containers.list(filters={"name": "bluechi-controller"})
+            print("===== DOUG container =====")
+            print(container)
+            print("===== DOUG container =====")
+            if container:
+                print("===== DOUG entrei container - container_data =====")
+                container_data = container[0]
+                print(container_data)
+                print("===== DOUG entrei container - container_data =====")
+                print("===== DOUG entrei container - container_data.inspect =====")
+                container_inspect = container_data.inspect()
+                print(container_inspect)
+                print("===== DOUG entrei container - container_data.inspect =====")
+                print("===== DOUG entrei container - container_ip =====")
+                container_ip = container_inspect["NetworkSettings"]["IPAddress"]
+                print(container_ip)
+                print("===== DOUG entrei container - container_ip =====")
+
+        return container_ip
+
+    def set_config(
+        self,
+        option_name: str,
+        option_value: str,
+        config_path: str
+    ):
+        result = None
+        cmd = f"sed -i 's/^{option_name}=.*/{option_name}={option_value}/' {config_path}"
+
+        result, _ = self.container.exec_run(cmd)
+        return result
+
     def systemctl_daemon_reload(self) -> Tuple[Optional[int], Union[Iterator[bytes], Any, Tuple[bytes, bytes]]]:
         return self.exec_run("systemctl daemon-reload")
 
@@ -121,6 +170,19 @@ class BluechiNodeContainer(BluechiContainer):
     def copy_systemd_service(self, service_file_name: str, source_dir: str, target_dir):
         super().copy_systemd_service(service_file_name, source_dir, target_dir)
         self.wait_for_bluechi_agent()
+
+    def get_ip_node(self, node_name: str) -> str:
+        container_ip = None
+
+        with PodmanClient() as client:
+            container = client.containers.list(filters={"name": node_name})
+
+            if container:
+                container_data = container[0]
+                container_inspect = container_data.inspect()
+                container_ip = container_inspect["NetworkSettings"]["IPAddress"]
+
+        return container_ip
 
 
 class BluechiControllerContainer(BluechiContainer):
