@@ -49,7 +49,7 @@ jobs:
 
       - name: Check SPDX headers
         run: |
-          ./build-scripts/spdx-header-chech.sh
+          ./build-scripts/spdx-header-check.sh
 
       - name: Running codespell checker
         run: |
