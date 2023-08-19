@@ -10,20 +10,21 @@ set -x
 echo "==== DOUG building image ===="
 echo "CONTAINER_USER: $CONTAINER_USER"
 echo "BLUECHI_IMAGE_NAME: $BLUECHI_IMAGE_NAME"
+podman rmi $BLUECHI_IMAGE_NAME --force
 podman build -f ./containers/$CONTAINER_USED -t $BLUECHI_IMAGE_NAME .
 if [[ $? -ne 0 ]]; then
     echo "Failed to build bluechi image"
     exit 1
 fi
-echo "==== DOUG building image ===="
+echo "===== DOUG building image ===="
 
 #modprobe iptable-nat
 
 echo "====== DOUG setting netavark ======"
 sudo apt install containers-common -y
 sudo cp /usr/share/containers/containers.conf /etc/containers/containers.conf
-sudo sed -i '/#network_backend=*/c\network_backend="netavark"' /etc/containers/containers.conf
-sudo cat /etc/containers/containers.conf
+#sudo sed -i '/#network_backend=*/c\network_backend="netavark"' /etc/containers/containers.conf
+#sudo cat /etc/containers/containers.conf
 sudo podman info --format {{.Host.NetworkBackend}}
 
 echo "====== DOUG setting netavark ======"

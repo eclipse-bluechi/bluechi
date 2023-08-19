@@ -62,15 +62,14 @@ def podman_client() -> PodmanClient:
 @pytest.fixture(scope='session')
 def bluechi_image_id(podman_client: PodmanClient, bluechi_image_name: str) -> (Union[str, None]):
     """Returns the image ID of bluechi testing containers"""
+    print("======= DOUG podman_client.images.list()")
     image = next(
         iter(
-            podman_client.images.list(
-                filters='reference=*{image_name}'.format(
-                    image_name=bluechi_image_name)
-            )
+            podman_client.images.list()
         ),
         None,
     )
+    print("======= DOUG podman_client.images.list()")
     assert image, f"Image '{bluechi_image_name}' was not found"
     return image.id
 
