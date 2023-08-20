@@ -10,7 +10,8 @@ RUN dnf install -y --repo hirte-snapshot \
         bluechi-agent-debuginfo \
         bluechi-ctl \
         bluechi-ctl-debuginfo \
-        bluechi-selinux && \
+        bluechi-selinux \
+        python3-bluechi && \
     dnf -y clean all
 
 CMD [ "/sbin/init" ]

@@ -18,10 +18,17 @@ from dasbus.typing import (
     UInt32,
     Int64,
     UInt64,
-    UnixFD,
     ObjPath,
     Structure,
 )
+
+# File has been renamed to UnixFD in following PR included in v1.7
+# https://github.com/rhinstaller/dasbus/pull/70
+try:
+    from dasbus.typing import File
+except ImportError:
+    from dasbus.typing import UnixFD
+
 from dasbus.client.proxy import InterfaceProxy, ObjectProxy
 from dasbus.connection import MessageBus, SystemMessageBus, SessionMessageBus
 
