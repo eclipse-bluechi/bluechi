@@ -60,7 +60,7 @@ def podman_client() -> PodmanClient:
 
 
 @pytest.fixture(scope='session')
-def bluechi_image_id(podman_client: PodmanClient, bluechi_image_name: str) -> (Union[str, None]):
+def bluechi_image_id(podman_client: PodmanClient, bluechi_image_name: str) -> Union[str, None]:
     """Returns the image ID of bluechi testing containers"""
     image = next(
         iter(
