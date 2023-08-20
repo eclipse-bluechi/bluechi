@@ -4,7 +4,7 @@
         {%- for access in property.access -%}
         {%- if access == "read" -%}
         def get_{{ property.pyname }}(self) -> {{ property.pytype }}:
-        self.get_proxy().{{ property.name }}
+        return self.get_proxy().{{ property.name }}
         {%- endif -%}
         {% endfor %}
     {% endfor %}
