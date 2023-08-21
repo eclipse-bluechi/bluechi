@@ -3,6 +3,20 @@
 
 set -x
 
+PODMAN_BACKEND_CONFIG_FILE="/etc/containers/containers.conf.d/50-network-backend.conf"
+if [ "$GITHUB_ACTIONS" == "true" ]; then
+    expected_backend="netavark"
+    podman_network_backend=$(sudo podman info --format "{{.Host.NetworkBackend}}")
+
+    if [ "${podman_network_backend}" != "${expected_backend}" ]; then
+        echo "Setting Host Network Backend as netavark..."
+        sudo mkdir -p /etc/containers/containers.conf.d
+        sudo echo "[network]" > "${PODMAN_BACKEND_CONFIG_FILE}"
+        sudo echo "network_backend = \"netavark\"" >> "${PODMAN_BACKEND_CONFIG_FILE}"
+        sudo podman system reset --force
+    fi
+fi
+
 podman build -f ./containers/$CONTAINER_USED -t $BLUECHI_IMAGE_NAME .
 if [[ $? -ne 0 ]]; then
     exit 1
