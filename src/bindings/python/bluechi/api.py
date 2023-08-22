@@ -236,19 +236,24 @@ class Job(ApiBase):
     def cancel(self) -> None:
         self.get_proxy().Cancel()
 
-    def get_id(self) -> UInt32:
+    @property
+    def id(self) -> UInt32:
         return self.get_proxy().Id
 
-    def get_node(self) -> str:
+    @property
+    def node(self) -> str:
         return self.get_proxy().Node
 
-    def get_unit(self) -> str:
+    @property
+    def unit(self) -> str:
         return self.get_proxy().Unit
 
-    def get_job_type(self) -> str:
+    @property
+    def job_type(self) -> str:
         return self.get_proxy().JobType
 
-    def get_state(self) -> str:
+    @property
+    def state(self) -> str:
         return self.get_proxy().State
 
 
@@ -434,13 +439,16 @@ class Node(ApiBase):
             level,
         )
 
-    def get_name(self) -> str:
+    @property
+    def name(self) -> str:
         return self.get_proxy().Name
 
-    def get_status(self) -> str:
+    @property
+    def status(self) -> str:
         return self.get_proxy().Status
 
-    def get_last_seen_timestamp(self) -> UInt64:
+    @property
+    def last_seen_timestamp(self) -> UInt64:
         return self.get_proxy().LastSeenTimestamp
 
 
