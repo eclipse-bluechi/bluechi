@@ -1,0 +1,58 @@
+---
+
+upstream_project_url: https://github.com/eclipse-bluechi/bluechi
+issue_repository: https://github.com/eclipse-bluechi/bluechi
+specfile_path: bluechi.spec
+upstream_package_name: bluechi
+downstream_package_name: bluechi
+
+update_release: false
+
+srpm_build_deps:
+  - gcc
+  - gcc-c++
+  - git
+  - jq
+  - meson
+  - systemd-devel
+  - rpm-build
+
+actions:
+  post-upstream-clone:
+    - bash -c './build-scripts/create-spec.sh'
+
+  get-current-version:
+    - bash -c './build-scripts/get-version.sh'
+
+  create-archive:
+    - bash -c './build-scripts/create-archive.sh'
+    - bash -c 'echo bluechi-$PACKIT_PROJECT_VERSION.tar.gz'
+
+jobs:
+  - job: copr_build
+    trigger: pull_request
+    targets:
+      - epel-9-x86_64
+      - fedora-rawhide-aarch64
+      - fedora-rawhide-i386
+      - fedora-rawhide-ppc64le
+      - fedora-rawhide-s390x
+      - fedora-rawhide-x86_64
+
+  - job: copr_build
+    trigger: commit
+    owner: '@centos-automotive-sig'
+    project: bluechi-snapshot
+    targets:
+      - centos-stream-9-aarch64
+      - centos-stream-9-ppc64le
+      - centos-stream-9-x86_64
+      - epel-9-aarch64
+      - epel-9-ppc64le
+      - epel-9-s390x
+      - epel-9-x86_64
+      - fedora-rawhide-aarch64
+      - fedora-rawhide-i386
+      - fedora-rawhide-ppc64le
+      - fedora-rawhide-s390x
+      - fedora-rawhide-x86_64

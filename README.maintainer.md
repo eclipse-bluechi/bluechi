@@ -58,7 +58,7 @@ manually add a **Highlights** section describing the most important changes.
 
 Following files need to be updated to switch the build from release build back to snapshot build:
 
-* `RELEASE` variable needs to be updated in `build-scripts/build-srpm.sh` to contain a date and git hash instead of
+* `RELEASE` variable needs to be updated in `build-scripts/create-spec.sh` to contain a date and git hash instead of
   a number.
 * Project version needs to be increased in `meson.build`
 
