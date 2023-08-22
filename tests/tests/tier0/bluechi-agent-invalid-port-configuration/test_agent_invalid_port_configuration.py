@@ -15,7 +15,7 @@ def start_with_invalid_port(ctrl: BluechiControllerContainer, nodes: Dict[str, B
     _, output = nodes[NODE_FOO].exec_run('systemctl status bluechi-agent')
     output_systemd = str(output)
     if "fail" in output_systemd.lower():
-        raise Exception("{NODE_FOO} bluechi-agent should NOT failed during the tart of the service")
+        raise Exception(f"{NODE_FOO} bluechi-agent should NOT failed during the tart of the service")
 
     _, output = nodes[NODE_BAR].exec_run('systemctl status bluechi-agent')
     output_systemd = str(output)
