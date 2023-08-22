@@ -9,7 +9,7 @@ from podman.domain.containers import Container
 from typing import Any, Iterator, Optional, Tuple, Union, IO
 
 from bluechi_test.config import BluechiConfig, BluechiNodeConfig, BluechiControllerConfig
-from bluechi_test.util import read_file
+from bluechi_test.util import read_file, get_random_name
 
 
 class BluechiContainer():
@@ -157,3 +157,18 @@ class BluechiControllerContainer(BluechiContainer):
         result, output = self.exec_run(f"bluechictl enable {node_name} {unit_name}")
         if result != 0:
             raise Exception(f"Failed to enable service {unit_name} on node {node_name}: {output}")
+
+    def run_python(self, python_script_path: str) -> \
+            Tuple[Optional[int], Union[Iterator[bytes], Any, Tuple[bytes, bytes]]]:
+
+        target_file_dir = os.path.join("/", "tmp")
+        target_file_name = get_random_name(10)
+        content = read_file(python_script_path)
+        self.create_file(target_file_dir, target_file_name, content)
+
+        target_file_path = os.path.join(target_file_dir, target_file_name)
+        result, output = self.exec_run(f'python3 {target_file_path}')
+        try:
+            os.remove(target_file_path)
+        finally:
+            return result, output

@@ -120,6 +120,18 @@ the [.pep8](./.pep8) file. All source files can be formatted via:
 autopep8 ./
 ```
 
+### Using python bindings in tests
+
+The [python bindings](../src/bindings/python/) can be used in the integration tests to simplify writing them. However, it is not possible to use the bindings directly in the tests since they are leveraging the D-Bus API of BlueChi provided on the system D-Bus. A separate script has to be written, injected and executed within the container running the BlueChi controller. In order to keep the usage rather simple, the `BluechiControllerContainer` class provides a function to abstract these details:
+
+```python
+# run the file ./python/monitor.py located in the current test directory
+# and get the exit code as well as the output (e.g. all print())
+exit_code, output = ctrl.run_python("python/monitor.py")
+```
+
+A full example of how to use the python bindings can be found in the [monitor open-close test](./tests/tier0/monitor-open-close/).
+
 ## Usage of containers
 
 The integration tests rely on containers as separate compute entities. These containers are used to simulate BlueChi's

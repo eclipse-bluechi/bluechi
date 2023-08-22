@@ -3,6 +3,7 @@ FROM --platform=$TARGETPLATFORM quay.io/centos/centos:stream9
 RUN dnf upgrade --refresh -y --nodocs && \
     dnf install --nodocs \
         policycoreutils-python-utils \
+        python3-dasbus \
         selinux-policy \
         systemd \
         systemd-devel \

@@ -18,10 +18,17 @@ from dasbus.typing import (
     UInt32,
     Int64,
     UInt64,
-    UnixFD,
     ObjPath,
     Structure,
 )
+
+# File has been renamed to UnixFD in following PR included in v1.7
+# https://github.com/rhinstaller/dasbus/pull/70
+try:
+    from dasbus.typing import File
+except ImportError:
+    from dasbus.typing import UnixFD
+
 from dasbus.client.proxy import InterfaceProxy, ObjectProxy
 from dasbus.connection import MessageBus, SystemMessageBus, SessionMessageBus
 
@@ -52,40 +59,6 @@ class ApiBase:
 
     def get_proxy(self) -> InterfaceProxy | ObjectProxy:
         raise Exception("Not implemented!")
-
-
-class Job(ApiBase):
-    def __init__(
-        self, job_path: ObjPath, bus: MessageBus = None, use_systembus=True
-    ) -> None:
-        super().__init__(bus, use_systembus)
-
-        self.job_path = job_path
-        self.job_proxy = None
-
-    def get_proxy(self) -> InterfaceProxy | ObjectProxy:
-        if self.job_proxy is None:
-            self.job_proxy = self.bus.get_proxy(BC_DBUS_INTERFACE, self.job_path)
-
-        return self.job_proxy
-
-    def cancel(self) -> None:
-        self.get_proxy().Cancel()
-
-    def get_id(self) -> UInt32:
-        self.get_proxy().Id
-
-    def get_node(self) -> str:
-        self.get_proxy().Node
-
-    def get_unit(self) -> str:
-        self.get_proxy().Unit
-
-    def get_job_type(self) -> str:
-        self.get_proxy().JobType
-
-    def get_state(self) -> str:
-        self.get_proxy().State
 
 
 class Monitor(ApiBase):
@@ -245,33 +218,43 @@ class Metrics(ApiBase):
         self.get_proxy().AgentJobMetrics.connect(callback)
 
 
-class Agent(ApiBase):
-    def __init__(self, bus: MessageBus = None, use_systembus=True) -> None:
+class Job(ApiBase):
+    def __init__(
+        self, job_path: ObjPath, bus: MessageBus = None, use_systembus=True
+    ) -> None:
         super().__init__(bus, use_systembus)
 
-        self.agent_proxy = None
+        self.job_path = job_path
+        self.job_proxy = None
 
     def get_proxy(self) -> InterfaceProxy | ObjectProxy:
-        if self.agent_proxy is None:
-            self.agent_proxy = self.bus.get_proxy(
-                BC_AGENT_DBUS_INTERFACE, BC_OBJECT_PATH
-            )
+        if self.job_proxy is None:
+            self.job_proxy = self.bus.get_proxy(BC_DBUS_INTERFACE, self.job_path)
 
-        return self.agent_proxy
+        return self.job_proxy
 
-    def create_proxy(self, local_service_name: str, node: str, unit: str) -> None:
-        self.get_proxy().CreateProxy(
-            local_service_name,
-            node,
-            unit,
-        )
+    def cancel(self) -> None:
+        self.get_proxy().Cancel()
 
-    def remove_proxy(self, local_service_name: str, node: str, unit: str) -> None:
-        self.get_proxy().RemoveProxy(
-            local_service_name,
-            node,
-            unit,
-        )
+    @property
+    def id(self) -> UInt32:
+        return self.get_proxy().Id
+
+    @property
+    def node(self) -> str:
+        return self.get_proxy().Node
+
+    @property
+    def unit(self) -> str:
+        return self.get_proxy().Unit
+
+    @property
+    def job_type(self) -> str:
+        return self.get_proxy().JobType
+
+    @property
+    def state(self) -> str:
+        return self.get_proxy().State
 
 
 class Manager(ApiBase):
@@ -282,9 +265,7 @@ class Manager(ApiBase):
 
     def get_proxy(self) -> InterfaceProxy | ObjectProxy:
         if self.manager_proxy is None:
-            self.manager_proxy = self.bus.get_proxy(
-                BC_DBUS_INTERFACE, BC_OBJECT_PATH
-            )
+            self.manager_proxy = self.bus.get_proxy(BC_DBUS_INTERFACE, BC_OBJECT_PATH)
 
         return self.manager_proxy
 
@@ -458,11 +439,43 @@ class Node(ApiBase):
             level,
         )
 
-    def get_name(self) -> str:
-        self.get_proxy().Name
+    @property
+    def name(self) -> str:
+        return self.get_proxy().Name
 
-    def get_status(self) -> str:
-        self.get_proxy().Status
+    @property
+    def status(self) -> str:
+        return self.get_proxy().Status
 
-    def get_last_seen_timestamp(self) -> UInt64:
-        self.get_proxy().LastSeenTimestamp
+    @property
+    def last_seen_timestamp(self) -> UInt64:
+        return self.get_proxy().LastSeenTimestamp
+
+
+class Agent(ApiBase):
+    def __init__(self, bus: MessageBus = None, use_systembus=True) -> None:
+        super().__init__(bus, use_systembus)
+
+        self.agent_proxy = None
+
+    def get_proxy(self) -> InterfaceProxy | ObjectProxy:
+        if self.agent_proxy is None:
+            self.agent_proxy = self.bus.get_proxy(
+                BC_AGENT_DBUS_INTERFACE, BC_OBJECT_PATH
+            )
+
+        return self.agent_proxy
+
+    def create_proxy(self, local_service_name: str, node: str, unit: str) -> None:
+        self.get_proxy().CreateProxy(
+            local_service_name,
+            node,
+            unit,
+        )
+
+    def remove_proxy(self, local_service_name: str, node: str, unit: str) -> None:
+        self.get_proxy().RemoveProxy(
+            local_service_name,
+            node,
+            unit,
+        )
