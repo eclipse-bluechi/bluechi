@@ -405,7 +405,8 @@ int cfg_agent_def_conf(struct config *config) {
                 return result;
         }
 
-        if (cfg_set_value(config, CFG_NODE_NAME, get_hostname()) != 0) {
+        _cleanup_free_ char *default_node_name = get_hostname();
+        if (cfg_set_value(config, CFG_NODE_NAME, default_node_name) != 0) {
                 return -1;
         }
 
