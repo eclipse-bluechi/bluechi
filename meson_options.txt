@@ -6,4 +6,8 @@ option('man', type : 'combo',
     choices : ['true', 'false'], value : 'true',
     description : 'Build and install man pages')
 
+option('with_coverage', type : 'combo',
+    choices : ['true', 'false'], value : 'false',
+    description : 'Add coverage collection')
+
 option('dbus-srv-user', type: 'string', description: 'The (existing) user which runs bluechi')

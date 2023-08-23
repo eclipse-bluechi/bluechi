@@ -27,6 +27,13 @@ if api_bus == 'user'
    common_cflags += '-DUSE_USER_API_BUS'
 endif
 
+# Set option to get coverage collection
+with_coverage = get_option('with_coverage')
+if with_coverage == 'true'
+   add_project_arguments('-coverage', language : 'c')
+   add_project_link_arguments('-lgcov', language : 'c')
+endif
+
 # Build time configuration header file
 conf = configuration_data()
 
