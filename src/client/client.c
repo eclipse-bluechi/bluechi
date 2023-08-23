@@ -554,6 +554,67 @@ static int method_set_log_level(Client *client, char *node_name, char *loglevel)
         return 0;
 }
 
+static int method_freeze_unit_on(Client *client, char *node_name, char *unit) {
+        int r = 0;
+        _cleanup_sd_bus_error_ sd_bus_error error = SD_BUS_ERROR_NULL;
+        _cleanup_sd_bus_message_ sd_bus_message *result = NULL;
+
+        r = assemble_object_path_string(NODE_OBJECT_PATH_PREFIX, node_name, &client->object_path);
+        if (r < 0) {
+                return r;
+        }
+
+        r = sd_bus_call_method(
+                        client->api_bus,
+                        BC_INTERFACE_BASE_NAME,
+                        client->object_path,
+                        NODE_INTERFACE,
+                        "FreezeUnit",
+                        &error,
+                        &result,
+                        "s",
+                        unit);
+        if (r < 0) {
+                fprintf(stderr, "Failed to issue method call: %s\n", error.message);
+                return r;
+        }
+
+        printf("Unit %s %s operation done\n", unit, client->op);
+
+        return 0;
+}
+
+static int method_thaw_unit_on(Client *client, char *node_name, char *unit) {
+        int r = 0;
+        _cleanup_sd_bus_error_ sd_bus_error error = SD_BUS_ERROR_NULL;
+        _cleanup_sd_bus_message_ sd_bus_message *result = NULL;
+
+        r = assemble_object_path_string(NODE_OBJECT_PATH_PREFIX, node_name, &client->object_path);
+        if (r < 0) {
+                return r;
+        }
+
+        r = sd_bus_call_method(
+                        client->api_bus,
+                        BC_INTERFACE_BASE_NAME,
+                        client->object_path,
+                        NODE_INTERFACE,
+                        "ThawUnit",
+                        &error,
+                        &result,
+                        "s",
+                        unit);
+        if (r < 0) {
+                fprintf(stderr, "Failed to issue method call: %s\n", error.message);
+                return r;
+        }
+
+        printf("Unit %s %s operation done\n", unit, client->op);
+
+        return 0;
+}
+
+
 int client_call_manager(Client *client) {
         int r = 0;
 
@@ -590,6 +651,16 @@ int client_call_manager(Client *client) {
                         return -EINVAL;
                 }
                 r = method_lifecycle_action_on(client, client->opargv[0], client->opargv[1], "StopUnit");
+        } else if (streq(client->op, "freeze")) {
+                if (client->opargc != 2) {
+                        return -EINVAL;
+                }
+                r = method_freeze_unit_on(client, client->opargv[0], client->opargv[1]);
+        } else if (streq(client->op, "thaw")) {
+                if (client->opargc != 2) {
+                        return -EINVAL;
+                }
+                r = method_thaw_unit_on(client, client->opargv[0], client->opargv[1]);
         } else if (streq(client->op, "restart")) {
                 if (client->opargc != 2) {
                         return -EINVAL;
@@ -700,6 +771,10 @@ int print_client_usage(char *argv) {
         printf("    usage: start nodename unitname\n");
         printf("  - stop: stop a specific systemd service (or timer, or slice) on a specific node\n");
         printf("    usage: stop nodename unitname\n");
+        printf("  - freeze: freeze a specific systemd service on a specific node\n");
+        printf("    usage: freeze nodename unitname\n");
+        printf("  - thaw: thaw a frozen systemd service on a specific node\n");
+        printf("    usage: thaw nodename unitname\n");
         printf("  - reload: reloads a specific systemd service (or timer, or slice) on a specific node\n");
         printf("    usage: reload nodename unitname\n");
         printf("  - restart: restarts a specific systemd service (or timer, or slice) on a specific node\n");

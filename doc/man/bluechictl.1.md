@@ -26,7 +26,7 @@ Print current bluechictl version
 
 ## Commands
 
-### **bluechictl** [*start|stop|restart|reload*] [*agent*] [*unit*]
+### **bluechictl** [*start|stop|freeze|thaw|restart|reload*] [*agent*] [*unit*]
 
 Performs one of the listed lifecycle operations on the given systemd unit for the `bluechi-agent`.
 
