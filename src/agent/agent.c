@@ -919,6 +919,114 @@ static int agent_method_set_unit_properties(sd_bus_message *m, void *userdata, U
         return 1;
 }
 
+/******************************************************************************
+ ******** org.eclipse.bluechi.internal.Agent.FreezeUnit  *
+ ******************************************************************************/
+
+static int freeze_unit_cb(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error) {
+        _cleanup_systemd_request_ SystemdRequest *req = userdata;
+
+        if (sd_bus_message_is_method_error(m, NULL)) {
+                /* Forward error */
+                return sd_bus_reply_method_error(req->request_message, sd_bus_message_get_error(m));
+        }
+
+        _cleanup_sd_bus_message_ sd_bus_message *reply = NULL;
+        int r = sd_bus_message_new_method_return(req->request_message, &reply);
+        if (r < 0) {
+                return r;
+        }
+
+        r = sd_bus_message_copy(reply, m, true);
+        if (r < 0) {
+                return r;
+        }
+
+        return sd_bus_message_send(reply);
+}
+
+static int agent_method_freeze_unit(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error) {
+        Agent *agent = userdata;
+        const char *unit = NULL;
+        _cleanup_free_ char *unit_path = NULL;
+
+        int r = sd_bus_message_read(m, "s", &unit);
+        if (r < 0) {
+                return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_INVALID_ARGS, "Invalid arguments");
+        }
+
+        r = assemble_object_path_string(SYSTEMD_OBJECT_PATH "/unit", unit, &unit_path);
+        if (r < 0) {
+                return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "Internal Error");
+        }
+
+        _cleanup_systemd_request_ SystemdRequest *req = agent_create_request_full(
+                        agent, m, unit_path, "org.freedesktop.systemd1.Unit", "Freeze");
+        if (req == NULL) {
+                return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "Internal error");
+        }
+
+        if (!systemd_request_start(req, freeze_unit_cb)) {
+                return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "Internal error");
+        }
+
+        return 1;
+}
+
+/******************************************************************************
+ ******** org.eclipse.bluechi.internal.Agent.ThawUnit  *
+ ******************************************************************************/
+
+static int thaw_unit_cb(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error) {
+        _cleanup_systemd_request_ SystemdRequest *req = userdata;
+
+        if (sd_bus_message_is_method_error(m, NULL)) {
+                /* Forward error */
+                return sd_bus_reply_method_error(req->request_message, sd_bus_message_get_error(m));
+        }
+
+        _cleanup_sd_bus_message_ sd_bus_message *reply = NULL;
+        int r = sd_bus_message_new_method_return(req->request_message, &reply);
+        if (r < 0) {
+                return r;
+        }
+
+        r = sd_bus_message_copy(reply, m, true);
+        if (r < 0) {
+                return r;
+        }
+
+        return sd_bus_message_send(reply);
+}
+
+static int agent_method_thaw_unit(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error) {
+        Agent *agent = userdata;
+        const char *unit = NULL;
+        _cleanup_free_ char *unit_path = NULL;
+
+        int r = sd_bus_message_read(m, "s", &unit);
+        if (r < 0) {
+                return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_INVALID_ARGS, "Invalid arguments");
+        }
+
+        r = assemble_object_path_string(SYSTEMD_OBJECT_PATH "/unit", unit, &unit_path);
+        if (r < 0) {
+                return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "Internal Error");
+        }
+
+        _cleanup_systemd_request_ SystemdRequest *req = agent_create_request_full(
+                        agent, m, unit_path, "org.freedesktop.systemd1.Unit", "Thaw");
+        if (req == NULL) {
+                return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "Internal error");
+        }
+
+        if (!systemd_request_start(req, thaw_unit_cb)) {
+                return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "Internal error");
+        }
+
+        return 1;
+}
+
 static void agent_job_done(UNUSED sd_bus_message *m, const char *result, void *userdata) {
         AgentJobOp *op = userdata;
         Agent *agent = op->agent;
@@ -1361,6 +1469,8 @@ static const sd_bus_vtable internal_agent_vtable[] = {
         SD_BUS_METHOD("SetUnitProperties", "sba(sv)", "", agent_method_set_unit_properties, 0),
         SD_BUS_METHOD("StartUnit", "ssu", "", agent_method_start_unit, 0),
         SD_BUS_METHOD("StopUnit", "ssu", "", agent_method_stop_unit, 0),
+        SD_BUS_METHOD("FreezeUnit", "s", "", agent_method_freeze_unit, 0),
+        SD_BUS_METHOD("ThawUnit", "s", "", agent_method_thaw_unit, 0),
         SD_BUS_METHOD("RestartUnit", "ssu", "", agent_method_restart_unit, 0),
         SD_BUS_METHOD("ReloadUnit", "ssu", "", agent_method_reload_unit, 0),
         SD_BUS_METHOD("Subscribe", "s", "", agent_method_subscribe, 0),
