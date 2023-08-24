@@ -154,16 +154,18 @@ bool bc_log_get_quiet() {
 
 
 int bc_log_init(struct config *config) {
-        // load log settings from configuration
-        const char *target = NULL;
-        const char *quiet = NULL;
+
+        // set default logging settings
+        bc_log_set_level(LOG_LEVEL_INFO);
+        bc_log_set_log_fn(bc_log_to_journald_with_location);
+        bc_log_set_quiet(false);
 
         LogLevel level = string_to_log_level(cfg_get_value(config, CFG_LOG_LEVEL));
         if (level != LOG_LEVEL_INVALID) {
                 bc_log_set_level(level);
         }
 
-        target = cfg_get_value(config, CFG_LOG_TARGET);
+        const char *target = cfg_get_value(config, CFG_LOG_TARGET);
         if (target != NULL) {
                 if (streqi(BC_LOG_TARGET_JOURNALD, target)) {
                         bc_log_set_log_fn(bc_log_to_journald_with_location);
@@ -174,7 +176,7 @@ int bc_log_init(struct config *config) {
                 }
         }
 
-        quiet = cfg_get_value(config, CFG_LOG_IS_QUIET);
+        const char *quiet = cfg_get_value(config, CFG_LOG_IS_QUIET);
         if (quiet != NULL) {
                 bc_log_set_quiet(cfg_get_bool_value(config, CFG_LOG_IS_QUIET));
         }
