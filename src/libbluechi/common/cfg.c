@@ -425,7 +425,7 @@ int cfg_agent_def_conf(struct config *config) {
                 return result;
         }
 
-        if ((result = cfg_set_value(config, CFG_LOG_TARGET, BC_LOG_TARGET_STDERR)) != 0) {
+        if ((result = cfg_set_value(config, CFG_LOG_TARGET, BC_LOG_TARGET_JOURNALD)) != 0) {
                 return result;
         }
 
@@ -456,7 +456,7 @@ int cfg_manager_def_conf(struct config *config) {
                 return result;
         }
 
-        if ((result = cfg_set_value(config, CFG_LOG_TARGET, BC_LOG_TARGET_STDERR)) != 0) {
+        if ((result = cfg_set_value(config, CFG_LOG_TARGET, BC_LOG_TARGET_JOURNALD)) != 0) {
                 return result;
         }
 
