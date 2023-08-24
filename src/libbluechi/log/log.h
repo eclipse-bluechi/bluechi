@@ -56,6 +56,9 @@ int bc_log_to_stderr_with_location(
 void bc_log_set_log_fn(LogFn log_fn);
 void bc_log_set_level(LogLevel level);
 void bc_log_set_quiet(bool is_quiet);
+LogFn bc_log_get_log_fn();
+LogLevel bc_log_get_level();
+bool bc_log_get_quiet();
 
 int bc_log_init(struct config *config);
 
