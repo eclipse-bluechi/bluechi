@@ -3,8 +3,32 @@
 
 set -x
 
-podman build -f ./containers/$CONTAINER_USED -t $BLUECHI_IMAGE_NAME .
+# Install required dependencies only when asked
+if [ "$INSTALL_DEPS" == "yes" ]; then
+    dnf install \
+        podman \
+        python3-dasbus \
+        python3-podman \
+        python3-pytest \
+        python3-pytest-timeout \
+        -y
+fi
 
+BUILD_ARG=""
+
+# By default we want to use bluechi-snapshot repo, but when building from packit testing farm we need to pass custom
+# copr repo to the container (packit uses temporary COPR repos for unmerged PRs)
+COPR_REPO="@centos-automotive-sig/bluechi-snapshot"
+if [ "$PACKIT_COPR_PROJECT" != "" ]; then
+    COPR_REPO="$PACKIT_COPR_PROJECT"
+fi
+BUILD_ARG="--build-arg copr_repo=$COPR_REPO"
+
+podman build \
+    ${BUILD_ARG} \
+    -f ./containers/$CONTAINER_USED \
+    -t $BLUECHI_IMAGE_NAME \
+    .
 if [[ $? -ne 0 ]]; then
     exit 1
 fi

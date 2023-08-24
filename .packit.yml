@@ -39,6 +39,16 @@ jobs:
       - fedora-rawhide-s390x
       - fedora-rawhide-x86_64
 
+  - job: tests
+    trigger: pull_request
+    fmf_path: tests
+    env:
+      INSTALL_DEPS: "yes"
+    targets:
+      # Run integration tests on Fedora using CS9 containers, because running integrations tests on CS9 using CS9
+      # containers is very flaky
+      - fedora-rawhide-x86_64
+
   - job: copr_build
     trigger: commit
     owner: '@centos-automotive-sig'

@@ -1,8 +1,10 @@
 FROM quay.io/bluechi/integration-test-base:latest
 
+ARG copr_repo
+
 RUN dnf install -y dnf-plugin-config-manager
 
-RUN dnf copr enable -y @centos-automotive-sig/bluechi-snapshot
+RUN dnf copr enable -y $copr_repo
 
 RUN dnf install \
         --nogpgcheck \

@@ -9,14 +9,15 @@ environment:
     BLUECHI_CTRL_SVC_PORT: 8420
     BLUECHI_IMAGE_NAME: bluechi-image
     CONTAINER_USED: integration-test-snapshot
+    INSTALL_DEPS: no
     LOG_LEVEL: INFO
     WITH_COVERAGE: 0
     WITH_VALGRIND: 0
 prepare:
-  - name: Set containers setup
-    how: shell
-    script: |
-        bash ./scripts/tests-setup.sh
+    - name: Prepare containers setup
+      how: shell
+      script: |
+          bash scripts/tests-setup.sh
 execute:
     how: tmt
 report:
