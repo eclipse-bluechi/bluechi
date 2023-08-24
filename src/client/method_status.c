@@ -9,6 +9,7 @@ typedef struct unit_info_t {
         const char *id;
         const char *load_state;
         const char *active_state;
+        const char *freezer_state;
         const char *sub_state;
         const char *unit_file_state;
 } unit_info_t;
@@ -22,6 +23,7 @@ static const struct bus_properties_map property_map[] = {
         { "Id", offsetof(unit_info_t, id) },
         { "LoadState", offsetof(unit_info_t, load_state) },
         { "ActiveState", offsetof(unit_info_t, active_state) },
+        { "FreezerState", offsetof(unit_info_t, freezer_state) },
         { "SubState", offsetof(unit_info_t, sub_state) },
         { "UnitFileState", offsetof(unit_info_t, unit_file_state) },
         {}
@@ -169,10 +171,11 @@ static void print_info_header(size_t name_col_width) {
                 fprintf(stderr, "\t");
         }
 
-        fprintf(stderr, "| LOADED\t| ACTIVE\t| SUBSTATE\t| ENABLED\t|\n");
+        fprintf(stderr, "| LOADED\t| ACTIVE\t| SUBSTATE\t| FREEZERSTATE\t| ENABLED\t|\n");
         for (i = PRINT_TAB_SIZE + name_col_width; i > PRINT_TAB_SIZE; i -= PRINT_TAB_SIZE) {
                 fprintf(stderr, "--------");
         }
+        fprintf(stderr, "----------------");
         fprintf(stderr, "----------------");
         fprintf(stderr, "----------------");
         fprintf(stderr, "----------------");
@@ -206,6 +209,7 @@ static void print_unit_info(unit_info_t *unit_info, size_t name_col_width) {
         PRINT_AND_ALIGN(load_state);
         PRINT_AND_ALIGN(active_state);
         PRINT_AND_ALIGN(sub_state);
+        PRINT_AND_ALIGN(freezer_state);
         PRINT_AND_ALIGN(unit_file_state);
 
         fprintf(stderr, "|\n");
