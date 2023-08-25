@@ -1,0 +1,1 @@
+summary: Test if the proper virtual signals are emitted when a monitor with wildcard subscription is active and a node disconnects and reconnects again
