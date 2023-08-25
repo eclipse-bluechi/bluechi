@@ -1,0 +1,10 @@
+[Unit]
+Description=Just sleeping
+
+[Service]
+Type=simple
+ExecStart=/bin/sleep 10
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target
