@@ -1,7 +1,6 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
 
 common_src = [
-  'cfg_test',
   'list_test',
   'parse-util_test',
   'string-util_test',
@@ -18,5 +17,6 @@ foreach src : common_src
   test(src, exec_test)
 endforeach
 
+subdir('cfg')
 subdir('network')
 subdir('time-util')
