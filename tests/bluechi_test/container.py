@@ -89,6 +89,14 @@ class BluechiContainer():
         result, _ = self.exec_run(f"systemctl is-active {unit_name}")
         return result == 0
 
+    def get_unit_freezer_state(self, unit_name: str) -> str:
+        _, output = self.exec_run(f"systemctl show {unit_name} --property=FreezerState")
+        state = str(output).split('=', 1)
+        result = ""
+        if len(state) > 1:
+            result = state[1]
+        return result
+
     def get_unit_state(self, unit_name: str) -> str:
         _, output = self.exec_run(f"systemctl is-active {unit_name}")
         return output
@@ -157,6 +165,20 @@ class BluechiControllerContainer(BluechiContainer):
         result, output = self.exec_run(f"bluechictl enable {node_name} {unit_name}")
         if result != 0:
             raise Exception(f"Failed to enable service {unit_name} on node {node_name}: {output}")
+
+    def freeze_unit(self, node_name: str, unit_name: str) -> None:
+        print(f"Freezing unit {unit_name} on node {node_name}")
+
+        result, output = self.exec_run(f"bluechictl freeze {node_name} {unit_name}")
+        if result != 0:
+            raise Exception(f"Failed to freeze service {unit_name} on node {node_name}: {output}")
+
+    def thaw_unit(self, node_name: str, unit_name: str) -> None:
+        print(f"Thawing unit {unit_name} on node {node_name}")
+
+        result, output = self.exec_run(f"bluechictl thaw {node_name} {unit_name}")
+        if result != 0:
+            raise Exception(f"Failed to thaw service {unit_name} on node {node_name}: {output}")
 
     def run_python(self, python_script_path: str) -> \
             Tuple[Optional[int], Union[Iterator[bytes], Any, Tuple[bytes, bytes]]]:
