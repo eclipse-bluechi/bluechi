@@ -375,6 +375,16 @@ class Node(ApiBase):
             mode,
         )
 
+    def freeze_unit(self, name: str) -> None:
+        self.get_proxy().FreezeUnit(
+            name,
+        )
+
+    def thaw_unit(self, name: str) -> None:
+        self.get_proxy().ThawUnit(
+            name,
+        )
+
     def reload_unit(self, name: str, mode: str) -> ObjPath:
         return self.get_proxy().ReloadUnit(
             name,
