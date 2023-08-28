@@ -150,13 +150,14 @@ int cfg_load_complete_configuration(
                                         "Error loading custom configuration file '%s': '%s'.\n",
                                         custom_config_file,
                                         strerror(-result));
+                                return result;
                         } else if (result > 0) {
                                 fprintf(stderr,
                                         "Error parsing configuration file '%s' on line %d\n",
                                         custom_config_file,
                                         result);
+                                return -EINVAL;
                         }
-                        return result;
                 }
         }
 
