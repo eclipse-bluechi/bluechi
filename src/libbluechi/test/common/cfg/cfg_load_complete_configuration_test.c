@@ -82,7 +82,7 @@ struct cfg_test_param test_data[] = {
           { { NULL, NULL }, { NULL, NULL }, { NULL, NULL } } },
         { "with invalid value in custom config file",
           { "NodeName = laptop\n", "NodeName 0 pi\n", { "LogLevel=DEBUG\n", "LogTarget=stderr\n" } },
-          1,
+          -EINVAL,
           { { "NodeName", "laptop" }, { NULL, NULL }, { NULL, NULL } } },
         { "with invalid value in one of the confd files",
           { "NodeName = laptop\n", "NodeName = pi\n", { "LogLevel=DEBUG\n", "LogTarget0stderr\n" } },
