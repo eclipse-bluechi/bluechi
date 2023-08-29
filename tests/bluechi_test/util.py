@@ -40,4 +40,4 @@ def assemble_bluechi_proxy_service_name(node_name: str, unit_name: str) -> str:
 def get_random_name(name_length: int) -> str:
     # choose from all lowercase letter
     letters = string.ascii_lowercase
-    return ''.join(random.choice(letters) for i in range(name_length))
+    return ''.join(random.choice(letters) for _ in range(name_length))
