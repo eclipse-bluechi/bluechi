@@ -1,0 +1,6 @@
+[Unit]
+Description=Just being true once
+
+[Service]
+Type=simple
+ExecStart=/bin/true
