@@ -12,6 +12,7 @@ fi
 rpmbuild \
     --define "_topmdir rpmbuild" \
     --define "_rpmdir rpmbuild" \
+    --define "with_coverage ${WITH_COVERAGE:=0}"\
     --define "with_python ${WITH_PYTHON:=1}" \
     --rebuild rpmbuild/SRPMS/*src.rpm
 

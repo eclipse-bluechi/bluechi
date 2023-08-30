@@ -3,6 +3,10 @@
 %global with_python 1
 %endif
 
+# coverage collection is disabled by default , it can be enabled passing `--define "with_coverage 1"` option to rpmbuild
+%if 0%{?with_coverage} 
+%global coverage_flags -Dwith_coverage=true
+%endif
 
 Name:    bluechi
 Version: @VERSION@
@@ -203,7 +207,7 @@ API description and manually written code to simplify recurring tasks.
 %autosetup
 
 %build
-%meson -Dapi_bus=system
+%meson -Dapi_bus=system %{?coverage_flags}
 %meson_build
 
 %if %{with_python}
