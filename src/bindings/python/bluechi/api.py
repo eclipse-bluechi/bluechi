@@ -92,9 +92,10 @@ class Monitor(ApiBase):
             id,
         )
 
-    def subscribe_list(self, targets: Tuple[str, List[str]]) -> UInt32:
+    def subscribe_list(self, node: str, units: List[str]) -> UInt32:
         return self.get_proxy().SubscribeList(
-            targets,
+            node,
+            units,
         )
 
     def on_unit_properties_changed(
