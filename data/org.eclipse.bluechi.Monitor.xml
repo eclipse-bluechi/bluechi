@@ -12,7 +12,8 @@
       <arg name="id" type="u" direction="in" />
     </method>
     <method name="SubscribeList">
-      <arg name="targets" type="sas" direction="in" />
+      <arg name="node" type="s" direction="in" />
+      <arg name="units" type="as" direction="in" />
       <arg name="id" type="u" direction="out" />
     </method>
 
