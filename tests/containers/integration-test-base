@@ -1,4 +1,4 @@
-FROM --platform=$TARGETPLATFORM quay.io/centos/centos:stream9
+FROM quay.io/centos/centos:stream9
 
 RUN dnf upgrade --refresh -y --nodocs && \
     dnf install --nodocs \

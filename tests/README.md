@@ -150,11 +150,21 @@ Currently, the base images are pushed manually to the [bluechi on quay.io](https
 
 **Note to codeowners:**
 
-The base images [build-base](./containers/build-base) and [integration-test-base](./containers/integration-test-base) can be built for multiple platforms (arm64 and amd64) using the [build-containers.sh](../build-scripts/build-containers.sh) script. It'll build images for the given platforms as well as a manifest with the same name, which can then be pushed to the registry. From the root directory of the project run the following commands:
+The base images [build-base](./containers/build-base) and [integration-test-base](./containers/integration-test-base) can be built for multiple architectures (arm64 and amd64) using the [build-containers.sh](../build-scripts/build-containers.sh) script. It'll build the images for the supported architectures as well as a manifest, which can then be pushed to the registry.
+
+Building for multiple architectures, the following packages are required:
 
 ```bash
-# building and publishing build-base image
-bash build-scripts/build-containers.sh build_base
-podman login -u="someuser" -p="topsecret" quay.io
-podman manifest push quay.io/bluechi/build-base:latest docker://quay.io/bluechi/build-base:latest
+sudo dnf install -y podman buildah qemu-user-static
+```
+
+From the root directory of the project run the following commands:
+
+```bash
+# In order to build and directly push, login first
+buildah login -u="someuser" -p="topsecret" quay.io
+sudo PUSH_MANIFEST=yes bash build-scripts/build-push-containers.sh build_base
+
+# Only build locally
+bash build-scripts/build-push-containers.sh build_base
 ```
