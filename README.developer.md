@@ -9,6 +9,7 @@
   - [Linting](#linting)
   - [Build](#build)
   - [Debug](#debug)
+  - [Busctl](#busctl)
   - [Unit Tests](#unit-tests)
   - [Integration Tests](#integration-tests)
   - [Running](#running)
@@ -54,6 +55,59 @@ sudo dnf install \
 [markdownlint-cli2](https://github.com/DavidAnson/markdownlint-cli2) can be used for static analysis of markdown files.
 Check the [installation guide](https://github.com/DavidAnson/markdownlint-cli2#install) and use the most appropriate way
 of installation for your setup.
+
+### busctl
+
+**busctl** is a systemd tool to introspect and monitor the D-Bus bus. See below some examples using busctl with bluechi service.
+
+**Instrospect org.eclipse.bluechi**:
+```bash
+# busctl introspect \
+         org.eclipse.bluechi \
+         /org/eclipse/bluechi
+
+NAME                                TYPE      SIGNATURE RESULT/VALUE   FLAGS
+org.eclipse.bluechi.Manager         interface -         -              -
+.CreateMonitor                      method    -         o              -
+.DisableMetrics                     method    -         -              -
+.EnableMetrics                      method    -         -              -
+.GetNode                            method    s         o              -
+.ListNodes                          method    -         a(sos)         -
+.ListUnits                          method    -         a(sssssssouso) -
+.Ping                               method    s         s              -
+.SetLogLevel                        method    s         -              -
+.JobNew                             signal    uo        -              -
+.JobRemoved                         signal    uosss     -              -
+.NodeConnectionStateChanged         signal    ss        -              -
+org.eclipse.bluechi.Shutdown        interface -         -              -
+.Shutdown                           method    -         -              -
+org.freedesktop.DBus.Introspectable interface -         -              -
+.Introspect                         method    -         s              -
+org.freedesktop.DBus.Peer           interface -         -              -
+.GetMachineId                       method    -         s              -
+.Ping                               method    -         -              -
+org.freedesktop.DBus.Properties     interface -         -              -
+.Get                                method    ss        v              -
+.GetAll                             method    s         a{sv}          -
+.Set                                method    ssv       -              -
+.PropertiesChanged                  signal    sa{sv}as  -              -
+```
+
+**Example calling ListNodes**:
+```bash
+export SERVICE="org.eclipse.bluechi"
+export OBJECT="/org/eclipse/bluechi"
+export INTERFACE="org.eclipse.bluechi.Manager"
+export METHOD="ListNodes"
+
+# busctl call \
+	"${SERVICE}" \
+	"${OBJECT}" \
+	"${INTERFACE}" \
+	"${METHOD}"
+
+a(sos) 3 "control" "/org/eclipse/bluechi/node/control" "online" "node1" "/org/eclipse/bluechi/node/node1" "online" "qm-node1" "/org/eclipse/bluechi/node/qm_2dnode1" "online"
+```
 
 ### Code Style
 
