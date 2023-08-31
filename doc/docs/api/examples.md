@@ -1,6 +1,49 @@
 <!-- markdownlint-disable-file MD013 -->
 # Examples using the public D-Bus API
 
+## GoLang
+First, make sure the system has golang installed and download the dbus library.
+
+These steps were based on CentOS Stream 9:
+
+### Installing golang
+
+``` bash
+# dnf install go-toolset
+```
+
+### Adding dbus library
+
+``` bash
+# go install github.com/godbus/dbus
+```
+
+### Build the source code:
+
+``` bash
+# go build list_nodes.go
+# ./list_nodes
+Name: control
+Status: online
+Object Path: /org/eclipse/bluechi/node/control
+
+Name: node1
+Status: online
+Object Path: /org/eclipse/bluechi/node/node1
+
+Name: qm-node1
+Status: online
+Object Path: /org/eclipse/bluechi/node/qm_2dnode1
+```
+
+### List all nodes
+
+``` go
+--8<-- "api-examples/go/list_nodes.go"
+```
+
+---
+
 ## Python
 
 The examples listed here are using the [dasbus](https://dasbus.readthedocs.io/en/latest/) library for Python 3. It can be installed via
