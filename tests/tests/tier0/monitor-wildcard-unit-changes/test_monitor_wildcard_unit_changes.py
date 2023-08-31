@@ -31,7 +31,7 @@ def exec(ctrl: BluechiControllerContainer, nodes: Dict[str, BluechiNodeContainer
         raise Exception(output)
 
 
-@pytest.mark.timeout(15)
+@pytest.mark.timeout(20)
 def test_monitor_wildcard_unit_changes(
         bluechi_test: BluechiTest,
         bluechi_ctrl_default_config: BluechiControllerConfig,

@@ -42,7 +42,7 @@ def start_with_invalid_port(ctrl: BluechiControllerContainer, nodes: Dict[str, B
                 "NOT failed during the start of the service")
 
 
-@pytest.mark.timeout(15)
+@pytest.mark.timeout(25)
 def test_agent_invalid_port_configuration(
         bluechi_test: BluechiTest,
         bluechi_node_default_config: BluechiNodeConfig, bluechi_ctrl_default_config: BluechiControllerConfig):

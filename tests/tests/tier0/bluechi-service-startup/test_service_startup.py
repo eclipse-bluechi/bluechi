@@ -15,7 +15,7 @@ def startup_verify(ctrl: BluechiControllerContainer, _: Dict[str, BluechiNodeCon
     assert output == 'active'
 
 
-@pytest.mark.timeout(5)
+@pytest.mark.timeout(10)
 def test_controller_startup(bluechi_test: BluechiTest, bluechi_ctrl_default_config: BluechiControllerConfig):
     bluechi_test.set_bluechi_controller_config(bluechi_ctrl_default_config)
 

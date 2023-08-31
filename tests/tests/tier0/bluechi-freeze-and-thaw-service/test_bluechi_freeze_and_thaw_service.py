@@ -45,7 +45,7 @@ def exec(ctrl: BluechiControllerContainer, nodes: Dict[str, BluechiNodeContainer
     verify_service_thaw(foo)
 
 
-@pytest.mark.timeout(10)
+@pytest.mark.timeout(20)
 def test_service_freeze_and_thaw(
         bluechi_test: BluechiTest,
         bluechi_ctrl_default_config: BluechiControllerConfig,

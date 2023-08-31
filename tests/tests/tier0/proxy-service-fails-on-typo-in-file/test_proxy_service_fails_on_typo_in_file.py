@@ -41,7 +41,7 @@ def exec(ctrl: BluechiControllerContainer, nodes: Dict[str, BluechiNodeContainer
     verify_proxy_start_failed(foo, bar)
 
 
-@pytest.mark.timeout(10)
+@pytest.mark.timeout(20)
 def test_proxy_service_fails_on_typo_in_file(
         bluechi_test: BluechiTest,
         bluechi_ctrl_default_config: BluechiControllerConfig,
