@@ -60,7 +60,8 @@ class BluechiContainer():
 
     def cleanup(self):
         if self.container.status == 'running':
-            self.container.kill()
+            kw_params = {'timeout': 0}
+            self.container.stop(**kw_params)
         self.container.remove()
 
     def exec_run(self, command: (Union[str, list[str]]), raw_output: bool = False) -> \
