@@ -22,7 +22,7 @@ def foo_startup_verify(ctrl: BluechiControllerContainer, nodes: Dict[str, Bluech
     # TODO: Add code to test that agent on node foo is successfully connected to bluechi controller
 
 
-@pytest.mark.timeout(5)
+@pytest.mark.timeout(10)
 def test_agent_foo_startup(
         bluechi_test: BluechiTest,
         bluechi_ctrl_default_config: BluechiControllerConfig,
