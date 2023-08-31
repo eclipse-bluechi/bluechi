@@ -9,3 +9,4 @@ globs:
 ignores:
   - "doc/man/*.md"
   - "subprojects/*/*.md"
+  - "README.developer.md"
