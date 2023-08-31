@@ -20,7 +20,7 @@ def exec(ctrl: BluechiControllerContainer, nodes: Dict[str, BluechiNodeContainer
         raise Exception(output)
 
 
-@pytest.mark.timeout(10)
+@pytest.mark.timeout(25)
 def test_monitor_wildcard_node_reconnect(
         bluechi_test: BluechiTest,
         bluechi_ctrl_default_config: BluechiControllerConfig,

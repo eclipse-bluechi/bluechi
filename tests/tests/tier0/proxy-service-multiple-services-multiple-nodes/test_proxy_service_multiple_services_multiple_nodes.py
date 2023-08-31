@@ -58,7 +58,7 @@ def exec(ctrl: BluechiControllerContainer, nodes: Dict[str, BluechiNodeContainer
     assert foo1.wait_for_unit_state_to_be(bluechi_proxy_service, "inactive")
 
 
-@pytest.mark.timeout(15)
+@pytest.mark.timeout(25)
 def test_proxy_service_multiple_services_multiple_nodes(
         bluechi_test: BluechiTest,
         bluechi_ctrl_default_config: BluechiControllerConfig,

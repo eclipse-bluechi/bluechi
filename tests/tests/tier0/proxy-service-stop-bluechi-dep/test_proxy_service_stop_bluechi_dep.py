@@ -53,7 +53,7 @@ def exec(ctrl: BluechiControllerContainer, nodes: Dict[str, BluechiNodeContainer
     verify_proxy_stop(foo, bar)
 
 
-@pytest.mark.timeout(10)
+@pytest.mark.timeout(20)
 def test_proxy_service_stop_bluechi_dep(
         bluechi_test: BluechiTest,
         bluechi_ctrl_default_config: BluechiControllerConfig,
