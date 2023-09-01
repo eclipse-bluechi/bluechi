@@ -12,15 +12,11 @@ NODE_BAR = "node-bar"
 
 
 def start_with_invalid_port(ctrl: BluechiControllerContainer, nodes: Dict[str, BluechiNodeContainer]):
-    _, output = nodes[NODE_FOO].exec_run('systemctl status bluechi-agent')
-    output_systemd = str(output)
-    if "fail" in output_systemd.lower():
-        raise Exception(f"{NODE_FOO} bluechi-agent should NOT failed during the tart of the service")
+    node_foo_with_valid_port = nodes[NODE_FOO]
+    assert node_foo_with_valid_port.wait_for_unit_state_to_be("bluechi-agent", "active")
 
-    _, output = nodes[NODE_BAR].exec_run('systemctl status bluechi-agent')
-    output_systemd = str(output)
-    if "fail" not in output_systemd.lower():
-        raise Exception(f"{NODE_BAR} bluechi-agent should FAILED during the start but DO NOT FAILED")
+    node_bar_with_invalid_port = nodes[NODE_BAR]
+    assert node_bar_with_invalid_port.wait_for_unit_state_to_be("bluechi-agent", "failed")
 
 
 @pytest.mark.timeout(15)
