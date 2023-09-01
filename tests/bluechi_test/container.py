@@ -16,7 +16,6 @@ class BluechiContainer():
 
     def __init__(self, container: Container, config: BluechiConfig) -> None:
         self.container: Container = container
-        self.config: BluechiConfig = config
 
         # add confd file to container
         self.create_file(config.get_confd_dir(), config.file_name, config.serialize())
@@ -120,6 +119,8 @@ class BluechiNodeContainer(BluechiContainer):
 
     def __init__(self, container: Container, config: BluechiNodeConfig) -> None:
         super().__init__(container, config)
+
+        self.config = config
         self.node_name = config.node_name
 
     def wait_for_bluechi_agent(self):
@@ -136,6 +137,8 @@ class BluechiControllerContainer(BluechiContainer):
 
     def __init__(self, container: Container, config: BluechiControllerConfig) -> None:
         super().__init__(container, config)
+
+        self.config = config
 
     def wait_for_bluechi(self):
         should_wait = True
