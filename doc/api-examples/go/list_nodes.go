@@ -5,7 +5,7 @@ package main
 import (
 	"fmt"
 	"os"
-	"github.com/godbus/dbus"
+	"github.com/godbus/dbus/v5"
 )
 
 // Constants to manage bluechi dbus interface

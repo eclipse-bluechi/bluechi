@@ -16,13 +16,15 @@ These steps were based on CentOS Stream 9:
 ### Adding dbus library
 
 ``` bash
-# go install github.com/godbus/dbus
+# go install github.com/godbus/dbus/v5
 ```
 
 ### Build the source code
 
 ``` bash
-# go build list_nodes.go
+# go mod init list_nodes
+# go mod tidy 
+# go run list_nodes.go
 # ./list_nodes
 Name: control
 Status: online
