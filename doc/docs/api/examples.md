@@ -1,21 +1,46 @@
 <!-- markdownlint-disable-file MD013 MD024 -->
 # Examples using the public D-Bus API
 
+These steps were based on CentOS Stream 9
+
+## Ruby
+
+### Installing ruby and dbus module
+
+``` bash
+dnf install ruby -y
+gem install ruby-dbus
+```
+
+### Build the source code
+
+``` bash
+# ruby list_nodes.rb
+BlueChi nodes:
+================
+Name: control
+Path: online
+Status: /org/eclipse/bluechi/node/control
+
+Name: node1
+Path: offline
+Status: /org/eclipse/bluechi/node/node1:x
+```
+
+### List all nodes
+
+``` ruby
+--8<-- "api-examples/ruby/list_nodes.rb"
+```
+
+---
+
 ## GoLang
 
-First, make sure the system has golang installed and download the dbus library.
-
-These steps were based on CentOS Stream 9:
-
-### Installing golang
+### Installing golang and dbus module
 
 ``` bash
 # dnf install go-toolset
-```
-
-### Adding dbus library
-
-``` bash
 # go install github.com/godbus/dbus
 ```
 
