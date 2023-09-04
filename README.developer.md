@@ -61,6 +61,7 @@ of installation for your setup.
 **busctl** is a systemd tool to introspect and monitor the D-Bus bus. See below some examples using busctl with bluechi service.
 
 **Instrospect org.eclipse.bluechi**:
+
 ```bash
 # busctl introspect \
          org.eclipse.bluechi \
@@ -94,6 +95,7 @@ org.freedesktop.DBus.Properties     interface -         -              -
 ```
 
 **Example calling ListNodes**:
+
 ```bash
 export SERVICE="org.eclipse.bluechi"
 export OBJECT="/org/eclipse/bluechi"
