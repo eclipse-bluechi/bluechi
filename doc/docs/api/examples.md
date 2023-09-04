@@ -1,6 +1,36 @@
 <!-- markdownlint-disable-file MD013 MD024 -->
 # Examples using the public D-Bus API
 
+## Ruby
+
+### Installing ruby and dbus module
+
+``` bash
+dnf install ruby -y
+gem install ruby-dbus
+```
+
+### Running the example
+
+``` bash
+# ruby list_nodes.rb
+BlueChi nodes:
+================
+Name: control
+Path: online
+Status: /org/eclipse/bluechi/node/control
+
+Name: node1
+Path: offline
+Status: /org/eclipse/bluechi/node/node1
+```
+
+### List all nodes
+
+``` ruby
+--8<-- "api-examples/ruby/list_nodes.rb"
+```
+
 ## GoLang
 
 First, make sure the system has golang installed and download the dbus library.
