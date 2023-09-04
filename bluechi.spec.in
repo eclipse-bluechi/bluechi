@@ -226,6 +226,25 @@ popd
 
 
 %changelog
+* Mon Sep 04 2023 Michael Engel <mengel@redhat.com> - 0.5.0-1
+- Changing the name of the project from hirte to BlueChi
+- Changing the license of the project from GPL-2.0-or-later to LGPL-2.1-or-later
+- Changing the license of API examples to CC0-1.0
+- Changing the license of typed python bindings package to CC0-1.0
+- New feature: freeze and thaw units via BlueChi
+- Added CLI option to all binaries to print the version
+- A heartbeat interval of 0 disables it instead of spamming the signal
+- A disconnecting, anonymous node doesn't lead to a segfault anymore
+- Fixed a few smaller memory leaks
+- Increased the maximum line length and added multi-line support for configuration files
+- Improved error message when parsing configuration file fails
+- Python bindings use the property annotation for D-Bus properties
+- Fixes in the typed python bindings generator
+- Fixes in the D-Bus API description
+- The default log target has been set to journald
+- Updates to Mkdocs like adding GoLang and Rust example
+- Added more unit and integration tests
+
 * Mon Jul 10 2023 Michael Engel <mengel@redhat.com> - 0.4.0-1
 - Defaults for hirtectl monitor defaults defined and documented
 - Dedicated signal is emitted when a node changes its connection state
