@@ -290,8 +290,8 @@ The newly built `bluechictl` can be used via:
 
 Files for documentation of this project are located in the [doc](./doc/) directory comprising:
 
-- [api examples](./doc/api-examples/): directory containing python files that use the D-Bus API of BlueChi, e.g. for starting
-a systemd unit
+- [api examples](./doc/api-examples/): directory containing source files for different programming languages that use
+the D-Bus API of BlueChi, e.g. for starting a systemd unit
 - [man](./doc/man/): directory containing the markdown files for generating the man pages
 (see [Building MAN pages](#building-man-pages) for more information)
 - readthedocs files for building the documentation website of BlueChi (see [the README](./doc/README.md) for further information)
