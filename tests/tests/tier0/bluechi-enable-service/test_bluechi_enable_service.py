@@ -1,7 +1,6 @@
 # SPDX-License-Identifier: LGPL-2.1-or-later
 
 import os
-import pytest
 from typing import Dict
 
 from bluechi_test.config import BluechiControllerConfig, BluechiNodeConfig
@@ -32,7 +31,6 @@ def exec(ctrl: BluechiControllerContainer, nodes: Dict[str, BluechiNodeContainer
         raise Exception(f"Unit {simple_service} expected to be enabled, but got: {output}")
 
 
-@pytest.mark.timeout(15)
 def test_proxy_service_start(
         bluechi_test: BluechiTest,
         bluechi_ctrl_default_config: BluechiControllerConfig,

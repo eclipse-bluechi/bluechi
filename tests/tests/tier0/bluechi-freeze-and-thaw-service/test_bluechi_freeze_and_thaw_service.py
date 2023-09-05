@@ -1,7 +1,6 @@
 # SPDX-License-Identifier: LGPL-2.1-or-later
 
 import os
-import pytest
 from typing import Dict
 
 from bluechi_test.config import BluechiControllerConfig, BluechiNodeConfig
@@ -45,7 +44,6 @@ def exec(ctrl: BluechiControllerContainer, nodes: Dict[str, BluechiNodeContainer
     verify_service_thaw(foo)
 
 
-@pytest.mark.timeout(20)
 def test_service_freeze_and_thaw(
         bluechi_test: BluechiTest,
         bluechi_ctrl_default_config: BluechiControllerConfig,

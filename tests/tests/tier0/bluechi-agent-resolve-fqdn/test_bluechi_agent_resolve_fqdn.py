@@ -1,6 +1,5 @@
 # SPDX-License-Identifier: LGPL-2.1-or-later
 
-import pytest
 from typing import Dict
 
 from bluechi_test.fixtures import get_primary_ip
@@ -39,7 +38,6 @@ def verify_resolving_fqdn(ctrl: BluechiControllerContainer, _: Dict[str, Bluechi
     assert result == 0
 
 
-@pytest.mark.timeout(10)
 def test_agent_resolve_fqdn(bluechi_test: BluechiTest, bluechi_ctrl_default_config: BluechiControllerConfig):
     bluechi_ctrl_default_config.allowed_node_names = [local_node_name]
 

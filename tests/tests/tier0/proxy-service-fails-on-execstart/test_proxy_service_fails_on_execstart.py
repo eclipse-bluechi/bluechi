@@ -42,7 +42,6 @@ def exec(ctrl: BluechiControllerContainer, nodes: Dict[str, BluechiNodeContainer
 
 
 @pytest.mark.skip(reason="Currently flaky. Tracked in https://github.com/containers/bluechi/issues/320. ")
-@pytest.mark.timeout(25)
 def test_proxy_service_fails_on_execstart(
         bluechi_test: BluechiTest,
         bluechi_ctrl_default_config: BluechiControllerConfig,

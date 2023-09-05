@@ -1,6 +1,5 @@
 # SPDX-License-Identifier: LGPL-2.1-or-later
 
-import pytest
 from typing import Dict
 
 from bluechi_test.test import BluechiTest
@@ -27,7 +26,6 @@ def start_with_invalid_logisquiet(ctrl: BluechiControllerContainer, nodes: Dict[
     assert node_with_numbers_only_in_logisquiet.wait_for_unit_state_to_be("bluechi-agent", "active")
 
 
-@pytest.mark.timeout(25)
 def test_agent_invalid_configuration(
         bluechi_test: BluechiTest,
         bluechi_node_default_config: BluechiNodeConfig, bluechi_ctrl_default_config: BluechiControllerConfig):

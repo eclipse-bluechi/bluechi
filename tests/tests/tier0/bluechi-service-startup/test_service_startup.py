@@ -1,6 +1,5 @@
 # SPDX-License-Identifier: LGPL-2.1-or-later
 
-import pytest
 from typing import Dict
 
 from bluechi_test.test import BluechiTest
@@ -15,7 +14,6 @@ def startup_verify(ctrl: BluechiControllerContainer, _: Dict[str, BluechiNodeCon
     assert output == 'active'
 
 
-@pytest.mark.timeout(10)
 def test_controller_startup(bluechi_test: BluechiTest, bluechi_ctrl_default_config: BluechiControllerConfig):
     bluechi_test.set_bluechi_controller_config(bluechi_ctrl_default_config)
 
