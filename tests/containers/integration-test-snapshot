@@ -1,9 +1,12 @@
 FROM quay.io/bluechi/integration-test-base:latest
 
-RUN dnf install -y --repo hirte-snapshot \
-    --repofrompath hirte-snapshot,https://download.copr.fedorainfracloud.org/results/mperina/hirte-snapshot/centos-stream-9-$(uname -m)/ \
-    --nogpgcheck \
-    --nodocs \
+RUN dnf install -y dnf-plugin-config-manager
+
+RUN dnf copr enable -y mperina/hirte-snapshot
+
+RUN dnf install \
+        --nogpgcheck \
+        --nodocs \
         bluechi \
         bluechi-debuginfo \
         bluechi-agent \
@@ -11,7 +14,9 @@ RUN dnf install -y --repo hirte-snapshot \
         bluechi-ctl \
         bluechi-ctl-debuginfo \
         bluechi-selinux \
-        python3-bluechi && \
-    dnf -y clean all
+        python3-bluechi \
+        -y
+
+RUN dnf -y clean all
 
 CMD [ "/sbin/init" ]
