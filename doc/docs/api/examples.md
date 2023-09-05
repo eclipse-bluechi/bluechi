@@ -135,6 +135,38 @@ offline
 --8<-- "api-examples/c++/list_nodes.cpp"
 ```
 
+---
+
+## C
+
+### Installing gcc and dbus module
+
+``` bash
+dnf install gcc dbus-devel -y
+gcc -o list_nodes list_nodes.c -I/usr/include/dbus-1.0 -I/usr/lib64/dbus-1.0/include/ -ldbus-1
+```
+
+### Running the example
+
+``` bash
+# ./list_nodes
+control
+Path: /org/eclipse/bluechi/node/control
+online
+
+node1
+Path: /org/eclipse/bluechi/node/node1
+offline
+```
+
+### List all nodes
+
+``` c
+--8<-- "api-examples/c/list_nodes.c"
+```
+
+---
+
 ## GoLang
 
 First, make sure the system has golang installed and download the dbus library.
