@@ -3,7 +3,7 @@
 project(
   'bluechi',
   'c',
-  version: '0.5.0',
+  version: '0.6.0',
   license: 'LGPL-2.1-or-later',
   default_options: [
     'c_std=gnu17',     # Adds "-std=gnu17".  Includes GNU 17 extensions.
