@@ -13,37 +13,23 @@ NODE_WITH_NOT_VALID_VALUE = "node-with-not-valid-value"
 NODE_WITH_NUMBERS_ONLY_IN_LOGLEVEL = "node-numbers-only"
 
 
-def start_with_invalid_port(ctrl: BluechiControllerContainer, nodes: Dict[str, BluechiNodeContainer]):
-    _, output = nodes[NODE_GOOD].exec_run('systemctl status bluechi-agent')
-    output_systemd = str(output)
-    if "fail" in output_systemd.lower():
-        raise Exception(f"{NODE_GOOD} bluechi-agent should NOT failed during the start of the service")
+def start_with_invalid_loglevel(ctrl: BluechiControllerContainer, nodes: Dict[str, BluechiNodeContainer]):
 
-    _, output = nodes[NODE_WITH_LONG_LOGLEVEL].exec_run('systemctl status bluechi-agent')
-    output_systemd = str(output)
-    if "fail" not in output_systemd.lower():
-        raise Exception(
-                f"{NODE_WITH_LONG_LOGLEVEL} bluechi-agent should FAIL "
-                "during the start of the service"
-        )
+    node_good = nodes[NODE_GOOD]
+    assert node_good.wait_for_unit_state_to_be("bluechi-agent", "active")
 
-    _, output = nodes[NODE_WITH_NOT_VALID_VALUE].exec_run('systemctl status bluechi-agent')
-    output_systemd = str(output)
-    if "fail" in output_systemd.lower():
-        raise Exception(
-                f"{NODE_WITH_NOT_VALID_VALUE} bluechi-agent should "
-                "NOT failed during the start of the service")
+    node_with_log_loglevel = nodes[NODE_WITH_LONG_LOGLEVEL]
+    assert node_with_log_loglevel.wait_for_unit_state_to_be("bluechi-agent", "failed")
 
-    _, output = nodes[NODE_WITH_NUMBERS_ONLY_IN_LOGLEVEL].exec_run('systemctl status bluechi-agent')
-    output_systemd = str(output)
-    if "fail" in output_systemd.lower():
-        raise Exception(
-                f"{NODE_WITH_NUMBERS_ONLY_IN_LOGLEVEL} bluechi-agent should "
-                "NOT failed during the start of the service")
+    node_with_not_valid_value = nodes[NODE_WITH_NOT_VALID_VALUE]
+    assert node_with_not_valid_value.wait_for_unit_state_to_be("bluechi-agent", "active")
+
+    node_with_numbers_only_in_loglevel = nodes[NODE_WITH_NUMBERS_ONLY_IN_LOGLEVEL]
+    assert node_with_numbers_only_in_loglevel.wait_for_unit_state_to_be("bluechi-agent", "active")
 
 
 @pytest.mark.timeout(25)
-def test_agent_invalid_port_configuration(
+def test_agent_invalid_configuration(
         bluechi_test: BluechiTest,
         bluechi_node_default_config: BluechiNodeConfig, bluechi_ctrl_default_config: BluechiControllerConfig):
 
@@ -77,4 +63,4 @@ def test_agent_invalid_port_configuration(
     bluechi_test.add_bluechi_node_config(node_with_invalid_value_cfg)
     bluechi_test.add_bluechi_node_config(node_with_numbersonly_in_loglevel_cfg)
 
-    bluechi_test.run(start_with_invalid_port)
+    bluechi_test.run(start_with_invalid_loglevel)
