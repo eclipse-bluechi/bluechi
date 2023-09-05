@@ -36,39 +36,39 @@ The following code snippets showcase how `bluechi` can be used:
 
 ```python
 # starting a systemd unit
---8<-- "bluechi-examples/StartUnit:5"
+--8<-- "bluechi-examples/StartUnit.py:5"
 
 # and stopping it again
---8<-- "bluechi-examples/StopUnit:7"
+--8<-- "bluechi-examples/StopUnit.py:7"
 ```
 
 ```python
 # enabling a systemd unit to be executed on startup
---8<-- "bluechi-examples/EnableUnit:5"
+--8<-- "bluechi-examples/EnableUnit.py:5"
 
 # and disabling it again
---8<-- "bluechi-examples/DisableUnit:7"
+--8<-- "bluechi-examples/DisableUnit.py:7"
 ```
 
 ```python
 # listing all nodes
---8<-- "bluechi-examples/ListAllNodes:5"
+--8<-- "bluechi-examples/ListAllNodes.py:5"
 ```
 
 ```python
 # listing all units on all nodes
---8<-- "bluechi-examples/ListNodeUnits:5"
+--8<-- "bluechi-examples/ListNodeUnits.py:5"
 
 
 # or easily filter them and only display active services
---8<-- "bluechi-examples/ListActiveServices:5"
+--8<-- "bluechi-examples/ListActiveServices.py:5"
 ```
 
 ```python
 # getting properties from systemd units
 # e.g. the CPUWeight
---8<-- "bluechi-examples/CPUWeight:5"
+--8<-- "bluechi-examples/CPUWeight.py:5"
 
 # and setting values for them
---8<-- "bluechi-examples/SetCPUWeight:5"
+--8<-- "bluechi-examples/SetCPUWeight.py:5"
 ```
