@@ -35,3 +35,4 @@ markdown_extensions:
   - admonition
   - pymdownx.snippets:
      base_path: ["doc"]
+     check_paths: True
