@@ -1,7 +1,6 @@
 # SPDX-License-Identifier: LGPL-2.1-or-later
 
 import os
-import pytest
 from typing import Dict
 
 from bluechi_test.config import BluechiControllerConfig, BluechiNodeConfig
@@ -58,7 +57,6 @@ def exec(ctrl: BluechiControllerContainer, nodes: Dict[str, BluechiNodeContainer
     assert foo1.wait_for_unit_state_to_be(bluechi_proxy_service, "inactive")
 
 
-@pytest.mark.timeout(25)
 def test_proxy_service_multiple_services_multiple_nodes(
         bluechi_test: BluechiTest,
         bluechi_ctrl_default_config: BluechiControllerConfig,

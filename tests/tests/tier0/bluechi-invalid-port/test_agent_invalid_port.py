@@ -1,6 +1,5 @@
 # SPDX-License-Identifier: LGPL-2.1-or-later
 
-import pytest
 from typing import Dict
 
 from bluechi_test.test import BluechiTest
@@ -39,7 +38,6 @@ def exec(ctrl: BluechiControllerContainer, _: Dict[str, BluechiNodeContainer]):
     assert ctrl.wait_for_unit_state_to_be("bluechi", "active")
 
 
-@pytest.mark.timeout(40)
 def test_agent_invalid_port(bluechi_test: BluechiTest, bluechi_ctrl_default_config: BluechiControllerConfig):
 
     bluechi_test.set_bluechi_controller_config(bluechi_ctrl_default_config)

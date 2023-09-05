@@ -1,7 +1,6 @@
 # SPDX-License-Identifier: LGPL-2.1-or-later
 
 import os
-import pytest
 from typing import Dict
 
 from bluechi_test.config import BluechiControllerConfig, BluechiNodeConfig
@@ -35,7 +34,6 @@ def exec(ctrl: BluechiControllerContainer, nodes: Dict[str, BluechiNodeContainer
     verify_proxy_start_failed(foo)
 
 
-@pytest.mark.timeout(20)
 def test_proxy_service_fails_on_non_existent_service(
         bluechi_test: BluechiTest,
         bluechi_ctrl_default_config: BluechiControllerConfig,

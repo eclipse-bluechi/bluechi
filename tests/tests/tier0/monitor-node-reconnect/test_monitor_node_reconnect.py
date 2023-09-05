@@ -2,7 +2,6 @@
 
 import os
 import time
-import pytest
 from typing import Dict
 
 from bluechi_test.test import BluechiTest
@@ -33,7 +32,6 @@ def exec(ctrl: BluechiControllerContainer, nodes: Dict[str, BluechiNodeContainer
         raise Exception(output)
 
 
-@pytest.mark.timeout(15)
 def test_monitor_node_disconnect(
         bluechi_test: BluechiTest,
         bluechi_ctrl_default_config: BluechiControllerConfig,

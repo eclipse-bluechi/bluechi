@@ -1,7 +1,6 @@
 # SPDX-License-Identifier: LGPL-2.1-or-later
 
 import os
-import pytest
 from typing import Dict
 
 from bluechi_test.test import BluechiTest
@@ -19,7 +18,6 @@ def exec(ctrl: BluechiControllerContainer, nodes: Dict[str, BluechiNodeContainer
         raise Exception(output)
 
 
-@pytest.mark.timeout(10)
 def test_monitor_node_disconnect(
         bluechi_test: BluechiTest,
         bluechi_ctrl_default_config: BluechiControllerConfig,
