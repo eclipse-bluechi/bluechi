@@ -1,10 +1,53 @@
 name: Publish
 
 on:
-  workflow_dispatch:
-
+  push:
+    tags:
+      - 'v*.*.*'
 
 jobs:
+
+  ghrelease:
+    name: Create GitHub release for BlueChi
+    runs-on: ubuntu-latest
+    container:
+      image: quay.io/bluechi/build-base:latest
+
+    steps:
+      - name: Checkout sources
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          submodules: 'true'
+      
+      - name: Build source rpm
+        run: |
+          ./build-scripts/build-srpm.sh
+
+      - name: Create source zip and tarball
+        run: |
+          mkdir -p /tmp/bluechi-${{ github.ref_name }}
+          cp -r ./ /tmp/bluechi-${{ github.ref_name }}/
+          rm -rf /tmp/bluechi-${{ github.ref_name }}/.git/
+          mv /tmp/bluechi-${{ github.ref_name }}/ ./ 
+
+          zip -r bluechi-${{ github.ref_name }}.zip ./bluechi-${{ github.ref_name }}/
+          tar czf bluechi-${{ github.ref_name }}.tar.gz ./bluechi-${{ github.ref_name }}/
+      
+      - name: Release
+        uses: softprops/action-gh-release@v1
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          generate_release_notes: true
+          prerelease: false
+          draft: false
+          token: ${{ secrets.GH_RELEASE_TOKEN }}
+          files: |
+            bluechi-${{ github.ref_name }}.zip
+            bluechi-${{ github.ref_name }}.tar.gz
+            rpmbuild/SRPMS/*.src.rpm
+
+
   pypipublish:
     name: Publish bluechi on PyPi
     runs-on: ubuntu-latest
