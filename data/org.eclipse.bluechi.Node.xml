@@ -1,49 +1,154 @@
 <!DOCTYPE node PUBLIC "-//freedesktop//DTD D-BUS Object Introspection 1.0//EN" "http://www.freedesktop.org/standards/dbus/1.0/introspect.dtd">
 <!-- SPDX-License-Identifier: LGPL-2.1-or-later -->
 <node>
+
+  <!-- 
+    org.eclipse.bluechi.Node:
+    @short_description: Public interface of BlueChi on the managing node providing methods, signals and  for a specific node.
+
+    This interface can be used to get information about a specific node and its units as well as control them, e.g. by starting or stopping them.
+  -->
   <interface name="org.eclipse.bluechi.Node">
+
+    <!-- 
+      StartUnit:
+      @name: The name of the unit to start 
+      @mode: The mode used to start the unit
+      @job: The path for the job associated with the start operation
+
+      Queues a unit activate job for the named unit on this node. The queue is per-unit name, which means there is only ever one active job per unit. Mode
+    can be one of replace or fail. If there is an outstanding queued (but not running) job, that is replaced if mode is replace, or the job
+    fails if mode is fail.
+
+      The job returned is an object path for an object implementing org.eclipse.bluechi.Job, and which be monitored for the progress of the job, or used
+    to cancel the job. To track the result of the job, follow the JobRemoved signal on the Manager.
+    -->
     <method name="StartUnit">
       <arg name="name" type="s" direction="in" />
       <arg name="mode" type="s" direction="in" />
       <arg name="job" type="o" direction="out" />
     </method>
+
+    <!-- 
+      StopUnit:
+      @name: The name of the unit to stop 
+      @mode: The mode used to stop the unit
+      @job: The path for the job associated with the stop operation
+
+      StopUnit() is similar to StartUnit() but stops the specified unit rather than starting it.
+    -->
     <method name="StopUnit">
       <arg name="name" type="s" direction="in" />
       <arg name="mode" type="s" direction="in" />
       <arg name="job" type="o" direction="out" />
     </method>
+
+    <!-- 
+      FreezeUnit:
+      @name: The name of the unit to freeze
+
+      Freezing the unit will cause all processes contained within the cgroup corresponding to the unit to be suspended. Being suspended means that unit's
+    processes won't be scheduled to run on CPU until thawed.
+    -->
     <method name="FreezeUnit">
       <arg name="name" type="s" direction="in" />
     </method>
+
+    <!-- 
+      ThawUnit:
+      @name: The name of the unit to thaw
+
+      This is the inverse operation to the freeze command and resumes the execution of processes in the unit's cgroup.
+    -->
     <method name="ThawUnit">
       <arg name="name" type="s" direction="in" />
     </method>
+
+    <!-- 
+      ReloadUnit:
+      @name: The name of the unit to reload 
+      @mode: The mode used to reload the unit
+      @job: The path for the job associated with the reload operation
+
+      ReloadUnit() is similar to StartUnit() but can be used to reload a unit instead. See equivalent systemd methods for details.
+    -->
     <method name="ReloadUnit">
       <arg name="name" type="s" direction="in" />
       <arg name="mode" type="s" direction="in" />
       <arg name="job" type="o" direction="out" />
     </method>
+
+    <!-- 
+      RestartUnit:
+      @name: The name of the unit to restart 
+      @mode: The mode used to restart the unit
+      @job: The path for the job associated with the restart operation
+
+      RestartUnit() is similar to StartUnit() but can be used to restart a unit instead. See equivalent systemd methods for details.
+    -->
     <method name="RestartUnit">
       <arg name="name" type="s" direction="in" />
       <arg name="mode" type="s" direction="in" />
       <arg name="job" type="o" direction="out" />
     </method>
-    <method name="GetUnitProperties">
+
+    <!-- 
+      GetUnit:
+      @name: The name of unit
+      @interface: The interface name
+      @props: The  as key-value pair with the name of the property as key
+
+      Returns the current  for a named unit on the node. The returned  are the same as you would get in the systemd  apis.
+    -->
+    <method name="GetUnit">
       <arg name="name" type="s" direction="in" />
       <arg name="interface" type="s" direction="in" />
       <arg name="props" type="a{sv}" direction="out" />
     </method>
+
+    <!-- 
+      GetUnitProperty:
+      @name: The name of unit
+      @interface: The interface name
+      @property: The property name
+      @value: The value of the property
+
+      Get one named property, otherwise similar to GetUnit.
+    -->
     <method name="GetUnitProperty">
       <arg name="name" type="s" direction="in" />
       <arg name="interface" type="s" direction="in" />
       <arg name="property" type="s" direction="in" />
       <arg name="value" type="v" direction="out" />
     </method>
-    <method name="SetUnitProperties">
+
+    <!-- 
+      SetUnit:
+      @name: The name of the unit
+      @runtime: Specify if the changes should persist after reboot or not
+      @keyvalues: A list of the new values as key-value pair with the key being the name of the property
+
+      Set named . If runtime is true the property changes do not persist across reboots.
+    -->
+    <method name="SetUnit">
       <arg name="name" type="s" direction="in" />
       <arg name="runtime" type="b" direction="in" />
       <arg name="keyvalues" type="a(sv)" direction="in" />
     </method>
+
+    <!-- 
+      EnableUnitFiles:
+      @files: A list of units to enable
+      @runtime: Specify if the changes should persist after reboot or not
+      @force: Specify if replacing the symlinks pointing to other units should be enforced
+      @carries_install_info: True if the units contained enablement information
+      @changes: The changes made
+        - type of change (one of: symlink, unlink)
+        - file name of the symlink
+        - destination of the symlink
+      
+      EnableUnitFiles() may be used to enable one or more units in the system (by creating symlinks to them in /etc/ or /run/).
+    -->
     <method name="EnableUnitFiles">
       <arg name="files" type="as" direction="in" />
       <arg name="runtime" type="b" direction="in" />
@@ -51,21 +156,88 @@
       <arg name="carries_install_info" type="b" direction="out" />
       <arg name="changes" type="a(sss)" direction="out" />
     </method>
+
+    <!-- 
+      DisableUnitFiles:
+      @files: A list of units to enable
+      @runtime: Specify if the changes should persist after reboot or not
+      @changes: The changes made
+        - type of change (one of: symlink, unlink)
+        - file name of the symlink
+        - destination of the symlink
+
+      DisableUnitFiles() is similar to EnableUnitFiles() but disables the specified units by removing all symlinks to them in /etc/ and /run/
+    -->
     <method name="DisableUnitFiles">
       <arg name="files" type="as" direction="in" />
       <arg name="runtime" type="b" direction="in" />
       <arg name="changes" type="a(sss)" direction="out" />
     </method>
+
+    <!-- 
+      ListUnits:
+      @units: A list of all units on the node:
+        - The primary unit name as string
+        - The human readable description string
+        - The load state (i.e. whether the unit file has been loaded successfully)
+        - The active state (i.e. whether the unit is currently started or not)
+        - The sub state (a more fine-grained version of the active state that is specific to the unit type, which the active state is not)
+        - A unit that is being followed in its state by this unit, if there is any, otherwise the empty string.
+        - The unit object path
+        - If there is a job queued for the job unit the numeric job id, 0 otherwise
+        - The job type as string
+        - The job object path
+
+      List all loaded systemd units. 
+    -->
     <method name="ListUnits">
       <arg name="units" type="a(ssssssouso)" direction="out" />
     </method>
+
+    <!-- 
+      Reload:
+      
+      Reload() may be invoked to reload all unit files. 
+    -->
     <method name="Reload" />
+
+    <!-- 
+      SetLogLevel:
+      @loglevel: The new loglevel to use. 
+
+      Change the loglevel of the manager.
+    -->
     <method name="SetLogLevel">
       <arg name="level" type="s" direction="in" />
     </method>
 
-    <property name="Name" type="s" access="read" />
-    <property name="Status" type="s" access="read" />
-    <property name="LastSeenTimestamp" type="t" access="read" />
+
+    <!-- 
+      Name:
+
+      The name of the node.
+    -->
+    <property name="Name" type="s" access="read">
+      <annotation name="org.freedesktop.DBus.Property.EmitsChangedSignal" value="const" />
+    </property>
+
+    <!-- 
+      Status:
+
+      The connection status of the node with the BlueChi controller.
+      On any change, a signal is emitted on the org.freedesktop.DBus.Properties interface. 
+    -->
+    <property name="Status" type="s" access="read">
+      <annotation name="org.freedesktop.DBus.Property.EmitsChangedSignal" value="true" />
+    </property>
+
+    <!-- 
+      LastSeenTimestamp:
+
+      A timestamp indicating when the last connection test (e.g. via heartbeat) was successful.
+    -->
+    <property name="LastSeenTimestamp" type="t" access="read">
+      <annotation name="org.freedesktop.DBus.Property.EmitsChangedSignal" value="false" />
+    </property>
   </interface>
 </node>

@@ -1,12 +1,39 @@
 <!DOCTYPE node PUBLIC "-//freedesktop//DTD D-BUS Object Introspection 1.0//EN" "http://www.freedesktop.org/standards/dbus/1.0/introspect.dtd">
 <!-- SPDX-License-Identifier: LGPL-2.1-or-later -->
 <node>
+
+  <!-- 
+    org.eclipse.bluechi.Agent:
+    @short_description: Public interface of BlueChi on the managed node providing methods and signals for the respective node.
+
+    This interface is used to create proxy services resolving dependencies on services of other managed nodes.
+  -->
   <interface name="org.eclipse.bluechi.Agent">
+
+    <!-- 
+      CreateProxy:
+      @local_service_name: The service name which requests the external dependency
+      @node: The requested node to provide the service
+      @unit: The external unit requested from the local service
+
+      BlueChi internal usage only.
+      CreateProxy() creates a new proxy service. It is part in the chain of resolving dependencies on services running on other managed nodes.
+    -->
     <method name="CreateProxy">
       <arg name="local_service_name" type="s" direction="in" />
       <arg name="node" type="s" direction="in" />
       <arg name="unit" type="s" direction="in" />
     </method>
+
+    <!-- 
+      RemoveProxy:
+      @local_service_name: The service name which requests the external dependency
+      @node: The requested node to provide the service
+      @unit: The external unit requested from the local service
+
+      BlueChi internal usage only.
+      RemoveProxy() removes a new proxy service. It is part in the chain of resolving dependencies on services running on other managed nodes.
+    -->
     <method name="RemoveProxy">
       <arg name="local_service_name" type="s" direction="in" />
       <arg name="node" type="s" direction="in" />

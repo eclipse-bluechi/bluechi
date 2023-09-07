@@ -1,28 +1,90 @@
 <!DOCTYPE node PUBLIC "-//freedesktop//DTD D-BUS Object Introspection 1.0//EN" "http://www.freedesktop.org/standards/dbus/1.0/introspect.dtd">
 <!-- SPDX-License-Identifier: LGPL-2.1-or-later -->
 <node>
+
+  <!-- 
+    org.eclipse.bluechi.Monitor:
+    @short_description: Public interface of BlueChi on the managing node providing monitoring functionality.
+
+    This interface is only available if a monitor has been created before via the Manager interface.
+    It provides methods to subscribe to changes in systemd units on managed nodes as well as signals for those changes.
+  -->
   <interface name="org.eclipse.bluechi.Monitor">
+
+    <!-- 
+      Close:
+
+      Close the monitor.
+    -->
     <method name="Close" />
+
+    <!-- 
+      Subscribe:
+      @node: The name of the node to subscribe to
+      @unit: The name of the unit to subscribe to
+      @id: The id of the created subscription. 
+
+      Subscribe to changes of a unit on a node. Both fields support a wildcard '*'. A wildcard in the node name will create the subscription for all nodes.
+    If the unit name is a wildcard, then the subscription matches changes for all units on the node.
+    -->
     <method name="Subscribe">
       <arg name="node" type="s" direction="in" />
       <arg name="unit" type="s" direction="in" />
       <arg name="id" type="u" direction="out" />
     </method>
+
+    <!-- 
+      Unsubscribe:
+      @id: The id of the subscription to cancel
+
+      Cancel the subscription by ID.
+    -->
     <method name="Unsubscribe">
       <arg name="id" type="u" direction="in" />
     </method>
+
+    <!-- 
+      SubscribeList:
+      @node: The name of the node to subscribe to
+      @units: A list of unit names to subscribe to
+      @id: The id of the created subscription
+
+      Subscribe to changes of a list of units on a node. The node field supports a wildcard '*'. A wildcard in the node name will create the subscription
+    for all nodes.
+    -->
     <method name="SubscribeList">
       <arg name="node" type="s" direction="in" />
       <arg name="units" type="as" direction="in" />
       <arg name="id" type="u" direction="out" />
     </method>
 
+
+    <!-- 
+      UnitPropertiesChanged:
+      @node: The node name this signal originated from
+      @unit: The unit for which the properties changed
+      @interface: The originating interface
+      @props: The changed properties as key-value pair with the name of the property as key
+
+      Whenever the properties change for any of the units that are currently subscribed to, this signal is emitted. 
+    -->
     <signal name="UnitPropertiesChanged">
       <arg name="node" type="s" />
       <arg name="unit" type="s" />
       <arg name="interface" type="s" />
       <arg name="props" type="a{sv}" />
     </signal>
+
+    <!-- 
+      UnitStateChanged:
+      @node: The node name this signal originated from
+      @unit: The unit for which the properties changed
+      @active_state: The active state of the unit
+      @sub_state: The sub state of the unit
+      @reason: The reason for the state change, the value is either real or virtual
+
+      Emitted when the active state (and substate) of a monitored unit changes.
+    -->
     <signal name="UnitStateChanged">
       <arg name="node" type="s" />
       <arg name="unit" type="s" />
@@ -30,11 +92,31 @@
       <arg name="sub_state" type="s" />
       <arg name="reason" type="s" />
     </signal>
+
+    <!-- 
+      UnitNew:
+      @node: The node name this signal originated from
+      @unit: The unit for which the properties changed
+      @reason: The reason for the state change, the value is either real or virtual
+
+      Emitted when a new unit is loaded by systemd, for example when a service is started (reason=real), or if BlueChi learns of an already loaded unit
+    (reason=virtual).
+    -->
     <signal name="UnitNew">
       <arg name="node" type="s" />
       <arg name="unit" type="s" />
       <arg name="reason" type="s" />
     </signal>
+
+    <!-- 
+      UnitRemoved:
+      @node: The node name this signal originated from
+      @unit: The unit for which the properties changed
+      @reason: The reason for the state change, the value is either real or virtual
+
+      Emitted when a unit is unloaded by systemd (reason=real), or when the agent disconnects and we previously reported the unit as loaded
+    (reason=virtual).
+    -->
     <signal name="UnitRemoved">
       <arg name="node" type="s" />
       <arg name="unit" type="s" />

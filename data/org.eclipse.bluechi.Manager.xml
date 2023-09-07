@@ -1,30 +1,120 @@
 <!DOCTYPE node PUBLIC "-//freedesktop//DTD D-BUS Object Introspection 1.0//EN" "http://www.freedesktop.org/standards/dbus/1.0/introspect.dtd">
 <!-- SPDX-License-Identifier: LGPL-2.1-or-later -->
 <node>
+
+  <!-- 
+    org.eclipse.bluechi.Manager:
+    @short_description: Public interface of BlueChi on the managing node providing methods and signals for all nodes.
+
+    This interface can be used to get information about all nodes and their units, create monitors and listen for job signals.
+  -->
   <interface name="org.eclipse.bluechi.Manager">
+
+    <!-- 
+      ListUnits:
+      @units: A list of all units on each node:
+        - The node name
+        - The primary unit name as string
+        - The human readable description string
+        - The load state (i.e. whether the unit file has been loaded successfully)
+        - The active state (i.e. whether the unit is currently started or not)
+        - The sub state (a more fine-grained version of the active state that is specific to the unit type, which the active state is not)
+        - A unit that is being followed in its state by this unit, if there is any, otherwise the empty string.
+        - The unit object path
+        - If there is a job queued for the job unit the numeric job id, 0 otherwise
+        - The job type as string
+        - The job object path
+
+      List all loaded systemd units on all nodes which are online.
+    -->
     <method name="ListUnits">
-      <arg name="units" type="a(ssssssouso)" direction="out" />
+      <arg name="units" type="a(sssssssouso)" direction="out" />
     </method>
+
+    <!-- 
+      ListNodes:
+      @nodes: A list of all nodes:
+        - The node name
+        - The object path of the node
+        - the current state of that node, either online or offline
+      
+      List all nodes managed by BlueChi regardless if they are offline or online.
+    -->
     <method name="ListNodes">
-      <arg name="node" type="a(sos)" direction="out" />
+      <arg name="nodes" type="a(sos)" direction="out" />
     </method>
+
+    <!-- 
+      GetNode:
+      @name: Name of the node
+      @path: The path of the requested node
+
+      Get the object path of the named node.
+    -->
     <method name="GetNode">
       <arg name="name" type="s" direction="in" />
       <arg name="path" type="o" direction="out" />
     </method>
+
+    <!-- 
+      CreateMonitor:
+      @monitor: The path of the created monitor.
+
+      Create a new monitor on which subscriptions can be added. It will automatically be closed as soon as the connection is closed.
+    -->
     <method name="CreateMonitor">
       <arg name="monitor" type="o" direction="out" />
     </method>
+
+    <!-- 
+      EnableMetrics:
+
+      Enable collecting performance metrics.
+    -->
     <method name="EnableMetrics" />
+
+    <!-- 
+      DisableMetrics:
+
+      Disable collecting performance metrics.
+    -->
     <method name="DisableMetrics" />
+
+    <!-- 
+      SetLogLevel:
+      @loglevel: The new loglevel to use. 
+
+      Change the loglevel of the manager.
+    -->
     <method name="SetLogLevel">
       <arg name="loglevel" type="s" direction="in" />
     </method>
-    
+
+
+    <!-- 
+      JobNew:
+      @id: The id of the new job
+      @job: The path of the job
+
+      Emitted each time a new BlueChi job is queued.
+    -->
     <signal name="JobNew">
       <arg name="id" type="u" />
       <arg name="job" type="o" />
     </signal>
+
+    <!-- 
+      JobRemoved:
+      @id: The id of the new job
+      @job: The path of the job
+      @node: The name of the node the job has been completed on
+      @unit: The name of the unit the job has been completed on
+      @result: The result of the job
+
+      Emitted each time a new job is dequeued or the underlying systemd job finished. result is one of: done, failed, cancelled, timeout, dependency,
+    skipped. This is either the result from systemd on the node, or cancelled if the job was cancelled in BlueChi before any systemd job was started
+    for it.
+    -->
     <signal name="JobRemoved">
       <arg name="id" type="u" />
       <arg name="job" type="o" />
@@ -32,6 +122,7 @@
       <arg name="unit" type="s" />
       <arg name="result" type="s" />
     </signal>
+
     <signal name="NodeConnectionStateChanged">
       <arg name="node" type="s" />
       <arg name="connection_state" type="s" />
