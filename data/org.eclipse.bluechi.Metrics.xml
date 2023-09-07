@@ -1,7 +1,25 @@
 <!DOCTYPE node PUBLIC "-//freedesktop//DTD D-BUS Object Introspection 1.0//EN" "http://www.freedesktop.org/standards/dbus/1.0/introspect.dtd">
 <!-- SPDX-License-Identifier: LGPL-2.1-or-later -->
 <node>
+
+  <!-- 
+    org.eclipse.bluechi.Metrics:
+    @short_description: Public interface of BlueChi on the managing node providing signals for performance metrics.
+
+    This interface is only available if the metrics have been enabled before via the Manager interface.
+  -->
   <interface name="org.eclipse.bluechi.Metrics">
+
+    <!-- 
+      StartUnitJobMetrics:
+      @node_name: The node name this metrics has been collected for
+      @job_id: The id of the job linked to the collected metrics
+      @unit: The unit name this metrics has been collected for
+      @job_measured_time_micros: The measured time it took starting the unit on the node in microseconds
+      @unit_start_prop_time_micros: The systemd time it took starting the unit on the node in microseconds
+
+      Emitted when a start operation processed by BlueChi finishes and the collection of metrics has been enabled previously.
+    -->
     <signal name="StartUnitJobMetrics">
       <arg name="node_name" type="s" />
       <arg name="job_id" type="s" />
@@ -9,6 +27,17 @@
       <arg name="job_measured_time_micros" type="t" />
       <arg name="unit_start_prop_time_micros" type="t" />
     </signal>
+
+    <!-- 
+      AgentJobMetrics:
+      @node_name: The node name this metrics has been collected for
+      @unit: The unit name this metrics has been collected for
+      @method: The lifecycle operation
+      @systemd_job_time_micros: The systemd time it took starting the unit on the node in microseconds
+
+      Emitted for all unit lifecycle operations (e.g. Start, Stop, Reload, etc.) processed by BlueChi when these finish and the collection of metrics has
+    been enabled previously.
+    -->
     <signal name="AgentJobMetrics">
       <arg name="node_name" type="s" />
       <arg name="unit" type="s" />

@@ -274,7 +274,7 @@ interface.
 
 ### interface org.eclipse.bluechi.Metrics
 
-This interface is provides signals for collecting metrics. It is created by calling `EnableMetrics` on the `org.eclipse.bluechi.Manager` interface and removed by calling `DisableMetrics`.
+This interface provides signals for collecting metrics. It is created by calling `EnableMetrics` on the `org.eclipse.bluechi.Manager` interface and removed by calling `DisableMetrics`.
 
 #### Signals
 
