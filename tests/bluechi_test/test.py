@@ -5,6 +5,7 @@ import traceback
 from podman import PodmanClient
 from typing import List, Dict, Callable, Tuple
 
+from bluechi_test.command import Command
 from bluechi_test.config import BluechiControllerConfig, BluechiNodeConfig
 from bluechi_test.container import BluechiNodeContainer, BluechiControllerContainer
 
@@ -82,13 +83,23 @@ class BluechiTest():
         return (success, (ctrl_container, node_container))
 
     def gather_logs(self, ctrl: BluechiControllerContainer, nodes: Dict[str, BluechiNodeContainer]):
-        print("Collecting logs from all container...")
+        print("Collecting logs from all containers...")
 
         if ctrl is not None:
             ctrl.gather_journal_logs(self.tmt_test_data_dir)
 
         for _, node in nodes.items():
             node.gather_journal_logs(self.tmt_test_data_dir)
+
+        self.gather_test_executor_logs()
+
+    def gather_test_executor_logs(self) -> None:
+        print("Collecting logs from test executor...")
+        log_file = f"{self.tmt_test_data_dir}/journal-test_executor.log"
+        try:
+            Command(f"journalctl --no-pager > {log_file}").run()
+        except Exception as ex:
+            print(f"Failed to gather test executor journal: {ex}")
 
     def teardown(self, ctrl: BluechiControllerContainer, nodes: Dict[str, BluechiNodeContainer]):
         print("Stopping and removing all container...")
