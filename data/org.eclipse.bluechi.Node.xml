@@ -93,14 +93,14 @@
     </method>
 
     <!-- 
-      GetUnit:
+      GetUnitProperties:
       @name: The name of unit
       @interface: The interface name
       @props: The  as key-value pair with the name of the property as key
 
       Returns the current  for a named unit on the node. The returned  are the same as you would get in the systemd  apis.
     -->
-    <method name="GetUnit">
+    <method name="GetUnitProperties">
       <arg name="name" type="s" direction="in" />
       <arg name="interface" type="s" direction="in" />
       <arg name="props" type="a{sv}" direction="out" />
@@ -123,14 +123,14 @@
     </method>
 
     <!-- 
-      SetUnit:
+      SetUnitProperties:
       @name: The name of the unit
       @runtime: Specify if the changes should persist after reboot or not
       @keyvalues: A list of the new values as key-value pair with the key being the name of the property
 
       Set named . If runtime is true the property changes do not persist across reboots.
     -->
-    <method name="SetUnit">
+    <method name="SetUnitProperties">
       <arg name="name" type="s" direction="in" />
       <arg name="runtime" type="b" direction="in" />
       <arg name="keyvalues" type="a(sv)" direction="in" />

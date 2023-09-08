@@ -5,6 +5,9 @@
         {%- if access == "read" -%}
         @property
     def {{ property.pyname }}(self) -> {{ property.pytype }}:
+        """
+        {{ property.inline_doc }}
+        """
         return self.get_proxy().{{ property.name }}
         {%- endif -%}
         {% endfor %}

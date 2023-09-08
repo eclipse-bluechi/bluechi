@@ -19,6 +19,7 @@ def model_to_data_dict(interfaces: List[Interface]) -> Dict[str, Any]:
     for iface in interfaces:
         data_interface = {
             "name": iface.name,
+            "inline_doc": iface.inline_doc,
             "methods": [],
             "signals": [],
             "properties": [],
@@ -26,6 +27,7 @@ def model_to_data_dict(interfaces: List[Interface]) -> Dict[str, Any]:
         for method in iface.methods:
             data_method = {
                 "name": method.name,
+                "inline_doc": method.inline_doc,
                 "pyname": pascal_to_snake(method.name),
                 "args": [],
                 "rets": [],
@@ -45,6 +47,7 @@ def model_to_data_dict(interfaces: List[Interface]) -> Dict[str, Any]:
         for signal in iface.signals:
             data_signal = {
                 "name": signal.name,
+                "inline_doc": signal.inline_doc,
                 "pyname": pascal_to_snake(signal.name),
                 "args": [],
             }
@@ -60,6 +63,7 @@ def model_to_data_dict(interfaces: List[Interface]) -> Dict[str, Any]:
         for prop in iface.properties:
             e = {
                 "name": prop.name,
+                "inline_doc": prop.inline_doc,
                 "pyname": pascal_to_snake(prop.name),
                 "pytype": types.parse_dbus_type_string(prop.type),
                 "access": prop.access.split("|"),

@@ -6,17 +6,21 @@ BASE_INTERFACE_NAME = "org.eclipse.bluechi"
 
 
 class Interface:
-    def __init__(self, path: str) -> None:
+    def __init__(self, path: str, inline_doc: str) -> None:
         self.path: str = path
         self.name: str = path.replace(BASE_INTERFACE_NAME + ".", "")
+        self.inline_doc: str = inline_doc.strip()
+
         self.methods: List[Method] = []
         self.signals: List[Signal] = []
         self.properties: List[Property] = []
 
 
 class Method:
-    def __init__(self, name: str) -> None:
+    def __init__(self, name: str, inline_doc: str) -> None:
         self.name: str = name
+        self.inline_doc: str = inline_doc.strip()
+
         self.args: List[MethodArg] = []
 
 
@@ -28,8 +32,10 @@ class MethodArg:
 
 
 class Signal:
-    def __init__(self, name: str) -> None:
+    def __init__(self, name: str, inline_doc: str) -> None:
         self.name: str = name
+        self.inline_doc: str = inline_doc.strip()
+
         self.args: List[SignalArg] = []
 
 
@@ -40,7 +46,8 @@ class SignalArg:
 
 
 class Property:
-    def __init__(self, name: str, proptype: str, access: str) -> None:
+    def __init__(self, name: str, inline_doc: str, proptype: str, access: str) -> None:
         self.name: str = name
+        self.inline_doc: str = inline_doc.strip()
         self.type: str = proptype
         self.access: str = access

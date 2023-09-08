@@ -9,7 +9,7 @@
         {%- endfor -%}
         ], None]) -> None:
         """
-        callback: 
+        {{ signal.inline_doc }}
         """
         self.get_proxy().{{ signal.name }}.connect(callback)
 

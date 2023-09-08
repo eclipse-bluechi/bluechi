@@ -32,36 +32,70 @@ def list_api_files(dir: str) -> List[str]:
 
 
 def parse_api_file(file: str) -> List[Interface]:
-    root = ET.parse(file).getroot()
+    xml_parser_with_comments = ET.XMLParser(target=ET.TreeBuilder(insert_comments=True))
+    root = ET.parse(file, parser=xml_parser_with_comments).getroot()
     if root.tag != "node":
         raise Exception("Invalid API xml: '<node>' has to be root tag")
     return parse_node_tag(root)
 
 
+def is_comment(elem: Element) -> bool:
+    return "function Comment" in str(elem.tag)
+
+
+def is_interface(elem: Element) -> bool:
+    return str(elem.tag) == "interface"
+
+
+def is_method(elem: Element) -> bool:
+    return str(elem.tag) == "method"
+
+
+def is_signal(elem: Element) -> bool:
+    return str(elem.tag) == "signal"
+
+
+def is_property(elem: Element) -> bool:
+    return str(elem.tag) == "property"
+
+
 def parse_node_tag(node: Element) -> List[Interface]:
     interfaces = []
-    for interface in node.findall("interface"):
-        interfaces.append(parse_interface_tag(interface))
+
+    doc_comment = None
+    for elem in node.iter():
+        if is_interface(elem):
+            interfaces.append(parse_interface_tag(elem, doc_comment))
+        if doc_comment is not None:
+            doc_comment = None
+        if is_comment(elem):
+            doc_comment = elem
     return interfaces
 
 
-def parse_interface_tag(interface: Element) -> Interface:
+def parse_interface_tag(interface: Element, doc_comment: Element) -> Interface:
     iname = interface.attrib["name"]
 
-    iface = Interface(iname)
+    iface = Interface(iname, "" if doc_comment is None else doc_comment.text)
 
-    for method in interface.findall("method"):
-        parse_method_tag(method, iface)
-    for signal in interface.findall("signal"):
-        parse_signal_tag(signal, iface)
-    for property in interface.findall("property"):
-        parse_property_tag(property, iface)
+    doc_comment = None
+    for elem in interface.iter():
+        if is_method(elem):
+            parse_method_tag(elem, doc_comment, iface)
+        if is_signal(elem):
+            parse_signal_tag(elem, doc_comment, iface)
+        if is_property(elem):
+            parse_property_tag(elem, doc_comment, iface)
+        if doc_comment is not None:
+            doc_comment = None
+        if is_comment(elem):
+            doc_comment = elem
 
     return iface
 
 
-def parse_method_tag(method: Element, interface: Interface):
-    m = Method(method.attrib["name"])
+def parse_method_tag(method: Element, doc_comment: Element, interface: Interface):
+    m = Method(method.attrib["name"], "" if doc_comment is None else doc_comment.text)
     for arg in method.findall("arg"):
         m.args.append(
             MethodArg(arg.attrib["name"], arg.attrib["direction"], arg.attrib["type"])
@@ -69,16 +103,19 @@ def parse_method_tag(method: Element, interface: Interface):
     interface.methods.append(m)
 
 
-def parse_signal_tag(signal: Element, interface: Interface):
-    s = Signal(signal.attrib["name"])
+def parse_signal_tag(signal: Element, doc_comment: Element, interface: Interface):
+    s = Signal(signal.attrib["name"], "" if doc_comment is None else doc_comment.text)
     for arg in signal.findall("arg"):
         s.args.append(SignalArg(arg.attrib["name"], arg.attrib["type"]))
     interface.signals.append(s)
 
 
-def parse_property_tag(property: Element, interface: Interface):
+def parse_property_tag(property: Element, doc_comment: Element, interface: Interface):
     interface.properties.append(
         Property(
-            property.attrib["name"], property.attrib["type"], property.attrib["access"]
+            property.attrib["name"],
+            "" if doc_comment is None else doc_comment.text,
+            property.attrib["type"],
+            property.attrib["access"],
         )
     )

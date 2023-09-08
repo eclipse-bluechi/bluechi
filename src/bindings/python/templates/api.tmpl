@@ -10,7 +10,7 @@
 {% include 'apibase.tmpl' %}
 
 {% for interface in interfaces -%}
-    {% with methods=interface.methods, signals=interface.signals, properties=interface.properties %}
+    {% with iface_doc=interface.inline_doc, methods=interface.methods, signals=interface.signals, properties=interface.properties %}
         {% include interface.name.lower() + ".tmpl" %}
     {% endwith %}
 {% endfor %}
