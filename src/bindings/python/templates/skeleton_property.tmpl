@@ -11,4 +11,19 @@
         return self.get_proxy().{{ property.name }}
         {%- endif -%}
         {% endfor %}
+
+        {% if property.emits_change %}
+    def on_{{ property.pyname }}_changed(self, callback: Callable[[Variant], None]):
+        """
+        {{ property.inline_doc }}
+        """
+
+        def on_properties_changed(interface: str, changed_props: Dict[str, Variant], invalidated_props: Dict[str, Variant]) -> None:
+            value = changed_props.get("{{ property.name }}")
+            if value is not None:
+                callback(value)
+
+        self.get_properties_proxy().PropertiesChanged.connect(on_properties_changed)
+        {{ name }}
+        {% endif %}
     {% endfor %}

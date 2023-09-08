@@ -5,19 +5,9 @@ class Metrics(ApiBase):
     """
     
     def __init__(self, metrics_path: ObjPath, bus: MessageBus = None, use_systembus=True) -> None:
-        super().__init__(bus, use_systembus)
+        super().__init__(BC_DBUS_INTERFACE, metrics_path, bus, use_systembus)
 
         self.metrics_path = metrics_path
-        self.metrics_proxy = None
-
-    def get_proxy(self) -> InterfaceProxy | ObjectProxy:
-        if self.metrics_proxy is None:
-            self.metrics_proxy = self.bus.get_proxy(
-                BC_DBUS_INTERFACE,
-                self.metrics_path
-            )
-
-        return self.metrics_proxy
 
     {%- include 'skeleton_method.tmpl' %}
     {%- include 'skeleton_signal.tmpl' %}
