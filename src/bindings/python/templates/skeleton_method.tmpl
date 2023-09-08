@@ -20,6 +20,9 @@
         {%- endfor -%}
         ]
         {%- endif -%}:
+        """
+        {{ method.inline_doc }}
+        """
         {% if method.rets|length > 0 -%}
         return {# comment to enforce whitespace #}
         {%- endif -%}

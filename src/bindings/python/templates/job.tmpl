@@ -1,6 +1,9 @@
 
 class Job(ApiBase):
-
+    """
+    {{ iface_doc }}
+    """
+    
     def __init__(self, job_path: ObjPath, bus: MessageBus = None, use_systembus=True) -> None:
         super().__init__(bus, use_systembus)
 

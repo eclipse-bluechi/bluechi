@@ -1,6 +1,9 @@
 
 class Metrics(ApiBase):
-
+    """
+    {{ iface_doc }}
+    """
+    
     def __init__(self, metrics_path: ObjPath, bus: MessageBus = None, use_systembus=True) -> None:
         super().__init__(bus, use_systembus)
 

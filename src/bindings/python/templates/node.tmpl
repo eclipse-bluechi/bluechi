@@ -1,6 +1,9 @@
 
 class Node(ApiBase):
-
+    """
+    {{ iface_doc }}
+    """
+    
     def __init__(self, node_name: str, bus: MessageBus = None, use_systembus=True) -> None:
         super().__init__(bus, use_systembus)
 
