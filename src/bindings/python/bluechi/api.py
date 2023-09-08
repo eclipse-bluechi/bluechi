@@ -5,7 +5,7 @@
 
 from __future__ import annotations
 
-from typing import Callable, Tuple, Dict, List
+from typing import Callable, Tuple, Dict, List, Any
 from dasbus.typing import (
     Bool,
     Double,
@@ -45,9 +45,19 @@ BC_DBUS_INTERFACE = "org.eclipse.bluechi"
 BC_OBJECT_PATH = "/org/eclipse/bluechi"
 BC_AGENT_DBUS_INTERFACE = "org.eclipse.bluechi.Agent"
 
+DBUS_PROPERTIES_INTERFACE = "org.freedesktop.DBus.Properties"
+
 
 class ApiBase:
-    def __init__(self, bus: MessageBus = None, use_systembus=True) -> None:
+    def __init__(
+        self,
+        interface: str,
+        object_path: str,
+        bus: MessageBus = None,
+        use_systembus=True,
+    ) -> None:
+        self.interface = interface
+        self.object_path = object_path
         self.use_systembus = use_systembus
 
         if bus is not None:
@@ -57,8 +67,25 @@ class ApiBase:
         else:
             self.bus = SessionMessageBus()
 
+        self.cached_proxy = None
+        self.cached_properties_proxy = None
+
     def get_proxy(self) -> InterfaceProxy | ObjectProxy:
-        raise Exception("Not implemented!")
+        if self.cached_proxy is None:
+            self.cached_proxy = self.bus.get_proxy(
+                self.interface,
+                self.object_path,
+            )
+
+        return self.cached_proxy
+
+    def get_properties_proxy(self) -> InterfaceProxy | ObjectProxy:
+        if self.cached_properties_proxy is None:
+            self.cached_properties_proxy = self.bus.get_proxy(
+                self.interface, self.object_path, DBUS_PROPERTIES_INTERFACE
+            )
+
+        return self.cached_properties_proxy
 
 
 class Monitor(ApiBase):
@@ -73,18 +100,9 @@ class Monitor(ApiBase):
     def __init__(
         self, monitor_path: ObjPath, bus: MessageBus = None, use_systembus=True
     ) -> None:
-        super().__init__(bus, use_systembus)
+        super().__init__(BC_DBUS_INTERFACE, monitor_path, bus, use_systembus)
 
         self.monitor_path = monitor_path
-        self.monitor_proxy = None
-
-    def get_proxy(self) -> InterfaceProxy | ObjectProxy:
-        if self.monitor_proxy is None:
-            self.monitor_proxy = self.bus.get_proxy(
-                BC_DBUS_INTERFACE, self.monitor_path
-            )
-
-        return self.monitor_proxy
 
     def close(self) -> None:
         """
@@ -239,18 +257,9 @@ class Metrics(ApiBase):
     def __init__(
         self, metrics_path: ObjPath, bus: MessageBus = None, use_systembus=True
     ) -> None:
-        super().__init__(bus, use_systembus)
+        super().__init__(BC_DBUS_INTERFACE, metrics_path, bus, use_systembus)
 
         self.metrics_path = metrics_path
-        self.metrics_proxy = None
-
-    def get_proxy(self) -> InterfaceProxy | ObjectProxy:
-        if self.metrics_proxy is None:
-            self.metrics_proxy = self.bus.get_proxy(
-                BC_DBUS_INTERFACE, self.metrics_path
-            )
-
-        return self.metrics_proxy
 
     def on_start_unit_job_metrics(
         self,
@@ -313,16 +322,9 @@ class Job(ApiBase):
     def __init__(
         self, job_path: ObjPath, bus: MessageBus = None, use_systembus=True
     ) -> None:
-        super().__init__(bus, use_systembus)
+        super().__init__(BC_DBUS_INTERFACE, job_path, bus, use_systembus)
 
         self.job_path = job_path
-        self.job_proxy = None
-
-    def get_proxy(self) -> InterfaceProxy | ObjectProxy:
-        if self.job_proxy is None:
-            self.job_proxy = self.bus.get_proxy(BC_DBUS_INTERFACE, self.job_path)
-
-        return self.job_proxy
 
     def cancel(self) -> None:
         """
@@ -379,6 +381,25 @@ class Job(ApiBase):
         """
         return self.get_proxy().State
 
+    def on_state_changed(self, callback: Callable[[Variant], None]):
+        """
+          State:
+
+        The current state of the job, one of: waiting (queued jobs) or running.
+        On any change, a signal is emitted on the org.freedesktop.DBus.Properties interface.
+        """
+
+        def on_properties_changed(
+            interface: str,
+            changed_props: Dict[str, Variant],
+            invalidated_props: Dict[str, Variant],
+        ) -> None:
+            value = changed_props.get("State")
+            if value is not None:
+                callback(value)
+
+        self.get_properties_proxy().PropertiesChanged.connect(on_properties_changed)
+
 
 class Manager(ApiBase):
     """
@@ -389,15 +410,7 @@ class Manager(ApiBase):
     """
 
     def __init__(self, bus: MessageBus = None, use_systembus=True) -> None:
-        super().__init__(bus, use_systembus)
-
-        self.manager_proxy = None
-
-    def get_proxy(self) -> InterfaceProxy | ObjectProxy:
-        if self.manager_proxy is None:
-            self.manager_proxy = self.bus.get_proxy(BC_DBUS_INTERFACE, BC_OBJECT_PATH)
-
-        return self.manager_proxy
+        super().__init__(BC_DBUS_INTERFACE, BC_OBJECT_PATH, bus, use_systembus)
 
     def list_units(
         self,
@@ -552,19 +565,13 @@ class Node(ApiBase):
     def __init__(
         self, node_name: str, bus: MessageBus = None, use_systembus=True
     ) -> None:
-        super().__init__(bus, use_systembus)
+        # set empty node path temporary, needs to be resolved after the bus has been set
+        super().__init__(BC_DBUS_INTERFACE, "", bus, use_systembus)
+
+        manager = self.bus.get_proxy(BC_DBUS_INTERFACE, BC_OBJECT_PATH)
+        self.object_path = manager.GetNode(node_name)
 
         self.node_name = node_name
-        self.node_proxy = None
-
-    def get_proxy(self) -> InterfaceProxy | ObjectProxy:
-        if self.node_proxy is None:
-            manager = self.bus.get_proxy(BC_DBUS_INTERFACE, BC_OBJECT_PATH)
-
-            node_path = manager.GetNode(self.node_name)
-            self.node_proxy = self.bus.get_proxy(BC_DBUS_INTERFACE, node_path)
-
-        return self.node_proxy
 
     def start_unit(self, name: str, mode: str) -> ObjPath:
         """
@@ -797,6 +804,25 @@ class Node(ApiBase):
         """
         return self.get_proxy().Status
 
+    def on_status_changed(self, callback: Callable[[Variant], None]):
+        """
+          Status:
+
+        The connection status of the node with the BlueChi controller.
+        On any change, a signal is emitted on the org.freedesktop.DBus.Properties interface.
+        """
+
+        def on_properties_changed(
+            interface: str,
+            changed_props: Dict[str, Variant],
+            invalidated_props: Dict[str, Variant],
+        ) -> None:
+            value = changed_props.get("Status")
+            if value is not None:
+                callback(value)
+
+        self.get_properties_proxy().PropertiesChanged.connect(on_properties_changed)
+
     @property
     def last_seen_timestamp(self) -> UInt64:
         """
@@ -816,17 +842,7 @@ class Agent(ApiBase):
     """
 
     def __init__(self, bus: MessageBus = None, use_systembus=True) -> None:
-        super().__init__(bus, use_systembus)
-
-        self.agent_proxy = None
-
-    def get_proxy(self) -> InterfaceProxy | ObjectProxy:
-        if self.agent_proxy is None:
-            self.agent_proxy = self.bus.get_proxy(
-                BC_AGENT_DBUS_INTERFACE, BC_OBJECT_PATH
-            )
-
-        return self.agent_proxy
+        super().__init__(BC_AGENT_DBUS_INTERFACE, BC_OBJECT_PATH, bus, use_systembus)
 
     def create_proxy(self, local_service_name: str, node: str, unit: str) -> None:
         """

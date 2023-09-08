@@ -46,8 +46,9 @@ class SignalArg:
 
 
 class Property:
-    def __init__(self, name: str, inline_doc: str, proptype: str, access: str) -> None:
+    def __init__(self, name: str, inline_doc: str, proptype: str, access: str, emits_change: bool) -> None:
         self.name: str = name
         self.inline_doc: str = inline_doc.strip()
         self.type: str = proptype
         self.access: str = access
+        self.emits_change: bool = emits_change

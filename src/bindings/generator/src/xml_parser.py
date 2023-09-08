@@ -59,6 +59,14 @@ def is_property(elem: Element) -> bool:
     return str(elem.tag) == "property"
 
 
+def does_property_emit_changed_signal(elem: Element) -> bool:
+    for annotation in elem.findall("annotation"):
+        if annotation.attrib["name"] == "org.freedesktop.DBus.Property.EmitsChangedSignal" \
+                and annotation.attrib["value"] == "true":
+            return True
+    return False
+
+
 def parse_node_tag(node: Element) -> List[Interface]:
     interfaces = []
 
@@ -117,5 +125,6 @@ def parse_property_tag(property: Element, doc_comment: Element, interface: Inter
             "" if doc_comment is None else doc_comment.text,
             property.attrib["type"],
             property.attrib["access"],
+            does_property_emit_changed_signal(property),
         )
     )

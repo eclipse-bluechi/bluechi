@@ -1,7 +1,9 @@
 
 class ApiBase:
 
-    def __init__(self, bus: MessageBus = None, use_systembus=True) -> None:
+    def __init__(self, interface: str, object_path: str, bus: MessageBus = None, use_systembus=True) -> None:
+        self.interface = interface
+        self.object_path = object_path
         self.use_systembus = use_systembus
 
         if bus is not None:
@@ -10,6 +12,25 @@ class ApiBase:
             self.bus = SystemMessageBus()
         else:
             self.bus = SessionMessageBus()
+        
+        self.cached_proxy = None
+        self.cached_properties_proxy = None
     
     def get_proxy(self) -> InterfaceProxy | ObjectProxy:
-        raise Exception("Not implemented!")
+        if self.cached_proxy is None:
+            self.cached_proxy = self.bus.get_proxy(
+                self.interface,
+                self.object_path,
+            )
+
+        return self.cached_proxy
+
+    def get_properties_proxy(self) -> InterfaceProxy | ObjectProxy:
+        if self.cached_properties_proxy is None:
+            self.cached_properties_proxy = self.bus.get_proxy(
+                self.interface,
+                self.object_path,
+                DBUS_PROPERTIES_INTERFACE
+            )
+
+        return self.cached_properties_proxy

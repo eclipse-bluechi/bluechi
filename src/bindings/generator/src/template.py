@@ -67,6 +67,7 @@ def model_to_data_dict(interfaces: List[Interface]) -> Dict[str, Any]:
                 "pyname": pascal_to_snake(prop.name),
                 "pytype": types.parse_dbus_type_string(prop.type),
                 "access": prop.access.split("|"),
+                "emits_change": prop.emits_change,
             }
             data_interface["properties"].append(e)
 
