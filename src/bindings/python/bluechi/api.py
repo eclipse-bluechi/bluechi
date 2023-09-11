@@ -875,3 +875,42 @@ class Agent(ApiBase):
             node,
             unit,
         )
+
+    @property
+    def status(self) -> str:
+        """
+          Status:
+
+        The connection status of the agent with the BlueChi controller.
+        On any change, a signal is emitted on the org.freedesktop.DBus.Properties interface.
+        """
+        return self.get_proxy().Status
+
+    def on_status_changed(self, callback: Callable[[Variant], None]):
+        """
+          Status:
+
+        The connection status of the agent with the BlueChi controller.
+        On any change, a signal is emitted on the org.freedesktop.DBus.Properties interface.
+        """
+
+        def on_properties_changed(
+            interface: str,
+            changed_props: Dict[str, Variant],
+            invalidated_props: Dict[str, Variant],
+        ) -> None:
+            value = changed_props.get("Status")
+            if value is not None:
+                callback(value)
+
+        self.get_properties_proxy().PropertiesChanged.connect(on_properties_changed)
+
+    @property
+    def disconnect_timestamp(self) -> UInt64:
+        """
+          DisconnectTimestamp:
+
+        A timestamp indicating when the agent lost connection to the BlueChi controller.
+        If the connection is active (agent is online), this value is 0.
+        """
+        return self.get_proxy().DisconnectTimestamp

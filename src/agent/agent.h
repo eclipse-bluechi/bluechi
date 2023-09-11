@@ -57,6 +57,7 @@ struct Agent {
 
         AgentConnectionState connection_state;
         uint64_t connection_retry_count;
+        time_t disconnect_timestamp;
 
         char *orch_addr;
         char *api_bus_service_name;
@@ -107,6 +108,7 @@ bool agent_start(Agent *agent);
 bool agent_stop(Agent *agent);
 
 bool agent_is_connected(Agent *agent);
+char *agent_is_online(Agent *agent);
 
 void agent_remove_proxy(Agent *agent, ProxyService *proxy, bool emit);
 
