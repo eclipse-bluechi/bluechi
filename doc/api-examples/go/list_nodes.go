@@ -1,17 +1,18 @@
-// SPDX-License-Identifier: CC0-1.0
+// SPDX-License-Identifier: MIT-0
 
 package main
 
 import (
 	"fmt"
 	"os"
+
 	"github.com/godbus/dbus/v5"
 )
 
 // Constants to manage bluechi dbus interface
 const (
-        BcDusInterface = "org.eclipse.bluechi"
-        BcObjectPath = "/org/eclipse/bluechi"
+	BcDusInterface  = "org.eclipse.bluechi"
+	BcObjectPath    = "/org/eclipse/bluechi"
 	MethodListNodes = "org.eclipse.bluechi.Manager.ListNodes"
 )
 
