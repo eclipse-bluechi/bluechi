@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# SPDX-License-Identifier: CC0-1.0
+# SPDX-License-Identifier: MIT-0
 #
 # vim:sw=4:ts=4:et
 from bluechi.api import Manager

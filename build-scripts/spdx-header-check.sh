@@ -11,7 +11,7 @@ APPROVED_LICENSES=""
 # Used for bluechi original code and in src/libbluechi/common/list.h
 APPROVED_LICENSES="${APPROVED_LICENSES} LGPL-2.1-or-later"
 # Used for examples in doc/api-examples and doc/bluechi-examples
-APPROVED_LICENSES="${APPROVED_LICENSES} CC0-1.0"
+APPROVED_LICENSES="${APPROVED_LICENSES} MIT-0"
 
 result=0
 found_files="
