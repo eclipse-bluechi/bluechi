@@ -96,6 +96,13 @@ bool agent_is_connected(Agent *agent) {
         return agent != NULL && agent->connection_state == AGENT_CONNECTION_STATE_CONNECTED;
 }
 
+char *agent_is_online(Agent *agent) {
+        if (agent_is_connected(agent)) {
+                return "online";
+        }
+        return "offline";
+}
+
 static int agent_stop_local_proxy_service(Agent *agent, ProxyService *proxy);
 static bool agent_connect(Agent *agent);
 static bool agent_reconnect(Agent *agent);
@@ -105,9 +112,19 @@ static int agent_disconnected(UNUSED sd_bus_message *message, void *userdata, UN
 
         bc_log_error("Disconnected from manager");
 
-        if (!agent_reconnect(agent)) {
-                agent->connection_state = AGENT_CONNECTION_STATE_RETRY;
+        agent->connection_state = AGENT_CONNECTION_STATE_RETRY;
+        int r = sd_bus_emit_properties_changed(
+                        agent->api_bus, BC_AGENT_OBJECT_PATH, AGENT_INTERFACE, "Status", NULL);
+        if (r < 0) {
+                bc_log_errorf("Failed to emit status property changed: %s", strerror(-r));
         }
+        r = get_time_seconds(&agent->disconnect_timestamp);
+        if (r < 0) {
+                bc_log_errorf("Failed to get current time on agent disconnect: %s", strerror(-r));
+        }
+
+        /* try to reconnect right away */
+        agent_reconnect(agent);
 
         return 0;
 }
@@ -117,8 +134,9 @@ static int agent_reset_heartbeat_timer(Agent *agent, sd_event_source **event_sou
 static int agent_heartbeat_timer_callback(sd_event_source *event_source, UNUSED uint64_t usec, void *userdata) {
         Agent *agent = (Agent *) userdata;
 
+        int r = 0;
         if (agent->connection_state == AGENT_CONNECTION_STATE_CONNECTED) {
-                int r = sd_bus_emit_signal(
+                r = sd_bus_emit_signal(
                                 agent->peer_dbus,
                                 INTERNAL_AGENT_OBJECT_PATH,
                                 INTERNAL_AGENT_INTERFACE,
@@ -135,7 +153,7 @@ static int agent_heartbeat_timer_callback(sd_event_source *event_source, UNUSED 
                 }
         }
 
-        int r = agent_reset_heartbeat_timer(agent, &event_source);
+        r = agent_reset_heartbeat_timer(agent, &event_source);
         if (r < 0) {
                 bc_log_errorf("Failed to reset agent heartbeat timer: %s", strerror(-r));
                 return r;
@@ -390,6 +408,7 @@ Agent *agent_new(void) {
         agent->connection_retry_count = 0;
         agent->wildcard_subscription_active = false;
         agent->metrics_enabled = false;
+        agent->disconnect_timestamp = 0;
 
         return steal_pointer(&agent);
 }
@@ -1596,10 +1615,53 @@ static int agent_method_remove_proxy(sd_bus_message *m, UNUSED void *userdata, U
         return sd_bus_reply_method_return(m, "");
 }
 
+
+/*************************************************************************
+ **** org.eclipse.bluechi.Agent.Status ****************
+ *************************************************************************/
+
+static int agent_property_get_status(
+                UNUSED sd_bus *bus,
+                UNUSED const char *path,
+                UNUSED const char *interface,
+                UNUSED const char *property,
+                sd_bus_message *reply,
+                void *userdata,
+                UNUSED sd_bus_error *ret_error) {
+        Agent *agent = userdata;
+
+        return sd_bus_message_append(reply, "s", agent_is_online(agent));
+}
+
+/*************************************************************************
+ **** org.eclipse.bluechi.Agent.LastSuccessfulHeartbeat ****************
+ *************************************************************************/
+
+static int agent_property_get_disconnect_timestamp(
+                UNUSED sd_bus *bus,
+                UNUSED const char *path,
+                UNUSED const char *interface,
+                UNUSED const char *property,
+                sd_bus_message *reply,
+                void *userdata,
+                UNUSED sd_bus_error *ret_error) {
+        Agent *agent = userdata;
+
+        return sd_bus_message_append(reply, "t", agent->disconnect_timestamp);
+}
+
+
 static const sd_bus_vtable agent_vtable[] = {
         SD_BUS_VTABLE_START(0),
         SD_BUS_METHOD("CreateProxy", "sss", "", agent_method_create_proxy, 0),
         SD_BUS_METHOD("RemoveProxy", "sss", "", agent_method_remove_proxy, 0),
+
+        SD_BUS_PROPERTY("Status", "s", agent_property_get_status, 0, SD_BUS_VTABLE_PROPERTY_EMITS_CHANGE),
+        SD_BUS_PROPERTY("DisconnectTimestamp",
+                        "t",
+                        agent_property_get_disconnect_timestamp,
+                        0,
+                        SD_BUS_VTABLE_PROPERTY_EXPLICIT),
         SD_BUS_VTABLE_END
 };
 
@@ -2257,6 +2319,13 @@ static bool agent_connect(Agent *agent) {
 
         agent->connection_state = AGENT_CONNECTION_STATE_CONNECTED;
         agent->connection_retry_count = 0;
+        agent->disconnect_timestamp = 0;
+
+        r = sd_bus_emit_properties_changed(
+                        agent->api_bus, BC_AGENT_OBJECT_PATH, AGENT_INTERFACE, "Status", NULL);
+        if (r < 0) {
+                bc_log_errorf("Failed to emit status property changed: %s", strerror(-r));
+        }
 
         r = sd_bus_match_signal_async(
                         agent->peer_dbus,

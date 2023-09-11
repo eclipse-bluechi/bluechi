@@ -39,5 +39,27 @@
       <arg name="node" type="s" direction="in" />
       <arg name="unit" type="s" direction="in" />
     </method>
+
+
+    <!-- 
+      Status:
+
+      The connection status of the agent with the BlueChi controller.
+      On any change, a signal is emitted on the org.freedesktop.DBus.Properties interface. 
+    -->
+    <property name="Status" type="s" access="read">
+      <annotation name="org.freedesktop.DBus.Property.EmitsChangedSignal" value="true" />
+    </property>
+
+    <!-- 
+      DisconnectTimestamp:
+
+      A timestamp indicating when the agent lost connection to the BlueChi controller.
+      If the connection is active (agent is online), this value is 0.
+    -->
+    <property name="DisconnectTimestamp" type="t" access="read">
+      <annotation name="org.freedesktop.DBus.Property.EmitsChangedSignal" value="false" />
+    </property>
+
   </interface>
 </node>
