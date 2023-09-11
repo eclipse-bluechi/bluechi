@@ -4,6 +4,7 @@ import unittest
 
 from dasbus.error import DBusError
 from dasbus.loop import EventLoop
+from dasbus.typing import Variant
 
 from bluechi.api import Manager, Node
 
@@ -15,13 +16,11 @@ class TestNodeDisconnect(unittest.TestCase):
     def test_node_disconnect(self):
         loop = EventLoop()
 
-        def on_state_change(_: str, state: str):
-            self.node_state = state
+        def on_state_change(state: Variant):
+            self.node_state = state.get_string()
             loop.quit()
 
         mgr = Manager()
-        mgr.on_node_connection_state_changed(on_state_change)
-
         nodes = mgr.list_nodes()
         if len(nodes) < 1:
             raise Exception("No connected node found")
@@ -29,6 +28,8 @@ class TestNodeDisconnect(unittest.TestCase):
         # get name of first node
         node_name = nodes[0][0]
         node = Node(node_name)
+
+        node.on_status_changed(on_state_change)
 
         # stop the bluechi-agent service to trigger a disconnected message
         # hacky solution to cause a disconnect:

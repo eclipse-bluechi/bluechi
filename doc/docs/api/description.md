@@ -57,10 +57,6 @@ Note that all properties also come with change events, so you can easily track w
     `failed`, `cancelled`, `timeout`, `dependency`, `skipped`. This is either the result from systemd on the node, or
     `cancelled` if the job was cancelled in BlueChi before any systemd job was started for it.
 
-  * `NodeConnectionStateChanged(s node, s state)`
-
-    Emitted each time a listed node in BlueChi changes its connection state from offline to online and vice versa. A node is considered online only when its registration at BlueChi succeeds.
-
 #### Properties
 
   * `Nodes` - `as`

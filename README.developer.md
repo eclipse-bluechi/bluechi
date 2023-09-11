@@ -79,7 +79,6 @@ org.eclipse.bluechi.Manager         interface -         -              -
 .SetLogLevel                        method    s         -              -
 .JobNew                             signal    uo        -              -
 .JobRemoved                         signal    uosss     -              -
-.NodeConnectionStateChanged         signal    ss        -              -
 org.eclipse.bluechi.Shutdown        interface -         -              -
 .Shutdown                           method    -         -              -
 org.freedesktop.DBus.Introspectable interface -         -              -

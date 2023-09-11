@@ -540,19 +540,6 @@ class Manager(ApiBase):
         """
         self.get_proxy().JobRemoved.connect(callback)
 
-    def on_node_connection_state_changed(
-        self,
-        callback: Callable[
-            [
-                str,
-                str,
-            ],
-            None,
-        ],
-    ) -> None:
-        """ """
-        self.get_proxy().NodeConnectionStateChanged.connect(callback)
-
 
 class Node(ApiBase):
     """
