@@ -295,6 +295,7 @@ int method_monitor_units_on_nodes(sd_bus *api_bus, char *node, char *units) {
  ******** Monitor: Connection state changes of agents **********
  ***************************************************************/
 
+typedef struct Node Node;
 typedef struct Nodes Nodes;
 typedef struct NodeConnection NodeConnection;
 
@@ -303,17 +304,40 @@ struct NodeConnection {
         char *node_path;
         char *state;
         uint64_t last_seen;
-        LIST_FIELDS(NodeConnection, nodes);
 };
 
-typedef struct Nodes {
+typedef struct Node {
         sd_bus *api_bus;
-        LIST_HEAD(NodeConnection, nodes);
+        NodeConnection *connection;
+        LIST_FIELDS(Node, nodes);
+        Nodes *nodes;
+} Node;
+
+typedef struct Nodes {
+        LIST_HEAD(Node, nodes);
 } Nodes;
 
-static Nodes *nodes_new(sd_bus *api_bus) {
+static Node *
+                node_new(sd_bus *api_bus,
+                         Nodes *head,
+                         const char *node_name,
+                         const char *node_path,
+                         const char *node_state,
+                         uint64_t last_seen_timestamp) {
+        Node *node = malloc0(sizeof(Node));
+        node->connection = malloc0(sizeof(NodeConnection));
+        node->connection->name = strdup(node_name);
+        node->connection->node_path = strdup(node_path);
+        node->connection->state = strdup(node_state);
+        node->connection->last_seen = last_seen_timestamp;
+        node->api_bus = api_bus;
+        node->nodes = head;
+        LIST_APPEND(nodes, head->nodes, node);
+        return node;
+}
+
+static Nodes *nodes_new() {
         Nodes *nodes = malloc0(sizeof(Nodes));
-        nodes->api_bus = api_bus;
         LIST_HEAD_INIT(nodes->nodes);
         return nodes;
 }
@@ -331,43 +355,37 @@ static char *node_connection_fmt_last_seen(NodeConnection *con) {
         return get_formatted_log_timestamp_for_timespec(t, false);
 }
 
-static void nodes_add_connection(
-                Nodes *nodes,
-                const char *node_name,
-                const char *node_path,
-                const char *node_state,
-                uint64_t last_seen_timestamp) {
-        NodeConnection *node_connection = malloc0(sizeof(NodeConnection));
-        node_connection->name = strdup(node_name);
-        node_connection->node_path = strdup(node_path);
-        node_connection->state = strdup(node_state);
-        node_connection->last_seen = last_seen_timestamp;
-
-        LIST_APPEND(nodes, nodes->nodes, node_connection);
-}
-
-static NodeConnection *nodes_find_by_name(Nodes *nodes, const char *node_name) {
-        NodeConnection *curr = NULL;
-        NodeConnection *next = NULL;
-        LIST_FOREACH_SAFE(nodes, curr, next, nodes->nodes) {
-                if (streq(curr->name, node_name)) {
-                        return curr;
-                }
+static void node_unref(Node *node) {
+        if (node == NULL) {
+                return;
         }
-        return NULL;
+
+        if (node->connection != NULL) {
+                free(node->connection->name);
+                free(node->connection->node_path);
+                free(node->connection->state);
+                free(node->connection);
+                node->connection = NULL;
+        }
+
+        if (node->nodes != NULL) {
+                node->nodes = NULL;
+        }
+
+        free(node);
+        node = NULL;
 }
+
 
 static void nodes_unref(Nodes *nodes) {
         if (nodes == NULL) {
                 return;
         }
 
-        NodeConnection *curr = NULL;
-        NodeConnection *next = NULL;
+        Node *curr = NULL;
+        Node *next = NULL;
         LIST_FOREACH_SAFE(nodes, curr, next, nodes->nodes) {
-                free(curr->name);
-                free(curr->node_path);
-                free(curr->state);
+                node_unref(curr);
         }
 
         free(nodes);
@@ -386,11 +404,14 @@ static void print_nodes(Nodes *nodes) {
         printf("%-30.30s| %-10.10s| %-28.28s\n", "NODE", "STATE", "LAST SEEN");
         printf("=========================================================================\n");
 
-        NodeConnection *curr = NULL;
-        NodeConnection *next = NULL;
+        Node *curr = NULL;
+        Node *next = NULL;
         LIST_FOREACH_SAFE(nodes, curr, next, nodes->nodes) {
-                _cleanup_free_ char *last_seen = node_connection_fmt_last_seen(curr);
-                printf("%-30.30s| %-10.10s| %-28.28s\n", curr->name, curr->state, last_seen);
+                _cleanup_free_ char *last_seen = node_connection_fmt_last_seen(curr->connection);
+                printf("%-30.30s| %-10.10s| %-28.28s\n",
+                       curr->connection->name,
+                       curr->connection->state,
+                       last_seen);
         }
 }
 
@@ -423,34 +444,92 @@ static int fetch_last_seen_timestamp_property(
         return 0;
 }
 
-static int on_node_connection_state_changed(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *error) {
-        Nodes *nodes = userdata;
-
-        const char *node_name = NULL, *con_state = NULL;
-
-        int r = 0;
-        r = sd_bus_message_read(m, "ss", &node_name, &con_state);
-        if (r < 0) {
-                fprintf(stderr, "Can't parse node connection state changed signal: %s\n", strerror(-r));
-                return 0;
+static int parse_status_from_changed_properties(sd_bus_message *m, char **ret_connection_status) {
+        if (ret_connection_status == NULL) {
+                fprintf(stderr, "NULL pointer to connection status not allowed");
+                return -EINVAL;
         }
 
-        NodeConnection *con = nodes_find_by_name(nodes, node_name);
-        if (con == NULL) {
-                fprintf(stderr, "Couldn't find connection for node '%s'", node_name);
-                return 0;
-        }
-
-        r = fetch_last_seen_timestamp_property(nodes->api_bus, con->node_path, &con->last_seen);
+        int r = sd_bus_message_enter_container(m, SD_BUS_TYPE_ARRAY, "{sv}");
         if (r < 0) {
-                fprintf(stderr, "Failed to get last seen property of node %s: %s\n", con->name, strerror(-r));
+                fprintf(stderr, "Failed to read changed properties: %s\n", strerror(-r));
                 return r;
         }
 
-        free(con->state);
-        con->state = strdup(con_state);
+        for (;;) {
+                r = sd_bus_message_enter_container(m, SD_BUS_TYPE_DICT_ENTRY, "sv");
+                if (r <= 0) {
+                        break;
+                }
 
-        print_nodes(nodes);
+                const char *key = NULL;
+                r = sd_bus_message_read(m, "s", &key);
+                if (r < 0) {
+                        fprintf(stderr, "Failed to read next unit changed property: %s\n", strerror(-r));
+                        return r;
+                }
+                if (r == 0) {
+                        break;
+                }
+
+                /* only process property changes for the node status */
+                if (!streq(key, "Status")) {
+                        break;
+                }
+
+                /* node status is always of type string */
+                r = sd_bus_message_enter_container(m, SD_BUS_TYPE_VARIANT, "s");
+                if (r < 0) {
+                        fprintf(stderr, "Failed to enter content of variant type: %s", strerror(-r));
+                        return r;
+                }
+                char *status = NULL;
+                r = sd_bus_message_read(m, "s", &status);
+                if (r < 0) {
+                        fprintf(stderr, "Failed to read value of changed property: %s\n", strerror(-r));
+                        return r;
+                }
+                *ret_connection_status = strdup(status);
+
+                r = sd_bus_message_exit_container(m);
+                if (r < 0) {
+                        fprintf(stderr, "Failed to exit container: %s\n", strerror(-r));
+                        return r;
+                }
+        }
+
+        return sd_bus_message_exit_container(m);
+}
+
+static int on_node_connection_state_changed(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *error) {
+        Node *node = userdata;
+
+        (void) sd_bus_message_skip(m, "s");
+
+        _cleanup_free_ char *con_state = NULL;
+        int r = parse_status_from_changed_properties(m, &con_state);
+        if (r < 0) {
+                return r;
+        }
+        if (con_state == NULL) {
+                fprintf(stderr, "Received connection status change signal with missing 'Status' key.");
+                return 0;
+        }
+
+        r = fetch_last_seen_timestamp_property(
+                        node->api_bus, node->connection->node_path, &node->connection->last_seen);
+        if (r < 0) {
+                fprintf(stderr,
+                        "Failed to get last seen property of node %s: %s\n",
+                        node->connection->name,
+                        strerror(-r));
+                return r;
+        }
+
+        free(node->connection->state);
+        node->connection->state = strdup(con_state);
+
+        print_nodes(node->nodes);
 
         return 0;
 }
@@ -474,7 +553,7 @@ int method_monitor_node_connection_state(sd_bus *api_bus) {
                 return r;
         }
 
-        _cleanup_nodes_ Nodes *nodes = nodes_new(api_bus);
+        _cleanup_nodes_ Nodes *nodes = nodes_new();
 
         r = sd_bus_message_enter_container(reply, SD_BUS_TYPE_ARRAY, "(sos)");
         if (r < 0) {
@@ -504,24 +583,25 @@ int method_monitor_node_connection_state(sd_bus *api_bus) {
                         }
                 }
 
-                nodes_add_connection(nodes, name, path, state, last_seen_timestamp);
+                Node *node = node_new(api_bus, nodes, name, path, state, last_seen_timestamp);
+                r = sd_bus_match_signal(
+                                api_bus,
+                                NULL,
+                                BC_INTERFACE_BASE_NAME,
+                                path,
+                                "org.freedesktop.DBus.Properties",
+                                "PropertiesChanged",
+                                on_node_connection_state_changed,
+                                node);
+                if (r < 0) {
+                        fprintf(stderr,
+                                "Failed to create callback for NodeConnectionStateChanged: %s\n",
+                                strerror(-r));
+                        return r;
+                }
         }
 
         print_nodes(nodes);
-
-        r = sd_bus_match_signal(
-                        api_bus,
-                        NULL,
-                        BC_INTERFACE_BASE_NAME,
-                        BC_OBJECT_PATH,
-                        MANAGER_INTERFACE,
-                        "NodeConnectionStateChanged",
-                        on_node_connection_state_changed,
-                        nodes);
-        if (r < 0) {
-                fprintf(stderr, "Failed to create callback for NodeConnectionStateChanged: %s\n", strerror(-r));
-                return r;
-        }
 
         return start_event_loop(api_bus);
 }

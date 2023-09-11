@@ -239,29 +239,6 @@ void manager_job_state_changed(Manager *manager, uint32_t job_id, const char *st
         }
 }
 
-void manager_node_connection_state_changed(Manager *manager, const char *node_name, const char *state) {
-        /* skip emitting state changed for anonymous node
-           since it wasn't (fully) connected in the first place */
-        if (node_name == NULL) {
-                return;
-        }
-
-        int r = sd_bus_emit_signal(
-                        manager->api_bus,
-                        BC_MANAGER_OBJECT_PATH,
-                        MANAGER_INTERFACE,
-                        "NodeConnectionStateChanged",
-                        "ss",
-                        node_name,
-                        state);
-        if (r < 0) {
-                bc_log_debugf("Failed to emit NodeConnectionStateChanged signal for node %s and new state %s: %s",
-                              node_name,
-                              state,
-                              strerror(-r));
-        }
-}
-
 void manager_finish_job(Manager *manager, uint32_t job_id, const char *result) {
         Job *job = NULL;
         LIST_FOREACH(jobs, job, manager->jobs) {
@@ -854,8 +831,6 @@ static const sd_bus_vtable manager_vtable[] = {
                         SD_BUS_PARAM(id) SD_BUS_PARAM(job) SD_BUS_PARAM(node) SD_BUS_PARAM(unit)
                                         SD_BUS_PARAM(result),
                         0),
-        SD_BUS_SIGNAL_WITH_NAMES(
-                        "NodeConnectionStateChanged", "ss", SD_BUS_PARAM(node) SD_BUS_PARAM(connection_state), 0),
         SD_BUS_VTABLE_END
 };
 
