@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: LGPL-2.1-or-later
 
 import io
+import logging
 import os
 import time
 import tarfile
@@ -10,6 +11,8 @@ from typing import Any, Iterator, Optional, Tuple, Union, IO
 
 from bluechi_test.config import BluechiConfig, BluechiNodeConfig, BluechiControllerConfig
 from bluechi_test.util import read_file, get_random_name
+
+logger = logging.getLogger(__name__)
 
 
 class BluechiContainer():
@@ -80,8 +83,8 @@ class BluechiContainer():
         source_path = os.path.join(source_dir, service_file_name)
         content = read_file(source_path)
 
-        print(f"Copy local systemd service '{source_path}' to container path '{target_dir}' with content:")
-        print(f"{content}\n")
+        logger.debug(f"Copy local systemd service '{source_path}' to container path '{target_dir}'\
+             with content:\n{content}")
         self.create_file(target_dir, service_file_name, content)
         self.systemctl_daemon_reload()
 
@@ -110,8 +113,8 @@ class BluechiContainer():
             if latest_state == expected_state:
                 return True
 
-        print(f"Timeout while waiting for {unit_name} to reach state {expected_state}. \
-              Latest state: {latest_state}")
+        logger.debug(f"Timeout while waiting for '{unit_name}' to reach state '{expected_state}'. \
+              Latest state: '{latest_state}'")
         return False
 
     def run_python(self, python_script_path: str) -> \
@@ -123,7 +126,10 @@ class BluechiContainer():
         self.create_file(target_file_dir, target_file_name, content)
 
         target_file_path = os.path.join(target_file_dir, target_file_name)
+        logger.debug(f"Executing python script '{target_file_path}'")
         result, output = self.exec_run(f'python3 {target_file_path}')
+        logger.debug(f"Execute python script '{target_file_path}' finished with result '{result}' \
+            and output:\n{output}")
         try:
             os.remove(target_file_path)
         finally:
@@ -165,36 +171,46 @@ class BluechiControllerContainer(BluechiContainer):
         self.wait_for_bluechi()
 
     def start_unit(self, node_name: str, unit_name: str) -> None:
-        print(f"Starting unit {unit_name} on node {node_name}")
+        logger.debug(f"Starting unit '{unit_name}' on node '{node_name}'")
 
         result, output = self.exec_run(f"bluechictl start {node_name} {unit_name}")
+        logger.debug(f"Start unit '{unit_name}' on node '{node_name}' finished with result '{result}' \
+            and output:\n{output}")
         if result != 0:
             raise Exception(f"Failed to start service {unit_name} on node {node_name}: {output}")
 
     def stop_unit(self, node_name: str, unit_name: str) -> None:
-        print(f"Stopping unit {unit_name} on node {node_name}")
+        logger.debug(f"Stopping unit '{unit_name}' on node '{node_name}'")
 
         result, output = self.exec_run(f"bluechictl stop {node_name} {unit_name}")
+        logger.debug(f"Stop unit '{unit_name}' on node '{node_name}' finished with result '{result}' \
+            and output:\n{output}")
         if result != 0:
             raise Exception(f"Failed to start service {unit_name} on node {node_name}: {output}")
 
     def enable_unit(self, node_name: str, unit_name: str) -> None:
-        print(f"Enabling unit {unit_name} on node {node_name}")
+        logger.debug(f"Enabling unit '{unit_name}' on node '{node_name}'")
 
         result, output = self.exec_run(f"bluechictl enable {node_name} {unit_name}")
+        logger.debug(f"Enable unit '{unit_name}' on node '{node_name}' finished with result '{result}' \
+            and output:\n{output}")
         if result != 0:
             raise Exception(f"Failed to enable service {unit_name} on node {node_name}: {output}")
 
     def freeze_unit(self, node_name: str, unit_name: str) -> None:
-        print(f"Freezing unit {unit_name} on node {node_name}")
+        logger.debug(f"Freezing unit {unit_name} on node {node_name}")
 
         result, output = self.exec_run(f"bluechictl freeze {node_name} {unit_name}")
+        logger.debug(f"Freeze unit '{unit_name}' on node '{node_name}' finished with result '{result}' \
+            and output:\n{output}")
         if result != 0:
             raise Exception(f"Failed to freeze service {unit_name} on node {node_name}: {output}")
 
     def thaw_unit(self, node_name: str, unit_name: str) -> None:
-        print(f"Thawing unit {unit_name} on node {node_name}")
+        logger.debug(f"Thawing unit {unit_name} on node {node_name}")
 
         result, output = self.exec_run(f"bluechictl thaw {node_name} {unit_name}")
+        logger.debug(f"Thaw unit '{unit_name}' on node '{node_name}' finished with result '{result}' \
+            and output:\n{output}")
         if result != 0:
             raise Exception(f"Failed to thaw service {unit_name} on node {node_name}: {output}")

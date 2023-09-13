@@ -1,5 +1,6 @@
 # SPDX-License-Identifier: LGPL-2.1-or-later
 
+import logging
 import traceback
 
 from podman import PodmanClient
@@ -8,6 +9,8 @@ from typing import List, Dict, Callable, Tuple
 from bluechi_test.command import Command
 from bluechi_test.config import BluechiControllerConfig, BluechiNodeConfig
 from bluechi_test.container import BluechiNodeContainer, BluechiControllerContainer
+
+logger = logging.getLogger(__name__)
 
 
 class BluechiTest():
@@ -45,8 +48,8 @@ class BluechiTest():
         ctrl_container: BluechiControllerContainer = None
         node_container: Dict[str, BluechiNodeContainer] = dict()
         try:
-            print(
-                f"Starting container for bluechi-controller with config:\n{self.bluechi_controller_config.serialize()}")
+            logger.debug(f"Starting container for bluechi-controller with config:\
+                \n{self.bluechi_controller_config.serialize()}")
 
             c = self.podman_client.containers.run(
                 name=self.bluechi_controller_config.name,
@@ -61,7 +64,7 @@ class BluechiTest():
             ctrl_container.exec_run('systemctl start bluechi')
 
             for cfg in self.bluechi_node_configs:
-                print(f"Starting container bluechi-node '{cfg.node_name}' with config:\n{cfg.serialize()}")
+                logger.debug(f"Starting container bluechi-node '{cfg.node_name}' with config:\n{cfg.serialize()}")
 
                 c = self.podman_client.containers.run(
                     name=cfg.node_name,
@@ -78,12 +81,12 @@ class BluechiTest():
 
         except Exception as ex:
             success = False
-            print(f"Failed to setup bluechi container: {ex}")
+            logger.debug(f"Failed to setup bluechi container: {ex}")
 
         return (success, (ctrl_container, node_container))
 
     def gather_logs(self, ctrl: BluechiControllerContainer, nodes: Dict[str, BluechiNodeContainer]):
-        print("Collecting logs from all containers...")
+        logger.debug("Collecting logs from all containers...")
 
         if ctrl is not None:
             ctrl.gather_journal_logs(self.tmt_test_data_dir)
@@ -94,15 +97,15 @@ class BluechiTest():
         self.gather_test_executor_logs()
 
     def gather_test_executor_logs(self) -> None:
-        print("Collecting logs from test executor...")
+        logger.debug("Collecting logs from test executor...")
         log_file = f"{self.tmt_test_data_dir}/journal-test_executor.log"
         try:
             Command(f"journalctl --no-pager > {log_file}").run()
         except Exception as ex:
-            print(f"Failed to gather test executor journal: {ex}")
+            logger.debug(f"Failed to gather test executor journal: {ex}")
 
     def teardown(self, ctrl: BluechiControllerContainer, nodes: Dict[str, BluechiNodeContainer]):
-        print("Stopping and removing all container...")
+        logger.debug("Stopping and removing all container...")
 
         if ctrl is not None:
             ctrl.cleanup()

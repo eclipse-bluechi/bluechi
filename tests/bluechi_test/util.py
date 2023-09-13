@@ -1,10 +1,13 @@
 # SPDX-License-Identifier: LGPL-2.1-or-later
 
+import logging
 import random
 import string
 import socket
 
 from typing import Union
+
+logger = logging.getLogger(__name__)
 
 
 def read_file(local_file: str) -> Union[str, None]:
@@ -21,8 +24,8 @@ def get_primary_ip() -> str:
         # connect to an arbitrary address
         s.connect(("254.254.254.254", 1))
         ip = s.getsockname()[0]
-    except Exception as ex:
-        print(f"Failed to get IP, falling back to localhost. Exception: {ex}")
+    except Exception:
+        logging.exception("Failed to get IP, falling back to localhost.")
         ip = "127.0.0.1"
     finally:
         s.close()
