@@ -9,11 +9,11 @@ nav:
   - Home: index.md
   - Getting Started: getting_started.md
   - Configuration: configuration.md
+  - Proxy Services: proxy_services.md
   - DBus API: 
     - Description: api/description.md
-    - Examples: api/examples.md
-    - Bindings: api/bindings.md
-  - Proxy Services: proxy_services.md
+    - Using the D-Bus API: api/examples.md
+    - Generating clients: api/client_generation.md
   - MAN Pages:
     - Binaries:
       - bluechi(1): man/bluechi.md
@@ -25,7 +25,12 @@ nav:
       - bluechi-agent(5): man/bluechi_agent_conf.md
 
 theme:
-  name: readthedocs
+  name: material
+  features:
+    - content.code.copy
+
+extra_javascript:
+  - assets/js/tab-sync.js
 
 markdown_extensions:
   - toc:
@@ -36,3 +41,6 @@ markdown_extensions:
   - pymdownx.snippets:
      base_path: ["doc"]
      check_paths: True
+  - pymdownx.superfences:
+  - pymdownx.tabbed:
+      alternate_style: true
