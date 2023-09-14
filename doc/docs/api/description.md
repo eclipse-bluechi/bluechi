@@ -1,14 +1,16 @@
 <!-- markdownlint-disable-file MD013 MD007 MD024 -->
 # D-Bus API Description
 
-The main way to interact with BlueChi is using [D-Bus](https://www.freedesktop.org/wiki/Software/dbus/). It exposes a name on the system bus called `org.eclipse.bluechi` that other programs can use to control the system. It is expected that high-level control planes use this API directly, but there is also a `bluechictl` program that is useful for debugging and testing.
+The main way to interact with BlueChi is using [D-Bus](https://www.freedesktop.org/wiki/Software/dbus/). It exposes a name on the system bus called `org.eclipse.bluechi` that other programs can use to control the system. It is expected that high-level control planes use this API directly, but there is also debugging tool called [bluechictl](../man/bluechictl.md) which can be used for debugging and testing purposes.
+
+The interfaces described in this sections are referencing the [introspection data](https://dbus.freedesktop.org/doc/dbus-specification.html#introspection-format) which is defined in XML files located in the [data directory](https://github.com/containers/bluechi/tree/main/data) of the project.
 
 ## BlueChi public D-Bus API
 
 The main entry point is at the `/org/eclipse/bluechi` object path and implements the `org.eclipse.bluechi.Manager`
 interface.
 
-Note that all properties also come with change events, so you can easily track when they change.
+Note that some properties also come with change events, so you can easily track when they change.
 
 ### interface org.eclipse.bluechi.Manager
 
