@@ -7,7 +7,7 @@ import dasbus.connection
 bus = dasbus.connection.SystemMessageBus()
 
 if len(sys.argv) != 4:
-    print("No node name, unit and value supplied")
+    print(f"Usage: python {sys.argv[0]} node_name unit_name cpu_weight")
     sys.exit(1)
 
 node_name = sys.argv[1]

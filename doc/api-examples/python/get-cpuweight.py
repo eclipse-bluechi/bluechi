@@ -6,7 +6,7 @@ import dasbus.connection
 bus = dasbus.connection.SystemMessageBus()
 
 if len(sys.argv) != 3:
-    print("No node name, unit supplied")
+    print(f"Usage: python {sys.argv[0]} node_name unit_name")
     sys.exit(1)
 
 node_name = sys.argv[1]
@@ -17,4 +17,4 @@ node_path = manager.GetNode(node_name)
 node = bus.get_proxy("org.eclipse.bluechi", node_path)
 
 value = node.GetUnitProperty(unit_name, "org.freedesktop.systemd1.Service", "CPUWeight")
-print(value)
+print(value.get_uint64())

@@ -9,7 +9,6 @@ import (
 	"github.com/godbus/dbus/v5"
 )
 
-// Constants to manage bluechi dbus interface
 const (
 	BcDusInterface  = "org.eclipse.bluechi"
 	BcObjectPath    = "/org/eclipse/bluechi"
@@ -17,8 +16,6 @@ const (
 )
 
 func main() {
-	var nodes [][]interface{}
-
 	conn, err := dbus.ConnectSystemBus()
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "Failed to connect to system bus:", err)
@@ -26,6 +23,7 @@ func main() {
 	}
 	defer conn.Close()
 
+	var nodes [][]interface{}
 	busObject := conn.Object(BcDusInterface, BcObjectPath)
 	err = busObject.Call(MethodListNodes, 0).Store(&nodes)
 	if err != nil {
@@ -34,9 +32,6 @@ func main() {
 	}
 
 	for _, node := range nodes {
-		fmt.Println("Name:", node[0])
-		fmt.Println("Status:", node[2])
-		fmt.Println("Object Path:", node[1])
-		fmt.Println()
+		fmt.Printf("Name: %s, Status: %s\n", node[0], node[2])
 	}
 }

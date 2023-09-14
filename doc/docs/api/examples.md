@@ -1,200 +1,158 @@
-<!-- markdownlint-disable-file MD013 MD024 -->
-# Examples using the public D-Bus API
+<!-- markdownlint-disable-file MD013 -->
+# Using BlueChi's D-Bus API
 
-## Python
+BlueChi provides [introspection data](https://dbus.freedesktop.org/doc/dbus-specification.html#introspection-format) for its public API. These XML files are located in the [data directory](https://github.com/containers/bluechi/tree/main/data) of the BlueChi project and can be used either as reference when writing custom clients or as input to generate them (see [here](./client_generation.md)).
 
-The examples listed here are using the [dasbus](https://dasbus.readthedocs.io/en/latest/) library for Python 3. It can be installed via
+There are a number of bindings for the D-Bus protocol for a range of programming languages. A (not complete) list of bindings can be found on the [freedesktop D-Bus bindings](https://www.freedesktop.org/wiki/Software/DBusBindings/) website.
 
-```bash
-pip3 install dasbus
-```
+The following sections demonstrate how the D-Bus API of BlueChi can be interacted with using bindings from different programming languages by showing small snippets.
 
----
+!!! Note
 
-### List all nodes
+    All snippets require to be run on the machine where BlueChi is running. The only exception is the example for [monitoring the connection status of the agent](#monitor-the-connection-on-the-managed-node), which has to be executed on the managed node where the BlueChi agent is running.
 
-```python
---8<-- "api-examples/python/list-nodes.py"
-```
+## Setup
 
----
+=== "Go"
 
-### List all units on a given node
+    --8<-- "api-examples/go/setup.md"
 
-```python
---8<-- "api-examples/python/list-node-units.py"
-```
+=== "Python"
 
----
+    --8<-- "api-examples/python/setup.md"
 
-### List active services on all nodes
+!!! Note
 
-```python
---8<-- "api-examples/python/list-active-services.py"
-```
+        Depending on the setup of BlueChi root privileges might be needed when running the samples.
 
----
-
-### Starting a unit
-
-```python
---8<-- "api-examples/python/start-unit.py"
-```
-
----
-
-### Monitor a unit
-
-```python
---8<-- "api-examples/python/monitor-unit.py"
-```
-
----
-
-### Get a unit property
-
-```python
---8<-- "api-examples/python/get-unit-property.py"
-```
-
----
-
-### Set a unit property
-
-```python
---8<-- "api-examples/python/set-cpuweight.py"
-```
-
----
-
-### Enable unit files
-
-```python
---8<-- "api-examples/python/enable-unit.py"
-```
-
----
-
-## Ruby
-
-### Installing ruby and dbus module
-
-``` bash
-dnf install ruby -y
-gem install ruby-dbus
-```
-
-### Running the example
-
-``` bash
-# ruby list_nodes.rb
-BlueChi nodes:
-================
-Name: control
-Path: online
-Status: /org/eclipse/bluechi/node/control
-
-Name: node1
-Path: offline
-Status: /org/eclipse/bluechi/node/node1
-```
+## Getting information
 
 ### List all nodes
 
-``` ruby
---8<-- "api-examples/ruby/list_nodes.rb"
-```
+=== "Go"
 
-## GoLang
+    ```go
+    --8<-- "api-examples/go/list-nodes.go"
+    ```
 
-First, make sure the system has golang installed and download the dbus library.
+=== "Python"
 
-These steps were based on CentOS Stream 9:
+    ```python
+    --8<-- "api-examples/python/list-nodes.py"
+    ```
 
-### Installing golang
+### List all units on a node
 
-``` bash
-# dnf install go-toolset
-```
+=== "Go"
 
-### Adding dbus library
+    ```go
+    --8<-- "api-examples/go/list-node-units.go"
+    ```
 
-``` bash
-# go install github.com/godbus/dbus/v5
-```
+=== "Python"
 
-### Build the source code
+    ```python
+    --8<-- "api-examples/python/list-node-units.py"
+    ```
 
-``` bash
-# go mod init list_nodes
-# go mod tidy 
-# go run list_nodes.go
-# ./list_nodes
-Name: control
-Status: online
-Object Path: /org/eclipse/bluechi/node/control
+### Get a unit property value
 
-Name: node1
-Status: online
-Object Path: /org/eclipse/bluechi/node/node1
+=== "Go"
 
-Name: qm-node1
-Status: online
-Object Path: /org/eclipse/bluechi/node/qm_2dnode1
-```
+    ```go
+    --8<-- "api-examples/go/get-cpuweight.go"
+    ```
 
-### List all nodes
+=== "Python"
 
-``` go
---8<-- "api-examples/go/list_nodes.go"
-```
+    ```python
+    --8<-- "api-examples/python/get-cpuweight.py"
+    ```
 
----
+## Operations on units
 
-## Rust
+### Start unit
 
-Rust developers can take advance of **dbus-codegen-rust** to generate a Rust module
-and use,tag,release in any pace it's appropriate to their project.
+=== "Go"
 
-### Generating bluechi module
+    ```go
+    --8<-- "api-examples/go/start-unit.go"
+    ```
 
-Make sure a BlueChi node is running and execute the below commands.
+=== "Python"
 
-``` bash
-# dnf install rust cargo
-# cargo install dbus-codegen
-# dbus-codegen-rust -s -g -m None -d org.eclipse.bluechi -p /org/eclipse/bluechi > bluechi.rs
-```
+    ```python
+    --8<-- "api-examples/python/start-unit.py"
+    ```
 
-### Using the generated code
+### Enable unit
 
-As every project is different, here a traditional example of importing the generated module in a **main.rs**:
+=== "Go"
 
-**Dir structure**:
+    ```go
+    --8<-- "api-examples/go/enable-unit.go"
+    ```
 
-``` bash
-.
-├── Cargo.toml
-└── src
-    ├── bluechi.rs
-    └── main.rs
-```
+=== "Python"
 
-As soon the files **bluechi.rs** and [main.rs](./src/main.rs) were copies to `src/` it's possible to compile a new binary via:
+    ```python
+    --8<-- "api-examples/python/enable-unit.py"
+    ```
 
-``` bash
-# cargo build
-# ./list_nodes
-Node: "control"
-Status: "online"
-Path("/org/eclipse/bluechi/node/control\0")
-Node: "node1"
-Status: "offline"
-Path("/org/eclipse/bluechi/node/node1\0")
-```
+### Set property of a unit
 
-### List all nodes
+=== "Go"
 
-``` rust
---8<-- "api-examples/rust/list_nodes.rs"
-```
+    ```go
+    --8<-- "api-examples/go/set-cpuweight.go"
+    ```
+
+=== "Python"
+
+    ```python
+    --8<-- "api-examples/python/set-cpuweight.py"
+    ```
+
+## Monitoring
+
+### Monitor the connections of all nodes
+
+=== "Go"
+
+    ```go
+    --8<-- "api-examples/go/monitor-node-connections.go"
+    ```
+
+=== "Python"
+
+    ```python
+    --8<-- "api-examples/python/monitor-node-connections.py"
+    ```
+
+### Monitor the connection on the managed node
+
+=== "Go"
+
+    ```go
+    --8<-- "api-examples/go/monitor-agent-connection.go"
+    ```
+
+=== "Python"
+
+    ```python
+    --8<-- "api-examples/python/monitor-agent-connection.py"
+    ```
+
+### Monitor unit changes
+
+=== "Go"
+
+    ```go
+    --8<-- "api-examples/go/monitor-unit.go"
+    ```
+
+=== "Python"
+
+    ```python
+    --8<-- "api-examples/python/monitor-unit.py"
+    ```

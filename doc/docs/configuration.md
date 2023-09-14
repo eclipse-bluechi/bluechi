@@ -1,5 +1,8 @@
 # Configuration
 
+For a list of supported options incl. an explanation please refer to the
+the MAN pages for [bluechi(5)](./man/bluechi_conf.md) and [bluechi-agent(5)](./man/bluechi_agent_conf.md).
+
 ## Loading order
 
 On startup, bluechi loads configuration files from the following directories:
@@ -17,9 +20,6 @@ files in `/etc/bluechi/bluechi.conf.d` are sorted alphabetically and read in asc
 
 It is also possible to pass the cli option `-c <path_to_file>` to both, bluechi and bluechi-agent. If specified, this
 configuration has the highest priority and all defined settings will override previously set options.
-
-For a list of supported options incl. an explanation please refer to the
-the MAN pages for [bluechi(5)](./man/bluechi_conf.md) and [bluechi-agent(5)](./man/bluechi_agent_conf.md).
 
 ## Maximum line length
 
