@@ -1,7 +1,7 @@
 # Configuration
 
 For a list of supported options incl. an explanation please refer to the the MAN pages for
-[bluechi-controller(5)](./man/bluechi-controller-conf.md) and [bluechi-agent(5)](./man/bluechi_agent_conf.md).
+[bluechi-controller(5)](./man/bluechi-controller-conf.md) and [bluechi-agent(5)](./man/bluechi-agent-conf.md).
 
 ## Loading order
 

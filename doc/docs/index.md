@@ -50,4 +50,4 @@ administrators from interacting with bluechi via D-Bus directly.
 
 Here is a generic overview of the BlueChi architecture:
 
-![BlueChi Architecture diagrma](img/bluechi_architecture.jpg)
+![BlueChi Architecture diagram](img/bluechi_architecture.jpg)
