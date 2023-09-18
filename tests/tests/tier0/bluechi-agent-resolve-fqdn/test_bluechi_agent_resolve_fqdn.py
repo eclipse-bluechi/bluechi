@@ -29,7 +29,7 @@ def verify_resolving_fqdn(ctrl: BluechiControllerContainer, _: Dict[str, Bluechi
     local_node_cfg.manager_host = "localhost"
     ctrl.create_file(local_node_cfg.get_confd_dir(), local_node_cfg.file_name, local_node_cfg.serialize())
 
-    ctrl.exec_run('systemctl start bluechi-agent')
+    ctrl.systemctl_start_and_wait("bluechi-agent", 1)
     result, output = ctrl.exec_run('systemctl is-active bluechi-agent')
     assert result == 0
     assert output == 'active'

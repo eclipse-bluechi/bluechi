@@ -46,6 +46,13 @@ def bluechi_network_name() -> str:
     return _get_env_value('BLUECHI_NETWORK_NAME', 'bluechi-test')
 
 
+@pytest.fixture(scope='session')
+def run_with_valgrind() -> bool:
+    """Returns 1 if bluechi should be run with valgrind for memory management testing"""
+
+    return _get_env_value('WITH_VALGRIND', 0) == '1'
+
+
 def _get_env_value(env_var: str, default_value: str) -> str:
     value = os.getenv(env_var)
     if value is None:
@@ -95,7 +102,8 @@ def bluechi_test(
         bluechi_network_name: str,
         bluechi_ctrl_host_port: str,
         bluechi_ctrl_svc_port: str,
-        tmt_test_data_dir: str):
+        tmt_test_data_dir: str,
+        run_with_valgrind: bool):
 
     return BluechiTest(
         podman_client,
@@ -104,4 +112,5 @@ def bluechi_test(
         bluechi_ctrl_host_port,
         bluechi_ctrl_svc_port,
         tmt_test_data_dir,
+        run_with_valgrind,
     )

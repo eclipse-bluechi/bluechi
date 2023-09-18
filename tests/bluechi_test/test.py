@@ -1,6 +1,9 @@
 # SPDX-License-Identifier: LGPL-2.1-or-later
 
 import logging
+import os
+import re
+import time
 import traceback
 
 from podman import PodmanClient
@@ -22,7 +25,8 @@ class BluechiTest():
             bluechi_network_name: str,
             bluechi_ctrl_host_port: str,
             bluechi_ctrl_svc_port: str,
-            tmt_test_data_dir: str) -> None:
+            tmt_test_data_dir: str,
+            run_with_valgrind: bool) -> None:
 
         self.podman_client = podman_client
         self.bluechi_image_id = bluechi_image_id
@@ -30,6 +34,7 @@ class BluechiTest():
         self.bluechi_ctrl_host_port = bluechi_ctrl_host_port
         self.bluechi_ctrl_svc_port = bluechi_ctrl_svc_port
         self.tmt_test_data_dir = tmt_test_data_dir
+        self.run_with_valgrind = run_with_valgrind
 
         self.bluechi_controller_config: BluechiControllerConfig = None
         self.bluechi_node_configs: List[BluechiNodeConfig] = []
@@ -61,7 +66,10 @@ class BluechiTest():
             c.wait(condition="running")
 
             ctrl_container = BluechiControllerContainer(c, self.bluechi_controller_config)
+            if self.run_with_valgrind:
+                ctrl_container.enable_valgrind()
             ctrl_container.exec_run('systemctl start bluechi-controller')
+            ctrl_container.wait_for_unit_state_to_be("bluechi-controller.service", "active")
 
             for cfg in self.bluechi_node_configs:
                 logger.debug(f"Starting container bluechi-node '{cfg.node_name}' with config:\n{cfg.serialize()}")
@@ -77,11 +85,20 @@ class BluechiTest():
                 node = BluechiNodeContainer(c, cfg)
                 node_container[cfg.node_name] = node
 
+                if self.run_with_valgrind:
+                    node.enable_valgrind()
+
                 node.exec_run('systemctl start bluechi-agent')
+                node.wait_for_unit_state_to_be("bluechi-agent.service", "active")
 
         except Exception as ex:
             success = False
             logger.debug(f"Failed to setup bluechi container: {ex}")
+            traceback.print_exc()
+
+        if self.run_with_valgrind:
+            # Give some more time for bluechi to start and connect while running with valgrind
+            time.sleep(2)
 
         return (success, (ctrl_container, node_container))
 
@@ -90,9 +107,13 @@ class BluechiTest():
 
         if ctrl is not None:
             ctrl.gather_journal_logs(self.tmt_test_data_dir)
+            if self.run_with_valgrind:
+                ctrl.gather_valgrind_logs(self.tmt_test_data_dir)
 
         for _, node in nodes.items():
             node.gather_journal_logs(self.tmt_test_data_dir)
+            if self.run_with_valgrind:
+                node.gather_valgrind_logs(self.tmt_test_data_dir)
 
         self.gather_test_executor_logs()
 
@@ -113,6 +134,25 @@ class BluechiTest():
         for _, node in nodes.items():
             node.cleanup()
 
+    def check_valgrind_logs(self) -> None:
+        logger.debug("Checking valgrind logs...")
+        errors_found = False
+        for filename in os.listdir(self.tmt_test_data_dir):
+            if re.match(r'.+-valgrind-.+\.log', filename):
+                with open(os.path.join(self.tmt_test_data_dir, filename), 'r') as file:
+                    summary_found = False
+                    for line in file.readlines():
+                        if 'ERROR SUMMARY' in line:
+                            summary_found = True
+                            errors = re.findall(r'ERROR SUMMARY: (\d+) errors', line)
+                            if errors[0] != "0":
+                                logger.debug(f"Valgrind errors found in {filename}")
+                                errors_found = True
+                    if not summary_found:
+                        raise Exception(f"Valgrind log {filename} does not contain summary, log was not finalized")
+        if errors_found:
+            raise Exception(f"Memory errors found in test. Review valgrind logs in {self.tmt_test_data_dir}")
+
     def run(self, exec: Callable[[BluechiControllerContainer, Dict[str, BluechiNodeContainer]], None]):
         successful, container = self.setup()
         ctrl_container, node_container = container
@@ -125,5 +165,9 @@ class BluechiTest():
         try:
             exec(ctrl_container, node_container)
         finally:
-            self.gather_logs(ctrl_container, node_container)
-            self.teardown(ctrl_container, node_container)
+            try:
+                self.gather_logs(ctrl_container, node_container)
+                if self.run_with_valgrind:
+                    self.check_valgrind_logs()
+            finally:
+                self.teardown(ctrl_container, node_container)

@@ -76,6 +76,16 @@ tmt run
 This will use latest BlueChi packages from
 [hirte-snapshot](https://copr.fedorainfracloud.org/coprs/mperina/hirte-snapshot/) repository.
 
+## Running integration tests with memory leak detection
+
+To run integration tests with `valgrind`, set `WITH_VALGRIND` environment variable as follows:
+
+```shell
+WITH_VALGRIND=1 tmt run -v
+```
+
+If `valgrind` detects a memory leak in a test, the test will fail, and the logs will be found in the test `data` directory.
+
 ## Running integration tests with local BlueChi build
 
 In order to run integration tests for your local BlueChi build, you need have BlueChi RPM packages built from your source
