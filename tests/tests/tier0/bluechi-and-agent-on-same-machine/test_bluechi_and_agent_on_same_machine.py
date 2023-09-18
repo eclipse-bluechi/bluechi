@@ -21,9 +21,9 @@ def exec(ctrl: BluechiControllerContainer, nodes: Dict[str, BluechiNodeContainer
         manager_port=ctrl.config.port,
     )
     ctrl.create_file(node_foo_config.get_confd_dir(), node_foo_config.file_name, node_foo_config.serialize())
-    result, _ = ctrl.exec_run("systemctl start bluechi-agent")
+    result, _, wait_result = ctrl.systemctl_start_and_wait("bluechi-agent", 1)
     assert result == 0
-    assert ctrl.wait_for_unit_state_to_be("bluechi-agent", "active")
+    assert wait_result
 
     # bluechi-agent is running, check if it is connected
     result, output = ctrl.run_python(os.path.join("python", "is_node_connected.py"))

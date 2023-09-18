@@ -7,5 +7,6 @@ RUN dnf upgrade --refresh -y --nodocs && \
         selinux-policy \
         systemd \
         systemd-devel \
+        valgrind \
     -y && \
     dnf -y clean all

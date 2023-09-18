@@ -14,6 +14,9 @@ from bluechi_test.util import read_file, get_random_name
 
 logger = logging.getLogger(__name__)
 
+valgrind_log_path_controller = '/var/log/valgrind/bluechi-controller-valgrind.log'
+valgrind_log_path_agent = '/var/log/valgrind/bluechi-agent-valgrind.log'
+
 
 class BluechiContainer():
 
@@ -79,6 +82,15 @@ class BluechiContainer():
     def systemctl_daemon_reload(self) -> Tuple[Optional[int], Union[Iterator[bytes], Any, Tuple[bytes, bytes]]]:
         return self.exec_run("systemctl daemon-reload")
 
+    def systemctl_start_and_wait(self, service_name: str, sleep_after: float = 0.0) -> \
+            Tuple[Optional[int], Union[Iterator[bytes], Any, Tuple[bytes, bytes]], Optional[bool]]:
+
+        result, output = self.exec_run(f"systemctl start {service_name}")
+        wait_result = self.wait_for_unit_state_to_be(service_name, "active")
+        time.sleep(sleep_after)
+
+        return result, output, wait_result
+
     def copy_systemd_service(self, service_file_name: str, source_dir: str, target_dir):
         source_path = os.path.join(source_dir, service_file_name)
         content = read_file(source_path)
@@ -104,7 +116,7 @@ class BluechiContainer():
         _, output = self.exec_run(f"systemctl is-active {unit_name}")
         return output
 
-    def wait_for_unit_state_to_be(self, unit_name: str, expected_state: str, timeout: float = 2.0) -> bool:
+    def wait_for_unit_state_to_be(self, unit_name: str, expected_state: str, timeout: float = 4.0) -> bool:
         latest_state = ""
 
         start = time.time()
@@ -116,6 +128,16 @@ class BluechiContainer():
         logger.debug(f"Timeout while waiting for '{unit_name}' to reach state '{expected_state}'. \
               Latest state: '{latest_state}'")
         return False
+
+    def enable_valgrind(self) -> None:
+        self.exec_run(f"sed -i '/ExecStart=/c\\ExecStart=/usr/bin/valgrind --leak-check=yes "
+                      f"--log-file={valgrind_log_path_controller} /usr/libexec/bluechi-controller' "
+                      f"/usr/lib/systemd/system/bluechi-controller.service")
+        self.exec_run(f"sed -i '/ExecStart=/c\\ExecStart=/usr/bin/valgrind --leak-check=yes "
+                      f"--log-file={valgrind_log_path_controller} /usr/libexec/bluechi-agent' "
+                      f"/usr/lib/systemd/system/bluechi-agent.service")
+        self.exec_run("mkdir -p /var/log/valgrind")
+        self.exec_run("systemctl daemon-reload")
 
     def run_python(self, python_script_path: str) -> \
             Tuple[Optional[int], Union[Iterator[bytes], Any, Tuple[bytes, bytes]]]:
@@ -134,6 +156,25 @@ class BluechiContainer():
             os.remove(target_file_path)
         finally:
             return result, output
+
+    def extract_valgrind_logs(self, log_path: str, target_path: str, data_dir: str) -> None:
+        result, _ = self.exec_run(f'cp -f {log_path} {target_path}')
+        if result == 0:
+            self.get_file(target_path, data_dir)
+
+    def gather_valgrind_logs(self, data_dir: str) -> None:
+        bluechi_valgrind_filename = f"bluechi-controller-valgrind-{self.container.name}.log"
+        bluechi_agent_valgrind_filename = f"bluechi-agent-valgrind-{self.container.name}.log"
+        bluechi_valgrind_log_target_path = f"/tmp/{bluechi_valgrind_filename}"
+        bluechi_agent_valgrind_log_target_path = f"/tmp/{bluechi_agent_valgrind_filename}"
+
+        # Stop bluechi process to finalize valgrind report
+        self.exec_run("systemctl stop bluechi-agent")
+        self.exec_run("systemctl stop bluechi-controller")
+
+        # Collect valgrind logs to the data directory
+        self.extract_valgrind_logs(valgrind_log_path_controller, bluechi_valgrind_log_target_path, data_dir)
+        self.extract_valgrind_logs(valgrind_log_path_agent, bluechi_agent_valgrind_log_target_path, data_dir)
 
 
 class BluechiNodeContainer(BluechiContainer):
