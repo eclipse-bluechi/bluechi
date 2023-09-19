@@ -176,8 +176,8 @@ meson install -C builddir --destdir bin
 
 After building, the following binaries are available:
 
-- `bluechi`: the systemd service controller which is run on the main machine, sending commands to the agents and
-  monitoring the progress
+- `bluechi-controller`: the systemd service controller which is run on the main machine, sending commands to the agents
+  and monitoring the progress
 - `bluechi-agent`: the node agent unit which connects with the controller and executes commands on the node machine
 - `bluechi-proxy`: an internally used application to resolve cross-node dependencies
 - `bluechictl`: a helper (CLI) program to send an commands to the controller
@@ -205,7 +205,7 @@ Rebuild the BlueChi project with debug symbols included:
 ```bash
 bluechi> make clean
 bluechi> meson install -C builddir --dest=bin
-bluechi> gdb --args ./builddir/bin/usr/local/bin/bluechi -c /etc/bluechi/bluechi.conf
+bluechi> gdb --args ./builddir/bin/usr/local/bin/bluechi-controller -c /etc/bluechi/controller.conf
 ```
 
 ### Unit tests
@@ -246,7 +246,7 @@ meson install -C builddir --destdir bin
 Meson will output the artifacts to `./builddir/bin/usr/local/`. This directory is referred to in the following sections
 simply as `<builddir>`.
 
-To allow `bluechi` and `bluechi-agent` to own a name on the local system D-Bus, the provided configuration
+To allow `bluechi-controller` and `bluechi-agent` to own a name on the local system D-Bus, the provided configuration
 files need to be copied (if not already existing):
 
 ```bash
@@ -257,21 +257,21 @@ cp <builddir>/share/dbus-1/system.d/org.eclipse.bluechi.conf /etc/dbus-1/system.
 **Note:** Make sure to reload the dbus service so these changes take effect: `systemctl reload dbus-broker.service` (or
 `systemctl reload dbus.service`)
 
-#### bluechi
+#### bluechi-controller
 
-The newly built controller can simply be run via `./<builddir>/bin/bluechi`, but it is recommended to use a specific
-configuration for development. This file can be passed in with the `-c` CLI option:
+The newly built controller can simply be run via `./<builddir>/bin/bluechi-controller`, but it is recommended to use a
+specific configuration for development. This file can be passed in with the `-c` CLI option:
 
 ```bash
-./<builddir>/bin/bluechi -c <path-to-cfg-file>
+./<builddir>/bin/bluechi-controller -c <path-to-cfg-file>
 ```
 
 #### bluechi-agent
 
-Before starting the agent, it is best to have the `bluechi` controller already running. However, `bluechi-agent` will
+Before starting the agent, it is best to have the `bluechi-controller` already running. However, `bluechi-agent` will
 try to reconnect in the configured heartbeat interval.
 
-Similar to `bluechi`, it is recommended to use a dedicated configuration file for development:
+Similar to `bluechi-controller`, it is recommended to use a dedicated configuration file for development:
 
 ```bash
 ./<builddir>/bin/bluechi-agent -c <path-to-cfg-file>

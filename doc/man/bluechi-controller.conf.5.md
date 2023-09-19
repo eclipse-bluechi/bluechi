@@ -2,21 +2,20 @@
 
 ## NAME
 
-bluechi.conf - Configuration file to bootstrap bluechi
+bluechi-controller.conf - Configuration file to bootstrap bluechi-controller
 
 ## DESCRIPTION
 
-The basic file definition used to bootstrap bluechi.
+The basic file definition used to bootstrap bluechi-controller.
 
 ## Format
 
-The bluechi configuration file is using the
+The bluechi-controller configuration file is using the
 [systemd configuration file format](https://www.freedesktop.org/software/systemd/man/systemd.syntax.html). Contrary to this, there is no need for the `\` symbol at the end of a line to continue a value on the next line. A value continued on multiple lines will just be concatenated by bluechi. The maximum line length supported is 500 characters. If the value exceeds this limitation, use multiple, indented lines.
 
-### **bluechi** section
+### **bluechi-controller** section
 
-All fields to bootstrap the bluechi manager are contained in the **bluechi** section. The following keys are understood by
-`bluechi`.
+All fields to bootstrap the bluechi controller are contained in the **bluechi-controller** section. The following keys are understood by `bluechi-controller`.
 
 #### **ManagerPort** (uint16_t)
 
@@ -58,7 +57,7 @@ If this flag is set to `true`, no logs are written by bluechi. By default the fl
 A basic example of a configuration file for `bluechi`:
 
 ```
-[bluechi]
+[bluechi-controller]
 ManagerPort=842
 AllowedNodeNames=agent-007,agent-123
 LogLevel=DEBUG
@@ -69,7 +68,7 @@ LogIsQuiet=false
 Using a value that is continued on multiple lines:
 
 ```
-[bluechi]
+[bluechi-controller]
 ManagerPort=842
 AllowedNodeNames=agent-007,
    agent-123,
@@ -82,11 +81,11 @@ LogIsQuiet=false
 
 ## FILES
 
-Distributions provide the __/usr/share/bluechi/config/bluechi.conf__ file which defines bluechi configuration defaults. Administrators can copy this file to __/etc/bluechi/bluechi.conf__ and specify their own configuration.
+Distributions provide the __/usr/share/bluechi/config/controller.conf__ file which defines bluechi configuration defaults. Administrators can copy this file to __/etc/bluechi/controller.conf__ and specify their own configuration.
 
-Administrators can also use a "drop-in" directory __/etc/bluechi/bluechi.conf.d__ to drop their configuration changes.
+Administrators can also use a "drop-in" directory __/etc/bluechi/controller.conf.d__ to drop their configuration changes.
 
 
 ## SEE ALSO
 
-**[bluechi(1)](https://github.com/containers/bluechi/blob/main/doc/man/bluechi.1.md)**
+**[bluechi-controller(1)](https://github.com/containers/bluechi/blob/main/doc/man/bluechi-controller.1.md)**

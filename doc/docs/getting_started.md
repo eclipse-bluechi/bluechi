@@ -35,7 +35,7 @@ For both the laptop and the Raspberry Pi 4, the configuration files can be found
 under: `/etc/bluechi/`.
 
 On the laptop, where both bluechi and bluechi-agent run, configure bluechi in
-`/etc/bluechi/bluechi.conf` as:
+`/etc/bluechi/controller.conf` as:
 
 ```ini
 [bluechi]
@@ -81,7 +81,7 @@ Starting bluechi and bluechi-agent is now as simple as starting normal systemd s
 Run on the primary system (here the  laptop):
 
 ```bash
-systemctl start bluechi bluechi-agent
+systemctl start bluechi-controller bluechi-agent
 ```
 
 And on the worker nodes (here the Raspberry Pi 4):
@@ -93,7 +93,7 @@ systemctl start bluechi-agent
 On each system, monitor the services using either, accordingly:
 
 ```bash
-journalctl -lfu bluechi
+journalctl -lfu bluechi-controller
 ```
 
 Or
@@ -108,9 +108,9 @@ Once the services are up and running, the logs of the laptop show that the
 Raspberry Pi successfully connects to the laptop:
 
 ```text
-Mar 13 10:20:36 flame.pingoured.fr systemd[1]: Started bluechi.service - BlueChi service orchestrator manager daemon.
-Mar 13 10:20:36 flame.pingoured.fr bluechi[124510]: 10:20:36 INFO     ../src/manager/node.c:602 node_method_register      msg="Registered managed node from fd 8 as 'laptop'"
-Mar 13 10:20:38 flame.pingoured.fr bluechi[124510]: 10:20:38 INFO     ../src/manager/node.c:602 node_method_register      msg="Registered managed node from fd 9 as 'rpi4'"
+Mar 13 10:20:36 flame.pingoured.fr systemd[1]: Started bluechi-controller.service - BlueChi service orchestrator manager daemon.
+Mar 13 10:20:36 flame.pingoured.fr bluechi-controller[124510]: 10:20:36 INFO     ../src/manager/node.c:602 node_method_register      msg="Registered managed node from fd 8 as 'laptop'"
+Mar 13 10:20:38 flame.pingoured.fr bluechi-controller[124510]: 10:20:38 INFO     ../src/manager/node.c:602 node_method_register      msg="Registered managed node from fd 9 as 'rpi4'"
 ```
 
 From there, bluechictl can be used on the laptop to control services running on

@@ -9,7 +9,7 @@ focus on highly regulated industries, such as those requiring function safety.
 BlueChi integrates with systemd via its D-Bus API and relays D-Bus messages over
 TCP for multi-nodes support.
 
-On the main node a service called `bluechi` is running. On startup, the manager
+On the main node a service called `bluechi-controller` is running. On startup, the manager
 loads the configuration files which describe all the involved systems
 (called nodes) that are expected to be managed. Each node has a
 unique name that is used to reference it in the manager.

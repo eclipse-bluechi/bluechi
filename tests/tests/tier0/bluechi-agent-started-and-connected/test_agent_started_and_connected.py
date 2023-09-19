@@ -8,7 +8,7 @@ from bluechi_test.config import BluechiControllerConfig, BluechiNodeConfig
 
 
 def foo_startup_verify(ctrl: BluechiControllerContainer, nodes: Dict[str, BluechiNodeContainer]):
-    result, output = ctrl.exec_run('systemctl is-active bluechi')
+    result, output = ctrl.exec_run('systemctl is-active bluechi-controller')
 
     assert result == 0
     assert output == 'active'

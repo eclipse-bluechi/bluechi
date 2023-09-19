@@ -2,19 +2,19 @@
 
 ## NAME
 
-bluechi - Manager of services across agents
+bluechi-controller - Manager of services across agents
 
 ## SYNOPSIS
 
-**bluechi** [*options*]
+**bluechi-controller** [*options*]
 
 ## DESCRIPTION
 
 BlueChi is a systemd service controller intended for multi-nodes environments with a predefined number of nodes and with a focus on highly regulated environment such as those requiring functional safety (for example in cars).
 
-The bluechi manager offers its public API on the local DBus and uses the DBus APIs provided by all connected `bluechi-agents` to manage systemd services on those remote systems.
+The bluechi controller offers its public API on the local DBus and uses the DBus APIs provided by all connected `bluechi-agents` to manage systemd services on those remote systems.
 
-**bluechi [OPTIONS]**
+**bluechi-controller [OPTIONS]**
 
 ## OPTIONS
 
@@ -24,11 +24,11 @@ Print usage statement and exit.
 
 #### **--port**, **-p**
 
-The port on which bluechi is listening for and setting up connections with `bluechi-agents`. This option will overwrite the port defined in the configuration file.
+The port on which bluechi-controller is listening for and setting up connections with `bluechi-agents`. This option will overwrite the port defined in the configuration file.
 
 #### **--config**, **-c**
 
-Path to the configuration file, see `bluechi.conf(5)`.
+Path to the configuration file, see `bluechi-controller.conf(5)`.
 
 #### **--version**,  **-v**
 
@@ -36,7 +36,7 @@ Print current bluechi version
 
 ## Environment Variables
 
-`bluechi` understands the following environment variables that can be used to override the settings from the configuration file (see `bluechi.conf(5)`).
+`bluechi-controller` understands the following environment variables that can be used to override the settings from the configuration file (see `bluechi-controller.conf(5)`).
 
 #### **BC_LOG_LEVEL**
 
@@ -65,4 +65,4 @@ TBD
 
 ## CONFIGURATION FILES
 
-**[bluechi.conf(5)](https://github.com/containers/bluechi/blob/main/doc/man/bluechi.conf.5.md)**
+**[bluechi-controller.conf(5)](https://github.com/containers/bluechi/blob/main/doc/man/bluechi-controller.conf.5.md)**

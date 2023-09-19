@@ -9,7 +9,7 @@ from bluechi_test.config import BluechiControllerConfig
 
 def exec(ctrl: BluechiControllerContainer, _: Dict[str, BluechiNodeContainer]):
 
-    assert ctrl.wait_for_unit_state_to_be("bluechi", "active")
+    assert ctrl.wait_for_unit_state_to_be("bluechi-controller", "active")
 
     original_cfg = ctrl.config.deep_copy()
 
@@ -17,25 +17,25 @@ def exec(ctrl: BluechiControllerContainer, _: Dict[str, BluechiNodeContainer]):
     new_cfg = original_cfg.deep_copy()
     new_cfg.port = "542O"
     ctrl.create_file(new_cfg.get_confd_dir(), new_cfg.file_name, new_cfg.serialize())
-    ctrl.exec_run("systemctl restart bluechi")
-    assert ctrl.wait_for_unit_state_to_be("bluechi", "failed")
+    ctrl.exec_run("systemctl restart bluechi-controller")
+    assert ctrl.wait_for_unit_state_to_be("bluechi-controller", "failed")
 
     # port out of range
     new_cfg = original_cfg.deep_copy()
     new_cfg.port = "65538"
     ctrl.create_file(new_cfg.get_confd_dir(), new_cfg.file_name, new_cfg.serialize())
     # to ensure that a restart is possible, reset the lock due to too many failed attempts
-    ctrl.exec_run("systemctl reset-failed bluechi")
-    ctrl.exec_run("systemctl restart bluechi")
-    assert ctrl.wait_for_unit_state_to_be("bluechi", "failed")
+    ctrl.exec_run("systemctl reset-failed bluechi-controller")
+    ctrl.exec_run("systemctl restart bluechi-controller")
+    assert ctrl.wait_for_unit_state_to_be("bluechi-controller", "failed")
 
     # valid config again
     new_cfg = original_cfg.deep_copy()
     ctrl.create_file(new_cfg.get_confd_dir(), new_cfg.file_name, new_cfg.serialize())
     # to ensure that a restart is possible, reset the lock due to too many failed attempts
-    ctrl.exec_run("systemctl reset-failed bluechi")
-    ctrl.exec_run("systemctl restart bluechi")
-    assert ctrl.wait_for_unit_state_to_be("bluechi", "active")
+    ctrl.exec_run("systemctl reset-failed bluechi-controller")
+    ctrl.exec_run("systemctl restart bluechi-controller")
+    assert ctrl.wait_for_unit_state_to_be("bluechi-controller", "active")
 
 
 def test_agent_invalid_port(bluechi_test: BluechiTest, bluechi_ctrl_default_config: BluechiControllerConfig):

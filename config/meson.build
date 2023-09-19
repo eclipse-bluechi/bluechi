@@ -10,7 +10,7 @@ install_data(
 )
 
 install_data(
-  'bluechi/bluechi.conf',
+  'controller/controller.conf',
   install_dir : join_paths(get_option('datadir'), 'bluechi', 'config')
 )
 
@@ -20,6 +20,6 @@ install_data(
 )
 
 install_data(
-  'bluechi.conf.d/README.md',
-  install_dir :  join_paths(get_option('sysconfdir') / 'bluechi' / 'bluechi.conf.d')
+  'controller.conf.d/README.md',
+  install_dir :  join_paths(get_option('sysconfdir') / 'bluechi' / 'controller.conf.d')
 )

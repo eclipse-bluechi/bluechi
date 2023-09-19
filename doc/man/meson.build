@@ -8,14 +8,14 @@ endif
 want_man = want_man and md2man.found()
 
 man1 = [
-  'bluechi',
+  'bluechi-controller',
   'bluechi-agent',
   'bluechictl',
   'bluechi-proxy',
 ]
 
 man5 = [
-    'bluechi.conf',
+    'bluechi-controller.conf',
     'bluechi-agent.conf',
 ]
 

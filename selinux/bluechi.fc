@@ -1,4 +1,4 @@
-/usr/bin/bluechi	--	gen_context(system_u:object_r:bluechi_exec_t,s0)
+/usr/bin/bluechi-controller	--	gen_context(system_u:object_r:bluechi_exec_t,s0)
 
 /usr/bin/bluechi-agent	--	gen_context(system_u:object_r:bluechi_agent_exec_t,s0)
 

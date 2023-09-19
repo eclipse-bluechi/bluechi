@@ -4,7 +4,7 @@
 %endif
 
 # coverage collection is disabled by default , it can be enabled passing `--define "with_coverage 1"` option to rpmbuild
-%if 0%{?with_coverage} 
+%if 0%{?with_coverage}
 %global coverage_flags -Dwith_coverage=true
 %endif
 
@@ -37,33 +37,33 @@ such as those requiring functional safety (for example in cars).
 This package contains the controller and command line tool.
 
 %post
-%systemd_post bluechi.service
+%systemd_post bluechi-controller.service
 
 %preun
-%systemd_preun bluechi.service
+%systemd_preun bluechi-controller.service
 
 %postun
-%systemd_postun_with_restart bluechi.service
+%systemd_postun_with_restart bluechi-controller.service
 
 %files
-%ghost %{_sysconfdir}/bluechi/bluechi.conf
+%ghost %{_sysconfdir}/bluechi/controller.conf
 %dir %{_sysconfdir}/bluechi
-%dir %{_sysconfdir}/bluechi/bluechi.conf.d
+%dir %{_sysconfdir}/bluechi/controller.conf.d
 %doc README.md
 %doc README.developer.md
 %license LICENSE
-%{_bindir}/bluechi
+%{_bindir}/bluechi-controller
 %{_datadir}/dbus-1/interfaces/org.eclipse.bluechi.Job.xml
 %{_datadir}/dbus-1/interfaces/org.eclipse.bluechi.Manager.xml
 %{_datadir}/dbus-1/interfaces/org.eclipse.bluechi.Monitor.xml
 %{_datadir}/dbus-1/interfaces/org.eclipse.bluechi.Node.xml
 %{_datadir}/dbus-1/system.d/org.eclipse.bluechi.conf
-%{_datadir}/bluechi/config/bluechi.conf
-%{_mandir}/man1/bluechi.*
-%{_mandir}/man5/bluechi.conf.*
-%{_sysconfdir}/bluechi/bluechi.conf.d/README.md
-%{_unitdir}/bluechi.service
-%{_unitdir}/bluechi.socket
+%{_datadir}/bluechi/config/controller.conf
+%{_mandir}/man1/bluechi-controller.*
+%{_mandir}/man5/bluechi-controller.conf.*
+%{_sysconfdir}/bluechi/controller.conf.d/README.md
+%{_unitdir}/bluechi-controller.service
+%{_unitdir}/bluechi-controller.socket
 
 
 %package agent

@@ -12,7 +12,7 @@ node_foo_name = "node-foo"
 
 def exec(ctrl: BluechiControllerContainer, nodes: Dict[str, BluechiNodeContainer]):
 
-    assert ctrl.wait_for_unit_state_to_be("bluechi", "active")
+    assert ctrl.wait_for_unit_state_to_be("bluechi-controller", "active")
 
     node_foo_config = BluechiNodeConfig(
         file_name="agent.conf",

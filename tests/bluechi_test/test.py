@@ -61,7 +61,7 @@ class BluechiTest():
             c.wait(condition="running")
 
             ctrl_container = BluechiControllerContainer(c, self.bluechi_controller_config)
-            ctrl_container.exec_run('systemctl start bluechi')
+            ctrl_container.exec_run('systemctl start bluechi-controller')
 
             for cfg in self.bluechi_node_configs:
                 logger.debug(f"Starting container bluechi-node '{cfg.node_name}' with config:\n{cfg.serialize()}")
