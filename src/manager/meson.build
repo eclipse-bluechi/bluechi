@@ -19,7 +19,7 @@ orch_src = [
 ]
 
 executable(
-  'bluechi',
+  'bluechi-controller',
   orch_src,
   dependencies: [
     systemd_dep,

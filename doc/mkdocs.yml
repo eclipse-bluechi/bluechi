@@ -10,19 +10,19 @@ nav:
   - Getting Started: getting_started.md
   - Configuration: configuration.md
   - Proxy Services: proxy_services.md
-  - DBus API: 
+  - DBus API:
     - Description: api/description.md
     - Using the D-Bus API: api/examples.md
     - Generating clients: api/client_generation.md
   - MAN Pages:
     - Binaries:
-      - bluechi(1): man/bluechi.md
+      - bluechi-controller(1): man/bluechi-controller.md
       - bluechi-agent(1): man/bluechi-agent.md
       - bluechi-proxy(1): man/bluechi-proxy.md
       - bluechictl(1): man/bluechictl.md
     - Configuration:
-      - bluechi(5): man/bluechi_conf.md
-      - bluechi-agent(5): man/bluechi_agent_conf.md
+      - bluechi-controller.conf(5): man/bluechi-controller-conf.md
+      - bluechi-agent.conf(5): man/bluechi-agent-conf.md
 
 theme:
   name: material

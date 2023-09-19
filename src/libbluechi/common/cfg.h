@@ -27,7 +27,7 @@
 /*
  * Configuration section for bluechi manager.
  */
-#define CFG_SECT_BLUECHI "bluechi"
+#define CFG_SECT_BLUECHI "bluechi-controller"
 
 /*
  * Configuration section for bluechi agent.
@@ -41,12 +41,12 @@ typedef struct config config;
 
 /* Standard configuration file locations
  */
-#define CFG_ETC_BC_CONF CONFIG_H_SYSCONFDIR "/bluechi/bluechi.conf"
+#define CFG_ETC_BC_CONF CONFIG_H_SYSCONFDIR "/bluechi/controller.conf"
 #define CFG_ETC_BC_AGENT_CONF CONFIG_H_SYSCONFDIR "/bluechi/agent.conf"
 #define CFG_AGENT_DEFAULT_CONFIG CONFIG_H_DATADIR "/bluechi-agent/config/agent.conf"
-#define CFG_BC_DEFAULT_CONFIG CONFIG_H_DATADIR "/bluechi/config/bluechi.conf"
+#define CFG_BC_DEFAULT_CONFIG CONFIG_H_DATADIR "/bluechi/config/controller.conf"
 #define CFG_ETC_AGENT_CONF_DIR CONFIG_H_SYSCONFDIR "/bluechi/agent.conf.d"
-#define CFG_ETC_BC_CONF_DIR CONFIG_H_SYSCONFDIR "/bluechi/bluechi.conf.d"
+#define CFG_ETC_BC_CONF_DIR CONFIG_H_SYSCONFDIR "/bluechi/controller.conf.d"
 
 /*
  * An item in a configuration map

@@ -14,7 +14,7 @@ def exec(ctrl: BluechiControllerContainer, nodes: Dict[str, BluechiNodeContainer
 
     node_foo = nodes[node_foo_name]
 
-    assert ctrl.wait_for_unit_state_to_be("bluechi", "active")
+    assert ctrl.wait_for_unit_state_to_be("bluechi-controller", "active")
     assert node_foo.wait_for_unit_state_to_be("bluechi-agent", "active")
 
     # bluechi and bluechi-agent are running, check that agent is not connected

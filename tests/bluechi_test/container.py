@@ -164,7 +164,7 @@ class BluechiControllerContainer(BluechiContainer):
     def wait_for_bluechi(self):
         should_wait = True
         while should_wait:
-            should_wait = not self.service_is_active("bluechi")
+            should_wait = not self.service_is_active("bluechi-controller")
 
     def copy_systemd_service(self, service_file_name: str, source_dir: str, target_dir):
         super().copy_systemd_service(service_file_name, source_dir, target_dir)

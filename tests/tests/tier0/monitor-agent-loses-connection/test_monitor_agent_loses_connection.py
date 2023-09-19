@@ -11,7 +11,7 @@ node_foo_name = "node-foo"
 
 
 def start_agent_in_ctrl_container(ctrl: BluechiControllerContainer):
-    assert ctrl.wait_for_unit_state_to_be("bluechi", "active")
+    assert ctrl.wait_for_unit_state_to_be("bluechi-controller", "active")
 
     node_foo_config = BluechiNodeConfig(
         file_name="agent.conf",

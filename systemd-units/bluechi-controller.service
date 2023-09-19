@@ -3,13 +3,13 @@
 #  This file is part of bluechi.
 #
 [Unit]
-Description=BlueChi systemd service controller manager daemon
-Documentation=man:bluechi(1) man:bluechi.conf(5)
+Description=BlueChi Controller systemd service
+Documentation=man:bluechi-controller(1) man:bluechi-controller.conf(5)
 After=network.target
 
 [Service]
 Type=simple
-ExecStart=/usr/bin/bluechi
+ExecStart=/usr/bin/bluechi-controller
 Restart=on-failure
 
 [Install]

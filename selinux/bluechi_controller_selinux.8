@@ -1,9 +1,9 @@
-.TH  "bluechi_selinux"  "8"  "23-04-04" "bluechi" "SELinux Policy bluechi"
+.TH  "bluechi_controller_selinux"  "8"  "23-04-04" "bluechi-controller" "SELinux Policy bluechi-controller"
 .SH "NAME"
-bluechi_selinux \- Security Enhanced Linux Policy for the bluechi processes
+bluechi_controller_selinux \- Security Enhanced Linux Policy for the bluechi-controller processes
 .SH "DESCRIPTION"
 
-Security-Enhanced Linux secures the bluechi processes via flexible mandatory access control.
+Security-Enhanced Linux secures the bluechi-controller processes via flexible mandatory access control.
 
 The bluechi processes execute with the bluechi_t SELinux type. You can check if you have these processes running by executing the \fBps\fP command with the \fB\-Z\fP qualifier.
 
@@ -18,7 +18,7 @@ The bluechi_t SELinux type can be entered via the \fBbluechi_exec_t\fP file type
 
 The default entrypoint paths for the bluechi_t domain are the following:
 
-/usr/bin/bluechi
+/usr/bin/bluechi-controller
 .SH PROCESS TYPES
 SELinux defines process types (domains) for each process running on the system
 .PP
@@ -274,4 +274,4 @@ This manual page was auto-generated using
 .B "sepolicy manpage".
 
 .SH "SEE ALSO"
-selinux(8), bluechi(8), semanage(8), restorecon(8), chcon(1), sepolicy(8), setsebool(8), bluechi_agent_selinux(8), bluechi_agent_selinux(8)
+selinux(8), bluechi-controller(8), semanage(8), restorecon(8), chcon(1), sepolicy(8), setsebool(8), bluechi_agent_selinux(8), bluechi_controller_selinux(8)

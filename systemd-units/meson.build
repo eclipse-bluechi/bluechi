@@ -4,7 +4,13 @@ systemd_unit_dir = join_paths(get_option('prefix'), 'lib', 'systemd', 'system')
 systemd_user_unit_dir = join_paths(get_option('prefix'), 'lib', 'systemd', 'user')
 
 install_data(
-  ['bluechi.service', 'bluechi-agent.service', 'bluechi.socket', 'bluechi-proxy@.service', 'bluechi-dep@.service'],
+  [
+    'bluechi-controller.service',
+    'bluechi-agent.service',
+    'bluechi-controller.socket',
+    'bluechi-proxy@.service',
+    'bluechi-dep@.service'
+    ],
   install_dir : systemd_unit_dir
 )
 

@@ -21,7 +21,7 @@ class BluechiConfig():
 
 class BluechiControllerConfig(BluechiConfig):
 
-    confd_dir = "/etc/bluechi/bluechi.conf.d"
+    confd_dir = "/etc/bluechi/controller.conf.d"
 
     def __init__(
             self,
@@ -46,7 +46,7 @@ class BluechiControllerConfig(BluechiConfig):
         # supported by bluechi is never exceeded
         allowed_node_names = ",\n ".join(self.allowed_node_names)
 
-        return f"""[bluechi]
+        return f"""[bluechi-controller]
 ManagerPort={self.port}
 AllowedNodeNames={allowed_node_names}
 LogLevel={self.log_level}

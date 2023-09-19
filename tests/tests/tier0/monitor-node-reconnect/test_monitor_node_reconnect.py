@@ -17,11 +17,11 @@ def exec(ctrl: BluechiControllerContainer, nodes: Dict[str, BluechiNodeContainer
     if result != 0:
         raise Exception(output)
 
-    ctrl.exec_run("systemctl stop bluechi")
-    _, output = ctrl.exec_run('systemctl is-active bluechi')
+    ctrl.exec_run("systemctl stop bluechi-controller")
+    _, output = ctrl.exec_run('systemctl is-active bluechi-controller')
     assert output == 'inactive'
 
-    ctrl.exec_run("systemctl start bluechi")
+    ctrl.exec_run("systemctl start bluechi-controller")
     ctrl.wait_for_bluechi()
     # since the heartbeat (incl. a try to reconnect) is going to happen
     # every n milliseconds, lets wait a bit so this test is not becoming flaky
