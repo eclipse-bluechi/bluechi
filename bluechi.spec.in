@@ -203,6 +203,19 @@ API description and manually written code to simplify recurring tasks.
 %{python3_sitelib}/bluechi/
 %endif
 
+%if 0%{?with_coverage}
+%package coverage
+Summary: Code coverage files for BlueChi
+
+%description coverage
+This package contains code coverage files created during the build. Those files
+will be used during integration tests when creating code coverage report.
+
+%files coverage
+%license LICENSE
+%{_datadir}/bluechi-coverage/*.gcno
+%endif
+
 %prep
 %autosetup
 
