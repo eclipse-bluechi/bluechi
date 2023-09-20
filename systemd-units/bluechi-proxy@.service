@@ -8,8 +8,8 @@ Documentation=man:bluechi-proxy(1)
 StopWhenUnneeded=yes
 
 [Service]
-ExecStart=bluechi-proxy create %i.service
-ExecStop=bluechi-proxy remove %i.service
+ExecStart=/usr/libexec/bluechi-proxy create %i.service
+ExecStop=/usr/libexec/bluechi-proxy remove %i.service
 RemainAfterExit=yes
 Type=oneshot
 KillMode=mixed
