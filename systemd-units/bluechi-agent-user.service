@@ -9,4 +9,4 @@ After=network.target
 
 [Service]
 Type=simple
-ExecStart=/usr/bin/bluechi-agent --user
+ExecStart=/usr/libexec/bluechi-agent --user

@@ -9,7 +9,7 @@ After=network.target
 
 [Service]
 Type=simple
-ExecStart=/usr/bin/bluechi-controller
+ExecStart=/usr/libexec/bluechi-controller
 Restart=on-failure
 
 [Install]

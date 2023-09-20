@@ -52,7 +52,7 @@ This package contains the controller and command line tool.
 %doc README.md
 %doc README.developer.md
 %license LICENSE
-%{_bindir}/bluechi-controller
+%{_libexecdir}/bluechi-controller
 %{_datadir}/dbus-1/interfaces/org.eclipse.bluechi.Job.xml
 %{_datadir}/dbus-1/interfaces/org.eclipse.bluechi.Manager.xml
 %{_datadir}/dbus-1/interfaces/org.eclipse.bluechi.Monitor.xml
@@ -95,8 +95,8 @@ This package contains the node agent.
 %dir %{_sysconfdir}/bluechi/agent.conf.d
 %doc README.md
 %license LICENSE
-%{_bindir}/bluechi-agent
-%{_bindir}/bluechi-proxy
+%{_libexecdir}/bluechi-agent
+%{_libexecdir}/bluechi-proxy
 %{_datadir}/dbus-1/system.d/org.eclipse.bluechi.Agent.conf
 %{_datadir}/bluechi-agent/config/agent.conf
 %{_datadir}/dbus-1/interfaces/org.eclipse.bluechi.Agent.xml
