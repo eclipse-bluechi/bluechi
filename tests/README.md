@@ -163,7 +163,7 @@ From the root directory of the project run the following commands:
 ```bash
 # In order to build and directly push, login first
 buildah login -u="someuser" -p="topsecret" quay.io
-sudo PUSH_MANIFEST=yes bash build-scripts/build-push-containers.sh build_base
+PUSH_MANIFEST=yes bash build-scripts/build-push-containers.sh build_base
 
 # Only build locally
 bash build-scripts/build-push-containers.sh build_base
