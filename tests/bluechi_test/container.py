@@ -116,13 +116,26 @@ class BluechiContainer():
         _, output = self.exec_run(f"systemctl is-active {unit_name}")
         return output
 
-    def wait_for_unit_state_to_be(self, unit_name: str, expected_state: str, timeout: float = 4.0) -> bool:
+    def _is_unit_in_state(self, unit_name: str, expected_state: str) -> bool:
+        latest_state = self.get_unit_state(unit_name)
+        logger.debug(f"Got state '{latest_state}' for unit {unit_name}")
+        return latest_state == expected_state
+
+    def wait_for_unit_state_to_be(
+            self,
+            unit_name: str,
+            expected_state: str,
+            timeout: float = 5.0,
+            delay: float = 0.5) -> bool:
         latest_state = ""
+
+        if self._is_unit_in_state(unit_name, expected_state):
+            return True
 
         start = time.time()
         while (time.time() - start) < timeout:
-            latest_state = self.get_unit_state(unit_name)
-            if latest_state == expected_state:
+            time.sleep(delay)
+            if self._is_unit_in_state(unit_name, expected_state):
                 return True
 
         logger.debug(f"Timeout while waiting for '{unit_name}' to reach state '{expected_state}'. \
