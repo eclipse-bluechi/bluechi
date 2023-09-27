@@ -29,6 +29,7 @@ def exec(ctrl: BluechiControllerContainer, nodes: Dict[str, BluechiNodeContainer
     target_dir = os.path.join("/", "etc", "systemd", "system")
 
     foo.copy_systemd_service(requesting_service, source_dir, target_dir)
+    assert foo.wait_for_unit_state_to_be(requesting_service, "inactive")
 
     ctrl.start_unit(node_foo_name, requesting_service)
     verify_proxy_start_failed(foo)
