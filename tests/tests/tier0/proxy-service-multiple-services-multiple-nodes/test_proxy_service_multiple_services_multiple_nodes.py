@@ -29,6 +29,10 @@ def exec(ctrl: BluechiControllerContainer, nodes: Dict[str, BluechiNodeContainer
     foo2.copy_systemd_service(requesting_service, source_dir, target_dir)
     bar.copy_systemd_service(simple_service, source_dir, target_dir)
 
+    assert foo1.wait_for_unit_state_to_be(requesting_service, "inactive")
+    assert foo2.wait_for_unit_state_to_be(requesting_service, "inactive")
+    assert bar.wait_for_unit_state_to_be(simple_service, "inactive")
+
     bluechi_dep_service = assemble_bluechi_dep_service_name(simple_service)
     bluechi_proxy_service = assemble_bluechi_proxy_service_name(node_bar_name, simple_service)
 
