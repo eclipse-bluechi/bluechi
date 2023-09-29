@@ -19,10 +19,6 @@ def create_local_node_config() -> BluechiNodeConfig:
 
 
 def verify_resolving_fqdn(ctrl: BluechiControllerContainer, _: Dict[str, BluechiNodeContainer]):
-    result, output = ctrl.exec_run('systemctl is-active bluechi-controller')
-    assert result == 0
-    assert output == 'active'
-
     # create config for local bluechi-agent and adding config to controller container
     local_node_cfg = create_local_node_config()
     local_node_cfg.node_name = local_node_name
@@ -30,9 +26,7 @@ def verify_resolving_fqdn(ctrl: BluechiControllerContainer, _: Dict[str, Bluechi
     ctrl.create_file(local_node_cfg.get_confd_dir(), local_node_cfg.file_name, local_node_cfg.serialize())
 
     ctrl.systemctl_start_and_wait("bluechi-agent", 1)
-    result, output = ctrl.exec_run('systemctl is-active bluechi-agent')
-    assert result == 0
-    assert output == 'active'
+    ctrl.wait_for_unit_state_to_be('bluechi-agent', 'active')
 
     result, output = ctrl.exec_run(f'bluechictl list-units {local_node_name}')
     assert result == 0
