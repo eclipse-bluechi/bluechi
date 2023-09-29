@@ -69,10 +69,10 @@ class BluechiContainer():
             self.container.stop(**kw_params)
         self.container.remove()
 
-    def exec_run(self, command: (Union[str, list[str]]), raw_output: bool = False) -> \
+    def exec_run(self, command: (Union[str, list[str]]), raw_output: bool = False, tty: bool = True) -> \
             Tuple[Optional[int], Union[Iterator[bytes], Any, Tuple[bytes, bytes]]]:
 
-        result, output = self.container.exec_run(command)
+        result, output = self.container.exec_run(command, tty=tty)
 
         if not raw_output and output:
             output = output.decode('utf-8').strip()
