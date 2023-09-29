@@ -18,8 +18,7 @@ def exec(ctrl: BluechiControllerContainer, nodes: Dict[str, BluechiNodeContainer
         raise Exception(output)
 
     ctrl.exec_run("systemctl stop bluechi-controller")
-    _, output = ctrl.exec_run('systemctl is-active bluechi-controller')
-    assert output == 'inactive'
+    ctrl.wait_for_unit_state_to_be('bluechi-controller', 'inactive')
 
     ctrl.exec_run("systemctl start bluechi-controller")
     ctrl.wait_for_bluechi()
