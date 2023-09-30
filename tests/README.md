@@ -130,6 +130,16 @@ the [.pep8](./.pep8) file. All source files can be formatted via:
 autopep8 ./
 ```
 
+### Changing log level
+
+By default BlueChi integration tests are using `INFO` log level to display important information about the test run.
+More detailed information can be displayed by setting log level to `DEBUG`:
+
+```shell
+cd ~/bluechi/tests
+tmt run -eLOG_LEVEL=DEBUG
+```
+
 ### Using python bindings in tests
 
 The [python bindings](../src/bindings/python/) can be used in the integration tests to simplify writing them. However, it is not possible to use the bindings directly in the tests since they are leveraging the D-Bus API of BlueChi provided on the system D-Bus. A separate script has to be written, injected and executed within the container running the BlueChi controller. In order to keep the usage rather simple, the `BluechiControllerContainer` class provides a function to abstract these details:
