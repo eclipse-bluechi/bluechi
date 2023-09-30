@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: LGPL-2.1-or-later
 
 # Checked files regex
-CHECKED_FILES=".*\(\.c\|\.h\|\.py\|\.sh\|\.xml\|meson\.build\)"
+CHECKED_FILES=".*\(\.c\|\.h\|\.go\|\.py\|\.rs\|\.sh\|\.xml\|meson\.build\)"
 
 #
 # List of licenses which are OK when found in a source code
