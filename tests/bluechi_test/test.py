@@ -13,7 +13,7 @@ from bluechi_test.command import Command
 from bluechi_test.config import BluechiControllerConfig, BluechiNodeConfig
 from bluechi_test.container import BluechiNodeContainer, BluechiControllerContainer
 
-logger = logging.getLogger(__name__)
+LOGGER = logging.getLogger(__name__)
 
 
 class BluechiTest():
@@ -53,7 +53,7 @@ class BluechiTest():
         ctrl_container: BluechiControllerContainer = None
         node_container: Dict[str, BluechiNodeContainer] = dict()
         try:
-            logger.debug(f"Starting container for bluechi-controller with config:\
+            LOGGER.debug(f"Starting container for bluechi-controller with config:\
                 \n{self.bluechi_controller_config.serialize()}")
 
             c = self.podman_client.containers.run(
@@ -72,7 +72,7 @@ class BluechiTest():
             ctrl_container.wait_for_unit_state_to_be("bluechi-controller.service", "active")
 
             for cfg in self.bluechi_node_configs:
-                logger.debug(f"Starting container bluechi-node '{cfg.node_name}' with config:\n{cfg.serialize()}")
+                LOGGER.debug(f"Starting container bluechi-node '{cfg.node_name}' with config:\n{cfg.serialize()}")
 
                 c = self.podman_client.containers.run(
                     name=cfg.node_name,
@@ -93,7 +93,7 @@ class BluechiTest():
 
         except Exception as ex:
             success = False
-            logger.debug(f"Failed to setup bluechi container: {ex}")
+            LOGGER.error(f"Failed to setup bluechi container: {ex}")
             traceback.print_exc()
 
         if self.run_with_valgrind:
@@ -103,7 +103,7 @@ class BluechiTest():
         return (success, (ctrl_container, node_container))
 
     def gather_logs(self, ctrl: BluechiControllerContainer, nodes: Dict[str, BluechiNodeContainer]):
-        logger.debug("Collecting logs from all containers...")
+        LOGGER.debug("Collecting logs from all containers...")
 
         if ctrl is not None:
             ctrl.gather_journal_logs(self.tmt_test_data_dir)
@@ -118,15 +118,15 @@ class BluechiTest():
         self.gather_test_executor_logs()
 
     def gather_test_executor_logs(self) -> None:
-        logger.debug("Collecting logs from test executor...")
+        LOGGER.debug("Collecting logs from test executor...")
         log_file = f"{self.tmt_test_data_dir}/journal-test_executor.log"
         try:
             Command(f"journalctl --no-pager > {log_file}").run()
         except Exception as ex:
-            logger.debug(f"Failed to gather test executor journal: {ex}")
+            LOGGER.error(f"Failed to gather test executor journal: {ex}")
 
     def teardown(self, ctrl: BluechiControllerContainer, nodes: Dict[str, BluechiNodeContainer]):
-        logger.debug("Stopping and removing all container...")
+        LOGGER.debug("Stopping and removing all container...")
 
         if ctrl is not None:
             ctrl.cleanup()
@@ -135,7 +135,7 @@ class BluechiTest():
             node.cleanup()
 
     def check_valgrind_logs(self) -> None:
-        logger.debug("Checking valgrind logs...")
+        LOGGER.debug("Checking valgrind logs...")
         errors_found = False
         for filename in os.listdir(self.tmt_test_data_dir):
             if re.match(r'.+-valgrind-.+\.log', filename):
@@ -146,7 +146,7 @@ class BluechiTest():
                             summary_found = True
                             errors = re.findall(r'ERROR SUMMARY: (\d+) errors', line)
                             if errors[0] != "0":
-                                logger.debug(f"Valgrind errors found in {filename}")
+                                LOGGER.error(f"Valgrind errors found in {filename}")
                                 errors_found = True
                     if not summary_found:
                         raise Exception(f"Valgrind log {filename} does not contain summary, log was not finalized")
