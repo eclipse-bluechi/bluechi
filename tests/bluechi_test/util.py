@@ -7,7 +7,7 @@ import socket
 
 from typing import Union
 
-logger = logging.getLogger(__name__)
+LOGGER = logging.getLogger(__name__)
 
 
 def read_file(local_file: str) -> Union[str, None]:
@@ -25,7 +25,7 @@ def get_primary_ip() -> str:
         s.connect(("254.254.254.254", 1))
         ip = s.getsockname()[0]
     except Exception:
-        logging.exception("Failed to get IP, falling back to localhost.")
+        LOGGER.exception("Failed to get IP, falling back to localhost.")
         ip = "127.0.0.1"
     finally:
         s.close()
