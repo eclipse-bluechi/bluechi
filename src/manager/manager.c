@@ -62,18 +62,6 @@ void manager_unref(Manager *manager) {
                 return;
         }
 
-        sd_event_unrefp(&manager->event);
-
-        free(manager->api_bus_service_name);
-
-        sd_event_source_unrefp(&manager->node_connection_source);
-
-        sd_bus_slot_unrefp(&manager->name_owner_changed_slot);
-        sd_bus_slot_unrefp(&manager->filter_slot);
-        sd_bus_slot_unrefp(&manager->manager_slot);
-        sd_bus_slot_unrefp(&manager->metrics_slot);
-        sd_bus_unrefp(&manager->api_bus);
-
         Job *job = NULL;
         Job *next_job = NULL;
         LIST_FOREACH_SAFE(jobs, job, next_job, manager->jobs) {
@@ -105,6 +93,18 @@ void manager_unref(Manager *manager) {
                 cfg_dispose(manager->config);
                 manager->config = NULL;
         }
+
+        sd_event_unrefp(&manager->event);
+
+        free(manager->api_bus_service_name);
+
+        sd_event_source_unrefp(&manager->node_connection_source);
+
+        sd_bus_slot_unrefp(&manager->name_owner_changed_slot);
+        sd_bus_slot_unrefp(&manager->filter_slot);
+        sd_bus_slot_unrefp(&manager->manager_slot);
+        sd_bus_slot_unrefp(&manager->metrics_slot);
+        sd_bus_unrefp(&manager->api_bus);
 
         free(manager);
 }
