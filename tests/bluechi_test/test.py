@@ -1,5 +1,6 @@
 # SPDX-License-Identifier: LGPL-2.1-or-later
 
+import datetime
 import logging
 import os
 import re
@@ -38,6 +39,8 @@ class BluechiTest():
 
         self.bluechi_controller_config: BluechiControllerConfig = None
         self.bluechi_node_configs: List[BluechiNodeConfig] = []
+
+        self._test_init_time = datetime.datetime.now()
 
     def set_bluechi_controller_config(self, cfg: BluechiControllerConfig):
         self.bluechi_controller_config = cfg
@@ -121,7 +124,8 @@ class BluechiTest():
         logger.debug("Collecting logs from test executor...")
         log_file = f"{self.tmt_test_data_dir}/journal-test_executor.log"
         try:
-            Command(f"journalctl --no-pager > {log_file}").run()
+            logs_since = self._test_init_time.strftime("%Y-%m-%d %H:%M:%S")
+            Command(f'journalctl --no-pager --since "{logs_since}" > {log_file}').run()
         except Exception as ex:
             logger.debug(f"Failed to gather test executor journal: {ex}")
 
