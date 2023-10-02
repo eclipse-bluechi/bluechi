@@ -118,7 +118,7 @@ class BluechiContainer():
 
     def _is_unit_in_state(self, unit_name: str, expected_state: str) -> bool:
         latest_state = self.get_unit_state(unit_name)
-        logger.debug(f"Got state '{latest_state}' for unit {unit_name}")
+        LOGGER.debug(f"Got state '{latest_state}' for unit {unit_name}")
         return latest_state == expected_state
 
     def wait_for_unit_state_to_be(
