@@ -21,6 +21,8 @@ struct AgentRequest {
         free_func_t free_userdata;
         agent_request_response_t cb;
 
+        bool is_cancelled;
+
         LIST_FIELDS(AgentRequest, outstanding_requests);
 };
 
@@ -28,6 +30,8 @@ AgentRequest *agent_request_ref(AgentRequest *req);
 void agent_request_unref(AgentRequest *req);
 
 int agent_request_start(AgentRequest *req);
+
+int agent_request_cancel(AgentRequest *r);
 
 struct Node {
         int ref_count;
@@ -54,11 +58,14 @@ struct Node {
 
         struct hashmap *unit_subscriptions;
         time_t last_seen;
+
+        bool is_shutdown;
 };
 
 Node *node_new(Manager *manager, const char *name);
 Node *node_ref(Node *node);
 void node_unref(Node *node);
+void node_shutdown(Node *node);
 
 const char *node_get_status(Node *node);
 

@@ -169,6 +169,8 @@ Node *node_new(Manager *manager, const char *name) {
                 }
         }
 
+        node->is_shutdown = false;
+
         return steal_pointer(&node);
 }
 
@@ -204,6 +206,15 @@ void node_unref(Node *node) {
         free_and_null(node->name);
         free_and_null(node->object_path);
         free(node);
+}
+
+void node_shutdown(Node *node) {
+        AgentRequest *req = NULL;
+        AgentRequest *next_req = NULL;
+        node->is_shutdown = true;
+        LIST_FOREACH_SAFE(outstanding_requests, req, next_req, node->outstanding_requests) {
+                agent_request_cancel(req);
+        }
 }
 
 bool node_export(Node *node) {
@@ -1070,6 +1081,7 @@ int node_create_request(
         req->cb = cb;
         req->userdata = userdata;
         req->free_userdata = free_userdata;
+        req->is_cancelled = false;
         LIST_APPEND(outstanding_requests, node->outstanding_requests, req);
 
         *ret = req;
@@ -1078,8 +1090,22 @@ int node_create_request(
 
 static int agent_request_callback(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error) {
         _cleanup_agent_request_ AgentRequest *req = userdata;
+        if (req->is_cancelled) {
+                bc_log_debugf("Response received to a cancelled request for node %s. Dropping message.",
+                              req->node->name);
+                return 0;
+        }
 
         return req->cb(req, m, ret_error);
+}
+
+int agent_request_cancel(AgentRequest *r) {
+        _cleanup_agent_request_ AgentRequest *req = r;
+        req->is_cancelled = true;
+        _cleanup_sd_bus_message_ sd_bus_message *m = NULL;
+        sd_bus_message_new_method_errorf(req->message, &m, SD_BUS_ERROR_FAILED, "Request cancelled");
+
+        return req->cb(req, m, NULL);
 }
 
 int agent_request_start(AgentRequest *req) {
@@ -1156,6 +1182,11 @@ static int method_list_units_callback(AgentRequest *req, sd_bus_message *m, UNUS
 static int node_method_list_units(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error) {
         Node *node = userdata;
 
+        if (node->is_shutdown) {
+                return sd_bus_reply_method_errorf(
+                                m, SD_BUS_ERROR_FAILED, "Request not allowed: node is in shutdown state");
+        }
+
         _cleanup_agent_request_ AgentRequest *agent_req = node_request_list_units(
                         node,
                         method_list_units_callback,
@@ -1198,6 +1229,11 @@ static int node_method_set_unit_properties(sd_bus_message *m, void *userdata, UN
         Node *node = userdata;
         const char *unit = NULL;
         int runtime = 0;
+
+        if (node->is_shutdown) {
+                return sd_bus_reply_method_errorf(
+                                m, SD_BUS_ERROR_FAILED, "Request not allowed: node is in shutdown state");
+        }
 
         int r = sd_bus_message_read(m, "sb", &unit, &runtime);
         if (r < 0) {
@@ -1282,6 +1318,12 @@ static int node_method_passthrough_to_agent_callback(
 
 static int node_method_passthrough_to_agent(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error) {
         Node *node = userdata;
+
+        if (node->is_shutdown) {
+                return sd_bus_reply_method_errorf(
+                                m, SD_BUS_ERROR_FAILED, "Request not allowed: node is in shutdown state");
+        }
+
         _cleanup_agent_request_ AgentRequest *req = NULL;
         int r = node_create_request(
                         &req,
@@ -1381,6 +1423,11 @@ static int node_run_unit_lifecycle_method(
         const char *unit = NULL;
         const char *mode = NULL;
         uint64_t start_time = get_time_micros();
+
+        if (node->is_shutdown) {
+                return sd_bus_reply_method_errorf(
+                                m, SD_BUS_ERROR_FAILED, "Request not allowed: node is in shutdown state");
+        }
 
         int r = sd_bus_message_read(m, "ss", &unit, &mode);
         if (r < 0) {

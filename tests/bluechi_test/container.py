@@ -148,11 +148,11 @@ class BluechiContainer():
         return False
 
     def enable_valgrind(self) -> None:
-        self.exec_run(f"sed -i '/ExecStart=/c\\ExecStart=/usr/bin/valgrind --leak-check=yes "
+        self.exec_run(f"sed -i '/ExecStart=/c\\ExecStart=/usr/bin/valgrind -s --leak-check=yes "
                       f"--log-file={valgrind_log_path_controller} /usr/libexec/bluechi-controller' "
                       f"/usr/lib/systemd/system/bluechi-controller.service")
-        self.exec_run(f"sed -i '/ExecStart=/c\\ExecStart=/usr/bin/valgrind --leak-check=yes "
-                      f"--log-file={valgrind_log_path_controller} /usr/libexec/bluechi-agent' "
+        self.exec_run(f"sed -i '/ExecStart=/c\\ExecStart=/usr/bin/valgrind -s --leak-check=yes "
+                      f"--log-file={valgrind_log_path_agent} /usr/libexec/bluechi-agent' "
                       f"/usr/lib/systemd/system/bluechi-agent.service")
         self.exec_run("mkdir -p /var/log/valgrind")
         self.exec_run("systemctl daemon-reload")
