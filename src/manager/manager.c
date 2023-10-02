@@ -83,9 +83,11 @@ void manager_unref(Manager *manager) {
         Node *node = NULL;
         Node *next_node = NULL;
         LIST_FOREACH_SAFE(nodes, node, next_node, manager->nodes) {
+                node_shutdown(node);
                 node_unref(node);
         }
         LIST_FOREACH_SAFE(nodes, node, next_node, manager->anonymous_nodes) {
+                node_shutdown(node);
                 node_unref(node);
         }
 
