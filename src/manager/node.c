@@ -947,10 +947,11 @@ static int node_disconnected(UNUSED sd_bus_message *message, void *userdata, UNU
 
         /* Remove anonymous nodes when they disconnect */
         if (node->name == NULL) {
+                bc_log_info("Anonymous node disconnected");
                 manager_remove_node(manager, node);
         } else {
-                /* Remove all jobs associated with the registered node that got
-                   disconnected. */
+                bc_log_infof("Node '%s' disconnected", node->name);
+                /* Remove all jobs associated with the registered node that got disconnected. */
                 if (!LIST_IS_EMPTY(manager->jobs)) {
                         Job *job = NULL;
                         Job *next_job = NULL;
@@ -963,12 +964,6 @@ static int node_disconnected(UNUSED sd_bus_message *message, void *userdata, UNU
                         }
                 }
                 node_unset_agent_bus(node);
-        }
-
-        if (node->name) {
-                bc_log_infof("Node '%s' disconnected", node->name);
-        } else {
-                bc_log_info("Anonymous node disconnected");
         }
 
         return 0;
