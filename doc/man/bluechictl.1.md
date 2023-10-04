@@ -46,6 +46,10 @@ Creates a monitor on the given agent to observe changes in the specified units. 
 
 Creates a monitor to observe connection state changes for all nodes.
 
+### **bluechictl** *system-resources* *agent*
+
+Fetches information about system resources on the specific bluechi-agents.
+
 
 **Example:**
 

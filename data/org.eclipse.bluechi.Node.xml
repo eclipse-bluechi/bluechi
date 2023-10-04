@@ -211,6 +211,22 @@
       <arg name="level" type="s" direction="in" />
     </method>
 
+    <!-- 
+      GetSystemResources:
+      @cpu_number: The cpu number of the node.
+      @cpu_time: The cpu time (nsec) of the node.
+      @memory_total: The total memory size (kB) of the node.
+      @memory_used: The used memory size (kB) of the node.
+
+      Get the system resources of the node.
+    -->
+    <method name="GetSystemResources">
+      <arg name="cpu_number" type="u" direction="out" />
+      <arg name="cpu_time" type="t" direction="out" />
+      <arg name="memory_total" type="t" direction="out" />
+      <arg name="memory_used" type="t" direction="out" />
+    </method>
+
 
     <!-- 
       Name:

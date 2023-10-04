@@ -72,6 +72,7 @@ static const sd_bus_vtable node_vtable[] = {
         SD_BUS_METHOD("DisableUnitFiles", "asb", "a(sss)", node_method_passthrough_to_agent, 0),
         SD_BUS_METHOD("Reload", "", "", node_method_passthrough_to_agent, 0),
         SD_BUS_METHOD("SetLogLevel", "s", "", node_method_set_log_level, 0),
+        SD_BUS_METHOD("GetSystemResources", "", "uttt", node_method_passthrough_to_agent, 0),
         SD_BUS_PROPERTY("Name", "s", node_property_get_nodename, 0, SD_BUS_VTABLE_PROPERTY_CONST),
         SD_BUS_PROPERTY("Status", "s", node_property_get_status, 0, SD_BUS_VTABLE_PROPERTY_EMITS_CHANGE),
         SD_BUS_PROPERTY("LastSeenTimestamp", "t", node_property_get_last_seen, 0, SD_BUS_VTABLE_PROPERTY_EXPLICIT),

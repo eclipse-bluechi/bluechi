@@ -15,6 +15,8 @@ libbluechi_src = [
     'common/opt.h',
     'common/parse-util.c',
     'common/parse-util.h',
+    'common/procfs-util.c',
+    'common/procfs-util.h',
     'common/network.h',
     'common/network.c',
     'common/time-util.c',

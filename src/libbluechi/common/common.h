@@ -27,6 +27,12 @@ static inline int steal_fd(int *fdp) {
         return fd;
 }
 
+static inline void fclosep(FILE **f) {
+        if (*f) {
+                fclose(*f);
+        }
+}
+
 static inline void closep(const int *fd) {
         if (*fd >= 0) {
                 close(*fd);
@@ -60,6 +66,7 @@ static inline void *malloc0_array(size_t base_size, size_t element_size, size_t 
 #define _cleanup_(x) __attribute__((__cleanup__(x)))
 #define _cleanup_free_ _cleanup_(freep)
 #define _cleanup_fd_ _cleanup_(closep)
+#define _cleanup_fclose_ _cleanup_(fclosep)
 
 // NOLINTBEGIN(bugprone-macro-parentheses)
 #define DEFINE_CLEANUP_FUNC(_type, _freefunc)         \

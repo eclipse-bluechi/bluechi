@@ -77,6 +77,12 @@
     <method name="SetLogLevel">
       <arg name="level" type="s" direction="in" />
     </method>
+    <method name="GetSystemResources">
+      <arg name="cpu_number" type="u" direction="out" />
+      <arg name="cpu_time" type="t" direction="out" />
+      <arg name="memory_total" type="t" direction="out" />
+      <arg name="memory_used" type="t" direction="out" />
+    </method>
 
     <signal name="JobDone">
       <arg name="id" type="u" />

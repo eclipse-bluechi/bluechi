@@ -12,6 +12,7 @@
 #include "libbluechi/common/network.h"
 #include "libbluechi/common/opt.h"
 #include "libbluechi/common/parse-util.h"
+#include "libbluechi/common/procfs-util.h"
 #include "libbluechi/common/time-util.h"
 #include "libbluechi/log/log.h"
 #include "libbluechi/service/shutdown.h"
@@ -1479,6 +1480,49 @@ static int agent_method_set_log_level(
         return sd_bus_reply_method_return(m, "");
 }
 
+/*************************************************************************
+ ************** org.eclipse.bluechi.Agent.GetSystemResources     *
+ *************************************************************************/
+
+static int agent_method_get_system_resources(
+                UNUSED sd_bus_message *m, UNUSED void *userdata, UNUSED sd_bus_error *ret_error) {
+        _cleanup_sd_bus_message_ sd_bus_message *reply = NULL;
+        uint32_t cpu_number = 0;
+        uint64_t cpu_time = 0;
+        uint64_t memory_total = 0;
+        uint64_t memory_used = 0;
+        long ret = 0;
+
+        int r = sd_bus_message_new_method_return(m, &reply);
+        if (r < 0) {
+                return sd_bus_reply_method_errorf(reply, SD_BUS_ERROR_FAILED, "Internal error");
+        }
+
+        ret = sysconf(_SC_NPROCESSORS_ONLN);
+        if (ret < 0) {
+                return sd_bus_reply_method_errorf(reply, SD_BUS_ERROR_FAILED, "Internal error");
+        }
+        assert(ret > 0);
+        cpu_number = ret;
+
+        r = procfs_cpu_get_usage(&cpu_time);
+        if (r < 0) {
+                return sd_bus_reply_method_errorf(reply, SD_BUS_ERROR_FAILED, "Internal error");
+        }
+
+        r = procfs_memory_get(&memory_total, &memory_used);
+        if (r < 0) {
+                return sd_bus_reply_method_errorf(reply, SD_BUS_ERROR_FAILED, "Internal error");
+        }
+
+        r = sd_bus_message_append(reply, "uttt", cpu_number, cpu_time, memory_total, memory_used);
+        if (r < 0) {
+                return sd_bus_reply_method_errorf(reply, SD_BUS_ERROR_FAILED, "Internal error");
+        }
+
+        return sd_bus_message_send(reply);
+}
+
 
 static const sd_bus_vtable internal_agent_vtable[] = {
         SD_BUS_VTABLE_START(0),
@@ -1497,6 +1541,7 @@ static const sd_bus_vtable internal_agent_vtable[] = {
         SD_BUS_METHOD("EnableMetrics", "", "", agent_method_enable_metrics, 0),
         SD_BUS_METHOD("DisableMetrics", "", "", agent_method_disable_metrics, 0),
         SD_BUS_METHOD("SetLogLevel", "s", "", agent_method_set_log_level, 0),
+        SD_BUS_METHOD("GetSystemResources", "", "uttt", agent_method_get_system_resources, 0),
         SD_BUS_SIGNAL_WITH_NAMES("JobDone", "us", SD_BUS_PARAM(id) SD_BUS_PARAM(result), 0),
         SD_BUS_SIGNAL_WITH_NAMES("JobStateChanged", "us", SD_BUS_PARAM(id) SD_BUS_PARAM(state), 0),
         SD_BUS_SIGNAL_WITH_NAMES(

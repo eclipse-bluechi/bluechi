@@ -614,6 +614,49 @@ static int method_thaw_unit_on(Client *client, char *node_name, char *unit) {
         return 0;
 }
 
+static int method_get_system_resources_on(Client *client, char *node_name) {
+        int r = 0;
+        _cleanup_sd_bus_error_ sd_bus_error error = SD_BUS_ERROR_NULL;
+        _cleanup_sd_bus_message_ sd_bus_message *result = NULL;
+        uint32_t cpu_number = 0;
+        uint64_t cpu_time = 0;
+        uint64_t memory_total = 0;
+        uint64_t memory_used = 0;
+
+        r = assemble_object_path_string(NODE_OBJECT_PATH_PREFIX, node_name, &client->object_path);
+        if (r < 0) {
+                return r;
+        }
+
+        r = sd_bus_call_method(
+                        client->api_bus,
+                        BC_INTERFACE_BASE_NAME,
+                        client->object_path,
+                        NODE_INTERFACE,
+                        "GetSystemResources",
+                        &error,
+                        &result,
+                        "");
+        if (r < 0) {
+                fprintf(stderr, "Failed to issue method call: %s\n", error.message);
+                return r;
+        }
+
+        r = sd_bus_message_read(result, "uttt", &cpu_number, &cpu_time, &memory_total, &memory_used);
+        if (r < 0) {
+                fprintf(stderr, "Failed to read the system resources of the node: %s\n", strerror(-r));
+                return r;
+        }
+
+        printf("CPU(s): %u, CPU time: %lu nsec, Memory: %lu kB / %lu kB\n",
+               cpu_number,
+               cpu_time,
+               memory_used,
+               memory_total);
+
+        return 0;
+}
+
 
 int client_call_manager(Client *client) {
         int r = 0;
@@ -750,6 +793,11 @@ int client_call_manager(Client *client) {
                 } else {
                         return -EINVAL;
                 }
+        } else if (streq(client->op, "system-resources")) {
+                if (client->opargc != 1) {
+                        return -EINVAL;
+                }
+                return method_get_system_resources_on(client, client->opargv[0]);
         } else if (streq(client->op, "version")) {
                 printf("%s\n", CONFIG_H_BC_VERSION);
         } else {
@@ -793,5 +841,7 @@ int print_client_usage(char *argv) {
         printf("    usage: monitor node-connection\n");
         printf("  - daemon-reload: reload systemd daemon on a specific node\n");
         printf("    usage: disable nodename\n");
+        printf("  - system-resources: returns the system resources on a specific nodes\n");
+        printf("    usage: system-resources nodename\n");
         return 0;
 }

@@ -200,6 +200,10 @@ Object path: `/org/eclipse/bluechi/node/$name`
 
     Set the new log level for bluechi-agent by invoking the internal bluechi-agent API.
 
+  * `GetSystemResources(out u cpu_number, out t cpu_time, out t memory_total, out t memory_used)`
+
+    Returns information about system resources (cpu and memory) on this node.
+
 #### Properties
 
   * `Name` - `s`

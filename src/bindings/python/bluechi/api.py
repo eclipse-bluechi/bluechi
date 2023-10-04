@@ -772,6 +772,18 @@ class Node(ApiBase):
             level,
         )
 
+    def get_system_resources(self) -> Tuple[UInt32, UInt64, UInt64, UInt64]:
+        """
+          GetSystemResources:
+        @cpu_number: The cpu number of the node.
+        @cpu_time: The cpu time (nsec) of the node.
+        @memory_total: The total memory size (kB) of the node.
+        @memory_used: The used memory size (kB) of the node.
+
+        Get the system resources of the node.
+        """
+        return self.get_proxy().GetSystemResources()
+
     @property
     def name(self) -> str:
         """
