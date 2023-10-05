@@ -2,6 +2,8 @@ FROM quay.io/bluechi/integration-test-base:latest
 
 RUN dnf install -y dnf-plugin-config-manager
 
+ARG with_coverage
+
 RUN dnf copr enable -y @centos-automotive-sig/bluechi-snapshot
 
 RUN dnf install \
@@ -16,6 +18,13 @@ RUN dnf install \
         bluechi-selinux \
         python3-bluechi \
         -y
+
+RUN if [ "$with_coverage" = "1" ]; then \
+        dnf install \
+        --nogpgcheck \
+        --nodocs \
+        bluechi-coverage;  \
+    fi
 
 RUN dnf -y clean all
 

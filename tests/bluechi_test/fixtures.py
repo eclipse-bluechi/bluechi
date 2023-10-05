@@ -53,6 +53,13 @@ def run_with_valgrind() -> bool:
     return _get_env_value('WITH_VALGRIND', 0) == '1'
 
 
+@pytest.fixture(scope='session')
+def run_with_coverage() -> bool:
+    """Returns 1 if code coverage should be collected"""
+
+    return _get_env_value('WITH_COVERAGE', 0) == '1'
+
+
 def _get_env_value(env_var: str, default_value: str) -> str:
     value = os.getenv(env_var)
     if value is None:
@@ -103,7 +110,8 @@ def bluechi_test(
         bluechi_ctrl_host_port: str,
         bluechi_ctrl_svc_port: str,
         tmt_test_data_dir: str,
-        run_with_valgrind: bool):
+        run_with_valgrind: bool,
+        run_with_coverage:bool):
 
     return BluechiTest(
         podman_client,
@@ -113,4 +121,5 @@ def bluechi_test(
         bluechi_ctrl_svc_port,
         tmt_test_data_dir,
         run_with_valgrind,
+        run_with_coverage,
     )
