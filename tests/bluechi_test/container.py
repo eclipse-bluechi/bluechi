@@ -63,6 +63,13 @@ class BluechiContainer():
 
         self.get_file(log_file, data_dir)
 
+    def gather_coverage(self, data_coverage_dir: str) -> None:
+        gcno_file_location = "/usr/share/bluechi-coverage/"
+        gcda_file_location = "/var/tmp/bluechi-coverage"
+
+        self.get_file(gcda_file_location, data_coverage_dir)
+        self.get_file(gcno_file_location, data_coverage_dir)
+
     def cleanup(self):
         if self.container.status == 'running':
             kw_params = {'timeout': 0}

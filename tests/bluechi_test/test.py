@@ -27,7 +27,8 @@ class BluechiTest():
             bluechi_ctrl_host_port: str,
             bluechi_ctrl_svc_port: str,
             tmt_test_data_dir: str,
-            run_with_valgrind: bool) -> None:
+            run_with_valgrind: bool,
+            run_with_coverage: bool) -> None:
 
         self.podman_client = podman_client
         self.bluechi_image_id = bluechi_image_id
@@ -36,6 +37,7 @@ class BluechiTest():
         self.bluechi_ctrl_svc_port = bluechi_ctrl_svc_port
         self.tmt_test_data_dir = tmt_test_data_dir
         self.run_with_valgrind = run_with_valgrind
+        self.run_with_coverage = run_with_coverage
 
         self.bluechi_controller_config: BluechiControllerConfig = None
         self.bluechi_node_configs: List[BluechiNodeConfig] = []
@@ -119,6 +121,18 @@ class BluechiTest():
                 node.gather_valgrind_logs(self.tmt_test_data_dir)
 
         self.gather_test_executor_logs()
+    def gather_coverage(self, ctrl: BluechiControllerContainer, nodes: Dict[str, BluechiNodeContainer]):
+        logger.debug("Collecting coverage from all containers...")
+
+        data_coverage_dir = f"{self.tmt_test_data_dir}/bluechi-coverage/"
+
+        os.mkdir(f"{self.tmt_test_data_dir}/bluechi-coverage")
+
+        if ctrl is not None:
+            ctrl.gather_coverage(data_coverage_dir)
+
+        for _, node in nodes.items():
+            node.gather_coverage(data_coverage_dir)
 
     def gather_test_executor_logs(self) -> None:
         LOGGER.debug("Collecting logs from test executor...")
@@ -173,5 +187,7 @@ class BluechiTest():
                 self.gather_logs(ctrl_container, node_container)
                 if self.run_with_valgrind:
                     self.check_valgrind_logs()
+                if self.run_with_coverage:
+                    self.gather_coverage(ctrl_container, node_container)
             finally:
                 self.teardown(ctrl_container, node_container)
