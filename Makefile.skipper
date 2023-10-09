@@ -1,0 +1,5 @@
+rpm:
+	SKIP_GIT_CONFIG=yes SKIP_BUILDDEP=yes ARTIFACTS_DIR=./tests/bluechi-rpms/ ./build-scripts/build-rpm.sh
+
+clean-rpm:
+	rm -rf ./tests/bluechi-rpms/

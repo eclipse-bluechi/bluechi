@@ -96,13 +96,16 @@ section.
 
 In the following steps BlueChi source codes are located in `~/bluechi` directory.
 
-Integration tests are expecting, that local BlueChi RPMs are located in `tests/bluechi-rpms` top level subdirectory, so BlueChi
-packages should be built using following commands:
+The integration tests expect that local BlueChi RPMs are located in `tests/bluechi-rpms` top level subdirectory.
+In addition, since the tests run in CentOS-Stream9 based containers the RPMs must also be built for CentOS-Stream9.
+To this end, a containerized build infrastructure is available.
+
+The containerized build infrastructure depends on [skipper](https://github.com/Stratoscale/skipper),
+installed via the [requirements.txt](./requirements.txt) file
 
 ```shell
-mkdir ~/bluechi/tests/bluechi-rpms
 cd ~/bluechi
-sudo ARTIFACTS_DIR=~/bluechi/tests/bluechi-rpms ./build-scripts/build-rpm.sh
+skipper make rpm
 ```
 
 When done it's required to create DNF repository from those RPMs:

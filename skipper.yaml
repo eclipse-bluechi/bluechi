@@ -1,0 +1,3 @@
+build_container_image: bluechi-rpm-build
+make:
+  makefile: Makefile.skipper
