@@ -3,18 +3,20 @@ FROM quay.io/bluechi/integration-test-base:latest
 RUN mkdir -p /tmp/bluechi-rpms
 COPY ./bluechi-rpms /tmp/bluechi-rpms
 
-RUN dnf install -y --repo bluechi-rpms \
+RUN dnf install --repo bluechi-rpms \
         --repofrompath bluechi-rpms,file:///tmp/bluechi-rpms/ \
         --nogpgcheck \
         --nodocs \
-        bluechi \
-        bluechi-debuginfo \
+        bluechi-controller \
+        bluechi-controller-debuginfo \
         bluechi-agent \
         bluechi-agent-debuginfo \
         bluechi-ctl \
         bluechi-ctl-debuginfo \
         bluechi-selinux \
-        python3-bluechi && \
-    dnf -y clean all
+        python3-bluechi \
+        -y
+
+RUN dnf -y clean all
 
 CMD [ "/sbin/init" ]

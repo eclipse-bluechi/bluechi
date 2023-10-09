@@ -24,28 +24,38 @@ BuildRequires: systemd-devel
 BuildRequires: systemd-rpm-macros
 BuildRequires: golang-github-cpuguy83-md2man
 
+%description
+BlueChi is a systemd service controller for multi-nodes environements with a
+predefined number of nodes and with a focus on highly regulated environment
+such as those requiring functional safety (for example in cars).
+
+
+%package controller
+Summary:  BlueChi service controller
 Requires: systemd
 Recommends: bluechi-selinux
 
 Obsoletes: hirte < 0.6.0
 Provides: hirte = %{version}-%{release}
+Obsoletes: bluechi < 0.7.0
+Provides: bluechi = %{version}-%{release}
 
-%description
+%description controller
 BlueChi is a systemd service controller for multi-nodes environements with a
 predefined number of nodes and with a focus on highly regulated environment
 such as those requiring functional safety (for example in cars).
-This package contains the controller and command line tool.
+This package contains the controller service.
 
-%post
+%post controller
 %systemd_post bluechi-controller.service
 
-%preun
+%preun controller
 %systemd_preun bluechi-controller.service
 
-%postun
+%postun controller
 %systemd_postun_with_restart bluechi-controller.service
 
-%files
+%files controller
 %ghost %{_sysconfdir}/bluechi/controller.conf
 %dir %{_sysconfdir}/bluechi
 %dir %{_sysconfdir}/bluechi/controller.conf.d
