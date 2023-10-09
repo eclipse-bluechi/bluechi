@@ -121,8 +121,9 @@ class BluechiTest():
                 node.gather_valgrind_logs(self.tmt_test_data_dir)
 
         self.gather_test_executor_logs()
+
     def gather_coverage(self, ctrl: BluechiControllerContainer, nodes: Dict[str, BluechiNodeContainer]):
-        logger.debug("Collecting coverage from all containers...")
+        LOGGER.debug("Collecting coverage from all containers...")
 
         data_coverage_dir = f"{self.tmt_test_data_dir}/bluechi-coverage/"
 

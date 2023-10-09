@@ -224,6 +224,7 @@ will be used during integration tests when creating code coverage report.
 %files coverage
 %license LICENSE
 %{_datadir}/bluechi-coverage/*.gcno
+%dir %{_localstatedir}/tmp/bluechi-coverage/
 %endif
 
 %prep
@@ -241,6 +242,10 @@ popd
 
 %install
 %meson_install
+
+%if 0%{?with_coverage}
+mkdir -p %{buildroot}/%{_localstatedir}/tmp/bluechi-coverage/
+%endif
 
 %if %{with_python}
 pushd src/bindings/python

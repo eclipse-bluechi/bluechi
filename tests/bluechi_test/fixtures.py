@@ -111,7 +111,7 @@ def bluechi_test(
         bluechi_ctrl_svc_port: str,
         tmt_test_data_dir: str,
         run_with_valgrind: bool,
-        run_with_coverage:bool):
+        run_with_coverage: bool):
 
     return BluechiTest(
         podman_client,
@@ -122,4 +122,4 @@ def bluechi_test(
         tmt_test_data_dir,
         run_with_valgrind,
         run_with_coverage,
-    )
+        )
