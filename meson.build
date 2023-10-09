@@ -31,6 +31,9 @@ endif
 with_coverage = get_option('with_coverage')
 if with_coverage == 'true'
    add_project_arguments('-coverage', language : 'c')
+    add_project_arguments(
+    '-fprofile-dir=' + join_paths(get_option('prefix'), get_option('localstatedir'), 'tmp', 'bluechi-coverage'), 
+    language : 'c')
    add_project_link_arguments('-lgcov', language : 'c')
    # Coverage source code mapping files `*.gcno` are created as a part of the build for each `*.c` file, but it's
    # very hard to tell meson to install files, which are created as a side effect from the build, so it's easier
