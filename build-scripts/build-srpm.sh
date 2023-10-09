@@ -6,7 +6,9 @@ meson setup builddir
 VERSION="$(meson introspect --projectinfo builddir | jq -r '.version')"
 
 # Mark current directory as safe for git to be able to parse git hash
-git config --global --add safe.directory $(pwd)
+if [ "${SKIP_GIT_CONFIG}" != "yes" ]; then
+    git config --global --add safe.directory $(pwd)
+fi
 
 # Package release
 #
