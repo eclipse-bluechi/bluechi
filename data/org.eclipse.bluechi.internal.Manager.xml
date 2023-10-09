@@ -3,7 +3,7 @@
 <node>
   <interface name="org.eclipse.bluechi.internal.Manager">
     <method name="Register">
-      <arg name="name" type="st" direction="in" />
+      <arg name="name" type="s" direction="in" />
     </method>
   </interface>
 </node>
