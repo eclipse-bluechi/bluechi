@@ -7,8 +7,8 @@ RUN dnf copr enable -y mperina/hirte-snapshot
 RUN dnf install \
         --nogpgcheck \
         --nodocs \
-        bluechi \
-        bluechi-debuginfo \
+        bluechi-controller \
+        bluechi-controller-debuginfo \
         bluechi-agent \
         bluechi-agent-debuginfo \
         bluechi-ctl \
