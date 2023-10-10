@@ -2,7 +2,7 @@ FROM quay.io/bluechi/integration-test-base:latest
 
 RUN dnf install -y dnf-plugin-config-manager
 
-RUN dnf copr enable -y mperina/hirte-snapshot
+RUN dnf copr enable -y @centos-automotive-sig/bluechi-snapshot
 
 RUN dnf install \
         --nogpgcheck \

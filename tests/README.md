@@ -74,7 +74,7 @@ tmt run
 ```
 
 This will use latest BlueChi packages from
-[hirte-snapshot](https://copr.fedorainfracloud.org/coprs/mperina/hirte-snapshot/) repository.
+[bluechi-snapshot](https://copr.fedorainfracloud.org/coprs/g/centos-automotive-sig/bluechi-snapshot/) repository.
 
 ## Running integration tests with memory leak detection
 
