@@ -1,6 +1,6 @@
 # BlueChi
 
-[![Copr build status](https://copr.fedorainfracloud.org/coprs/mperina/hirte-snapshot/package/hirte/status_image/last_build.png)](https://copr.fedorainfracloud.org/coprs/mperina/hirte-snapshot/package/hirte/)
+[![Copr build status](https://copr.fedorainfracloud.org/coprs/g/centos-automotive-sig/bluechi-snapshot/package/bluechi/status_image/last_build.png)](https://copr.fedorainfracloud.org/coprs/g/centos-automotive-sig/bluechi-snapshot/package/bluechi/)
 
 BlueChi (formerly know as hirte) is a systemd service controller intended for
 multi-node environments with a predefined number of nodes and with a focus on
@@ -22,11 +22,11 @@ to generate systemd service configuration to run a container via
 ### Testing
 
 RPM packages for the BlueChi project are available on
-[hirte-snapshot](https://copr.fedorainfracloud.org/coprs/mperina/hirte-snapshot/)
+[bluechi-snapshot](https://copr.fedorainfracloud.org/coprs/g/centos-automotive-sig/bluechi-snapshot/)
 COPR repo. To install BlueChi packages on your system please add that repo using:
 
 ```bash
-dnf copr enable mperina/hirte-snapshot
+dnf copr enable @centos-automotive-sig/bluechi-snapshot
 ```
 
 When done you can install relevant BlueChi packages using:
