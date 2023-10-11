@@ -5,12 +5,13 @@
 #include <sys/socket.h>
 #include <unistd.h>
 
+#include "libbluechi/common/common.h"
 #include "socket.h"
 
 int create_tcp_socket(uint16_t port) {
         struct sockaddr_in6 servaddr;
 
-        int fd = socket(AF_INET6, SOCK_STREAM | SOCK_CLOEXEC | SOCK_NONBLOCK, 0);
+        _cleanup_fd_ int fd = socket(AF_INET6, SOCK_STREAM | SOCK_CLOEXEC | SOCK_NONBLOCK, 0);
         if (fd < 0) {
                 int errsv = errno;
                 return -errsv;
@@ -38,7 +39,7 @@ int create_tcp_socket(uint16_t port) {
                 return -errsv;
         }
 
-        return fd;
+        return steal_fd(&fd);
 }
 
 int accept_tcp_connection_request(int fd) {
