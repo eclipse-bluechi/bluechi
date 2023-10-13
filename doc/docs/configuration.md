@@ -5,9 +5,9 @@ For a list of supported options incl. an explanation please refer to the the MAN
 
 ## Loading order
 
-On startup, bluechi loads configuration files from the following directories:
+On startup, BlueChi loads configuration files from the following directories:
 
-| Load order | bluechi | bluechi-agent |
+| Load order | bluechi-controller | bluechi-agent |
 |---|---|---|
 | 1 | `/usr/share/bluechi/config/controller.conf` | `/usr/share/bluechi-agent/config/agent.conf` |
 | 2 | `/etc/bluechi/controller.conf` | `/etc/bluechi/agent.conf` |
@@ -19,7 +19,8 @@ list and can be overridden by either editing `/etc/bluechi/controller.conf` or a
 `/etc/bluechi/controller.conf.d`. Configuration
 files in `/etc/bluechi/controller.conf.d` are sorted alphabetically and read in ascending order.
 
-It is also possible to pass the cli option `-c <path_to_file>` to both, bluechi and bluechi-agent. If specified, this
+It is also possible to pass the cli option `-c <path_to_file>` to both, bluechi-controller and bluechi-agent. If
+specified, this
 configuration has the highest priority and all defined settings will override previously set options.
 
 ## Maximum line length
