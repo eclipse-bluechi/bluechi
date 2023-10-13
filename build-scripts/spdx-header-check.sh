@@ -25,7 +25,8 @@ MAIN_FILES="$(find -type f \
     -regex ${CHECKED_FILES} \
     -not -path './builddir/*' \
     -not -path './subprojects/*' \
-    -not -path './doc/*-examples/*')"
+    -not -path './doc/*-examples/*' \
+    -not -path './doc/diagrams.drawio.xml')"
 
 #
 # List of files to check using the examples licenses
