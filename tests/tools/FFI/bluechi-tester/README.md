@@ -8,22 +8,7 @@ In the controller, use journald or stderr to monitor the actions this tools has 
 Example of usage:
 
 ``` bash
-[root@node ~]# git clone https://github.com/containers/qm
-[root@node qm]# cd qm/tests/e2e/tools/FFI/bluechi-tester
-
-[root@node bluechi-tester]# go mod init bluechi
-go: creating new go.mod: module bluechi
-go: to add module requirements and sums:
-	go mod tidy
-
-[root@node bluechi-tester]# go mod tidy
-go: finding module for package github.com/godbus/dbus/v5
-go: downloading github.com/godbus/dbus v4.1.0+incompatible
-go: downloading github.com/godbus/dbus/v5 v5.1.0
-go: found github.com/godbus/dbus/v5 in github.com/godbus/dbus/v5 v5.1.0
-
-[root@node bluechi-tester]# go build bluechi-tester.go
-
+[root@node bluechi-tester]# make
 [root@node bluechi-tester]# ./bluechi-tester
 Usage:
   bluechi-tester [flags]
