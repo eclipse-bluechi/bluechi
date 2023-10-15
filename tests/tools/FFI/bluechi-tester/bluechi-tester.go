@@ -20,8 +20,8 @@ const (
 // object path and signals of internal agents interface
 // see https://github.com/containers/bluechi/blob/main/data/org.eclipse.bluechi.internal.Agent.xml#L81-L116
 const (
-	InternalAgentObject = "/org/eclipse/bluechi/internal/agent"
-	InternalAgentSignal = "org.eclipse.bluechi.internal.Agent."
+	InternalAgentObject       = "/org/eclipse/bluechi/internal/agent"
+	InternalAgentSignalPrefix = "org.eclipse.bluechi.internal.Agent."
 )
 
 func usageAndExit() {
@@ -97,7 +97,7 @@ func main() {
 			fmt.Println("Sending " + fmt.Sprint(numberSignals) + " " + signalName + " signal to " + urlValue)
 			// emit a JobDone signal, results in an error log on the controller side since JobID 1 or (N) is unknown
 			for i := 0; i < numberSignals; i++ {
-				err = conn.Emit(InternalAgentObject, InternalAgentSignal + signalName, 1, "fake-state")
+				err = conn.Emit(InternalAgentObject, InternalAgentSignalPrefix+signalName, 1, "fake-state")
 				if err != nil {
 					fmt.Fprintln(os.Stderr, "Failed to emit signal")
 				}
