@@ -6,17 +6,17 @@ use std::time::Duration;
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let conn = Connection::new_system()?;
 
-    let proxy = conn.with_proxy(
+    let bluechi = conn.with_proxy(
         "org.eclipse.bluechi",
         "/org/eclipse/bluechi",
         Duration::from_millis(5000),
     );
 
     let (nodes,): (Vec<(String, dbus::Path, String)>,) =
-        proxy.method_call("org.eclipse.bluechi.Manager", "ListNodes", ())?;
+        bluechi.method_call("org.eclipse.bluechi.Manager", "ListNodes", ())?;
 
-    for node in nodes {
-        println!("Node: {}, Status: {}", node.0, node.2);
+    for (name, _, status) in nodes {
+        println!("Node: {}, Status: {}", name, status);
     }
 
     Ok(())

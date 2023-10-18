@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT-0
 
 use clap::Parser;
+use dbus::arg::Variant;
 use dbus::blocking::Connection;
 use dbus::Path;
 use std::time::Duration;
@@ -11,9 +12,13 @@ struct Cli {
     #[clap(short, long)]
     node_name: String,
 
-    /// The name of the unit to start
+    /// The unit name to set the cpu weight for
     #[clap(short, long)]
     unit_name: String,
+
+    /// The new value of the cpu weight
+    #[clap(short, long)]
+    cpu_weight: u64,
 }
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -28,20 +33,19 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     );
 
     let (node,): (Path,) =
-        bluechi.method_call("org.eclipse.bluechi.Manager", "GetNode", (&args.node_name,))?;
+        bluechi.method_call("org.eclipse.bluechi.Manager", "GetNode", (args.node_name,))?;
 
     let node_proxy = conn.with_proxy("org.eclipse.bluechi", node, Duration::from_millis(5000));
 
-    let (job_path,): (Path,) = node_proxy.method_call(
-        "org.eclipse.bluechi.Node",
-        "StartUnit",
-        (&args.unit_name, "replace"),
-    )?;
+    let new_cpu_weight = Variant(args.cpu_weight);
+    let mut values: Vec<(String, Variant<u64>)> = Vec::new();
+    values.push(("CPUWeight".to_string(), new_cpu_weight));
 
-    println!(
-        "Started unit '{}' on node '{}': {}",
-        args.unit_name, args.node_name, job_path
-    );
+    node_proxy.method_call(
+        "org.eclipse.bluechi.Node",
+        "SetUnitProperties",
+        (args.unit_name, false, values),
+    )?;
 
     Ok(())
 }

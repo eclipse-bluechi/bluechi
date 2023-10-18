@@ -3,25 +3,10 @@
 
 First of all, install Rust as describe in the [official documentation](https://www.rust-lang.org/tools/install).
 
-**Setup sample project**
-
-The Rust snippets require at least a simple project setup. Create it via:
-
-```bash
-# initialize the project
-cargo new bluechi
-cd bluechi
-```
-
 **Installing dependencies**
 
-The Rust snippets require the [dbus](https://docs.rs/dbus/latest/dbus/index.html) create. Navigate into the `bluechi` directory and add it as a dependency via:
-
-```bash
-cargo add dbus
-```
-
-Since the [dbus](https://docs.rs/dbus/latest/dbus/index.html) create requires the reference implementation `libdbus`, this needs to be installed as well:
+The Rust snippets requires [dbus](https://docs.rs/dbus/latest/dbus/index.html).
+Since this crate needs the reference implementation `libdbus`, it has to be installed:
 
 ```bash
 # on Ubuntu
@@ -35,6 +20,16 @@ dnf install dbus-devel pkgconf-pkg-config
 The snippet chosen to run needs to be copied into the `bluechi` directory. After that the example can be build and run via:
 
 ```bash
-cargo build
-./target/debug/bluechi args...
+# clone the BlueChi project
+$ git clone https://github.com/containers/bluechi.git
+
+# navigate into the rust api-examples directory
+$ cd bluechi/doc/api-examples/rust
+
+# build all example applications
+$ cargo build
+
+# run a specific example, e.g. start-unit
+$ ./target/debug/start-unit laptop cow.service
+$ ...
 ```

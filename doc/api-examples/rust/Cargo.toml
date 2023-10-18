@@ -1,0 +1,46 @@
+[package]
+name = "bluechi"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+clap = { version = "4.4.6", features = ["derive"] }
+dbus = "0.9.7"
+
+[[bin]]
+name = "enable-unit"
+path = "enable-unit.rs"
+
+[[bin]]
+name = "get-cpuweight"
+path = "get-cpuweight.rs"
+
+[[bin]]
+name = "list-node-units"
+path = "list-node-units.rs"
+
+[[bin]]
+name = "list-nodes"
+path = "list-nodes.rs"
+
+[[bin]]
+name = "monitor-agent-connection"
+path = "monitor-agent-connection.rs"
+
+[[bin]]
+name = "monitor-node-connections"
+path = "monitor-node-connections.rs"
+
+[[bin]]
+name = "monitor-unit"
+path = "monitor-unit.rs"
+
+[[bin]]
+name = "set-cpuweight"
+path = "set-cpuweight.rs"
+
+[[bin]]
+name = "start-unit"
+path = "start-unit.rs"
