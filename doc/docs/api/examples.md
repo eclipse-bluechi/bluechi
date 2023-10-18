@@ -21,6 +21,10 @@ The following sections demonstrate how the D-Bus API of BlueChi can be interacte
 
     --8<-- "api-examples/python/setup.md"
 
+=== "Rust"
+
+    --8<-- "api-examples/rust/setup.md"
+
 !!! Note
 
         Depending on the setup of BlueChi root privileges might be needed when running the samples.
@@ -41,6 +45,12 @@ The following sections demonstrate how the D-Bus API of BlueChi can be interacte
     --8<-- "api-examples/python/list-nodes.py"
     ```
 
+=== "Rust"
+
+    ```rust
+    --8<-- "api-examples/rust/list-nodes.rs"
+    ```
+
 ### List all units on a node
 
 === "Go"
@@ -55,6 +65,12 @@ The following sections demonstrate how the D-Bus API of BlueChi can be interacte
     --8<-- "api-examples/python/list-node-units.py"
     ```
 
+=== "Rust"
+
+    ```rust
+    --8<-- "api-examples/rust/list-node-units.rs"
+    ```
+
 ### Get a unit property value
 
 === "Go"
@@ -67,6 +83,12 @@ The following sections demonstrate how the D-Bus API of BlueChi can be interacte
 
     ```python
     --8<-- "api-examples/python/get-cpuweight.py"
+    ```
+
+=== "Rust"
+
+    ```rust
+    --8<-- "api-examples/rust/get-cpuweight.rs"
     ```
 
 ## Operations on units
@@ -85,6 +107,12 @@ The following sections demonstrate how the D-Bus API of BlueChi can be interacte
     --8<-- "api-examples/python/start-unit.py"
     ```
 
+=== "Rust"
+
+    ```rust
+    --8<-- "api-examples/rust/start-unit.rs"
+    ```
+
 ### Enable unit
 
 === "Go"
@@ -99,6 +127,12 @@ The following sections demonstrate how the D-Bus API of BlueChi can be interacte
     --8<-- "api-examples/python/enable-unit.py"
     ```
 
+=== "Rust"
+
+    ```rust
+    --8<-- "api-examples/rust/enable-unit.rs"
+    ```
+
 ### Set property of a unit
 
 === "Go"
@@ -111,6 +145,12 @@ The following sections demonstrate how the D-Bus API of BlueChi can be interacte
 
     ```python
     --8<-- "api-examples/python/set-cpuweight.py"
+    ```
+
+=== "Rust"
+
+    ```rust
+    --8<-- "api-examples/rust/set-cpuweight.rs"
     ```
 
 ## Monitoring
@@ -129,6 +169,12 @@ The following sections demonstrate how the D-Bus API of BlueChi can be interacte
     --8<-- "api-examples/python/monitor-node-connections.py"
     ```
 
+=== "Rust"
+
+    ```rust
+    --8<-- "api-examples/rust/monitor-node-connections.rs"
+    ```
+
 ### Monitor the connection on the managed node
 
 === "Go"
@@ -143,6 +189,12 @@ The following sections demonstrate how the D-Bus API of BlueChi can be interacte
     --8<-- "api-examples/python/monitor-agent-connection.py"
     ```
 
+=== "Rust"
+
+    ```rust
+    --8<-- "api-examples/rust/monitor-agent-connection.rs"
+    ```
+
 ### Monitor unit changes
 
 === "Go"
@@ -155,4 +207,10 @@ The following sections demonstrate how the D-Bus API of BlueChi can be interacte
 
     ```python
     --8<-- "api-examples/python/monitor-unit.py"
+    ```
+
+=== "Rust"
+
+    ```rust
+    --8<-- "api-examples/rust/monitor-unit.rs"
     ```
