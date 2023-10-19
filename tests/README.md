@@ -37,14 +37,14 @@ dnf install \
 
 All required python packages are listed in the [requirements.txt](./requirements.txt) and can be installed using `pip`:
 
-```bash
+```shell
 pip install -U -r requirements.txt
 ```
 
 Instead of installing the required packages directly, it is recommended to create a virtual environment. For example,
 the following snippet uses the built-in [venv](https://docs.python.org/3/library/venv.html):
 
-```bash
+```shell
 python -m venv ~/bluechi-env
 source ~/bluechi-env/bin/activate
 pip install -U -r requirements.txt
@@ -128,7 +128,7 @@ tmt run -v -eCONTAINER_USED=integration-test-local
 [autopep8](https://pypi.org/project/autopep8/) is used to enforce a unified code style. The applied rules are defined in
 the [.pep8](./.pep8) file. All source files can be formatted via:
 
-```bash
+```shell
 # navigate into bluechi/tests directory
 autopep8 ./
 ```
@@ -188,13 +188,13 @@ The base images [build-base](./containers/build-base) and [integration-test-base
 
 Building for multiple architectures, the following packages are required:
 
-```bash
+```shell
 sudo dnf install -y podman buildah qemu-user-static
 ```
 
 From the root directory of the project run the following commands:
 
-```bash
+```shell
 # In order to build and directly push, login first
 buildah login -u="someuser" -p="topsecret" quay.io
 PUSH_MANIFEST=yes bash build-scripts/build-push-containers.sh build_base
