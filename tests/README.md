@@ -160,8 +160,8 @@ A full example of how to use the python bindings can be found in the [monitor op
 Every test should be distinctly identified with a unique ID. Therefore, when adding a new test, please execute the following command to assign an ID to the new test:
 
 ```shell
-cd ~/bluechi/tests
-tmt test id .
+$ cd ~/bluechi/tests
+$ tmt test id .
 New id 'UUID' added to test '/tests/path_to_your_new_test'.
 ...
 ```
