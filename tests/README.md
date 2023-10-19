@@ -70,7 +70,7 @@ Integration tests are executed with [tmt framework](https://github.com/teemtee/t
 To run integration tests please execute below command of the top level directory of this project:
 
 ```shell
-tmt run
+tmt run -v
 ```
 
 This will use latest BlueChi packages from
@@ -118,7 +118,7 @@ After that step integration tests can be executed using following command:
 
 ```shell
 cd ~/bluechi/tests
-tmt run -eCONTAINER_USED=integration-test-local
+tmt run -v -eCONTAINER_USED=integration-test-local
 ```
 
 ## Developing integration tests
@@ -140,7 +140,7 @@ More detailed information can be displayed by setting log level to `DEBUG`:
 
 ```shell
 cd ~/bluechi/tests
-tmt run -eLOG_LEVEL=DEBUG
+tmt run -v -eLOG_LEVEL=DEBUG
 ```
 
 ### Using python bindings in tests
