@@ -1,1 +1,2 @@
 summary: Test if stopping the bluechi-dep service results in a stopped bluechi-proxy service, but both actual services are still running
+id: cb13e1ed-d692-4466-9ff8-389c90c29454

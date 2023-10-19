@@ -1,1 +1,2 @@
 summary: Test proper lifetimes of all services when multiple services on multiple nodes request the same service on the same node
+id: 4b5a0d32-4b85-404d-9a02-f58531bf1957

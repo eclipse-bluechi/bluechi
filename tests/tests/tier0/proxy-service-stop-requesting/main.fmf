@@ -1,1 +1,2 @@
 summary: Test if stopping the requesting service results in a stopped bluechi-proxy and bluechi-dep service, but dependency service is still running
+id: 6ebd2116-eb64-43b8-b346-8eb632122549

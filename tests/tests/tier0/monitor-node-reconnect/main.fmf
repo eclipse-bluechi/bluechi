@@ -1,1 +1,2 @@
 summary: Test if the bluechi-agent automatically reconnects on a successful heartbeat after the controller has been stopped and restarted
+id: 7db7738e-b1bf-458d-896a-5633b005d4dd

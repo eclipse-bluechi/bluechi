@@ -1,3 +1,4 @@
+component: bluechi
 test: |
     pytest -svv \
     --confcutdir=../../../ \

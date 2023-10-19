@@ -1,1 +1,2 @@
 summary: Test if proxy service fails if dependency service can't be loaded due to typo
+id: 240fcd55-a436-4301-97c6-f4d6426811a9

@@ -1,1 +1,2 @@
 summary: Test if the bluechi agent emits a status changed signal when it disconnects from the controller, e.g. when the controller goes down
+id: 7b5c59d0-f40e-4b29-b7c9-4fdeef9d079d
