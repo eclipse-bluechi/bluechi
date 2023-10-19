@@ -35,6 +35,10 @@ Summary:  BlueChi service controller
 Requires: systemd
 Recommends: bluechi-selinux
 
+%if 0%{?with_coverage}
+Requires: bluechi-coverage = %{version}-%{release}
+%endif
+
 Obsoletes: hirte < 0.6.0
 Provides: hirte = %{version}-%{release}
 Obsoletes: bluechi < 0.7.0
@@ -80,6 +84,10 @@ This package contains the controller service.
 Summary:  BlueChi service controller agent
 Requires: systemd
 Recommends: bluechi-selinux
+
+%if 0%{?with_coverage}
+Requires: bluechi-coverage = %{version}-%{release}
+%endif
 
 Obsoletes: hirte-agent < 0.6.0
 Provides: hirte-agent = %{version}-%{release}
@@ -175,6 +183,10 @@ semanage port -a -t bluechi_port_t -p tcp 842 2>/dev/null || semanage port -m -t
 %package ctl
 Summary:  BlueChi service controller command line tool
 Requires: %{name} = %{version}-%{release}
+
+%if 0%{?with_coverage}
+Requires: bluechi-coverage = %{version}-%{release}
+%endif
 
 Obsoletes: hirte-ctl < 0.6.0
 Provides: hirte-ctl = %{version}-%{release}

@@ -1,7 +1,5 @@
 FROM quay.io/bluechi/integration-test-base:latest
 
-ARG with_coverage
-
 RUN mkdir -p /tmp/bluechi-rpms
 
 COPY ./bluechi-rpms /tmp/bluechi-rpms
@@ -19,14 +17,6 @@ RUN dnf install --repo bluechi-rpms \
         bluechi-selinux \
         python3-bluechi \
         -y
-
-RUN if [ "$with_coverage" = "1" ]; then \
-        dnf install -y --repo bluechi-rpms \
-        --repofrompath bluechi-rpms,file:///tmp/bluechi-rpms/ \
-        --nogpgcheck \
-        --nodocs \
-        bluechi-coverage; \
-    fi
 
 RUN dnf -y clean all
 
