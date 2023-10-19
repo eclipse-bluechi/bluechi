@@ -40,13 +40,6 @@ def bluechi_ctrl_svc_port() -> str:
 
 
 @pytest.fixture(scope='session')
-def bluechi_network_name() -> str:
-    """Returns the name of the network used for testing containers"""
-
-    return _get_env_value('BLUECHI_NETWORK_NAME', 'bluechi-test')
-
-
-@pytest.fixture(scope='session')
 def run_with_valgrind() -> bool:
     """Returns 1 if bluechi should be run with valgrind for memory management testing"""
 
@@ -106,7 +99,6 @@ def bluechi_node_default_config(bluechi_ctrl_svc_port: str):
 def bluechi_test(
         podman_client: PodmanClient,
         bluechi_image_id: str,
-        bluechi_network_name: str,
         bluechi_ctrl_host_port: str,
         bluechi_ctrl_svc_port: str,
         tmt_test_data_dir: str,
@@ -116,7 +108,6 @@ def bluechi_test(
     return BluechiTest(
         podman_client,
         bluechi_image_id,
-        bluechi_network_name,
         bluechi_ctrl_host_port,
         bluechi_ctrl_svc_port,
         tmt_test_data_dir,

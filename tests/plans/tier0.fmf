@@ -9,7 +9,6 @@ environment:
     CONTAINER_USED: integration-test-snapshot
     LOG_LEVEL: INFO
     MGR_PORT: 8420
-    TEST_NET_RANGE: 10.10.0.0/24
 prepare:
   - name: Set containers setup
     how: shell

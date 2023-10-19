@@ -23,7 +23,6 @@ class BluechiTest():
             self,
             podman_client: PodmanClient,
             bluechi_image_id: str,
-            bluechi_network_name: str,
             bluechi_ctrl_host_port: str,
             bluechi_ctrl_svc_port: str,
             tmt_test_data_dir: str,
@@ -32,7 +31,6 @@ class BluechiTest():
 
         self.podman_client = podman_client
         self.bluechi_image_id = bluechi_image_id
-        self.bluechi_network_name = bluechi_network_name
         self.bluechi_ctrl_host_port = bluechi_ctrl_host_port
         self.bluechi_ctrl_svc_port = bluechi_ctrl_svc_port
         self.tmt_test_data_dir = tmt_test_data_dir
@@ -66,7 +64,6 @@ class BluechiTest():
                 image=self.bluechi_image_id,
                 detach=True,
                 ports={self.bluechi_ctrl_svc_port: self.bluechi_ctrl_host_port},
-                networks={self.bluechi_network_name: {}},
             )
             c.wait(condition="running")
 
@@ -83,7 +80,6 @@ class BluechiTest():
                     name=cfg.node_name,
                     image=self.bluechi_image_id,
                     detach=True,
-                    networks={self.bluechi_network_name: {}},
                 )
                 c.wait(condition="running")
 
