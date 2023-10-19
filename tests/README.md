@@ -81,7 +81,7 @@ This will use latest BlueChi packages from
 To run integration tests with `valgrind`, set `WITH_VALGRIND` environment variable as follows:
 
 ```shell
-WITH_VALGRIND=1 tmt run -v
+tmt run -v -eWITH_VALGRIND=1
 ```
 
 If `valgrind` detects a memory leak in a test, the test will fail, and the logs will be found in the test `data` directory.
