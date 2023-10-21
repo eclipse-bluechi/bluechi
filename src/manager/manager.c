@@ -564,13 +564,17 @@ static void manager_method_list_units_done(ListUnitsRequest *req) {
                 r = manager_method_list_units_encode_reply(req, reply);
         }
         if (r < 0) {
-                sd_bus_reply_method_errorf(req->request_message, SD_BUS_ERROR_FAILED, "Internal error");
+                sd_bus_reply_method_errorf(
+                                req->request_message,
+                                SD_BUS_ERROR_FAILED,
+                                "Failed to create a reply message: %s",
+                                strerror(-r));
                 return;
         }
 
         r = sd_bus_message_send(reply);
         if (r < 0) {
-                bc_log_errorf("Failed to send reply: %s", strerror(-r));
+                bc_log_errorf("Failed to send reply message: %s", strerror(-r));
                 return;
         }
 }
@@ -609,7 +613,7 @@ static int manager_method_list_units(sd_bus_message *m, void *userdata, UNUSED s
 
         req = malloc0_array(sizeof(*req), sizeof(req->sub_req[0]), manager->n_nodes);
         if (req == NULL) {
-                return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "Internal error");
+                return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_NO_MEMORY, "Out of memory");
         }
         req->request_message = sd_bus_message_ref(m);
 
@@ -654,24 +658,34 @@ static int manager_method_list_nodes(sd_bus_message *m, void *userdata, UNUSED s
 
         int r = sd_bus_message_new_method_return(m, &reply);
         if (r < 0) {
-                return sd_bus_reply_method_errorf(reply, SD_BUS_ERROR_FAILED, "Internal error");
+                return sd_bus_reply_method_errorf(
+                                reply,
+                                SD_BUS_ERROR_FAILED,
+                                "Failed to create a reply message: %s",
+                                strerror(-r));
         }
 
         r = sd_bus_message_open_container(reply, SD_BUS_TYPE_ARRAY, "(sos)");
         if (r < 0) {
-                return sd_bus_reply_method_errorf(reply, SD_BUS_ERROR_FAILED, "Internal error");
+                return sd_bus_reply_method_errorf(
+                                reply,
+                                SD_BUS_ERROR_INVALID_ARGS,
+                                "Invalid argument for the reply message: %s",
+                                strerror(-r));
         }
 
         LIST_FOREACH(nodes, node, manager->nodes) {
                 r = manager_method_list_encode_node(reply, node);
                 if (r < 0) {
-                        return sd_bus_reply_method_errorf(reply, SD_BUS_ERROR_FAILED, "Internal error");
+                        return sd_bus_reply_method_errorf(
+                                        reply, SD_BUS_ERROR_FAILED, "Failed to encode a node: %s", strerror(-r));
                 }
         }
 
         r = sd_bus_message_close_container(reply);
         if (r < 0) {
-                return sd_bus_reply_method_errorf(reply, SD_BUS_ERROR_FAILED, "Internal error");
+                return sd_bus_reply_method_errorf(
+                                reply, SD_BUS_ERROR_FAILED, "Failed to close message: %s", strerror(-r));
         }
 
         return sd_bus_message_send(reply);
@@ -689,7 +703,8 @@ static int manager_method_get_node(sd_bus_message *m, void *userdata, UNUSED sd_
 
         int r = sd_bus_message_read(m, "s", &node_name);
         if (r < 0) {
-                return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_INVALID_ARGS, "Invalid arguments");
+                return sd_bus_reply_method_errorf(
+                                m, SD_BUS_ERROR_INVALID_ARGS, "Invalid argument for the node name");
         }
 
         node = manager_find_node(manager, node_name);
@@ -699,12 +714,20 @@ static int manager_method_get_node(sd_bus_message *m, void *userdata, UNUSED sd_
 
         r = sd_bus_message_new_method_return(m, &reply);
         if (r < 0) {
-                return sd_bus_reply_method_errorf(reply, SD_BUS_ERROR_FAILED, "Internal error");
+                return sd_bus_reply_method_errorf(
+                                reply,
+                                SD_BUS_ERROR_FAILED,
+                                "Failed to create a reply message: %s",
+                                strerror(-r));
         }
 
         r = sd_bus_message_append(reply, "o", node->object_path);
         if (r < 0) {
-                return sd_bus_reply_method_errorf(reply, SD_BUS_ERROR_FAILED, "Internal error");
+                return sd_bus_reply_method_errorf(
+                                reply,
+                                SD_BUS_ERROR_FAILED,
+                                "Failed to append the object path of the node to the reply message: %s",
+                                strerror(-r));
         }
 
         return sd_bus_message_send(reply);
@@ -720,21 +743,29 @@ static int manager_method_create_monitor(sd_bus_message *m, void *userdata, UNUS
 
         _cleanup_monitor_ Monitor *monitor = monitor_new(manager, sd_bus_message_get_sender(m));
         if (monitor == NULL) {
-                return sd_bus_reply_method_errorf(reply, SD_BUS_ERROR_FAILED, "Internal error");
+                return sd_bus_reply_method_errorf(reply, SD_BUS_ERROR_FAILED, "Failed to create new monitor");
         }
 
         if (!monitor_export(monitor)) {
-                return sd_bus_reply_method_errorf(reply, SD_BUS_ERROR_FAILED, "Internal error");
+                return sd_bus_reply_method_errorf(reply, SD_BUS_ERROR_FAILED, "Failed to export monitor");
         }
 
         int r = sd_bus_message_new_method_return(m, &reply);
         if (r < 0) {
-                return sd_bus_reply_method_errorf(reply, SD_BUS_ERROR_FAILED, "Internal error");
+                return sd_bus_reply_method_errorf(
+                                reply,
+                                SD_BUS_ERROR_FAILED,
+                                "Failed to create a reply message for the monitor: %s",
+                                strerror(-r));
         }
 
         r = sd_bus_message_append(reply, "o", monitor->object_path);
         if (r < 0) {
-                return sd_bus_reply_method_errorf(reply, SD_BUS_ERROR_FAILED, "Internal error");
+                return sd_bus_reply_method_errorf(
+                                reply,
+                                SD_BUS_ERROR_FAILED,
+                                "Failed to append the object path of the monitor to the reply message: %s",
+                                strerror(-r));
         }
 
         r = sd_bus_message_send(reply);
