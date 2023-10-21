@@ -68,7 +68,7 @@ static int proxy_service_method_target_state_changed(
         Agent *agent = proxy->agent;
 
         if (agent == NULL) {
-                return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "Internal error");
+                return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "Failed to get the proxy agent");
         }
 
 
@@ -77,7 +77,11 @@ static int proxy_service_method_target_state_changed(
         const char *reason = NULL;
         int r = sd_bus_message_read(m, "sss", &active_state_str, &substate, &reason);
         if (r < 0) {
-                return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_INVALID_ARGS, "Invalid arguments");
+                return sd_bus_reply_method_errorf(
+                                m,
+                                SD_BUS_ERROR_INVALID_ARGS,
+                                "Invalid argument for: active state, substate, or reason: %s",
+                                strerror(-r));
         }
 
         UnitActiveState active_state = active_state_from_string(active_state_str);
@@ -150,13 +154,17 @@ static int proxy_service_method_target_removed(sd_bus_message *m, void *userdata
         _cleanup_proxy_service_ ProxyService *proxy = proxy_service_ref((ProxyService *) userdata);
         Agent *agent = proxy->agent;
         if (agent == NULL) {
-                return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "Internal error");
+                return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "Failed to get the proxy agent");
         }
 
         const char *reason = NULL;
         int r = sd_bus_message_read(m, "s", &reason);
         if (r < 0) {
-                return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_INVALID_ARGS, "Invalid arguments");
+                return sd_bus_reply_method_errorf(
+                                m,
+                                SD_BUS_ERROR_INVALID_ARGS,
+                                "Invalid argument for the reason: %s",
+                                strerror(-r));
         }
 
         bc_log_debugf("Proxy service '%s' got TargetRemoved from manager: %s",
@@ -181,7 +189,7 @@ static int proxy_service_method_error(sd_bus_message *m, void *userdata, UNUSED 
         Agent *agent = proxy->agent;
 
         if (agent == NULL) {
-                return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "Internal error");
+                return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "Failed to get the proxy agent");
         }
 
         const char *message = NULL;
