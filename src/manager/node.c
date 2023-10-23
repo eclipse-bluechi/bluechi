@@ -1134,12 +1134,20 @@ static int method_list_units_callback(AgentRequest *req, sd_bus_message *m, UNUS
         _cleanup_sd_bus_message_ sd_bus_message *reply = NULL;
         int r = sd_bus_message_new_method_return(request_message, &reply);
         if (r < 0) {
-                return sd_bus_reply_method_errorf(request_message, SD_BUS_ERROR_FAILED, "Internal error");
+                return sd_bus_reply_method_errorf(
+                                request_message,
+                                SD_BUS_ERROR_FAILED,
+                                "Failed to create a reply message for ListUnits request: %s",
+                                strerror(-r));
         }
 
         r = sd_bus_message_copy(reply, m, true);
         if (r < 0) {
-                return sd_bus_reply_method_errorf(request_message, SD_BUS_ERROR_FAILED, "Internal error");
+                return sd_bus_reply_method_errorf(
+                                request_message,
+                                SD_BUS_ERROR_FAILED,
+                                "Failed to copy the bus message for ListUnits request: %s",
+                                strerror(-r));
         }
 
         return sd_bus_message_send(reply);
@@ -1154,7 +1162,7 @@ static int node_method_list_units(sd_bus_message *m, void *userdata, UNUSED sd_b
                         sd_bus_message_ref(m),
                         (free_func_t) sd_bus_message_unref);
         if (agent_req == NULL) {
-                return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "Internal error");
+                return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "List units not found");
         }
 
         return 1;
@@ -1176,7 +1184,11 @@ static int node_method_set_unit_properties_callback(
         _cleanup_sd_bus_message_ sd_bus_message *reply = NULL;
         int r = sd_bus_message_new_method_return(request_message, &reply);
         if (r < 0) {
-                return sd_bus_reply_method_errorf(request_message, SD_BUS_ERROR_FAILED, "Internal error");
+                return sd_bus_reply_method_errorf(
+                                request_message,
+                                SD_BUS_ERROR_FAILED,
+                                "Failed to create a reply message: %s",
+                                strerror(-r));
         }
 
         return sd_bus_message_send(reply);
@@ -1189,11 +1201,15 @@ static int node_method_set_unit_properties(sd_bus_message *m, void *userdata, UN
 
         int r = sd_bus_message_read(m, "sb", &unit, &runtime);
         if (r < 0) {
-                return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "Internal Error");
+                return sd_bus_reply_method_errorf(
+                                m,
+                                SD_BUS_ERROR_INVALID_ARGS,
+                                "Invalid argument for unit or runtime: %s",
+                                strerror(-r));
         }
 
         _cleanup_agent_request_ AgentRequest *req = NULL;
-        node_create_request(
+        r = node_create_request(
                         &req,
                         node,
                         "SetUnitProperties",
@@ -1201,21 +1217,32 @@ static int node_method_set_unit_properties(sd_bus_message *m, void *userdata, UN
                         sd_bus_message_ref(m),
                         (free_func_t) sd_bus_message_unref);
         if (req == NULL) {
-                return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "Internal error");
+                return sd_bus_reply_method_errorf(
+                                m, SD_BUS_ERROR_FAILED, "Failed to create an agent request: %s", strerror(-r));
         }
 
         r = sd_bus_message_append(req->message, "sb", unit, runtime);
         if (r < 0) {
-                return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "Internal error");
+                return sd_bus_reply_method_errorf(
+                                m,
+                                SD_BUS_ERROR_FAILED,
+                                "Failed to append unit and runtime to the message: %s",
+                                strerror(-r));
         }
 
         r = sd_bus_message_copy(req->message, m, false);
         if (r < 0) {
-                return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "Internal error");
+                return sd_bus_reply_method_errorf(
+                                m, SD_BUS_ERROR_FAILED, "Failed to copy a message: %s", strerror(-r));
         }
 
-        if (agent_request_start(req) < 0) {
-                return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "Internal error");
+        r = agent_request_start(req);
+        if (r < 0) {
+                return sd_bus_reply_method_errorf(
+                                m,
+                                SD_BUS_ERROR_FAILED,
+                                "Failed to call the method to start the node: %s",
+                                strerror(-r));
         }
 
         return 1;
@@ -1232,12 +1259,20 @@ static int node_method_passthrough_to_agent_callback(
         _cleanup_sd_bus_message_ sd_bus_message *reply = NULL;
         int r = sd_bus_message_new_method_return(request_message, &reply);
         if (r < 0) {
-                return sd_bus_reply_method_errorf(request_message, SD_BUS_ERROR_FAILED, "Internal error");
+                return sd_bus_reply_method_errorf(
+                                request_message,
+                                SD_BUS_ERROR_FAILED,
+                                "Failed to create a reply message: %s",
+                                strerror(-r));
         }
 
         r = sd_bus_message_copy(reply, m, true);
         if (r < 0) {
-                return sd_bus_reply_method_errorf(request_message, SD_BUS_ERROR_FAILED, "Internal error");
+                return sd_bus_reply_method_errorf(
+                                request_message,
+                                SD_BUS_ERROR_FAILED,
+                                "Failed to copy a reply message: %s",
+                                strerror(-r));
         }
 
         return sd_bus_message_send(reply);
@@ -1246,7 +1281,7 @@ static int node_method_passthrough_to_agent_callback(
 static int node_method_passthrough_to_agent(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error) {
         Node *node = userdata;
         _cleanup_agent_request_ AgentRequest *req = NULL;
-        node_create_request(
+        int r = node_create_request(
                         &req,
                         node,
                         sd_bus_message_get_member(m),
@@ -1254,16 +1289,23 @@ static int node_method_passthrough_to_agent(sd_bus_message *m, void *userdata, U
                         sd_bus_message_ref(m),
                         (free_func_t) sd_bus_message_unref);
         if (req == NULL) {
-                return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "Internal error");
+                return sd_bus_reply_method_errorf(
+                                m, SD_BUS_ERROR_FAILED, "Failed to create an agent request: %s", strerror(-r));
         }
 
-        int r = sd_bus_message_copy(req->message, m, true);
+        r = sd_bus_message_copy(req->message, m, true);
         if (r < 0) {
-                return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "Internal error");
+                return sd_bus_reply_method_errorf(
+                                m, SD_BUS_ERROR_FAILED, "Failed to copy a reply message: %s", strerror(-r));
         }
 
-        if (agent_request_start(req) < 0) {
-                return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "Internal error");
+        r = agent_request_start(req);
+        if (r < 0) {
+                return sd_bus_reply_method_errorf(
+                                m,
+                                SD_BUS_ERROR_FAILED,
+                                "Failed to call the method to start the node: %s",
+                                strerror(-r));
         }
 
         return 1;
@@ -1321,7 +1363,7 @@ static int unit_lifecycle_method_callback(AgentRequest *req, sd_bus_message *m, 
         }
 
         if (!manager_add_job(manager, setup->job)) {
-                return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "Internal error");
+                return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "Failed to add a job");
         }
 
         return sd_bus_reply_method_return(setup->request_message, "o", setup->job->object_path);
@@ -1335,12 +1377,16 @@ static int node_run_unit_lifecycle_method(
 
         int r = sd_bus_message_read(m, "ss", &unit, &mode);
         if (r < 0) {
-                return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_INVALID_ARGS, "Invalid arguments");
+                return sd_bus_reply_method_errorf(
+                                m,
+                                SD_BUS_ERROR_INVALID_ARGS,
+                                "Invalid argument for unit or mode: %s",
+                                strerror(-r));
         }
 
         _cleanup_job_setup_ JobSetup *setup = job_setup_new(m, node, unit, job_type);
         if (setup == NULL) {
-                return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "Out of memory");
+                return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_NO_MEMORY, "Out of memory");
         }
 
         if (node->manager->metrics_enabled) {
@@ -1348,7 +1394,7 @@ static int node_run_unit_lifecycle_method(
         }
 
         _cleanup_agent_request_ AgentRequest *req = NULL;
-        node_create_request(
+        r = node_create_request(
                         &req,
                         node,
                         method,
@@ -1356,16 +1402,26 @@ static int node_run_unit_lifecycle_method(
                         job_setup_ref(setup),
                         (free_func_t) job_setup_unref);
         if (req == NULL) {
-                return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "Internal error");
+                return sd_bus_reply_method_errorf(
+                                m, SD_BUS_ERROR_FAILED, "Failed to create an agent request: %s", strerror(-r));
         }
 
         r = sd_bus_message_append(req->message, "ssu", unit, mode, setup->job->id);
         if (r < 0) {
-                return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "Internal error");
+                return sd_bus_reply_method_errorf(
+                                m,
+                                SD_BUS_ERROR_FAILED,
+                                "Failed to append unit, mode, and job ID to the message: %s",
+                                strerror(-r));
         }
 
-        if (agent_request_start(req) < 0) {
-                return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "Internal error");
+        r = agent_request_start(req);
+        if (r < 0) {
+                return sd_bus_reply_method_errorf(
+                                m,
+                                SD_BUS_ERROR_FAILED,
+                                "Failed to call the method to start the node: %s",
+                                strerror(-r));
         }
 
         return 1;
@@ -1417,13 +1473,20 @@ static int node_method_set_log_level(sd_bus_message *m, UNUSED void *userdata, U
 
         int r = sd_bus_message_read(m, "s", &level);
         if (r < 0) {
-                return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_INVALID_ARGS, "Invalid arguments");
+                return sd_bus_reply_method_errorf(
+                                m,
+                                SD_BUS_ERROR_INVALID_ARGS,
+                                "Invalid argument for the log-level: %s",
+                                strerror(-r));
         }
         LogLevel loglevel = string_to_log_level(level);
         if (loglevel == LOG_LEVEL_INVALID) {
                 r = sd_bus_reply_method_return(m, "");
                 if (r < 0) {
-                        return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_INVALID_ARGS, "Invalid arguments");
+                        return sd_bus_reply_method_errorf(
+                                        m,
+                                        SD_BUS_ERROR_INVALID_ARGS,
+                                        "Invalid argument for the log level invalid");
                 }
         }
         r = sd_bus_call_method(
@@ -1438,7 +1501,11 @@ static int node_method_set_log_level(sd_bus_message *m, UNUSED void *userdata, U
                         level);
         if (r < 0) {
                 bc_log_errorf("Failed to set log level call: %s", error.message);
-                return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "Internal error");
+                return sd_bus_reply_method_errorf(
+                                m,
+                                SD_BUS_ERROR_FAILED,
+                                "Failed to call a method to set the log level: %s",
+                                strerror(-r));
         }
         return sd_bus_reply_method_return(m, "");
 }

@@ -7,12 +7,7 @@ if [ "$CONTAINER_USED" = "integration-test-snapshot" ]; then
    export ARCH="--arch=$(uname -m)"
 fi
 
-BUILD_ARG=""
-if [ "$WITH_COVERAGE" == "1" ]; then
-    BUILD_ARG="--build-arg with_coverage=1"
-fi
-
-podman build $ARCH $BUILD_ARG -f ./containers/$CONTAINER_USED -t $BLUECHI_IMAGE_NAME .
+podman build $ARCH -f ./containers/$CONTAINER_USED -t $BLUECHI_IMAGE_NAME .
 
 if [[ $? -ne 0 ]]; then
     exit 1
