@@ -73,6 +73,12 @@ jobs:
         with:
           name: rpm-artifacts
           path: 'tests/bluechi-rpms'
+      
+      - name: Check integration test IDs
+        run: |
+          cd tests
+          tmt test id --dry | grep "New id" && echo "Found integration tests with missing ID. Please generate Test-IDs." && exit 1
+          cd ..
 
       - name: Run integration tests
         run: |
