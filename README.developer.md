@@ -5,15 +5,18 @@
   - [Environment Setup](#environment-setup)
     - [Prerequisites](#prerequisites)
     - [Dependencies Installation](#dependencies-installation)
+  - [Busctl](#busctl)
   - [Code Style](#code-style)
   - [Linting](#linting)
   - [Build](#build)
+    - [Build options](#build-options)
+    - [Bindings](#bindings)
   - [Debug](#debug)
-  - [Busctl](#busctl)
   - [Unit Tests](#unit-tests)
   - [Integration Tests](#integration-tests)
   - [Running](#running)
-    - [bluechi](#bluechi)
+    - [Assumed setup](#assumed-setup)
+    - [bluechi](#bluechi-controller)
     - [bluechi-agent](#bluechi-agent)
     - [bluechictl](#bluechictl)
 - [Documentation](#documentation)
@@ -182,6 +185,21 @@ After building, the following binaries are available:
 - `bluechi-proxy`: an internally used application to resolve cross-node dependencies
 - `bluechictl`: a helper (CLI) program to send an commands to the controller
 
+#### Build options
+
+BlueChi can be built with configurable options as listed in [meson_options.txt](./meson_options.txt). The value for
+those settings can either be changed directly in the file or via
+
+```bash
+# assuming an initial "meson setup builddir"
+meson configure -D<option-name>=<option-value>
+```
+
+Current options include:
+
+- `with_coverage`: This option ensures that BlueChi is built to collect coverage when running a BlueChi binary
+- `with_analyzer`: This option enables the [gcc option for static analysis](https://gcc.gnu.org/onlinedocs/gcc-13.2.0/gcc/Static-Analyzer-Options.html)
+
 #### Bindings
 
 Bindings for the D-Bus API of `BlueChi` are located in [src/bindings](./src/bindings/). Please refer to the
@@ -205,7 +223,7 @@ Rebuild the BlueChi project with debug symbols included:
 ```bash
 bluechi> make clean
 bluechi> meson install -C builddir --dest=bin
-bluechi> gdb --args ./builddir/bin/usr/local/bin/bluechi-controller -c /etc/bluechi/controller.conf
+bluechi> gdb --args ./builddir/bin/usr/local/libexec/bluechi-controller -c /etc/bluechi/controller.conf
 ```
 
 ### Unit tests

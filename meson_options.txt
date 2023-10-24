@@ -10,4 +10,7 @@ option('with_coverage', type : 'combo',
     choices : ['true', 'false'], value : 'false',
     description : 'Add coverage collection')
 
+option('with_analyzer', type : 'boolean', value : 'false',
+    description : 'Add the gcc option -fanalyzer for static analysis')
+
 option('dbus-srv-user', type: 'string', description: 'The (existing) user which runs bluechi')

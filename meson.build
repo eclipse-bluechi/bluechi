@@ -24,21 +24,25 @@ systemd_dep = dependency('libsystemd')
 # Set option to use either the session or system D-Bus
 api_bus = get_option('api_bus')
 if api_bus == 'user'
-   common_cflags += '-DUSE_USER_API_BUS'
+  common_cflags += '-DUSE_USER_API_BUS'
+endif
+
+if get_option('with_analyzer')
+  add_project_arguments('-fanalyzer', language : 'c')
 endif
 
 # Set option to get coverage collection
 with_coverage = get_option('with_coverage')
 if with_coverage == 'true'
-   add_project_arguments('-coverage', language : 'c')
-    add_project_arguments(
+  add_project_arguments('-coverage', language : 'c')
+  add_project_arguments(
     '-fprofile-dir=' + join_paths(get_option('prefix'), get_option('localstatedir'), 'tmp', 'bluechi-coverage'), 
     language : 'c')
-   add_project_link_arguments('-lgcov', language : 'c')
-   # Coverage source code mapping files `*.gcno` are created as a part of the build for each `*.c` file, but it's
-   # very hard to tell meson to install files, which are created as a side effect from the build, so it's easier
-   # to use custom install script
-   meson.add_install_script('build-scripts/install-coverage.sh')
+  add_project_link_arguments('-lgcov', language : 'c')
+  # Coverage source code mapping files `*.gcno` are created as a part of the build for each `*.c` file, but it's
+  # very hard to tell meson to install files, which are created as a side effect from the build, so it's easier
+  # to use custom install script
+  meson.add_install_script('build-scripts/install-coverage.sh')
 endif
 
 # Build time configuration header file
