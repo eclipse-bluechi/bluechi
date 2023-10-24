@@ -4,10 +4,8 @@ class Metrics(ApiBase):
     {{ iface_doc }}
     """
     
-    def __init__(self, metrics_path: ObjPath, bus: MessageBus = None, use_systembus=True) -> None:
-        super().__init__(BC_DBUS_INTERFACE, metrics_path, bus, use_systembus)
-
-        self.metrics_path = metrics_path
+    def __init__(self, bus: MessageBus = None, use_systembus=True) -> None:
+        super().__init__(BC_DBUS_INTERFACE, BC_METRICS_OBJECT_PATH, bus, use_systembus)
 
     {%- include 'skeleton_method.tmpl' %}
     {%- include 'skeleton_signal.tmpl' %}
