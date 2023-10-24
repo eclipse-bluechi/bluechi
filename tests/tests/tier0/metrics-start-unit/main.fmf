@@ -1,0 +1,3 @@
+summary: Test if start unit metric signals are emitted when metrics are enabled and
+    a unit is started
+id: dd1d3f60-b313-41a0-b9cf-2ba223ee792f
