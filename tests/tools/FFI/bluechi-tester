@@ -31,13 +31,6 @@ class BlueChiTester(object):
             signal_name: str,
             num_signals: int):
 
-        loop = GLib.MainLoop()
-
-        def _kill_loop():
-            loop.quit()
-            print("\nDone!")
-            sys.exit(0)
-
         parameters = get_variant(
                 Tuple[int, str],
                 (num_signals, "fake-state")
@@ -58,9 +51,8 @@ class BlueChiTester(object):
             )
             print(f"  * Sending {signal_name} {number}...")
 
-        # Schedule a callback to exit the EventLoop after the timeout
-        GLib.timeout_add_seconds(timeout, _kill_loop)
-        loop.run()
+        import time
+        time.sleep(1)
 
     def connect_to_controller(
             self,
