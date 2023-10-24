@@ -44,6 +44,7 @@ BC_DEFAULT_HOST = "127.0.0.1"
 BC_DBUS_INTERFACE = "org.eclipse.bluechi"
 BC_OBJECT_PATH = "/org/eclipse/bluechi"
 BC_AGENT_DBUS_INTERFACE = "org.eclipse.bluechi.Agent"
+BC_METRICS_OBJECT_PATH = "/org/eclipse/bluechi/metrics"
 
 DBUS_PROPERTIES_INTERFACE = "org.freedesktop.DBus.Properties"
 
@@ -254,12 +255,8 @@ class Metrics(ApiBase):
     This interface is only available if the metrics have been enabled before via the Manager interface.
     """
 
-    def __init__(
-        self, metrics_path: ObjPath, bus: MessageBus = None, use_systembus=True
-    ) -> None:
-        super().__init__(BC_DBUS_INTERFACE, metrics_path, bus, use_systembus)
-
-        self.metrics_path = metrics_path
+    def __init__(self, bus: MessageBus = None, use_systembus=True) -> None:
+        super().__init__(BC_DBUS_INTERFACE, BC_METRICS_OBJECT_PATH, bus, use_systembus)
 
     def on_start_unit_job_metrics(
         self,
