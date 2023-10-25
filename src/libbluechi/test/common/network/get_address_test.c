@@ -45,6 +45,10 @@ int getaddrinfo_mock(
          * addrinfo together so freeaddrinfo() will free the entire thing.
          */
         *pai = malloc0(sizeof(struct addrinfo) + sizeof(struct sockaddr_in6));
+        if (*pai == NULL) {
+                fprintf(stderr, "failed to create addrinfo, OOM");
+                exit(1);
+        }
         offset = (void *) ((long) *pai + sizeof(struct addrinfo));
 
         if (current_test_case.use_ipv4) {

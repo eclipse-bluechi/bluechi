@@ -1765,13 +1765,7 @@ static void job_tracker_free(JobTracker *track) {
         free(track);
 }
 
-static void job_tracker_freep(JobTracker **trackp) {
-        if (trackp && *trackp) {
-                job_tracker_free(*trackp);
-                *trackp = NULL;
-        }
-}
-
+DEFINE_CLEANUP_FUNC(JobTracker, job_tracker_free)
 #define _cleanup_job_tracker_ _cleanup_(job_tracker_freep)
 
 static bool
@@ -1790,6 +1784,13 @@ static bool
                 return false;
         }
 
+// Disabling -Wanalyzer-malloc-leak temporarily due to false-positive
+//      Leak detected is based on steal_pointer setting track=NULL and, subsequently,
+//      not freeing allocated job_object_path. This is desired since the actual instance
+//      is added to and managed by the tracked_jobs list of the agent.
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wanalyzer-malloc-leak"
+
         track->callback = callback;
         track->userdata = userdata;
         track->free_userdata = free_userdata;
@@ -1799,6 +1800,7 @@ static bool
 
         return true;
 }
+#pragma GCC diagnostic pop
 
 
 static int agent_match_job_changed(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error) {
@@ -1933,11 +1935,21 @@ static int agent_match_unit_new(sd_bus_message *m, void *userdata, UNUSED sd_bus
         }
 
         info->loaded = true;
+
+// Disabling -Wanalyzer-malloc-leak temporarily due to false-positive
+//      Leak detection does not take into account that the AgentUnitInfo info instance was
+//      added to and is managed by the hashmap
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wanalyzer-malloc-leak"
+
         /* Systemd services start in inactive(dead) state, so use this as the first
          * state. This way we can detect when the state changed without sporadic
          * changes to "dead".
          */
         info->active_state = UNIT_INACTIVE;
+        if (info->substate != NULL) {
+                free(info->substate);
+        }
         info->substate = strdup("dead");
 
         if (info->subscribed || agent->wildcard_subscription_active) {
@@ -1945,8 +1957,10 @@ static int agent_match_unit_new(sd_bus_message *m, void *userdata, UNUSED sd_bus
                 agent_emit_unit_new(agent, info, "real");
         }
 
+
         return 0;
 }
+#pragma GCC diagnostic pop
 
 static int agent_match_unit_removed(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *error) {
         Agent *agent = userdata;
@@ -2029,7 +2043,11 @@ int agent_init_units(Agent *agent, sd_bus_message *m) {
                 return r;
         }
 
-
+// Disabling -Wanalyzer-malloc-leak temporarily due to false-positive
+//      Leak detection does not take into account that the AgentUnitInfo info instance was
+//      added to and is managed by the hashmap
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wanalyzer-malloc-leak"
         while (sd_bus_message_at_end(m, false) == 0) {
                 r = sd_bus_message_enter_container(m, SD_BUS_TYPE_STRUCT, UNIT_INFO_TYPESTRING);
                 if (r < 0) {
@@ -2064,6 +2082,9 @@ int agent_init_units(Agent *agent, sd_bus_message *m) {
                         assert(streq(info->object_path, object_path));
                         info->loaded = true;
                         info->active_state = active_state_from_string(active_state);
+                        if (info->substate != NULL) {
+                                free(info->substate);
+                        }
                         info->substate = strdup(sub_state);
                 }
 
@@ -2072,6 +2093,7 @@ int agent_init_units(Agent *agent, sd_bus_message *m) {
                         return r;
                 }
         }
+#pragma GCC diagnostic pop
 
         r = sd_bus_message_exit_container(m);
         if (r < 0) {

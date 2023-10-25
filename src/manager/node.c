@@ -1022,8 +1022,6 @@ AgentRequest *agent_request_ref(AgentRequest *req) {
 }
 
 void agent_request_unref(AgentRequest *req) {
-        Node *node = req->node;
-
         req->ref_count--;
         if (req->ref_count != 0) {
                 return;
@@ -1035,6 +1033,7 @@ void agent_request_unref(AgentRequest *req) {
         sd_bus_slot_unrefp(&req->slot);
         sd_bus_message_unrefp(&req->message);
 
+        Node *node = req->node;
         LIST_REMOVE(outstanding_requests, node->outstanding_requests, req);
         node_unref(req->node);
         free(req);
@@ -1047,19 +1046,10 @@ int node_create_request(
                 agent_request_response_t cb,
                 void *userdata,
                 free_func_t free_userdata) {
-        _cleanup_agent_request_ AgentRequest *req = malloc0(sizeof(AgentRequest));
+        AgentRequest *req = malloc0(sizeof(AgentRequest));
         if (req == NULL) {
                 return -ENOMEM;
         }
-
-        req->ref_count = 1;
-        req->node = node_ref(node);
-        LIST_INIT(outstanding_requests, req);
-        req->userdata = userdata;
-        req->cb = cb;
-        req->free_userdata = free_userdata;
-
-        LIST_APPEND(outstanding_requests, node->outstanding_requests, req);
 
         int r = sd_bus_message_new_method_call(
                         node->agent_bus,
@@ -1069,10 +1059,20 @@ int node_create_request(
                         INTERNAL_AGENT_INTERFACE,
                         method);
         if (r < 0) {
+                free(req);
+                req = NULL;
                 return r;
         }
 
-        *ret = steal_pointer(&req);
+        req->ref_count = 1;
+        req->node = node_ref(node);
+        LIST_INIT(outstanding_requests, req);
+        req->cb = cb;
+        req->userdata = userdata;
+        req->free_userdata = free_userdata;
+        LIST_APPEND(outstanding_requests, node->outstanding_requests, req);
+
+        *ret = req;
         return 0;
 }
 
@@ -1217,6 +1217,8 @@ static int node_method_set_unit_properties(sd_bus_message *m, void *userdata, UN
                         sd_bus_message_ref(m),
                         (free_func_t) sd_bus_message_unref);
         if (req == NULL) {
+                sd_bus_message_unref(m);
+
                 return sd_bus_reply_method_errorf(
                                 m, SD_BUS_ERROR_FAILED, "Failed to create an agent request: %s", strerror(-r));
         }
@@ -1289,6 +1291,8 @@ static int node_method_passthrough_to_agent(sd_bus_message *m, void *userdata, U
                         sd_bus_message_ref(m),
                         (free_func_t) sd_bus_message_unref);
         if (req == NULL) {
+                sd_bus_message_unref(m);
+
                 return sd_bus_reply_method_errorf(
                                 m, SD_BUS_ERROR_FAILED, "Failed to create an agent request: %s", strerror(-r));
         }
@@ -1341,6 +1345,9 @@ DEFINE_CLEANUP_FUNC(JobSetup, job_setup_unref)
 
 static JobSetup *job_setup_new(sd_bus_message *request_message, Node *node, const char *unit, const char *type) {
         _cleanup_job_setup_ JobSetup *setup = malloc0(sizeof(JobSetup));
+        if (setup == NULL) {
+                return NULL;
+        }
 
         setup->ref_count = 1;
         setup->request_message = sd_bus_message_ref(request_message);
@@ -1402,6 +1409,8 @@ static int node_run_unit_lifecycle_method(
                         job_setup_ref(setup),
                         (free_func_t) job_setup_unref);
         if (req == NULL) {
+                job_setup_unref(setup);
+
                 return sd_bus_reply_method_errorf(
                                 m, SD_BUS_ERROR_FAILED, "Failed to create an agent request: %s", strerror(-r));
         }

@@ -11,6 +11,7 @@
   - [Build](#build)
     - [Build options](#build-options)
     - [Bindings](#bindings)
+  - [Static Code Analysis](#static-code-analysis)
   - [Debug](#debug)
   - [Unit Tests](#unit-tests)
   - [Integration Tests](#integration-tests)
@@ -210,6 +211,31 @@ these need to be re-generated via
 
 ```bash
 bash build-scripts/generate-bindings.sh python
+```
+
+### Static Code Analysis
+
+Additional, static code analysis is applied when running the [unit tests in CI](./.github/workflows/unit-tests.yml) by
+enabling the meson option `with_analyzer`:
+
+```bash
+meson configure -Dwith_analyzer=true builddir
+```
+
+Since the result of the analysis is heavily dependent on the compiler version, flags, etc., its recommended to build
+and run tests for BlueChi also in the [build-base](./tests/containers/build-base):
+
+```bash
+# navigate into the bluechi directory
+cd bluechi
+
+# run build-base container and mount bluechi directory
+podman run -it -v ./:/var/bluechi quay.io/bluechi/build-base:latest
+
+# configure meson to enable code analysis and build the project
+meson setup builddir
+meson configure -Dwith_analyzer=true builddir
+meson compile -C builddir
 ```
 
 ### Debug

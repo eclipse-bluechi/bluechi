@@ -24,5 +24,6 @@ do
         -I $BUILD_DIR \
         -I $SUBPROJECTS_DIR/hashmap.c \
         -I $SUBPROJECTS_DIR/inih \
+        -Wno-unknown-warning-option \
         -include config.h
 done

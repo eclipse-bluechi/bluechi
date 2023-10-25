@@ -586,7 +586,7 @@ static void manager_method_list_units_maybe_done(ListUnitsRequest *req) {
 }
 
 static int manager_list_units_callback(
-                AgentRequest *agent_req, UNUSED sd_bus_message *m, UNUSED sd_bus_error *ret_error) {
+                AgentRequest *agent_req, sd_bus_message *m, UNUSED sd_bus_error *ret_error) {
         ListUnitsRequest *req = agent_req->userdata;
         int i = 0;
 
@@ -605,6 +605,7 @@ static int manager_list_units_callback(
 
         return 0;
 }
+
 
 static int manager_method_list_units(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error) {
         Manager *manager = userdata;
@@ -629,10 +630,18 @@ static int manager_method_list_units(sd_bus_message *m, void *userdata, UNUSED s
                 }
         }
 
+// Disabling -Wanalyzer-malloc-leak temporarily due to false-positive
+//      Leak detected is based on the assumption that manager_method_list_units_maybe_done is only
+//      called once directly after iterating over the list - when the conditional to free req is false.
+//      However, it does not take into account that manager_list_units_callback calls it for each node.
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wanalyzer-malloc-leak"
+
         manager_method_list_units_maybe_done(req);
 
         return 1;
 }
+#pragma GCC diagnostic pop
 
 /************************************************************************
  ***** org.eclipse.bluechi.Manager.ListNodes **************
