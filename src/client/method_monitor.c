@@ -325,7 +325,15 @@ static Node *
                          const char *node_state,
                          uint64_t last_seen_timestamp) {
         Node *node = malloc0(sizeof(Node));
+        if (node == NULL) {
+                return NULL;
+        }
         node->connection = malloc0(sizeof(NodeConnection));
+        if (node->connection == NULL) {
+                free(node);
+                node = NULL;
+                return NULL;
+        }
         node->connection->name = strdup(node_name);
         node->connection->node_path = strdup(node_path);
         node->connection->state = strdup(node_state);
@@ -338,6 +346,9 @@ static Node *
 
 static Nodes *nodes_new() {
         Nodes *nodes = malloc0(sizeof(Nodes));
+        if (nodes == NULL) {
+                return NULL;
+        }
         LIST_HEAD_INIT(nodes->nodes);
         return nodes;
 }
@@ -554,6 +565,10 @@ int method_monitor_node_connection_state(sd_bus *api_bus) {
         }
 
         _cleanup_nodes_ Nodes *nodes = nodes_new();
+        if (nodes == NULL) {
+                fprintf(stderr, "Failed to create Node list, OOM");
+                return -ENOMEM;
+        }
 
         r = sd_bus_message_enter_container(reply, SD_BUS_TYPE_ARRAY, "(sos)");
         if (r < 0) {
@@ -584,6 +599,10 @@ int method_monitor_node_connection_state(sd_bus *api_bus) {
                 }
 
                 Node *node = node_new(api_bus, nodes, name, path, state, last_seen_timestamp);
+                if (node == NULL) {
+                        fprintf(stderr, "Failed to create Node, OOM");
+                        return -ENOMEM;
+                }
                 r = sd_bus_match_signal(
                                 api_bus,
                                 NULL,

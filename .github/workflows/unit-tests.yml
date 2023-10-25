@@ -22,7 +22,10 @@ jobs:
       - name: Building BlueChi
         run: |
           meson setup builddir
-          meson configure -Db_coverage=true builddir
+          meson configure \
+              -Db_coverage=true \
+              -Dwith_analyzer=true \
+            builddir
           meson compile -C builddir
 
       - name: Running unit tests

@@ -69,7 +69,8 @@ bool test_assemble_tcp_address_v6(const struct sockaddr_in6 *input, const char *
 
 bool test_assemble_tcp_address(const struct sockaddr_in *input, const char *expectedResult) {
         _cleanup_free_ char *result = assemble_tcp_address(input);
-        if ((result == NULL && expectedResult != NULL) || (result != NULL && !streq(result, expectedResult))) {
+        if ((result == NULL && expectedResult != NULL) || (result != NULL && expectedResult == NULL) ||
+            (result != NULL && !streq(result, expectedResult))) {
                 _cleanup_free_ char *msg = NULL;
                 int r = asprintf(
                                 &msg,
