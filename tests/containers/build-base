@@ -8,6 +8,7 @@ RUN dnf install -y dnf-plugin-config-manager && \
     dnf update --refresh --nodocs -y && \
     dnf install --nodocs \
         bzip2 \
+        clang \
         clang-tools-extra \
         codespell \
         createrepo_c \
