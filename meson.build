@@ -13,7 +13,7 @@ project(
   ]
 )
 
-test_cflags = [ '-Wno-cast-function-type' ]
+test_cflags = [ '-Wno-cast-function-type', '-Wno-unknown-warning-option' ]
 
 cc = meson.get_compiler('c')
 common_cflags = cc.get_supported_arguments(test_cflags)

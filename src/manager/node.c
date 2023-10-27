@@ -1759,8 +1759,6 @@ int node_add_proxy_dependency(Node *node, const char *unit_name) {
 
 int node_remove_proxy_dependency(Node *node, const char *unit_name) {
         ProxyDependency *dep = NULL;
-        _cleanup_free_ char *unit_name_copy = NULL;
-
         dep = node_find_proxy_dependency(node, unit_name);
         if (!dep) {
                 return -ENOENT;

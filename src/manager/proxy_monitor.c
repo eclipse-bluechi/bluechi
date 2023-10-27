@@ -202,7 +202,6 @@ static int proxy_monitor_send_state_changed_callback(
 int proxy_monitor_send_state_changed(
                 ProxyMonitor *monitor, const char *active_state, const char *substate, const char *reason) {
         _cleanup_sd_bus_error_ sd_bus_error error = SD_BUS_ERROR_NULL;
-        _cleanup_sd_bus_message_ sd_bus_message *message = NULL;
         int r = sd_bus_call_method_async(
                         monitor->node->agent_bus,
                         NULL,
@@ -239,7 +238,6 @@ static int proxy_monitor_send_new_callback(sd_bus_message *m, void *userdata, UN
 
 int proxy_monitor_send_new(ProxyMonitor *monitor, const char *reason) {
         _cleanup_sd_bus_error_ sd_bus_error error = SD_BUS_ERROR_NULL;
-        _cleanup_sd_bus_message_ sd_bus_message *message = NULL;
         int r = sd_bus_call_method_async(
                         monitor->node->agent_bus,
                         NULL,
@@ -274,7 +272,6 @@ static int proxy_monitor_send_removed_callback(sd_bus_message *m, void *userdata
 
 int proxy_monitor_send_removed(ProxyMonitor *monitor, const char *reason) {
         _cleanup_sd_bus_error_ sd_bus_error error = SD_BUS_ERROR_NULL;
-        _cleanup_sd_bus_message_ sd_bus_message *message = NULL;
         int r = sd_bus_call_method_async(
                         monitor->node->agent_bus,
                         NULL,

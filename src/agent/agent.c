@@ -1384,7 +1384,7 @@ static char *get_dep_unit(const char *unit_name) {
 }
 
 static int start_dep_callback(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error) {
-        _cleanup_systemd_request_ SystemdRequest *req = userdata;
+        UNUSED _cleanup_systemd_request_ SystemdRequest *req = userdata;
 
         if (sd_bus_message_is_method_error(m, NULL)) {
                 bc_log_errorf("Error starting dep service: %s", sd_bus_message_get_error(m)->message);
@@ -1438,7 +1438,7 @@ static int agent_method_start_dep(sd_bus_message *m, void *userdata, UNUSED sd_b
  *************************************************************************/
 
 static int stop_dep_callback(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error) {
-        _cleanup_systemd_request_ SystemdRequest *req = userdata;
+        UNUSED _cleanup_systemd_request_ SystemdRequest *req = userdata;
 
         if (sd_bus_message_is_method_error(m, NULL)) {
                 bc_log_errorf("Error stopping dep service: %s", sd_bus_message_get_error(m)->message);
@@ -2497,7 +2497,7 @@ static bool agent_reconnect(Agent *agent) {
 }
 
 static int stop_proxy_callback(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error) {
-        _cleanup_systemd_request_ SystemdRequest *req = userdata;
+        UNUSED _cleanup_systemd_request_ SystemdRequest *req = userdata;
 
         if (sd_bus_message_is_method_error(m, NULL)) {
                 bc_log_errorf("Error stopping proxy service: %s", sd_bus_message_get_error(m)->message);
