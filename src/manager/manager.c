@@ -556,7 +556,7 @@ static int manager_method_list_units_encode_reply(ListUnitsRequest *req, sd_bus_
 
 static void manager_method_list_units_done(ListUnitsRequest *req) {
         /* All sub_req-requests are done, collect results and free when done */
-        _cleanup_list_unit_request_ ListUnitsRequest *free_me = req;
+        UNUSED _cleanup_list_unit_request_ ListUnitsRequest *free_me = req;
 
         _cleanup_sd_bus_message_ sd_bus_message *reply = NULL;
         int r = sd_bus_message_new_method_return(req->request_message, &reply);

@@ -19,6 +19,15 @@ jobs:
         with:
           submodules: 'true'
 
+      - name: Building BlueChi (with clang/LLVM)
+        run: |
+          export CC=clang
+          export CXX=clang++
+          meson setup builddir
+          meson configure builddir
+          meson compile -C builddir
+          rm -rf builddir
+
       - name: Building BlueChi
         run: |
           meson setup builddir
