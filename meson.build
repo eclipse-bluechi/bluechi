@@ -29,7 +29,6 @@ endif
 
 if get_option('with_analyzer')
   add_project_arguments('-fanalyzer', language : 'c')
-  add_project_arguments('-Wno-analyzer-malloc-leak', language : 'c')
 endif
 
 # Set option to get coverage collection
