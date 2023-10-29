@@ -479,6 +479,7 @@ void agent_unref(Agent *agent) {
         free(agent->host);
         free(agent->orch_addr);
         free(agent->api_bus_service_name);
+        free(agent->manager_address);
 
         if (agent->event != NULL) {
                 sd_event_unrefp(&agent->event);
@@ -514,6 +515,10 @@ bool agent_set_port(Agent *agent, const char *port_s) {
         }
         agent->port = port;
         return true;
+}
+
+bool agent_set_manager_address(Agent *agent, const char *address) {
+        return copy_str(&agent->manager_address, address);
 }
 
 bool agent_set_orch_address(Agent *agent, const char *address) {
@@ -606,7 +611,7 @@ bool agent_parse_config(Agent *agent, const char *configfile) {
 
         value = cfg_get_value(agent->config, CFG_MANAGER_ADDRESS);
         if (value) {
-                if (!agent_set_orch_address(agent, value)) {
+                if (!agent_set_manager_address(agent, value)) {
                         return false;
                 }
         }
@@ -2109,6 +2114,11 @@ static bool ensure_orch_address(Agent *agent) {
         if (agent->orch_addr != NULL) {
                 return true;
         }
+
+        if (agent->manager_address != NULL) {
+                return agent_set_orch_address(agent, agent->manager_address);
+        }
+
         if (agent->host == NULL) {
                 bc_log_errorf("No manager host specified for agent '%s'", agent->name);
                 return false;
