@@ -53,6 +53,7 @@ struct Agent {
         char *name;
         char *host;
         int port;
+        char *manager_address;
         long heartbeat_interval_msec;
 
         AgentConnectionState connection_state;
