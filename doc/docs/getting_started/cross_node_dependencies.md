@@ -11,7 +11,7 @@ The following sections will provide a simplistic implementation of this example.
 
 !!! Note
 
-    A detailed explanation of how Proxy Services are implemented in BlueChi based on systemd can be found [here](../proxy_services.md).
+    A detailed explanation of how Proxy Services are implemented in BlueChi based on systemd can be found [here](../cross_node_dependencies/index.md).
 
 ## Setting up the CDN
 

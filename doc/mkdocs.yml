@@ -15,8 +15,11 @@ nav:
     - Using bluechictl: getting_started/examples_bluechictl.md
     - Cross-node dependencies: getting_started/cross_node_dependencies.md
   - Configuration: configuration.md
-  - Proxy Services: proxy_services.md
-  - DBus API:
+  - Cross-Node Dependencies: 
+    - cross_node_dependencies/index.md
+    - Proxy Services: cross_node_dependencies/proxy_services.md
+    - Using Proxy Services: cross_node_dependencies/usage.md
+  - BlueChi's API:
     - Description: api/description.md
     - Using the D-Bus API: api/examples.md
     - Generating clients: api/client_generation.md
