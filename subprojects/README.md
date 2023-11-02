@@ -5,8 +5,8 @@ project using mesons [subproject feature](https://mesonbuild.com/Subprojects.htm
 
 Currently BlueChi uses the following external projects:
 
-- [hashmap.c](https://github.com/engelmi/hashmap.c.git)
-- [inih](https://github.com/benhoyt/inih.git)
+- [hashmap.c](https://github.com/eclipse-bluechi/hashmap.c)
+- [inih](https://github.com/benhoyt/inih)
 
 Unfortunately, `hashmap.c` doesn't provide a `meson.build` file and patching on the fly would result in uncommitted
 changes. Because of that a fork has been created containing the necessary `meson.build` and is used for now.
