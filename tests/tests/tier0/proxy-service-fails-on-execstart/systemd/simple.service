@@ -3,5 +3,5 @@ Description=Attempting to just sleep, but fail
 
 [Service]
 Type=simple
-ExecStart=exit 1
+ExecStart=/bin/false
 RemainAfterExit=yes
