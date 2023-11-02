@@ -1,7 +1,6 @@
 # SPDX-License-Identifier: LGPL-2.1-or-later
 
 import os
-import pytest
 from typing import Dict
 
 from bluechi_test.config import BluechiControllerConfig, BluechiNodeConfig
@@ -41,7 +40,6 @@ def exec(ctrl: BluechiControllerContainer, nodes: Dict[str, BluechiNodeContainer
     verify_proxy_start_failed(foo, bar)
 
 
-@pytest.mark.skip(reason="Currently flaky. Tracked in https://github.com/containers/bluechi/issues/320. ")
 def test_proxy_service_fails_on_execstart(
         bluechi_test: BluechiTest,
         bluechi_ctrl_default_config: BluechiControllerConfig,

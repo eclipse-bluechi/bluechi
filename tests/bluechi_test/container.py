@@ -125,7 +125,7 @@ class BluechiContainer():
 
     def _is_unit_in_state(self, unit_name: str, expected_state: str) -> bool:
         latest_state = self.get_unit_state(unit_name)
-        LOGGER.debug(f"Got state '{latest_state}' for unit {unit_name}")
+        LOGGER.info(f"Got state '{latest_state}' for unit {unit_name}")
         return latest_state == expected_state
 
     def wait_for_unit_state_to_be(
@@ -134,7 +134,6 @@ class BluechiContainer():
             expected_state: str,
             timeout: float = 5.0,
             delay: float = 0.5) -> bool:
-        latest_state = ""
 
         if self._is_unit_in_state(unit_name, expected_state):
             return True
@@ -145,8 +144,7 @@ class BluechiContainer():
             if self._is_unit_in_state(unit_name, expected_state):
                 return True
 
-        LOGGER.error(f"Timeout while waiting for '{unit_name}' to reach state '{expected_state}'. \
-              Latest state: '{latest_state}'")
+        LOGGER.error(f"Timeout while waiting for '{unit_name}' to reach state '{expected_state}'.")
         return False
 
     def enable_valgrind(self) -> None:
