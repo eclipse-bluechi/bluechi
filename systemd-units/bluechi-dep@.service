@@ -9,6 +9,13 @@ BindsTo=%i.service
 After=%i.service
 
 [Service]
-ExecStart=true
 Type=oneshot
+
+# Use of ExecStop= here instead of ExecStart= since there is a  
+# potential race condition for ExecStart= that results in the
+# bluechi-dep@.service to transition in a failed state. 
+# This can happen when the target service transitioned to a failed 
+# state and the command in ExecStart= is still running. Then 
+# systemd will send a SIGTERM, failing the dep service as well.
+ExecStop=true
 RemainAfterExit=yes
