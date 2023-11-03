@@ -133,16 +133,16 @@ void unit_unref(UnitInfo *unit) {
                 return;
         }
 
-        free(unit->node);
-        free(unit->id);
-        free(unit->description);
-        free(unit->load_state);
-        free(unit->active_state);
-        free(unit->sub_state);
-        free(unit->following);
-        free(unit->unit_path);
-        free(unit->job_type);
-        free(unit->job_path);
+        free_and_null(unit->node);
+        free_and_null(unit->id);
+        free_and_null(unit->description);
+        free_and_null(unit->load_state);
+        free_and_null(unit->active_state);
+        free_and_null(unit->sub_state);
+        free_and_null(unit->following);
+        free_and_null(unit->unit_path);
+        free_and_null(unit->job_type);
+        free_and_null(unit->job_path);
 
         free(unit);
 }

@@ -96,7 +96,7 @@ void manager_unref(Manager *manager) {
 
         sd_event_unrefp(&manager->event);
 
-        free(manager->api_bus_service_name);
+        free_and_null(manager->api_bus_service_name);
 
         sd_event_source_unrefp(&manager->node_connection_source);
 

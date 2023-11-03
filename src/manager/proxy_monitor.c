@@ -78,8 +78,8 @@ void proxy_monitor_unref(ProxyMonitor *monitor) {
                 subscription_unref(monitor->subscription);
         }
 
-        free(monitor->unit_name);
-        free(monitor->proxy_object_path);
+        free_and_null(monitor->unit_name);
+        free_and_null(monitor->proxy_object_path);
         free(monitor);
 }
 

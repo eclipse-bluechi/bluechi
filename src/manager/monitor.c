@@ -85,12 +85,12 @@ void subscription_unref(Subscription *subscription) {
         SubscribedUnit *next_su = NULL;
         LIST_FOREACH_SAFE(units, su, next_su, subscription->subscribed_units) {
                 LIST_REMOVE(units, subscription->subscribed_units, su);
-                free(su->name);
-                free(su);
+                free_and_null(su->name);
+                free_and_null(su);
         }
 
-        free(subscription->node);
-        free(subscription);
+        free_and_null(subscription->node);
+        free_and_null(subscription);
 }
 
 
@@ -163,9 +163,9 @@ void monitor_unref(Monitor *monitor) {
         }
 
         sd_bus_slot_unrefp(&monitor->export_slot);
-        free(monitor->object_path);
-        free(monitor->client);
-        free(monitor);
+        free_and_null(monitor->object_path);
+        free_and_null(monitor->client);
+        free_and_null(monitor);
 }
 
 bool monitor_export(Monitor *monitor) {
