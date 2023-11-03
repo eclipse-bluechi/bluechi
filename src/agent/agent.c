@@ -71,8 +71,8 @@ static void agent_job_op_unref(AgentJobOp *op) {
         }
 
         agent_unref(op->agent);
-        free(op->unit);
-        free(op->method);
+        free_and_null(op->unit);
+        free_and_null(op->method);
         free(op);
 }
 
@@ -290,9 +290,9 @@ static char *make_unit_path(const char *unit) {
 
 static void unit_info_clear(void *item) {
         AgentUnitInfo *info = item;
-        free(info->object_path);
-        free(info->unit);
-        free(info->substate);
+        free_and_null(info->object_path);
+        free_and_null(info->unit);
+        free_and_null(info->substate);
 }
 
 static uint64_t unit_info_hash(const void *item, uint64_t seed0, uint64_t seed1) {
@@ -475,11 +475,11 @@ void agent_unref(Agent *agent) {
 
         hashmap_free(agent->unit_infos);
 
-        free(agent->name);
-        free(agent->host);
-        free(agent->orch_addr);
-        free(agent->api_bus_service_name);
-        free(agent->manager_address);
+        free_and_null(agent->name);
+        free_and_null(agent->host);
+        free_and_null(agent->orch_addr);
+        free_and_null(agent->api_bus_service_name);
+        free_and_null(agent->manager_address);
 
         if (agent->event != NULL) {
                 sd_event_unrefp(&agent->event);
@@ -1766,7 +1766,7 @@ static void job_tracker_free(JobTracker *track) {
         if (track->userdata && track->free_userdata) {
                 track->free_userdata(track->userdata);
         }
-        free(track->job_object_path);
+        free_and_null(track->job_object_path);
         free(track);
 }
 
@@ -1953,7 +1953,7 @@ static int agent_match_unit_new(sd_bus_message *m, void *userdata, UNUSED sd_bus
          */
         info->active_state = UNIT_INACTIVE;
         if (info->substate != NULL) {
-                free(info->substate);
+                free_and_null(info->substate);
         }
         info->substate = strdup("dead");
 
@@ -1984,8 +1984,7 @@ static int agent_match_unit_removed(sd_bus_message *m, void *userdata, UNUSED sd
 
         info->loaded = false;
         info->active_state = _UNIT_ACTIVE_STATE_INVALID;
-        free(info->substate);
-        info->substate = NULL;
+        free_and_null(info->substate);
 
         if (info->subscribed || agent->wildcard_subscription_active) {
                 /* Forward the event */
@@ -2088,7 +2087,7 @@ int agent_init_units(Agent *agent, sd_bus_message *m) {
                         info->loaded = true;
                         info->active_state = active_state_from_string(active_state);
                         if (info->substate != NULL) {
-                                free(info->substate);
+                                free_and_null(info->substate);
                         }
                         info->substate = strdup(sub_state);
                 }
@@ -2486,8 +2485,7 @@ static bool agent_reconnect(Agent *agent) {
         // resolve FQDN again in case the system changed
         // e.g. bluechi controller has been migrated to a different host
         if (agent->orch_addr != NULL) {
-                free(agent->orch_addr);
-                agent->orch_addr = NULL;
+                free_and_null(agent->orch_addr);
         }
         if (!ensure_orch_address(agent)) {
                 return false;

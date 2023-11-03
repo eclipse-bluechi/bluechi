@@ -263,10 +263,10 @@ void proxy_service_unref(ProxyService *proxy) {
         sd_bus_message_unrefp(&proxy->request_message);
         sd_bus_slot_unrefp(&proxy->export_slot);
 
-        free(proxy->node_name);
-        free(proxy->unit_name);
-        free(proxy->local_service_name);
-        free(proxy->object_path);
+        free_and_null(proxy->node_name);
+        free_and_null(proxy->unit_name);
+        free_and_null(proxy->local_service_name);
+        free_and_null(proxy->object_path);
         free(proxy);
 }
 

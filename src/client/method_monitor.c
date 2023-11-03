@@ -372,11 +372,10 @@ static void node_unref(Node *node) {
         }
 
         if (node->connection != NULL) {
-                free(node->connection->name);
-                free(node->connection->node_path);
-                free(node->connection->state);
-                free(node->connection);
-                node->connection = NULL;
+                free_and_null(node->connection->name);
+                free_and_null(node->connection->node_path);
+                free_and_null(node->connection->state);
+                free_and_null(node->connection);
         }
 
         if (node->nodes != NULL) {

@@ -37,6 +37,12 @@ static inline void freep(void *p) {
         free(*(void **) p);
 }
 
+// NOLINTBEGIN(bugprone-macro-parentheses)
+#define free_and_null(ptr) \
+        free(ptr);         \
+        ptr = NULL;
+// NOLINTEND(bugprone-macro-parentheses)
+
 typedef void (*free_func_t)(void *ptr);
 
 #define malloc0(n) (calloc(1, (n) ?: 1))

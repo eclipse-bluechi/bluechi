@@ -42,7 +42,7 @@ void client_unref(Client *client) {
                 sd_bus_unrefp(&client->api_bus);
         }
         if (client->object_path != NULL) {
-                free(client->object_path);
+                free_and_null(client->object_path);
         }
 
         free(client);

@@ -85,8 +85,8 @@ struct ProxyDependency {
 };
 
 static void proxy_dependency_free(struct ProxyDependency *dep) {
-        free(dep->unit_name);
-        free(dep);
+        free_and_null(dep->unit_name);
+        free_and_null(dep);
 }
 
 typedef struct UnitSubscription UnitSubscription;
@@ -110,8 +110,8 @@ typedef struct {
 
 static void unit_subscriptions_clear(void *item) {
         UnitSubscriptions *usubs = item;
-        free(usubs->unit);
-        free(usubs->substate);
+        free_and_null(usubs->unit);
+        free_and_null(usubs->substate);
         assert(LIST_IS_EMPTY(usubs->subs));
 }
 
@@ -201,8 +201,8 @@ void node_unref(Node *node) {
         node_unset_agent_bus(node);
         hashmap_free(node->unit_subscriptions);
 
-        free(node->name);
-        free(node->object_path);
+        free_and_null(node->name);
+        free_and_null(node->object_path);
         free(node);
 }
 
@@ -1669,7 +1669,7 @@ void node_unsubscribe(Node *node, Subscription *sub) {
                 }
 
                 LIST_REMOVE(subs, usubs->subs, found);
-                free(found);
+                free_and_null(found);
 
                 if (LIST_IS_EMPTY(usubs->subs)) {
                         /* Last subscription for this unit, tell agent */

@@ -33,9 +33,9 @@ static int option_compare(const void *a, const void *b, UNUSED void *udata) {
 
 static void option_destroy(void *item) {
         struct config_option *option = item;
-        free(option->section);
-        free(option->name);
-        free(option->value);
+        free_and_null(option->section);
+        free_and_null(option->name);
+        free_and_null(option->value);
 }
 
 static uint64_t option_hash(const void *item, uint64_t seed0, uint64_t seed1) {
@@ -114,8 +114,8 @@ int cfg_copy_overwrite(struct config *src, struct config *dst) {
 
 void cfg_dispose(struct config *config) {
         hashmap_free(config->cfg_store);
-        free(config->default_section);
-        free(config);
+        free_and_null(config->default_section);
+        free_and_null(config);
 }
 
 int cfg_load_complete_configuration(
@@ -291,7 +291,7 @@ int cfg_set_default_section(struct config *config, const char *section_name) {
         if (section_copy == NULL) {
                 return -ENOMEM;
         }
-        free(config->default_section);
+        free_and_null(config->default_section);
         config->default_section = section_copy;
 
         return 0;
@@ -338,9 +338,9 @@ int cfg_s_set_value(
         }
 
         if (replaced != NULL) {
-                free(replaced->section);
-                free(replaced->name);
-                free(replaced->value);
+                free_and_null(replaced->section);
+                free_and_null(replaced->name);
+                free_and_null(replaced->value);
         }
         return 0;
 }

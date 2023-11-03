@@ -2,28 +2,28 @@
 
 ## What is BlueChi?
 
-BlueChi (formerly known as hirte) is a deterministic multi-node service manager
+BlueChi (formerly known as hirte) is a deterministic multi-node service controller.
 
 BlueChi can manage the states of different services across multiple nodes with a
-focus on highly regulated industries, such as those requiring function safety.
+focus on highly regulated industries, such as those requiring functional safety.
 BlueChi integrates with systemd via its D-Bus API and relays D-Bus messages over
 TCP for multi-nodes support.
 
-On the main node a service called `bluechi-controller` is running. On startup, the manager
+On the main node a service called `bluechi-controller` is running. On startup, the controller
 loads the configuration files which describe all the involved systems
 (called nodes) that are expected to be managed. Each node has a
-unique name that is used to reference it in the manager.
+unique name that is used to reference it in the controller.
 
 On each managed node that is under control of BlueChi a service called `bluechi-agent`
-is running. When the service starts, it connects (via D-Bus over TCP) to the manager
+is running. When the service starts, it connects (via D-Bus over TCP) to the controller
 and registers as available (optionally authenticating). It then receives requests
-from the manager and reports local state changes to it.
+from the controller and reports local state changes to it.
 
 ## Background
 
 BlueChi is built around three components:
 
-* `bluechi-controller` service, running on the primary node, is the primary orchestrator
+* `bluechi-controller` service, running on the primary node, controls all connected nodes
 * `bluechi-agent` services, with one running on each managed node, is the agent
   talking locally to systemd to act on services
 * `bluechictl` command line program, is meant to be used by administrators to test,
