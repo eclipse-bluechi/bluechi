@@ -67,8 +67,25 @@ class BluechiContainer():
         gcno_file_location = "/usr/share/bluechi-coverage/"
         gcda_file_location = "/var/tmp/bluechi-coverage"
 
-        self.get_file(gcda_file_location, data_coverage_dir)
-        self.get_file(gcno_file_location, data_coverage_dir)
+        result, output = self.container.exec_run("rpm -q bluechi-controller")
+        bluechi_version = "bluechi" + str(output.decode()).split("-controller")[1].split("\n")[0]
+        src_file_location = f"/usr/src/debug/{bluechi_version}/src"
+
+        self.container.exec_run(f"cp -r {gcno_file_location}/. {gcda_file_location}")
+
+        result, output = self.container.exec_run(f"find {gcda_file_location} -name '*gcda'")
+        for file in output.split(b"\n"):
+            if b"gcda" in file:
+                file_name_without_hashes = file.split(b"#")[-1].decode()
+                file = gcda_file_location + file.split(b'/var/tmp/bluechi-coverage')[-1].decode()
+                result, output = self.container.exec_run(f"cp {file} {gcda_file_location}/{file_name_without_hashes}")
+                result, output = self.container.exec_run(f"rm {file}")
+
+        coverage_file_name = f"coverage-{self.container.name}.info"
+
+        result, output = self.container.exec_run(
+            f"geninfo {gcda_file_location} -b {src_file_location} -o {coverage_file_name}")
+        self.get_file(f"/{coverage_file_name}", data_coverage_dir)
 
     def cleanup(self):
         if self.container.status == 'running':
