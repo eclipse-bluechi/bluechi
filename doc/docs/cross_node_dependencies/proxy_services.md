@@ -63,7 +63,7 @@ Based on systemd's mapping table for [properties to their inverses](https://www.
 | `PartOf=`  | no |
 | `BindsTo=`  | yes |
 | `Requisite=`  | yes |
-| `Conflicts=`  | yes |
+| `Conflicts=`  | no |
 | `PropagatesReloadTo=`  | no |
 | `ReloadPropagatedFrom=`  | no |
 
