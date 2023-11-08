@@ -1561,7 +1561,7 @@ static void node_send_agent_unsubscribe(Node *node, const char *unit) {
 
         int r = send_agent_simple_message(node, "Unsubscribe", unit);
         if (r < 0) {
-                bc_log_error("Failed to subscribe w/ agent");
+                bc_log_error("Failed to unsubscribe w/ agent");
         }
 }
 
