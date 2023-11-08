@@ -7,7 +7,7 @@
 #include "node.h"
 
 Subscription *subscription_new(const char *node) {
-        static uint32_t next_id = 0;
+        static uint32_t next_id = 1;
 
         _cleanup_subscription_ Subscription *subscription = malloc0(sizeof(Subscription));
         if (subscription == NULL) {
@@ -349,7 +349,7 @@ static Subscription *monitor_find_subscription(Monitor *monitor, uint32_t sub_id
 static int monitor_method_unsubscribe(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error) {
         Monitor *monitor = userdata;
         Manager *manager = monitor->manager;
-        const uint32_t sub_id = 0;
+        uint32_t sub_id = 0;
 
         int r = sd_bus_message_read(m, "u", &sub_id);
         if (r < 0) {
@@ -363,7 +363,7 @@ static int monitor_method_unsubscribe(sd_bus_message *m, void *userdata, UNUSED 
         Subscription *sub = monitor_find_subscription(monitor, sub_id);
         if (sub == NULL) {
                 return sd_bus_reply_method_errorf(
-                                m, SD_BUS_ERROR_FAILED, "Subscription is not found: %s", strerror(-r));
+                                m, SD_BUS_ERROR_FAILED, "Subscription '%d' is not found", sub_id);
         }
 
         manager_remove_subscription(manager, sub);
