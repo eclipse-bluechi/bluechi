@@ -3,7 +3,7 @@
 project(
   'bluechi',
   'c',
-  version: '0.6.0',
+  version: run_command(join_paths(meson.current_source_dir(), 'build-scripts', 'version.sh'), ' short', check: true).stdout().strip(),
   license: 'LGPL-2.1-or-later',
   default_options: [
     'c_std=gnu17',     # Adds "-std=gnu17".  Includes GNU 17 extensions.
@@ -55,7 +55,10 @@ prefixdir = get_option('prefix')
 
 conf.set_quoted('CONFIG_H_SYSCONFDIR', join_paths(prefixdir, get_option('sysconfdir')))
 conf.set_quoted('CONFIG_H_DATADIR', join_paths(prefixdir, get_option('datadir')))
-conf.set_quoted('CONFIG_H_BC_VERSION', meson.project_version())
+conf.set_quoted('CONFIG_H_BC_VERSION', run_command(
+    join_paths(meson.current_source_dir(), 'build-scripts', 'version.sh'), ' long', check: true
+  ).stdout().strip()
+)
 
 config_h = configure_file(
         output : 'config.h',

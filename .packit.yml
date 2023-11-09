@@ -22,9 +22,10 @@ actions:
     - bash -c './build-scripts/create-spec.sh'
 
   get-current-version:
-    - bash -c './build-scripts/get-version.sh'
+    - bash -c './build-scripts/version.sh'
 
   create-archive:
+    - bash -c 'meson setup builddir 1>&2'
     - bash -c './build-scripts/create-archive.sh'
     - bash -c 'echo bluechi-$PACKIT_PROJECT_VERSION.tar.gz'
 

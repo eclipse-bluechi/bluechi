@@ -77,7 +77,7 @@ static int get_opts(int argc, char *argv[]) {
                         return 1;
 
                 case ARG_VERSION_SHORT:
-                        printf("%s\n", CONFIG_H_BC_VERSION);
+                        printf("bluechi-agent version %s\n", CONFIG_H_BC_VERSION);
                         return 1;
 
                 case ARG_NAME_SHORT:

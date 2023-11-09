@@ -751,7 +751,7 @@ int client_call_manager(Client *client) {
                         return -EINVAL;
                 }
         } else if (streq(client->op, "version")) {
-                printf("%s\n", CONFIG_H_BC_VERSION);
+                printf("bluechictl version %s\n", CONFIG_H_BC_VERSION);
         } else {
                 return -EINVAL;
         }
