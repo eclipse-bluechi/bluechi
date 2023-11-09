@@ -56,13 +56,14 @@ jobs:
     targets:
       - centos-stream-9-aarch64
       - centos-stream-9-ppc64le
+      - centos-stream-9-s390x
       - centos-stream-9-x86_64
       - epel-9-aarch64
       - epel-9-ppc64le
       - epel-9-s390x
       - epel-9-x86_64
-      - fedora-rawhide-aarch64
-      - fedora-rawhide-i386
-      - fedora-rawhide-ppc64le
-      - fedora-rawhide-s390x
-      - fedora-rawhide-x86_64
+      - fedora-all-aarch64
+      - fedora-all-i386
+      - fedora-all-ppc64le
+      - fedora-all-s390x
+      - fedora-all-x86_64
