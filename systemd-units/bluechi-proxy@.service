@@ -13,3 +13,11 @@ ExecStop=/usr/libexec/bluechi-proxy remove %i.service
 RemainAfterExit=yes
 Type=oneshot
 KillMode=mixed
+
+# Accept SIGTERM as successful exit status since there is a
+# potential race condition for ExecStart= when a stop signal
+# is sent and the ExecStart= command is still running. This
+# leads systemd to send a SIGTERM to the bluechi-proxy@.service.
+# This is acceptable and should not result the service transitioning
+# into a failed state.
+SuccessExitStatus=SIGTERM
