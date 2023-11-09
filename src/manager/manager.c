@@ -936,7 +936,7 @@ static int manager_name_owner_changed(sd_bus_message *m, void *userdata, UNUSED 
 }
 
 bool manager_start(Manager *manager) {
-        bc_log_infof("Starting bluechi %s", CONFIG_H_BC_VERSION);
+        bc_log_infof("Starting bluechi-controller %s", CONFIG_H_BC_VERSION);
         if (manager == NULL) {
                 return false;
         }
