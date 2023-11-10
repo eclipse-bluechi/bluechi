@@ -632,8 +632,8 @@ bool agent_parse_config(Agent *agent, const char *configfile) {
 static void agent_update_unit_infos_for(Agent *agent, AgentUnitInfo *info) {
         if (!info->subscribed && !info->loaded) {
                 AgentUnitInfoKey key = { info->object_path };
-                AgentUnitInfo *info = hashmap_delete(agent->unit_infos, &key);
-                if (info) {
+                AgentUnitInfo *info = (AgentUnitInfo *) hashmap_delete(agent->unit_infos, &key);
+                if (info != NULL) {
                         unit_info_clear(info);
                 }
         }
@@ -642,7 +642,7 @@ static void agent_update_unit_infos_for(Agent *agent, AgentUnitInfo *info) {
 static AgentUnitInfo *agent_get_unit_info(Agent *agent, const char *unit_path) {
         AgentUnitInfoKey key = { (char *) unit_path };
 
-        return hashmap_get(agent->unit_infos, &key);
+        return (AgentUnitInfo *) hashmap_get(agent->unit_infos, &key);
 }
 
 static AgentUnitInfo *agent_ensure_unit_info(Agent *agent, const char *unit) {
@@ -659,7 +659,7 @@ static AgentUnitInfo *agent_ensure_unit_info(Agent *agent, const char *unit) {
 
         AgentUnitInfo v = { unit_path, unit_copy, false, false, -1, NULL };
 
-        AgentUnitInfo *replaced = hashmap_set(agent->unit_infos, &v);
+        AgentUnitInfo *replaced = (AgentUnitInfo *) hashmap_set(agent->unit_infos, &v);
         if (replaced == NULL && hashmap_oom(agent->unit_infos)) {
                 return NULL;
         }

@@ -326,7 +326,7 @@ int cfg_s_set_value(
                         return -ENOMEM;
                 }
         }
-        struct config_option *replaced = hashmap_set(
+        struct config_option *replaced = (struct config_option *) hashmap_set(
                         config->cfg_store,
                         &(struct config_option){
                                         .section = section_copy, .name = name_copy, .value = value_copy });

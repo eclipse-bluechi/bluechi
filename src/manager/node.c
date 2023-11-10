@@ -284,7 +284,7 @@ static struct hashmap *node_compute_unique_monitor_subscriptions(Node *node, con
         }
 
         const UnitSubscriptionsKey key = { (char *) unit };
-        UnitSubscriptions *usubs = hashmap_get(node->unit_subscriptions, &key);
+        const UnitSubscriptions *usubs = hashmap_get(node->unit_subscriptions, &key);
         if (usubs != NULL) {
                 UnitSubscription *usub = NULL;
                 UnitSubscription *next_usub = NULL;
@@ -304,7 +304,7 @@ static struct hashmap *node_compute_unique_monitor_subscriptions(Node *node, con
         /* Only check for wildcards if the unit itself is not one. */
         if (!streq(unit, SYMBOL_WILDCARD)) {
                 const UnitSubscriptionsKey wildcard_key = { (char *) SYMBOL_WILDCARD };
-                UnitSubscriptions *usubs_wildcard = hashmap_get(node->unit_subscriptions, &wildcard_key);
+                const UnitSubscriptions *usubs_wildcard = hashmap_get(node->unit_subscriptions, &wildcard_key);
                 if (usubs_wildcard != NULL) {
                         UnitSubscription *usub = NULL;
                         UnitSubscription *next_usub = NULL;
@@ -386,7 +386,7 @@ static int node_match_unit_new(sd_bus_message *m, void *userdata, UNUSED sd_bus_
         }
 
         const UnitSubscriptionsKey key = { (char *) unit };
-        UnitSubscriptions *usubs = hashmap_get(node->unit_subscriptions, &key);
+        UnitSubscriptions *usubs = (UnitSubscriptions *) hashmap_get(node->unit_subscriptions, &key);
         if (usubs != NULL) {
                 usubs->loaded = true;
                 if (is_wildcard(unit)) {
@@ -427,7 +427,7 @@ static int node_match_unit_state_changed(sd_bus_message *m, void *userdata, UNUS
         }
 
         const UnitSubscriptionsKey key = { (char *) unit };
-        UnitSubscriptions *usubs = hashmap_get(node->unit_subscriptions, &key);
+        UnitSubscriptions *usubs = (UnitSubscriptions *) hashmap_get(node->unit_subscriptions, &key);
         if (usubs != NULL) {
                 usubs->loaded = true;
                 usubs->active_state = active_state_from_string(active_state);
@@ -464,7 +464,7 @@ static int node_match_unit_removed(sd_bus_message *m, void *userdata, UNUSED sd_
         }
 
         const UnitSubscriptionsKey key = { (char *) unit };
-        UnitSubscriptions *usubs = hashmap_get(node->unit_subscriptions, &key);
+        UnitSubscriptions *usubs = (UnitSubscriptions *) hashmap_get(node->unit_subscriptions, &key);
         if (usubs != NULL) {
                 usubs->loaded = false;
         }
@@ -1637,7 +1637,7 @@ void node_subscribe(Node *node, Subscription *sub) {
                 }
                 usub->sub = sub;
 
-                usubs = hashmap_get(node->unit_subscriptions, &key);
+                usubs = (UnitSubscriptions *) hashmap_get(node->unit_subscriptions, &key);
                 if (usubs == NULL) {
                         UnitSubscriptions v = { NULL, NULL, false, _UNIT_ACTIVE_STATE_INVALID, NULL };
                         v.unit = strdup(key.unit);
@@ -1646,7 +1646,7 @@ void node_subscribe(Node *node, Subscription *sub) {
                                 return;
                         }
 
-                        usubs = hashmap_set(node->unit_subscriptions, &v);
+                        usubs = (UnitSubscriptions *) hashmap_set(node->unit_subscriptions, &v);
                         if (usubs == NULL && hashmap_oom(node->unit_subscriptions)) {
                                 free(v.unit);
                                 bc_log_error("Failed to subscribe to unit, OOM");
@@ -1656,7 +1656,7 @@ void node_subscribe(Node *node, Subscription *sub) {
                         /* First sub to this unit, pass to agent */
                         node_send_agent_subscribe(node, sub_unit->name);
 
-                        usubs = hashmap_get(node->unit_subscriptions, &key);
+                        usubs = (UnitSubscriptions *) hashmap_get(node->unit_subscriptions, &key);
                 }
 
                 LIST_APPEND(subs, usubs->subs, steal_pointer(&usub));
@@ -1699,7 +1699,7 @@ void node_unsubscribe(Node *node, Subscription *sub) {
                    call unsubscribe, so this must silently handle the
                    case of too many unsubscribes. */
 
-                usubs = hashmap_get(node->unit_subscriptions, &key);
+                usubs = (UnitSubscriptions *) hashmap_get(node->unit_subscriptions, &key);
                 if (usubs == NULL) {
                         continue;
                 }
@@ -1721,7 +1721,7 @@ void node_unsubscribe(Node *node, Subscription *sub) {
                 if (LIST_IS_EMPTY(usubs->subs)) {
                         /* Last subscription for this unit, tell agent */
                         node_send_agent_unsubscribe(node, sub_unit->name);
-                        deleted = hashmap_delete(node->unit_subscriptions, &key);
+                        deleted = (UnitSubscriptions *) hashmap_delete(node->unit_subscriptions, &key);
                         if (deleted) {
                                 unit_subscriptions_clear(deleted);
                         }
