@@ -79,7 +79,6 @@ inih_dep = inih.get_variable('inih_dep')
 
 hashmapc = subproject('hashmap.c', default_options: [
   'default_library=static', # include it as static library
-  'werror=false'            # don't treat warnings as errors since it
 ])
 hashmapc_dep = hashmapc.get_variable('hashmapc_dep')
 
