@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: LGPL-2.1-or-later
 
 VERSION=0.6.0
-IS_RELEASE=false
+IS_RELEASE=true
 
 function short(){
     echo ${VERSION}

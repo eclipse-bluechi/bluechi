@@ -270,6 +270,37 @@ popd
 
 
 %changelog
+* Mon Nov 13 2023 Michael Engel <mengel@redhat.com> - 0.6.0-1
+- Moved from containers to eclipse-bluechi organization
+- Renamed bluechi to bluechi-controller for binary, rpm and documentation
+- Snapshot builds are now available in the centos-sig-automotive COPR group
+- Moved bluechi binaries to /usr/libexec for auto-completion
+- Introduced packit for builds and running integration tests on testing farm 
+- Introduced initial implementation for a tool to test FFI of BlueChi
+- Introduced clang/LLVM support
+- Added properties and signals for connection status and disconnected timestamp to Agent's public API
+- Removed duplicate NodeConnectionStateChanged signal from bluechi-controller
+- CLI option for the version (-v) prints version and git commit hash for non-release builds
+- Extended BlueChi's public D-Bus API specification by inline-comments
+- Added EmitsChangedSignal annotation to properties in BlueChi's public D-Bus API specification
+- Enhanced typed python bindings generator to use inline-comments from specification 
+- Enhanced typed python bindings generator to provide listener functions for property changed signals
+- Fixes in the D-Bus API description
+- Improved error messages returned by D-Bus API
+- Added static code analysis from gcc and fixed detected issues
+- Added a graceful node shutdown in bluechi-controller
+- Fixed a few smaller memory leaks
+- Fixed bug where configured manager address was overridden on connection failure
+- Fixed bug where removing a subscription was not prevented
+- Fixed race condition leading bluechi-proxy and bluechi-dep service to transition into failed state
+- NULLing pointers after free for better code hygiene, preventing invalid reads
+- Extended integration tests to run with valgrind to detect memory leaks
+- Added more integration tests
+- Reworked Getting Started documentation
+- Reworked Proxy Service documentation and added examples and limitations
+- Aligned and added API examples for Python, Go and Rust
+- Changed the license for python bindings to MIT-0
+
 * Mon Sep 04 2023 Michael Engel <mengel@redhat.com> - 0.5.0-1
 - Changing the name of the project from hirte to BlueChi
 - Changing the license of the project from GPL-2.0-or-later to LGPL-2.1-or-later
