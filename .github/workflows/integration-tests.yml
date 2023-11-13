@@ -23,6 +23,10 @@ jobs:
           # Use githash of a tested commit instead of merge commit
           ref: ${{ github.event.pull_request.head.sha }}
 
+      - name: Mark source directory as safe
+        run: | 
+          git config --global --add safe.directory $(pwd)
+
       - name: Perform build
         run: |
           ./build-scripts/build-rpm.sh $ARTIFACTS_DIR
