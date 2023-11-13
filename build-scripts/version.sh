@@ -1,8 +1,8 @@
 #!/bin/bash -e
 # SPDX-License-Identifier: LGPL-2.1-or-later
 
-VERSION=0.6.0
-IS_RELEASE=true
+VERSION=0.7.0
+IS_RELEASE=false
 
 function short(){
     echo ${VERSION}
