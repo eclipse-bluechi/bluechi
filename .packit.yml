@@ -19,6 +19,7 @@ srpm_build_deps:
 
 actions:
   post-upstream-clone:
+    - bash -c 'git config --global --add safe.directory $(pwd)'
     - bash -c './build-scripts/create-spec.sh'
 
   get-current-version:

@@ -19,9 +19,6 @@ function release(){
         # Used for official releases. Increment if necessary
         RELEASE="1"
     else
-        # Mark current directory as safe for git to be able to parse git hash
-        git config --global --add safe.directory $(pwd)
-
         # Used for nightly builds
         RELEASE="0.$(date +%04Y%02m%02d%02H%02M).git$(git rev-parse --short ${GITHUB_SHA:-HEAD})"
     fi
