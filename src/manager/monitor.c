@@ -342,6 +342,7 @@ static Subscription *monitor_find_subscription(Monitor *monitor, uint32_t sub_id
                         return sub;
                 }
         }
+        bc_log_debugf("Subscription ID '%d' for monitor '%s' not found", sub_id, monitor->object_path);
 
         return NULL;
 }
@@ -382,26 +383,41 @@ int monitor_on_unit_property_changed(
         int r = sd_bus_message_new_signal(
                         manager->api_bus, &sig, monitor->object_path, MONITOR_INTERFACE, "UnitPropertiesChanged");
         if (r < 0) {
+                bc_log_errorf("Monitor: %s, failed to create UnitPropertiesChanged signal: %s",
+                              monitor->object_path,
+                              strerror(-r));
                 return r;
         }
 
         r = sd_bus_message_append(sig, "sss", node, unit, interface);
         if (r < 0) {
+                bc_log_errorf("Monitor: %s, failed to append data to UnitPropertiesChanged signal: %s",
+                              monitor->object_path,
+                              strerror(-r));
                 return r;
         }
 
         r = sd_bus_message_skip(m, "ss"); // Skip unit & iface
         if (r < 0) {
+                bc_log_errorf("Monitor: %s, failed to skip unit and interface for UnitPropertiesChanged signal: %s",
+                              monitor->object_path,
+                              strerror(-r));
                 return r;
         }
 
         r = sd_bus_message_copy(sig, m, false);
         if (r < 0) {
+                bc_log_errorf("Monitor: %s, failed to copy properties for UnitPropertiesChanged signal: %s",
+                              monitor->object_path,
+                              strerror(-r));
                 return r;
         }
 
         r = sd_bus_send_to(manager->api_bus, sig, monitor->client, NULL);
         if (r < 0) {
+                bc_log_errorf("Monitor: %s, ailed to create UnitPropertiesChanged signal: %s",
+                              monitor->object_path,
+                              strerror(-r));
                 return r;
         }
 
@@ -416,11 +432,17 @@ int monitor_on_unit_new(void *userdata, const char *node, const char *unit, cons
         int r = sd_bus_message_new_signal(
                         manager->api_bus, &sig, monitor->object_path, MONITOR_INTERFACE, "UnitNew");
         if (r < 0) {
+                bc_log_errorf("Monitor: %s, failed to create UnitNew signal: %s",
+                              monitor->object_path,
+                              strerror(-r));
                 return r;
         }
 
         r = sd_bus_message_append(sig, "sss", node, unit, reason);
         if (r < 0) {
+                bc_log_errorf("Monitor: %s, failed to append data to UnitNew signal: %s",
+                              monitor->object_path,
+                              strerror(-r));
                 return r;
         }
 
@@ -441,11 +463,17 @@ int monitor_on_unit_state_changed(
         int r = sd_bus_message_new_signal(
                         manager->api_bus, &sig, monitor->object_path, MONITOR_INTERFACE, "UnitStateChanged");
         if (r < 0) {
+                bc_log_errorf("Monitor: %s, failed to create UnitStateChanged signal: %s",
+                              monitor->object_path,
+                              strerror(-r));
                 return r;
         }
 
         r = sd_bus_message_append(sig, "sssss", node, unit, active_state, substate, reason);
         if (r < 0) {
+                bc_log_errorf("Monitor: %s, failed to append data to UnitStateChanged signal: %s",
+                              monitor->object_path,
+                              strerror(-r));
                 return r;
         }
 
@@ -460,11 +488,17 @@ int monitor_on_unit_removed(void *userdata, const char *node, const char *unit, 
         int r = sd_bus_message_new_signal(
                         manager->api_bus, &sig, monitor->object_path, MONITOR_INTERFACE, "UnitRemoved");
         if (r < 0) {
+                bc_log_errorf("Monitor: %s, failed to create UnitRemoved signal: %s",
+                              monitor->object_path,
+                              strerror(-r));
                 return r;
         }
 
         r = sd_bus_message_append(sig, "sss", node, unit, reason);
         if (r < 0) {
+                bc_log_errorf("Monitor: %s, failed to append data to UnitRemoved signal: %s",
+                              monitor->object_path,
+                              strerror(-r));
                 return r;
         }
 
