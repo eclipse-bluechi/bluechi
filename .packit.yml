@@ -43,9 +43,24 @@ jobs:
 
   - job: tests
     trigger: pull_request
+    identifier: integration-tests
     fmf_path: tests
     env:
       INSTALL_DEPS: "yes"
+    targets:
+      # Run integration tests on Fedora using CS9 containers, because running integrations tests on CS9 using CS9
+      # containers is very flaky
+      - fedora-rawhide-x86_64
+
+  - job: tests
+    trigger: pull_request
+    identifier: integration-tests-valgrind
+    fmf_path: tests
+    labels:
+      - valgrind
+    env:
+      INSTALL_DEPS: "yes"
+      WITH_VALGRIND: "1"
     targets:
       # Run integration tests on Fedora using CS9 containers, because running integrations tests on CS9 using CS9
       # containers is very flaky
