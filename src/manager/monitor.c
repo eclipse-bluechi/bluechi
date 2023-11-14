@@ -412,15 +412,19 @@ int monitor_on_unit_new(void *userdata, const char *node, const char *unit, cons
         Monitor *monitor = (Monitor *) userdata;
         Manager *manager = monitor->manager;
 
-        return sd_bus_emit_signal(
-                        manager->api_bus,
-                        monitor->object_path,
-                        MONITOR_INTERFACE,
-                        "UnitNew",
-                        "sss",
-                        node,
-                        unit,
-                        reason);
+        _cleanup_sd_bus_message_ sd_bus_message *sig = NULL;
+        int r = sd_bus_message_new_signal(
+                        manager->api_bus, &sig, monitor->object_path, MONITOR_INTERFACE, "UnitNew");
+        if (r < 0) {
+                return r;
+        }
+
+        r = sd_bus_message_append(sig, "sss", node, unit, reason);
+        if (r < 0) {
+                return r;
+        }
+
+        return sd_bus_send_to(manager->api_bus, sig, monitor->client, NULL);
 }
 
 int monitor_on_unit_state_changed(
@@ -433,30 +437,36 @@ int monitor_on_unit_state_changed(
         Monitor *monitor = (Monitor *) userdata;
         Manager *manager = monitor->manager;
 
-        return sd_bus_emit_signal(
-                        manager->api_bus,
-                        monitor->object_path,
-                        MONITOR_INTERFACE,
-                        "UnitStateChanged",
-                        "sssss",
-                        node,
-                        unit,
-                        active_state,
-                        substate,
-                        reason);
+        _cleanup_sd_bus_message_ sd_bus_message *sig = NULL;
+        int r = sd_bus_message_new_signal(
+                        manager->api_bus, &sig, monitor->object_path, MONITOR_INTERFACE, "UnitStateChanged");
+        if (r < 0) {
+                return r;
+        }
+
+        r = sd_bus_message_append(sig, "sssss", node, unit, active_state, substate, reason);
+        if (r < 0) {
+                return r;
+        }
+
+        return sd_bus_send_to(manager->api_bus, sig, monitor->client, NULL);
 }
 
 int monitor_on_unit_removed(void *userdata, const char *node, const char *unit, const char *reason) {
         Monitor *monitor = (Monitor *) userdata;
         Manager *manager = monitor->manager;
 
-        return sd_bus_emit_signal(
-                        manager->api_bus,
-                        monitor->object_path,
-                        MONITOR_INTERFACE,
-                        "UnitRemoved",
-                        "sss",
-                        node,
-                        unit,
-                        reason);
+        _cleanup_sd_bus_message_ sd_bus_message *sig = NULL;
+        int r = sd_bus_message_new_signal(
+                        manager->api_bus, &sig, monitor->object_path, MONITOR_INTERFACE, "UnitRemoved");
+        if (r < 0) {
+                return r;
+        }
+
+        r = sd_bus_message_append(sig, "sss", node, unit, reason);
+        if (r < 0) {
+                return r;
+        }
+
+        return sd_bus_send_to(manager->api_bus, sig, monitor->client, NULL);
 }
