@@ -45,6 +45,8 @@ jobs:
     trigger: pull_request
     identifier: integration-tests
     fmf_path: tests
+    labels:
+      - standard
     env:
       INSTALL_DEPS: "yes"
     targets:
