@@ -39,7 +39,7 @@ dnf install bluechi bluechi-agent bluechi-ctl
 
 Patches are welcome!
 
-Please submit patches to [github.com/containers/bluechi](https://github.com/containers/bluechi).
+Please submit patches to [github.com/eclipse-bluechi/bluechi](https://github.com/eclipse-bluechi/bluechi).
 More information about the development can be found in [README.developer.md](README.developer.md).
 
 You can read [Get started with GitHub](https://docs.github.com/en/get-started)
@@ -47,7 +47,7 @@ if you are not familiar with the development process to learn more about it.
 
 ### Found a bug or documentation issue?
 
-To submit a bug or suggest an enhancement please use [GitHub issues](https://github.com/containers/bluechi/issues).
+To submit a bug or suggest an enhancement please use [GitHub issues](https://github.com/eclipse-bluechi/bluechi/issues).
 
 ## Still need help?
 

@@ -1,7 +1,7 @@
 <!-- markdownlint-disable-file MD013 -->
 # Using BlueChi's D-Bus API
 
-BlueChi provides [introspection data](https://dbus.freedesktop.org/doc/dbus-specification.html#introspection-format) for its public API. These XML files are located in the [data directory](https://github.com/containers/bluechi/tree/main/data) of the BlueChi project and can be used either as reference when writing custom clients or as input to generate them (see [here](./client_generation.md)).
+BlueChi provides [introspection data](https://dbus.freedesktop.org/doc/dbus-specification.html#introspection-format) for its public API. These XML files are located in the [data directory](https://github.com/eclipse-bluechi/bluechi/tree/main/data) of the BlueChi project and can be used either as reference when writing custom clients or as input to generate them (see [here](./client_generation.md)).
 
 There are a number of bindings for the D-Bus protocol for a range of programming languages. A (not complete) list of bindings can be found on the [freedesktop D-Bus bindings](https://www.freedesktop.org/wiki/Software/DBusBindings/) website.
 

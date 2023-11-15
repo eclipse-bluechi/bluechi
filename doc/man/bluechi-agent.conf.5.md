@@ -39,7 +39,7 @@ The port on which `bluechi` is listening for connection request and the `bluechi
 
 #### **HeartbeatInterval** (long)
 
-The interval between two heartbeat signals sent to bluechi in milliseconds. If an agent is not connected, it will retry to connect on each heartbeat. Setting this options to values smaller or equal to 0 disables it. This option will overwrite the heartbeat interval defined in the configuration file. 
+The interval between two heartbeat signals sent to bluechi in milliseconds. If an agent is not connected, it will retry to connect on each heartbeat. Setting this options to values smaller or equal to 0 disables it. This option will overwrite the heartbeat interval defined in the configuration file.
 
 #### **LogLevel** (string)
 
@@ -112,4 +112,4 @@ Administrators can also use a "drop-in" directory __/etc/bluechi/agent.conf.d__ 
 
 ## SEE ALSO
 
-**[bluechi-agent(1)](https://github.com/containers/bluechi/blob/main/doc/man/bluechi-agent.1.md)**
+**[bluechi-agent(1)](https://github.com/eclipse-bluechi/bluechi/blob/main/doc/man/bluechi-agent.1.md)**

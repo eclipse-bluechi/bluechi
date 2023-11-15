@@ -13,7 +13,7 @@ Version: @VERSION@
 Release: @RELEASE@%{?dist}
 Summary: A systemd service controller for multi-nodes environments
 License: LGPL-2.1-or-later
-URL:     https://github.com/containers/bluechi
+URL:     https://github.com/eclipse-bluechi/bluechi
 Source0: %{url}/archive/v%{version}/%{name}-%{version}.tar.gz
 
 BuildRequires: gcc
@@ -275,7 +275,7 @@ popd
 - Renamed bluechi to bluechi-controller for binary, rpm and documentation
 - Snapshot builds are now available in the centos-sig-automotive COPR group
 - Moved bluechi binaries to /usr/libexec for auto-completion
-- Introduced packit for builds and running integration tests on testing farm 
+- Introduced packit for builds and running integration tests on testing farm
 - Introduced initial implementation for a tool to test FFI of BlueChi
 - Introduced clang/LLVM support
 - Added properties and signals for connection status and disconnected timestamp to Agent's public API
@@ -283,7 +283,7 @@ popd
 - CLI option for the version (-v) prints version and git commit hash for non-release builds
 - Extended BlueChi's public D-Bus API specification by inline-comments
 - Added EmitsChangedSignal annotation to properties in BlueChi's public D-Bus API specification
-- Enhanced typed python bindings generator to use inline-comments from specification 
+- Enhanced typed python bindings generator to use inline-comments from specification
 - Enhanced typed python bindings generator to provide listener functions for property changed signals
 - Fixes in the D-Bus API description
 - Improved error messages returned by D-Bus API

@@ -88,4 +88,4 @@ Administrators can also use a "drop-in" directory __/etc/bluechi/controller.conf
 
 ## SEE ALSO
 
-**[bluechi-controller(1)](https://github.com/containers/bluechi/blob/main/doc/man/bluechi-controller.1.md)**
+**[bluechi-controller(1)](https://github.com/eclipse-bluechi/bluechi/blob/main/doc/man/bluechi-controller.1.md)**

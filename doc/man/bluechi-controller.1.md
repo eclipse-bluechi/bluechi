@@ -65,4 +65,4 @@ TBD
 
 ## CONFIGURATION FILES
 
-**[bluechi-controller.conf(5)](https://github.com/containers/bluechi/blob/main/doc/man/bluechi-controller.conf.5.md)**
+**[bluechi-controller.conf(5)](https://github.com/eclipse-bluechi/bluechi/blob/main/doc/man/bluechi-controller.conf.5.md)**

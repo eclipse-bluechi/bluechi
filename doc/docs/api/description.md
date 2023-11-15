@@ -3,7 +3,7 @@
 
 The main way to interact with BlueChi is using [D-Bus](https://www.freedesktop.org/wiki/Software/dbus/). It exposes a name on the system bus called `org.eclipse.bluechi` that other programs can use to control the system. It is expected that high-level control planes use this API directly, but there is also debugging tool called [bluechictl](../man/bluechictl.md) which can be used for debugging and testing purposes.
 
-The interfaces described in this sections are referencing the [introspection data](https://dbus.freedesktop.org/doc/dbus-specification.html#introspection-format) which is defined in XML files located in the [data directory](https://github.com/containers/bluechi/tree/main/data) of the project.
+The interfaces described in this sections are referencing the [introspection data](https://dbus.freedesktop.org/doc/dbus-specification.html#introspection-format) which is defined in XML files located in the [data directory](https://github.com/eclipse-bluechi/bluechi/tree/main/data) of the project.
 
 ## BlueChi public D-Bus API
 

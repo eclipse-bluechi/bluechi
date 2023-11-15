@@ -1,7 +1,7 @@
 <!-- markdownlint-disable-file MD013 -->
 # Generating BlueChi clients
 
-BlueChi provides [introspection data](https://dbus.freedesktop.org/doc/dbus-specification.html#introspection-format) for its public API. These XML files are located in the [data directory](https://github.com/containers/bluechi/tree/main/data) of the project and can be also be used as input to generate clients.
+BlueChi provides [introspection data](https://dbus.freedesktop.org/doc/dbus-specification.html#introspection-format) for its public API. These XML files are located in the [data directory](https://github.com/eclipse-bluechi/bluechi/tree/main/data) of the project and can be also be used as input to generate clients.
 
 There is a variety of code generation tools for various programming languages. There is a list
 
@@ -16,7 +16,7 @@ Using generated code for clients has the advantage of reducing boilerplate code 
 
 For `python`, the dynamically generated proxies (e.g. from [dasbus](https://github.com/rhinstaller/dasbus)) don't require any generation and work well on their own. Because of that there are no larger projects to generate python code from a D-Bus specification. These proxies, however, don't provide (type) hints.
 
-Therefore, the BlueChi project contains its own [generator](https://github.com/containers/bluechi/tree/main/src/bindings/generator) to output typed python bindings based on introspection data.
+Therefore, the BlueChi project contains its own [generator](https://github.com/eclipse-bluechi/bluechi/tree/main/src/bindings/generator) to output typed python bindings based on introspection data.
 
 ### Installation
 
@@ -33,7 +33,7 @@ pip install bluechi
 Or build and install it directly from source:
 
 ```bash
-git clone git@github.com:containers/bluechi.git
+git clone git@github.com:eclipse-bluechi/bluechi.git
 cd bluechi
 pip install -r src/bindings/generator/requirements.txt
 
@@ -63,7 +63,7 @@ The functions from the `ext` subpackage leverage the functions in `api` and comb
 --8<-- "bluechi-examples/StartUnit.py"
 ```
 
-If there is a common task for which `bluechi` can provide a simplifying function, please submit an [new RFE request](https://github.com/containers/bluechi/issues/new/choose).
+If there is a common task for which `bluechi` can provide a simplifying function, please submit an [new RFE request](https://github.com/eclipse-bluechi/bluechi/issues/new/choose).
 
 For more examples, please have a look at the [next section](#more-examples)
 

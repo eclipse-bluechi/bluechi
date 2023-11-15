@@ -14,7 +14,7 @@ setup(
     long_description=readme(),
     long_description_content_type="text/markdown",
     author="BlueChi developers",
-    url="https://github.com/containers/bluechi/",
+    url="https://github.com/eclipse-bluechi/bluechi/",
     license="LGPL-2.1-or-later",
     install_requires=[
         "dasbus",
