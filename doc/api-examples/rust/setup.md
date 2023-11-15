@@ -21,7 +21,7 @@ The snippet chosen to run needs to be copied into the `bluechi` directory. After
 
 ```bash
 # clone the BlueChi project
-$ git clone https://github.com/containers/bluechi.git
+$ git clone https://github.com/eclipse-bluechi/bluechi.git
 
 # navigate into the rust api-examples directory
 $ cd bluechi/doc/api-examples/rust

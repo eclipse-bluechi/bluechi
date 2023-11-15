@@ -90,8 +90,8 @@ If `valgrind` detects a memory leak in a test, the test will fail, and the logs 
 
 In order to run integration tests for your local BlueChi build, you need have BlueChi RPM packages built from your source
 code. The details about BlueChi development can be found at
-[README.developer.md](https://github.com/containers/bluechi/blob/main/README.developer.md), the most important part for
-running integration tests is [Packaging](https://github.com/containers/bluechi/blob/main/README.developer.md#packaging)
+[README.developer.md](https://github.com/eclipse-bluechi/bluechi/blob/main/README.developer.md), the most important part for
+running integration tests is [Packaging](https://github.com/eclipse-bluechi/bluechi/blob/main/README.developer.md#packaging)
 section.
 
 In the following steps BlueChi source codes are located in `~/bluechi` directory.

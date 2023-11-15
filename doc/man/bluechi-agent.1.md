@@ -41,7 +41,7 @@ The unique name of this `bluechi-agent` used for registering at `bluechi`. This 
 
 #### **--interval**, **-i**
 
-The interval between two heartbeat signals sent to bluechi in milliseconds. If an agent is not connected, it will retry to connect on each heartbeat. Setting this options to values smaller or equal to 0 disables it. This option will overwrite the heartbeat interval defined in the configuration file. 
+The interval between two heartbeat signals sent to bluechi in milliseconds. If an agent is not connected, it will retry to connect on each heartbeat. Setting this options to values smaller or equal to 0 disables it. This option will overwrite the heartbeat interval defined in the configuration file.
 
 #### **--config**, **-c**
 
@@ -86,4 +86,4 @@ TBD
 
 ## CONFIGURATION FILES
 
-**[bluechi-agent.conf(5)](https://github.com/containers/bluechi/blob/main/doc/man/bluechi-agent.conf.5.md)**
+**[bluechi-agent.conf(5)](https://github.com/eclipse-bluechi/bluechi/blob/main/doc/man/bluechi-agent.conf.5.md)**

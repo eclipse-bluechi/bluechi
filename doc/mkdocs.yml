@@ -1,6 +1,6 @@
 site_name: BlueChi Documentation
 
-repo_url: https://github.com/containers/bluechi
+repo_url: https://github.com/eclipse-bluechi/bluechi
 repo_name: bluechi
 edit_uri: blob/main/doc/docs/
 
@@ -8,14 +8,14 @@ copyright: © Red Hat
 nav:
   - Home: index.md
   - Architecture: architecture.md
-  - Getting Started: 
+  - Getting Started:
     - getting_started/index.md
     - Single Node Setup: getting_started/single_node.md
     - Multi-Node Setup: getting_started/multi_node.md
     - Using bluechictl: getting_started/examples_bluechictl.md
     - Cross-node dependencies: getting_started/cross_node_dependencies.md
   - Configuration: configuration.md
-  - Cross-Node Dependencies: 
+  - Cross-Node Dependencies:
     - cross_node_dependencies/index.md
     - Proxy Services: cross_node_dependencies/proxy_services.md
     - Using Proxy Services: cross_node_dependencies/usage.md

@@ -20,7 +20,7 @@ On the raspberry pi, first create a temporary directory and add an example image
 ```bash
 mkdir -p /tmp/bluechi-cdn
 cd /tmp/bluechi-cdn
-wget https://raw.githubusercontent.com/containers/bluechi/main/doc/docs/img/bluechi_architecture.jpg
+wget https://raw.githubusercontent.com/eclipse-bluechi/bluechi/main/doc/docs/img/bluechi_architecture.jpg
 ```
 
 For the sake of simplicity, python's [http.server module](https://docs.python.org/3/library/http.server.html) is used to simulate a CDN. Create a new file `/etc/systemd/system/bluechi-cdn.service` and paste the following systemd unit definition:
@@ -117,7 +117,7 @@ if __name__ == "__main__":
     cdn_host = sys.argv[2]
 
     server = wsgiref.simple_server.make_server(
-        host="localhost", 
+        host="localhost",
         port=port,
         app=service
     )
