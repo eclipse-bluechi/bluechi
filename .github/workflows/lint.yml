@@ -144,7 +144,7 @@ jobs:
       
       - name: Generate python bindings
         run: |
-          bash build-scripts/generate-bindings.sh python
+          ./build-scripts/generate-bindings.sh python
 
       - name: Check for changes in generated python code
         run: |

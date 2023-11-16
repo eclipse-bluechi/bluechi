@@ -17,7 +17,7 @@ prepare:
     - name: Prepare containers setup
       how: shell
       script: |
-          bash scripts/tests-setup.sh
+          ./scripts/tests-setup.sh
 execute:
     how: tmt
 report:

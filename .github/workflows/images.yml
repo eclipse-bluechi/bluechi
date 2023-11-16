@@ -23,7 +23,7 @@ jobs:
 
       - name: Build manifest
         run: |
-          bash ./build-scripts/build-push-containers.sh ${{ inputs.image }}
+          ./build-scripts/build-push-containers.sh ${{ inputs.image }}
       
       - name: Push manifest o quay.io
         uses: redhat-actions/push-to-registry@v2
