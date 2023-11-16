@@ -37,8 +37,8 @@ git clone git@github.com:eclipse-bluechi/bluechi.git
 cd bluechi
 pip install -r src/bindings/generator/requirements.txt
 
-bash build-scripts/generate-bindings.sh python
-bash build-scripts/build-bindings.sh python
+./build-scripts/generate-bindings.sh python
+./build-scripts/build-bindings.sh python
 pip install src/bindings/python/dist/bluechi-0.6.0-py3-none-any.whl
 ```
 

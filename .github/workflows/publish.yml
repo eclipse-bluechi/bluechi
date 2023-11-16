@@ -72,7 +72,7 @@ jobs:
 
       - name: Generate python bindings
         run: |
-          bash build-scripts/generate-bindings.sh python
+          ./build-scripts/generate-bindings.sh python
 
       - name: Check for changes in generated python code
         run: |
@@ -86,7 +86,7 @@ jobs:
 
       - name: Build python bindings package
         run: |
-          bash build-scripts/build-bindings.sh python
+          ./build-scripts/build-bindings.sh python
 
       - name: Publish bluechi to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1

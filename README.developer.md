@@ -210,7 +210,7 @@ A complete set of typed python bindings for the D-Bus API is auto-generated. On 
 these need to be re-generated via
 
 ```bash
-bash build-scripts/generate-bindings.sh python
+./build-scripts/generate-bindings.sh python
 ```
 
 ### Static Code Analysis
