@@ -68,7 +68,6 @@ int main(int argc, char *argv[]) {
         _cleanup_client_ Client *client = new_client(op, opargc, opargv, opt_filter_glob);
         r = client_call_manager(client);
         if (r < 0) {
-                fprintf(stderr, "Call to manager failed: %s\n", strerror(-r));
                 return EXIT_FAILURE;
         }
 

@@ -504,6 +504,12 @@ static int manager_method_list_units_encode_reply(ListUnitsRequest *req, sd_bus_
                         continue;
                 }
 
+                const sd_bus_error *err = sd_bus_message_get_error(m);
+                if (err != NULL) {
+                        bc_log_errorf("Failed to list units for node '%s': %s", node_name, err->message);
+                        return -sd_bus_message_get_errno(m);
+                }
+
                 r = sd_bus_message_enter_container(m, SD_BUS_TYPE_ARRAY, UNIT_INFO_STRUCT_TYPESTRING);
                 if (r < 0) {
                         return r;
@@ -562,14 +568,21 @@ static void manager_method_list_units_done(ListUnitsRequest *req) {
 
         _cleanup_sd_bus_message_ sd_bus_message *reply = NULL;
         int r = sd_bus_message_new_method_return(req->request_message, &reply);
-        if (r >= 0) {
-                r = manager_method_list_units_encode_reply(req, reply);
-        }
         if (r < 0) {
                 sd_bus_reply_method_errorf(
                                 req->request_message,
                                 SD_BUS_ERROR_FAILED,
                                 "Failed to create a reply message: %s",
+                                strerror(-r));
+                return;
+        }
+
+        r = manager_method_list_units_encode_reply(req, reply);
+        if (r < 0) {
+                sd_bus_reply_method_errorf(
+                                req->request_message,
+                                SD_BUS_ERROR_FAILED,
+                                "List units request to at least one node failed: %s",
                                 strerror(-r));
                 return;
         }
