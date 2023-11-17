@@ -1129,17 +1129,17 @@ int agent_request_start(AgentRequest *req) {
 AgentRequest *node_request_list_units(
                 Node *node, agent_request_response_t cb, void *userdata, free_func_t free_userdata) {
         if (!node_has_agent(node)) {
-                return false;
+                return NULL;
         }
 
         _cleanup_agent_request_ AgentRequest *req = NULL;
         node_create_request(&req, node, "ListUnits", cb, userdata, free_userdata);
         if (req == NULL) {
-                return false;
+                return NULL;
         }
 
         if (agent_request_start(req) < 0) {
-                return false;
+                return NULL;
         }
 
         return steal_pointer(&req);
