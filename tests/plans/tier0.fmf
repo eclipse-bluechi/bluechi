@@ -22,3 +22,8 @@ execute:
     how: tmt
 report:
     how: junit
+finish:
+    - name: Create coverage report
+      how: shell
+      script: |
+           pytest -svv scripts/create_coverage_report.py

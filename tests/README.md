@@ -121,6 +121,28 @@ cd ~/bluechi/tests
 tmt run -v -eCONTAINER_USED=integration-test-local
 ```
 
+## Creating code coverage report from integration tests execution
+
+To be able to produce code coverage report from integration tests execution you need to build BlueChi RPMs with code
+coverage support:
+
+```shell
+cd ~/bluechi
+skipper make rpm WITH_COVERAGE=1
+createrepo_c ~/bluechi/tests/bluechi-rpms
+```
+
+When done, you need to run integration tests with code coverage report enabled:
+
+```shell
+tmt run -v -eCONTAINER_USED=integration-test-local -eWITH_COVERAGE=1
+```
+
+After the integration tests finishes, the code coverage html result can be found in `res` subdirectory inside the tmt
+execution result directory, for example:
+
+`/var/tmp/tmt/run-001/plans/tier0/report/default-0/report`
+
 ## Developing integration tests
 
 ### Code Style
