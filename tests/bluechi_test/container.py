@@ -85,6 +85,7 @@ class BluechiContainer():
 
         result, output = self.container.exec_run(
             f"geninfo {gcda_file_location} -b {src_file_location} -o {coverage_file_name}")
+
         self.get_file(f"/{coverage_file_name}", data_coverage_dir)
 
     def cleanup(self):
