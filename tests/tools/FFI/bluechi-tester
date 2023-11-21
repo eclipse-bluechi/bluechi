@@ -2,10 +2,11 @@
 # SPDX-License-Identifier: LGPL-2.1-or-later
 
 import argparse
+import signal
 import sys
 import time
 
-from dasbus.typing import get_variant, Tuple
+from dasbus.typing import Variant
 from dasbus.connection import AddressedMessageBus, InterfaceProxy, ObjectProxy
 from dasbus.error import DBusError
 
@@ -32,26 +33,27 @@ class BlueChiTester(object):
             signal_name: str,
             num_signals: int):
 
-        parameters = get_variant(
-                Tuple[int, str],
-                (num_signals, "fake-state")
-        )
-
         destination_bus_name = None
 
-        print(f"Sending {num_signals} {signal_name} "
-              f"signal(s) to controller... ")
+        number = 0
+        while (num_signals == 0) or (number < num_signals):
 
-        for number in range(0, num_signals):
+            parameters = None
+            if signal_name == "JobDone":
+                parameters = Variant("(us)", (number, "fake-state"))
+
             self.peer_bus.connection.emit_signal(
-                    destination_bus_name,
-                    OBJECT_PATH_AGENT,
-                    INTERFACE_AGENT,
-                    signal_name,
-                    parameters
+                destination_bus_name,
+                OBJECT_PATH_AGENT,
+                INTERFACE_AGENT,
+                signal_name,
+                parameters
             )
-            print(f"  * Sending {signal_name} {number}...")
+            print(f"  * Sent {signal_name} {number}...")
 
+            number += 1
+
+        # wait a bit to ensure all signals are sent
         time.sleep(1)
 
     def connect_to_controller(
@@ -83,7 +85,7 @@ def main():
         "--numbersignals",
         type=int,
         default=10,
-        help="Number of signals as an integer (default: 1)"
+        help="Number of signals as an integer (default: 1). If 0 is passed, it will run infinitely."
     )
 
     parser.add_argument(
@@ -117,6 +119,12 @@ def main():
         print(f"Error: unsupported signal name, "
               f"use the following: {supported_sigs}")
         sys.exit(1)
+
+    # Register handler for SIGINT
+    def signal_handler(sig, frame):
+        print('Aborting...')
+        sys.exit(0)
+    signal.signal(signal.SIGINT, signal_handler)
 
     BCAgent = BlueChiTester(node_name)
 
