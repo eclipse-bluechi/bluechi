@@ -925,7 +925,7 @@ static void manager_client_disconnected(Manager *manager, const char *client_id)
         Monitor *monitor = NULL;
         Monitor *next_monitor = NULL;
         LIST_FOREACH_SAFE(monitors, monitor, next_monitor, manager->monitors) {
-                if (streq(monitor->client, client_id)) {
+                if (streq(monitor->owner, client_id)) {
                         monitor_close(monitor);
                         manager_remove_monitor(manager, monitor);
                 }

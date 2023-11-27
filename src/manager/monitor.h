@@ -54,10 +54,18 @@ void subscription_unref(Subscription *subscription);
 DEFINE_CLEANUP_FUNC(Subscription, subscription_unref)
 #define _cleanup_subscription_ _cleanup_(subscription_unrefp)
 
+struct MonitorPeer {
+        uint32_t id;
+        char *name;
+        LIST_FIELDS(MonitorPeer, peers);
+};
+
 struct Monitor {
         int ref_count;
         uint32_t id;
-        char *client;
+
+        char *owner;
+        LIST_HEAD(MonitorPeer, peers);
 
         Manager *manager; /* weak ref */
 
@@ -69,7 +77,7 @@ struct Monitor {
         LIST_FIELDS(Monitor, monitors);
 };
 
-Monitor *monitor_new(Manager *manager, const char *client);
+Monitor *monitor_new(Manager *manager, const char *owner);
 Monitor *monitor_ref(Monitor *monitor);
 void monitor_unref(Monitor *monitor);
 

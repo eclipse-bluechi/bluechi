@@ -9,4 +9,5 @@ typedef struct Monitor Monitor;
 typedef struct ProxyMonitor ProxyMonitor;
 typedef struct Subscription Subscription;
 typedef struct SubscribedUnit SubscribedUnit;
+typedef struct MonitorPeer MonitorPeer;
 typedef struct ProxyDependency ProxyDependency;
