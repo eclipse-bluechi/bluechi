@@ -6,6 +6,8 @@
 
 #include "utils.h"
 
+#include "libbluechi/common/string-util.h"
+
 /* Number of seconds idle before sending keepalive packets */
 #define AGENT_KEEPALIVE_SOCKET_KEEPIDLE_SECS 1
 
@@ -335,4 +337,43 @@ int bus_socket_set_keepalive(sd_bus *bus) {
         }
 
         return 0;
+}
+
+/*
+ * Copied from libsystemd/sd-bus/bus-internal.c service_name_is_valid and adjusted to
+ * exclude the well-known service names. Also does not support '_' and '-' characters.
+ */
+bool bus_id_is_valid(const char *name) {
+        if (isempty(name) || name[0] != ':') {
+                return false;
+        }
+
+        const char *i = name + 1;
+        bool dot = true;
+        bool found_dot = false;
+        for (; *i; i++) {
+                if (*i == '.') {
+                        if (dot) {
+                                return false;
+                        }
+                        found_dot = true;
+                        dot = true;
+                        continue;
+                }
+                dot = false;
+
+                if (!ascii_isalpha(*i) && !ascii_isdigit(*i)) {
+                        return false;
+                }
+        }
+
+        if (i - name > SD_BUS_MAXIMUM_NAME_LENGTH) {
+                return false;
+        }
+
+        if (dot || !found_dot) {
+                return false;
+        }
+
+        return true;
 }

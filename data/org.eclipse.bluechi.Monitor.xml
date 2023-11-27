@@ -58,6 +58,30 @@
       <arg name="id" type="u" direction="out" />
     </method>
 
+    <!-- 
+      AddPeer:
+      @name: The name of the peer to add as listener to all monitor events. Needs to be unique name on the bus.
+      @id: The id of the created peer
+
+      Add a new peer to the monitor. A peer will receive all events that the monitor subscribes to.
+    -->
+    <method name="AddPeer">
+      <arg name="name" type="s" direction="in" />
+      <arg name="id" type="u" direction="out" />
+    </method>
+
+    <!-- 
+      RemovePeer:
+      @id: The id of the peer to remove
+      @reason: The reason for removing the peer
+
+      Remove a previously added peer from the monitor. The reason will be part of the PeerRemoved signal, which is only sent to the respective peer.
+    -->
+    <method name="RemovePeer">
+      <arg name="id" type="u" direction="in" />
+      <arg name="reason" type="s" direction="in" />
+    </method>
+
 
     <!-- 
       UnitPropertiesChanged:
@@ -120,6 +144,16 @@
     <signal name="UnitRemoved">
       <arg name="node" type="s" />
       <arg name="unit" type="s" />
+      <arg name="reason" type="s" />
+    </signal>
+
+    <!-- 
+      PeerRemoved:
+      @reason: The reason the peer got removed from the monitor.
+
+      Emitted when a peer is removed from the monitor, e.g. when the monitor has been closed, and only sent to the respective peer.
+    -->
+    <signal name="PeerRemoved">
       <arg name="reason" type="s" />
     </signal>
   </interface>

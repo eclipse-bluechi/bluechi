@@ -154,6 +154,31 @@ class Monitor(ApiBase):
             units,
         )
 
+    def add_peer(self, name: str) -> UInt32:
+        """
+          AddPeer:
+        @name: The name of the peer to add as listener to all monitor events. Needs to be unique name on the bus.
+        @id: The id of the created peer
+
+        Add a new peer to the monitor. A peer will receive all events that the monitor subscribes to.
+        """
+        return self.get_proxy().AddPeer(
+            name,
+        )
+
+    def remove_peer(self, id: UInt32, reason: str) -> None:
+        """
+          RemovePeer:
+        @id: The id of the peer to remove
+        @reason: The reason for removing the peer
+
+        Remove a previously added peer from the monitor. The reason will be part of the PeerRemoved signal, which is only sent to the respective peer.
+        """
+        self.get_proxy().RemovePeer(
+            id,
+            reason,
+        )
+
     def on_unit_properties_changed(
         self,
         callback: Callable[
@@ -245,6 +270,23 @@ class Monitor(ApiBase):
         (reason=virtual).
         """
         self.get_proxy().UnitRemoved.connect(callback)
+
+    def on_peer_removed(
+        self,
+        callback: Callable[
+            [
+                str,
+            ],
+            None,
+        ],
+    ) -> None:
+        """
+          PeerRemoved:
+        @reason: The reason the peer got removed from the monitor.
+
+        Emitted when a peer is removed from the monitor, e.g. when the monitor has been closed, and only sent to the respective peer.
+        """
+        self.get_proxy().PeerRemoved.connect(callback)
 
 
 class Metrics(ApiBase):
