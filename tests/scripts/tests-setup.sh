@@ -12,6 +12,8 @@ if [ "$INSTALL_DEPS" == "yes" ]; then
         python3-pytest \
         python3-pytest-timeout \
         -y
+    # Mitigate https://github.com/containers/podman-py/issues/350
+    dnf install python3-rich -y
 fi
 
 BUILD_ARG=""
