@@ -24,7 +24,7 @@ jobs:
           ref: ${{ github.event.pull_request.head.sha }}
 
       - name: Mark source directory as safe
-        run: | 
+        run: |
           git config --global --add safe.directory $(pwd)
 
       - name: Perform build
@@ -66,6 +66,8 @@ jobs:
       - name: Install unpackaged python libraries from PyPi
         run: |
           pip install "tmt[provision]" "tmt[report-junit]" podman pytest pytest-timeout
+          # Mitigate https://github.com/containers/podman-py/issues/350
+          pip install rich
 
       - name: Checkout sources
         uses: actions/checkout@v3
@@ -77,7 +79,7 @@ jobs:
         with:
           name: rpm-artifacts
           path: 'tests/bluechi-rpms'
-      
+
       - name: Check integration test IDs
         run: |
           cd tests
