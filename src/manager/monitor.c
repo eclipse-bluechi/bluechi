@@ -556,6 +556,8 @@ int monitor_on_unit_property_changed(
                                       monitor->object_path,
                                       strerror(-r));
                 }
+                sd_bus_message_unrefp(&sig);
+                sig = NULL;
         }
 
         MonitorPeer *peer = NULL;
@@ -570,6 +572,8 @@ int monitor_on_unit_property_changed(
                                               peer->name,
                                               strerror(-r));
                         }
+                        sd_bus_message_unrefp(&sig);
+                        sig = NULL;
                 }
         }
 
@@ -591,6 +595,8 @@ int monitor_on_unit_new(void *userdata, const char *node, const char *unit, cons
                                       monitor->object_path,
                                       strerror(-r));
                 }
+                sd_bus_message_unrefp(&sig);
+                sig = NULL;
         }
 
         MonitorPeer *peer = NULL;
@@ -605,6 +611,8 @@ int monitor_on_unit_new(void *userdata, const char *node, const char *unit, cons
                                               peer->name,
                                               strerror(-r));
                         }
+                        sd_bus_message_unrefp(&sig);
+                        sig = NULL;
                 }
         }
 
@@ -632,6 +640,8 @@ int monitor_on_unit_state_changed(
                                       monitor->object_path,
                                       strerror(-r));
                 }
+                sd_bus_message_unrefp(&sig);
+                sig = NULL;
         }
 
         MonitorPeer *peer = NULL;
@@ -646,6 +656,8 @@ int monitor_on_unit_state_changed(
                                               peer->name,
                                               strerror(-r));
                         }
+                        sd_bus_message_unrefp(&sig);
+                        sig = NULL;
                 }
         }
 
@@ -667,6 +679,8 @@ int monitor_on_unit_removed(void *userdata, const char *node, const char *unit, 
                                       monitor->object_path,
                                       strerror(-r));
                 }
+                sd_bus_message_unrefp(&sig);
+                sig = NULL;
         }
 
         MonitorPeer *peer = NULL;
@@ -681,6 +695,8 @@ int monitor_on_unit_removed(void *userdata, const char *node, const char *unit, 
                                               peer->name,
                                               strerror(-r));
                         }
+                        sd_bus_message_unrefp(&sig);
+                        sig = NULL;
                 }
         }
 
