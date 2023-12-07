@@ -214,7 +214,7 @@ void monitor_close(Monitor *monitor) {
         MonitorPeer *peer = NULL;
         MonitorPeer *next_peer = NULL;
         LIST_FOREACH_SAFE(peers, peer, next_peer, monitor->peers) {
-                monitor_emit_peer_removed(monitor, peer, "closed");
+                monitor_emit_peer_removed(monitor, peer, "monitor closed");
                 LIST_REMOVE(peers, monitor->peers, peer);
                 free_and_null(peer->name);
                 free_and_null(peer);
@@ -421,6 +421,23 @@ static MonitorPeer *monitor_add_peer(Monitor *monitor, const char *peer_name) {
         return peer;
 }
 
+static bool monitor_has_peer_with_name(Monitor *monitor, const char *peer_name) {
+        if (streq(monitor->owner, peer_name)) {
+                return true;
+        }
+
+        MonitorPeer *peer = NULL;
+        MonitorPeer *next_peer = NULL;
+        LIST_FOREACH_SAFE(peers, peer, next_peer, monitor->peers) {
+                if (streq(peer->name, peer_name)) {
+                        return true;
+                }
+        }
+        bc_log_debugf("Peer with name '%s' for monitor '%s' not found", peer_name, monitor->object_path);
+
+        return false;
+}
+
 static int monitor_method_add_peer(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error) {
         Monitor *monitor = userdata;
 
@@ -441,6 +458,11 @@ static int monitor_method_add_peer(sd_bus_message *m, void *userdata, UNUSED sd_
                                 SD_BUS_ERROR_INVALID_ARGS,
                                 "Peer name '%s' is not a valid bus name",
                                 peer_name);
+        }
+
+        if (monitor_has_peer_with_name(monitor, peer_name)) {
+                return sd_bus_reply_method_errorf(
+                                m, SD_BUS_ERROR_INVALID_ARGS, "Peer name '%s' has already been added", peer_name);
         }
 
         MonitorPeer *peer = monitor_add_peer(monitor, peer_name);
