@@ -107,6 +107,17 @@ class BluechiContainer():
         self.create_file(target_dir, service_file_name, content)
         self.systemctl_daemon_reload()
 
+    def copy_container_script(self, script_file_name: str):
+        curr_dir = os.getcwd()
+        source_path = os.path.join(curr_dir, "..", "..", "..", "bluechi_test", "container_scripts", script_file_name)
+        content = read_file(source_path)
+
+        target_dir = os.path.join("/", "var")
+
+        LOGGER.info(f"Copy container script '{source_path}' to container path '{curr_dir}'\
+             with content:\n{content}")
+        self.create_file(target_dir, script_file_name, content)
+
     def service_is_active(self, unit_name: str) -> bool:
         result, _ = self.exec_run(f"systemctl is-active {unit_name}")
         return result == 0

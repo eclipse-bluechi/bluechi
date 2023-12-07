@@ -1,0 +1,2 @@
+summary: Test if a listener on a monitor does receive remove signal, but no other signals after removing it as peer
+id: b7b061ec-7a6b-495b-aef7-b791fb9eb251
