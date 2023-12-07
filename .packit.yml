@@ -70,8 +70,12 @@ jobs:
 
   - job: copr_build
     trigger: commit
+    branch: main
     owner: '@centos-automotive-sig'
     project: bluechi-snapshot
+    notifications:
+      failure_comment:
+        message: "BlueChi build failed for merged commit {commit_sha}. Please check logs {logs_url}, packit dashboard {packit_dashboard_url} and external service dashboard {external_dashboard_url}"
     targets:
       - centos-stream-9-aarch64
       - centos-stream-9-ppc64le
