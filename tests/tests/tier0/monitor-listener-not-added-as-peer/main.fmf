@@ -1,0 +1,3 @@
+summary: Test if a listener on a monitor does not receive signals from it when not
+    added
+id: 7c84300a-4cd7-4184-8b75-5b574b8c3037
