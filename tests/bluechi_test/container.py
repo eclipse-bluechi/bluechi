@@ -186,10 +186,6 @@ class BluechiContainer():
         bluechi_valgrind_log_target_path = f"/tmp/{bluechi_valgrind_filename}"
         bluechi_agent_valgrind_log_target_path = f"/tmp/{bluechi_agent_valgrind_filename}"
 
-        # Stop bluechi process to finalize valgrind report
-        self.exec_run("systemctl stop bluechi-agent")
-        self.exec_run("systemctl stop bluechi-controller")
-
         # Collect valgrind logs to the data directory
         self.extract_valgrind_logs(valgrind_log_path_controller, bluechi_valgrind_log_target_path, data_dir)
         self.extract_valgrind_logs(valgrind_log_path_agent, bluechi_agent_valgrind_log_target_path, data_dir)

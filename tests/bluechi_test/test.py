@@ -140,6 +140,16 @@ class BluechiTest():
         except Exception as ex:
             LOGGER.error(f"Failed to gather test executor journal: {ex}")
 
+    def shutdown_bluechi(self, ctrl: BluechiControllerContainer, nodes: Dict[str, BluechiNodeContainer]):
+        LOGGER.debug("Stopping all BlueChi components in all container...")
+
+        for _, node in nodes.items():
+            node.exec_run("systemctl stop bluechi-agent")
+
+        if ctrl is not None:
+            ctrl.exec_run("systemctl stop bluechi-agent")
+            ctrl.exec_run("systemctl stop bluechi-controller")
+
     def teardown(self, ctrl: BluechiControllerContainer, nodes: Dict[str, BluechiNodeContainer]):
         LOGGER.debug("Stopping and removing all container...")
 
@@ -177,14 +187,31 @@ class BluechiTest():
             traceback.print_exc()
             raise Exception("Failed to setup bluechi test")
 
+        test_result = None
         try:
             exec(ctrl_container, node_container)
-        finally:
-            try:
-                self.gather_logs(ctrl_container, node_container)
-                if self.run_with_valgrind:
-                    self.check_valgrind_logs()
-                if self.run_with_coverage:
-                    self.gather_coverage(ctrl_container, node_container)
-            finally:
-                self.teardown(ctrl_container, node_container)
+        except Exception as ex:
+            test_result = ex
+            LOGGER.error(f"Failed to execute test: {ex}")
+            traceback.print_exc()
+
+        try:
+            self.shutdown_bluechi(ctrl_container, node_container)
+        except Exception as ex:
+            LOGGER.error(f"Failed to shutdown BlueChi components: {ex}")
+            traceback.print_exc()
+
+        try:
+            self.gather_logs(ctrl_container, node_container)
+            if self.run_with_valgrind:
+                self.check_valgrind_logs()
+            if self.run_with_coverage:
+                self.gather_coverage(ctrl_container, node_container)
+        except Exception as ex:
+            LOGGER.error(f"Failed to collect logs: {ex}")
+            traceback.print_exc()
+
+        self.teardown(ctrl_container, node_container)
+
+        if test_result is not None:
+            raise test_result
