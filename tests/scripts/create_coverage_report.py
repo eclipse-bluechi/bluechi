@@ -35,10 +35,11 @@ def exec(ctrl: BluechiControllerContainer, nodes: Dict[str, BluechiNodeContainer
     report_dir_name = "/report"
 
     merge_all_info_files(path_to_info_files)
-    content = read_file(merge_file_name)
-    ctrl.create_file(merge_dir, merge_file_name, content)
-    ctrl.exec_run(f"genhtml {merge_dir}/{merge_file_name} --output-directory={report_dir_name}")
-    ctrl.get_file(report_dir_name, path_to_tests_results)
+    if os.path.exists(merge_file_name):
+        content = read_file(merge_file_name)
+        ctrl.create_file(merge_dir, merge_file_name, content)
+        ctrl.exec_run(f"genhtml {merge_dir}/{merge_file_name} --output-directory={report_dir_name}")
+        ctrl.get_file(report_dir_name, path_to_tests_results)
 
 
 def test_create_coverag_report(
