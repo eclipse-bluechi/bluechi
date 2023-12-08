@@ -1,12 +1,14 @@
 FROM quay.io/centos/centos:stream9
 
-RUN dnf upgrade --refresh -y --nodocs && \
+RUN dnf upgrade --refresh --nodocs -y && \
+    dnf install --nodocs epel-release -y && \
     dnf install --nodocs \
-        policycoreutils-python-utils \
-        python3-dasbus \
-        selinux-policy \
-        systemd \
-        systemd-devel \
-        valgrind \
-    -y && \
+            lcov \
+            policycoreutils-python-utils \
+            python3-dasbus \
+            selinux-policy \
+            systemd \
+            systemd-devel \
+            valgrind \
+        -y && \
     dnf -y clean all
