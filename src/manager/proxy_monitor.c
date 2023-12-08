@@ -201,7 +201,6 @@ static int proxy_monitor_send_state_changed_callback(
 
 int proxy_monitor_send_state_changed(
                 ProxyMonitor *monitor, const char *active_state, const char *substate, const char *reason) {
-        _cleanup_sd_bus_error_ sd_bus_error error = SD_BUS_ERROR_NULL;
         int r = sd_bus_call_method_async(
                         monitor->node->agent_bus,
                         NULL,
@@ -219,7 +218,7 @@ int proxy_monitor_send_state_changed(
                 bc_log_errorf("Failed to send proxy state changed on node %s object %s: %s",
                               monitor->node->name,
                               monitor->proxy_object_path,
-                              error.message);
+                              strerror(-r));
         }
         return r;
 }
@@ -237,7 +236,6 @@ static int proxy_monitor_send_new_callback(sd_bus_message *m, void *userdata, UN
 }
 
 int proxy_monitor_send_new(ProxyMonitor *monitor, const char *reason) {
-        _cleanup_sd_bus_error_ sd_bus_error error = SD_BUS_ERROR_NULL;
         int r = sd_bus_call_method_async(
                         monitor->node->agent_bus,
                         NULL,
@@ -253,7 +251,7 @@ int proxy_monitor_send_new(ProxyMonitor *monitor, const char *reason) {
                 bc_log_errorf("Failed to send proxy new on node %s object %s: %s",
                               monitor->node->name,
                               monitor->proxy_object_path,
-                              error.message);
+                              strerror(-r));
         }
         return r;
 }
@@ -271,7 +269,6 @@ static int proxy_monitor_send_removed_callback(sd_bus_message *m, void *userdata
 }
 
 int proxy_monitor_send_removed(ProxyMonitor *monitor, const char *reason) {
-        _cleanup_sd_bus_error_ sd_bus_error error = SD_BUS_ERROR_NULL;
         int r = sd_bus_call_method_async(
                         monitor->node->agent_bus,
                         NULL,
@@ -287,7 +284,7 @@ int proxy_monitor_send_removed(ProxyMonitor *monitor, const char *reason) {
                 bc_log_errorf("Failed to send proxy removed on node %s object %s: %s",
                               monitor->node->name,
                               monitor->proxy_object_path,
-                              error.message);
+                              strerror(-r));
         }
         return r;
 }
