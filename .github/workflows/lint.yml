@@ -14,6 +14,7 @@ jobs:
       clang: ${{ steps.filter.outputs.clang }}
       md: ${{ steps.filter.outputs.md }}
       python: ${{ steps.filter.outputs.python }}
+      apispec: ${{ steps.filter.outputs.apispec }}
     steps:
       - name: Detect changed files
         uses: dorny/paths-filter@v2
@@ -141,10 +142,13 @@ jobs:
         run: | 
           python3 -m ensurepip --default-pip
           python3 -m pip install -r src/bindings/generator/requirements.txt
+          pip install wheel
+          dnf install -y python3-gobject
       
-      - name: Generate python bindings
+      - name: Generate and build python bindings
         run: |
           ./build-scripts/generate-bindings.sh python
+          ./build-scripts/build-bindings.sh python
 
       - name: Check for changes in generated python code
         run: |
