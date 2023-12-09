@@ -4,9 +4,7 @@
 # Important note: 
 # Run from root directory
 
-# Parse package version from the project
-meson setup builddir
-VERSION="$(meson introspect --projectinfo builddir | jq -r '.version')"
+VERSION=$($(dirname "$(readlink -f "$0")")/version.sh)
 
 function python() {
     # Package python bindings
