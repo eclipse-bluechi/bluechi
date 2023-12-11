@@ -3,7 +3,7 @@
 
 The `bluechi-agent` component also includes two systemd template services, `bluechi-proxy@.service` and `bluechi-dep@.service`, which are the core of the proxy service mechanism to resolve cross-node dependencies. Consider the following example:
 
-![structure](../img/bluechi_proxy_service_multi_node.png)
+![structure](../assets/img/bluechi_proxy_service_multi_node.png)
 
 The `producer.service` depends on the `mqtt.service` running on a different node. In a single node setup, systemd unit mechanisms like `Wants` would be sufficient to define such a relationship. Based on BlueChi's proxy service feature the same systemd keywords can be used to express this dependency - with a small addition:
 
@@ -43,7 +43,7 @@ In addition, when the last dependency of the proxy service on a node exits, the 
 
 Based on the described example, the following diagram visualizes the architecture of the BlueChi proxy services:
 
-![BlueChi-Proxy Architecture diagram](../img/bluechi_proxy_architecture.png)
+![BlueChi-Proxy Architecture diagram](../assets/img/bluechi_proxy_architecture.png)
 
 ## Limitations
 
