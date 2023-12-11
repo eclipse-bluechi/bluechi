@@ -3,7 +3,7 @@
 
 This section describes different scenarios of cross-node dependencies between services, how to resolve them using BlueChi's proxy service feature and which systemd mechanisms to use for the desired behaviour. As a baseline, the term `source.service` will be used for the systemd service that depends on a remote service, which will be referred to as `target.service`.
 
-![Using Proxy Services](../img/bluechi_using_proxy_services.png)
+![Using Proxy Services](../assets/img/bluechi_using_proxy_services.png)
 
 !!! Note
 

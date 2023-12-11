@@ -3,7 +3,7 @@
 
 In practice, it is a common scenario that a service running on Node A requires another service to run on Node B. Consider the following example:
 
-![BlueChi cross-node dependency example](../img/bluechi_cross_node_dependency.png)
+![BlueChi cross-node dependency example](../assets/img/bluechi_cross_node_dependency.png)
 
 The overall service consists of two applications - a webservice rendering an HTML and a CDN providing assets such as images.
 
@@ -20,7 +20,7 @@ On the raspberry pi, first create a temporary directory and add an example image
 ```bash
 mkdir -p /tmp/bluechi-cdn
 cd /tmp/bluechi-cdn
-wget https://raw.githubusercontent.com/eclipse-bluechi/bluechi/main/doc/docs/img/bluechi_architecture.jpg
+wget https://raw.githubusercontent.com/eclipse-bluechi/bluechi/main/doc/docs/bluechi_architecture.jpg
 ```
 
 For the sake of simplicity, python's [http.server module](https://docs.python.org/3/library/http.server.html) is used to simulate a CDN. Create a new file `/etc/systemd/system/bluechi-cdn.service` and paste the following systemd unit definition:

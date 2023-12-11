@@ -3,7 +3,7 @@
 
 BlueChi's two core components - the controller and the agent - can run alongside each other on the same machine. A single node setup like this is one of the quickest way to get started. This section describes how to achieve that. The diagram below depicts the desired state of the system:
 
-![BlueChi single node setup diagram](../img/bluechi_setup_single_node.png)
+![BlueChi single node setup diagram](../assets/img/bluechi_setup_single_node.png)
 
 ## Installation and configuration
 

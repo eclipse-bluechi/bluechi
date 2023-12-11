@@ -2,7 +2,7 @@
 
 The image below depicts a generic overview of the BlueChi architecture:
 
-![BlueChi Architecture diagram](img/bluechi_architecture_overview.png)
+![BlueChi Architecture diagram](assets/img/bluechi_architecture_overview.png)
 
 Any application that wants to integrate with BlueChi does so via it's public D-Bus API on the local system bus. These
 custom applications can be written in [a variety of languages](./api/examples.md).

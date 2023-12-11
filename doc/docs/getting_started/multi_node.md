@@ -3,7 +3,7 @@
 
 BlueChi is intended for multi-node environments with a predefined number of nodes. This section describes how to set it up based on an example with two machines - a laptop and a raspberry pi. The diagram below depicts the desired state of the system:
 
-![BlueChi multi node setup diagram](../img/bluechi_setup_multi_node.png)
+![BlueChi multi node setup diagram](../assets/img/bluechi_setup_multi_node.png)
 
 ## Installation and configuration
 
