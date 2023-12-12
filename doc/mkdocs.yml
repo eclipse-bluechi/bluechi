@@ -14,7 +14,11 @@ nav:
     - Multi-Node Setup: getting_started/multi_node.md
     - Using bluechictl: getting_started/examples_bluechictl.md
     - Cross-node dependencies: getting_started/cross_node_dependencies.md
+    - Securing connection with mTLS: getting_started/securing_multi_node.md
   - Configuration: configuration.md
+  - Monitoring:
+    - monitoring/index.md
+    - Peer Listener: monitoring/peers.md
   - Cross-Node Dependencies:
     - cross_node_dependencies/index.md
     - Proxy Services: cross_node_dependencies/proxy_services.md
