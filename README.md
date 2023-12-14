@@ -1,5 +1,5 @@
 <!-- markdownlint-disable-file MD041 -->
-![BlueChi logo](https://raw.githubusercontent.com/eclipse-bluechi/bluechi/main/logo/bluechi-logo-vert.png)
+![BlueChi logo](https://raw.githubusercontent.com/eclipse-bluechi/bluechi/main/logo/bluechi-logo-horiz.png)
 
 # BlueChi: A systemd service controller for multi-node environments
 
