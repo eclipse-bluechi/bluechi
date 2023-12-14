@@ -1,4 +1,7 @@
-# BlueChi
+<!-- markdownlint-disable-file MD041 -->
+![BlueChi logo](https://raw.githubusercontent.com/eclipse-bluechi/bluechi/main/logo/bluechi-logo-vert.png)
+
+# BlueChi: A systemd service controller for multi-node environments
 
 [![Copr build status](https://copr.fedorainfracloud.org/coprs/g/centos-automotive-sig/bluechi-snapshot/package/bluechi/status_image/last_build.png)](https://copr.fedorainfracloud.org/coprs/g/centos-automotive-sig/bluechi-snapshot/package/bluechi/)
 
