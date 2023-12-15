@@ -20,6 +20,9 @@ def exec(ctrl: BluechiControllerContainer, nodes: Dict[str, BluechiNodeContainer
     ctrl.exec_run("systemctl stop bluechi-controller")
     ctrl.wait_for_unit_state_to_be('bluechi-controller', 'inactive')
 
+    # lets wait a bit so the agent has at least one failing reconnect attempt
+    time.sleep(1)
+
     ctrl.exec_run("systemctl start bluechi-controller")
     ctrl.wait_for_bluechi()
     # since the heartbeat (incl. a try to reconnect) is going to happen
