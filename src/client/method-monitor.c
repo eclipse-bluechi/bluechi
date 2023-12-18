@@ -1,10 +1,11 @@
 /* SPDX-License-Identifier: LGPL-2.1-or-later */
+#include "method-monitor.h"
+#include "client.h"
+
 #include "libbluechi/common/common.h"
 #include "libbluechi/common/list.h"
 #include "libbluechi/common/time-util.h"
 #include "libbluechi/service/shutdown.h"
-
-#include "method_monitor.h"
 
 static int start_event_loop(sd_bus *api_bus) {
         _cleanup_sd_event_ sd_event *event = NULL;
@@ -161,7 +162,7 @@ static int on_unit_properties_changed_signal(
 }
 
 /* units are comma separated */
-int method_monitor_units_on_nodes(sd_bus *api_bus, char *node, char *units) {
+static int method_monitor_units_on_nodes(sd_bus *api_bus, char *node, char *units) {
         _cleanup_sd_bus_error_ sd_bus_error error = SD_BUS_ERROR_NULL;
         _cleanup_sd_bus_message_ sd_bus_message *reply = NULL;
         char *monitor_path = NULL;
@@ -622,4 +623,30 @@ int method_monitor_node_connection_state(sd_bus *api_bus) {
         print_nodes(nodes);
 
         return start_event_loop(api_bus);
+}
+
+int method_monitor(Command *command, void *userdata) {
+        Client *client = (Client *) userdata;
+        /* monitor node connection status changes */
+        if (command->opargc == 1 && streq(command->opargv[0], "node-connection")) {
+                return method_monitor_node_connection_state(client->api_bus);
+        }
+
+        /* monitor systemd units on the specified nodes */
+        char *arg0 = SYMBOL_WILDCARD;
+        char *arg1 = SYMBOL_WILDCARD;
+        switch (command->opargc) {
+        case 0:
+                break;
+        case 1:
+                arg0 = command->opargv[0];
+                break;
+        case 2:
+                arg0 = command->opargv[0];
+                arg1 = command->opargv[1];
+                break;
+        default:
+                return -EINVAL;
+        }
+        return method_monitor_units_on_nodes(client->api_bus, arg0, arg1);
 }
