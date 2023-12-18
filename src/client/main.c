@@ -3,52 +3,86 @@
 #include <getopt.h>
 #include <stdlib.h>
 
-#include "libbluechi/common/common.h"
+#include "libbluechi/cli/command.h"
 #include "libbluechi/common/opt.h"
 
 #include "client.h"
+#include "method-help.h"
+#include "method-list-units.h"
+#include "method-loglevel.h"
+#include "method-metrics.h"
+#include "method-monitor.h"
+#include "method-status.h"
+#include "method-unit-actions.h"
 
-const struct option options[] = {
+#define OPT_NONE 0u
+#define OPT_HELP 1u << 0u
+#define OPT_FILTER 1u << 1u
+
+int method_version(UNUSED Command *command, UNUSED void *userdata) {
+        printf("bluechictl version %s\n", CONFIG_H_BC_VERSION);
+        return 0;
+}
+
+const Method methods[] = {
+        {"help",           0, 0,       OPT_NONE,   method_help,          usage_bluechi},
+        { "list-units",    0, 1,       OPT_FILTER, method_list_units,    usage_bluechi},
+        { "start",         2, 2,       OPT_NONE,   method_start,         usage_bluechi},
+        { "stop",          2, 2,       OPT_NONE,   method_stop,          usage_bluechi},
+        { "freeze",        2, 2,       OPT_NONE,   method_freeze,        usage_bluechi},
+        { "thaw",          2, 2,       OPT_NONE,   method_thaw,          usage_bluechi},
+        { "restart",       2, 2,       OPT_NONE,   method_restart,       usage_bluechi},
+        { "reload",        2, 2,       OPT_NONE,   method_reload,        usage_bluechi},
+        { "monitor",       0, 2,       OPT_NONE,   method_monitor,       usage_bluechi},
+        { "metrics",       1, 1,       OPT_NONE,   method_metrics,       usage_bluechi},
+        { "enable",        2, ARG_ANY, OPT_NONE,   method_enable,        usage_bluechi},
+        { "disable",       2, ARG_ANY, OPT_NONE,   method_disable,       usage_bluechi},
+        { "daemon-reload", 1, 1,       OPT_NONE,   method_daemon_reload, usage_bluechi},
+        { "status",        2, ARG_ANY, OPT_NONE,   method_status,        usage_bluechi},
+        { "set-loglevel",  1, 2,       OPT_NONE,   method_set_loglevel,  usage_bluechi},
+        { "version",       0, 0,       OPT_NONE,   method_version,       usage_bluechi},
+        { NULL,            0, 0,       0,          NULL,                 NULL         }
+};
+
+const OptionType option_types[] = {
+        {ARG_FILTER_SHORT, ARG_FILTER, OPT_FILTER},
+        { 0,               NULL,       0         }
+};
+
+#define OPTIONS_STR ARG_HELP_SHORT_S ARG_FILTER_SHORT_S
+const struct option getopt_options[] = {
         {ARG_HELP,    no_argument,       0, ARG_HELP_SHORT  },
         { ARG_FILTER, required_argument, 0, ARG_FILTER_SHORT},
         { NULL,       0,                 0, '\0'            }
 };
 
-#define OPTIONS_STR ARG_HELP_SHORT_S ARG_FILTER_SHORT_S
-
-static char *op;
-static char **opargv;
-static int opargc;
-static bool no_action = false;
-
-static void usage(char *argv[]) {
-        print_client_usage(argv[0]);
+static void usage() {
+        method_help(NULL, NULL);
 }
 
-static int get_opts(int argc, char *argv[], char **opt_filter_glob) {
+static int parse_cli_opts(int argc, char *argv[], Command *command) {
         int opt = 0;
 
-        while ((opt = getopt_long(argc, argv, OPTIONS_STR, options, NULL)) != -1) {
+        while ((opt = getopt_long(argc, argv, OPTIONS_STR, getopt_options, NULL)) != -1) {
                 if (opt == ARG_HELP_SHORT) {
-                        usage(argv);
-                        no_action = true;
-                        return 0;
-                } else if (opt == ARG_FILTER_SHORT) {
-                        *opt_filter_glob = strdup(optarg);
-                } else {
-                        fprintf(stderr, "Unsupported option %c\n", opt);
-                        usage(argv);
+                        command->is_help = true;
+                } else if (opt == GETOPT_UNKNOWN_OPTION) {
+                        // Unrecognized option, getopt_long() prints error
                         return -EINVAL;
+                } else {
+                        const OptionType *option_type = get_option_type(option_types, opt);
+                        assert(option_type);
+                        // Recognized option, add it to the list
+                        command_add_option(command, opt, optarg, option_type);
                 }
         }
 
         if (optind < argc) {
-                op = argv[optind++];
-                opargv = &argv[optind];
-                opargc = argc - optind;
-        } else {
+                command->op = argv[optind++];
+                command->opargv = &argv[optind];
+                command->opargc = argc - optind;
+        } else if (!command->is_help) {
                 fprintf(stderr, "No command given\n");
-                usage(argv);
                 return -EINVAL;
         }
 
@@ -57,18 +91,31 @@ static int get_opts(int argc, char *argv[], char **opt_filter_glob) {
 
 int main(int argc, char *argv[]) {
         int r = 0;
-
-        _cleanup_free_ char *opt_filter_glob = NULL;
-        r = get_opts(argc, argv, &opt_filter_glob);
+        _cleanup_command_ Command *command = new_command();
+        r = parse_cli_opts(argc, argv, command);
         if (r < 0) {
+                usage();
                 return EXIT_FAILURE;
         }
-        if (no_action) {
+        if (command->op == NULL && command->is_help) {
+                usage();
                 return EXIT_SUCCESS;
         }
 
-        _cleanup_client_ Client *client = new_client(op, opargc, opargv, opt_filter_glob);
-        r = client_call_manager(client);
+        command->method = methods_get_method(command->op, methods);
+        if (command->method == NULL) {
+                fprintf(stderr, "Method %s not found\n", command->op);
+                usage();
+                return EXIT_FAILURE;
+        }
+
+        _cleanup_client_ Client *client = new_client();
+        r = client_open_sd_bus(client);
+        if (r < 0) {
+                return EXIT_FAILURE;
+        }
+
+        r = command_execute(command, client);
         if (r < 0) {
                 return EXIT_FAILURE;
         }

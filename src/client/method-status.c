@@ -1,9 +1,9 @@
 /* SPDX-License-Identifier: LGPL-2.1-or-later */
+#include "method-status.h"
+#include "client.h"
+
 #include "libbluechi/bus/utils.h"
 #include "libbluechi/common/common.h"
-
-#include "client.h"
-#include "method_status.h"
 
 typedef struct unit_info_t {
         const char *id;
@@ -234,7 +234,7 @@ static int get_status_unit_on(Client *client, char *node_name, char *unit_name, 
         _cleanup_sd_bus_message_ sd_bus_message *outgoing_message = NULL;
         unit_info_t unit_info = { 0 };
 
-        r = create_message_new_method_call(client, node_name, "GetUnitProperties", &outgoing_message);
+        r = client_create_message_new_method_call(client, node_name, "GetUnitProperties", &outgoing_message);
         if (r < 0) {
                 fprintf(stderr, "Failed to create a new message: %s\n", strerror(-r));
                 return r;
@@ -263,7 +263,7 @@ static int get_status_unit_on(Client *client, char *node_name, char *unit_name, 
         return 0;
 }
 
-int method_status_unit_on(Client *client, char *node_name, char **units, size_t units_count) {
+static int method_status_unit_on(Client *client, char *node_name, char **units, size_t units_count) {
         unsigned i = 0;
 
         size_t max_name_len = get_max_name_len(units, units_count);
@@ -282,4 +282,8 @@ int method_status_unit_on(Client *client, char *node_name, char **units, size_t 
         }
 
         return 0;
+}
+
+int method_status(Command *command, void *userdata) {
+        return method_status_unit_on(userdata, command->opargv[0], &command->opargv[1], command->opargc - 1);
 }

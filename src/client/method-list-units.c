@@ -1,7 +1,26 @@
 /* SPDX-License-Identifier: LGPL-2.1-or-later */
+#include "method-list-units.h"
+#include "client.h"
+
+#include "libbluechi/common/opt.h"
 #include "libbluechi/common/string-util.h"
 
-#include "method_list_units.h"
+typedef void (*print_unit_list_fn)(UnitList *unit_list, const char *glob_filter);
+
+struct UnitList {
+        int ref_count;
+
+        LIST_FIELDS(UnitList, node_units);
+
+        LIST_HEAD(UnitInfo, units);
+};
+
+UnitList *new_unit_list();
+UnitList *unit_list_ref(UnitList *unit_list);
+void unit_list_unref(UnitList *unit_list);
+
+DEFINE_CLEANUP_FUNC(UnitList, unit_list_unref)
+#define _cleanup_unit_list_ _cleanup_(unit_list_unrefp)
 
 static int
                 fetch_unit_list(sd_bus *api_bus,
@@ -50,7 +69,7 @@ static int
         return r;
 }
 
-int method_list_units_on_all(sd_bus *api_bus, print_unit_list_fn print, const char *glob_filter) {
+static int method_list_units_on_all(sd_bus *api_bus, print_unit_list_fn print, const char *glob_filter) {
         _cleanup_unit_list_ UnitList *unit_list = new_unit_list();
 
         int r = fetch_unit_list(
@@ -70,7 +89,7 @@ int method_list_units_on_all(sd_bus *api_bus, print_unit_list_fn print, const ch
         return 0;
 }
 
-int method_list_units_on(
+static int method_list_units_on(
                 sd_bus *api_bus, const char *node_name, print_unit_list_fn print, const char *glob_filter) {
         int r = 0;
         _cleanup_unit_list_ UnitList *unit_list = new_unit_list();
@@ -148,4 +167,13 @@ void print_unit_list_simple(UnitList *unit_list, const char *glob_filter) {
                                unit->sub_state);
                 }
         }
+}
+
+int method_list_units(Command *command, void *userdata) {
+        Client *client = (Client *) userdata;
+        char *filter_glob = command_get_option(command, ARG_FILTER_SHORT);
+        if (command->opargc == 0) {
+                return method_list_units_on_all(client->api_bus, print_unit_list_simple, filter_glob);
+        }
+        return method_list_units_on(client->api_bus, command->opargv[0], print_unit_list_simple, filter_glob);
 }

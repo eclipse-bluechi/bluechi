@@ -40,3 +40,5 @@
 #define ARG_VERSION "version"
 #define ARG_VERSION_SHORT 'v'
 #define ARG_VERSION_SHORT_S "v"
+
+#define GETOPT_UNKNOWN_OPTION '?'

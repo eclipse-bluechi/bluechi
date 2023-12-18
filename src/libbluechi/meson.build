@@ -5,6 +5,8 @@ libbluechi_src = [
     'bus/bus.h',
     'bus/utils.c',
     'bus/utils.h',
+    'cli/command.c',
+    'cli/command.h',
     'common/cfg.c',
     'common/cfg.h',
     'common/common.h',
