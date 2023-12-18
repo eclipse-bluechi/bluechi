@@ -371,11 +371,11 @@ static int manager_accept_node_connection(
 
         int r = bus_socket_set_no_delay(dbus_server);
         if (r < 0) {
-                bc_log_warn("Failed to set NO_DELAY on socket");
+                bc_log_warnf("Failed to set NO_DELAY on socket: %s", strerror(-r));
         }
         r = bus_socket_set_keepalive(dbus_server);
         if (r < 0) {
-                bc_log_warn("Failed to set KEEPALIVE on socket");
+                bc_log_warnf("Failed to set KEEPALIVE on socket: %s", strerror(-r));
         }
 
         /* Add anonymous node */
