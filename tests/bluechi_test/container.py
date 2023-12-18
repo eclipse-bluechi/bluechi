@@ -205,6 +205,13 @@ class BluechiContainer():
         self.extract_valgrind_logs(valgrind_log_path_controller, bluechi_valgrind_log_target_path, data_dir)
         self.extract_valgrind_logs(valgrind_log_path_agent, bluechi_agent_valgrind_log_target_path, data_dir)
 
+    def restart_with_config_file(self, config_file_location, service):
+        self.exec_run(f"sed -i '/ExecStart=/c\\ExecStart=/usr/libexec/{service} -c "
+                      f"{config_file_location}' "
+                      f"/usr/lib/systemd/system/{service}.service")
+        self.exec_run("systemctl daemon-reload")
+        self.exec_run(f"systemctl restart {service}.service")
+
 
 class BluechiNodeContainer(BluechiContainer):
 
