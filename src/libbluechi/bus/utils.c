@@ -336,6 +336,12 @@ int bus_socket_set_keepalive(sd_bus *bus) {
                 return -errno;
         }
 
+        int enable = 1;
+        r = setsockopt(fd, IPPROTO_IP, IP_RECVERR, &enable, sizeof(int));
+        if (r < 0) {
+                return -errno;
+        }
+
         return 0;
 }
 
