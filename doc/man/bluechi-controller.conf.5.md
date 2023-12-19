@@ -52,6 +52,15 @@ By default `journald` is used as the target.
 
 If this flag is set to `true`, no logs are written by bluechi. By default the flag is set to `false`.
 
+#### **IPReceiveErrors** (string)
+
+If this flag is set to `true`, it enables extended, reliable error message passing for
+the peer connection with all agents. This results in BlueChi receiving errors such as
+host unreachable ICMP packets instantly and possibly dropping the connection. This is
+useful to detect disconnects faster, but should be used with care as this might cause
+unnecessary disconnects in less robut networks. Default: true.
+
+
 ## Example
 
 A basic example of a configuration file for `bluechi`:

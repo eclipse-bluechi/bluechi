@@ -65,6 +65,8 @@ struct Agent {
 
         bool metrics_enabled;
 
+        bool ip_receive_errors;
+
         sd_event *event;
 
         sd_bus *api_bus;

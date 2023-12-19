@@ -398,9 +398,35 @@ const char *cfg_dump(struct config *config) {
         return cfg_info;
 }
 
+static int cfg_def_conf(struct config *config) {
+        int result = 0;
+
+        if ((result = cfg_set_value(config, CFG_LOG_LEVEL, log_level_to_string(LOG_LEVEL_INFO))) != 0) {
+                return result;
+        }
+
+        if ((result = cfg_set_value(config, CFG_LOG_TARGET, BC_LOG_TARGET_JOURNALD)) != 0) {
+                return result;
+        }
+
+        if ((result = cfg_set_value(config, CFG_LOG_IS_QUIET, NULL)) != 0) {
+                return result;
+        }
+
+        if ((result = cfg_set_value(config, CFG_IP_RECEIVE_ERRORS, BC_DEFAULT_IP_RECEIVE_ERROR)) != 0) {
+                return result;
+        }
+
+        return 0;
+}
+
 int cfg_agent_def_conf(struct config *config) {
         int result = cfg_set_default_section(config, CFG_SECT_AGENT);
         if (result != 0) {
+                return result;
+        }
+
+        if ((result = cfg_def_conf(config)) != 0) {
                 return result;
         }
 
@@ -421,19 +447,6 @@ int cfg_agent_def_conf(struct config *config) {
                 return result;
         }
 
-        const char *LOG_LEVEL_INFO = "INFO";
-        if ((result = cfg_set_value(config, CFG_LOG_LEVEL, LOG_LEVEL_INFO)) != 0) {
-                return result;
-        }
-
-        if ((result = cfg_set_value(config, CFG_LOG_TARGET, BC_LOG_TARGET_JOURNALD)) != 0) {
-                return result;
-        }
-
-        if ((result = cfg_set_value(config, CFG_LOG_IS_QUIET, NULL)) != 0) {
-                return result;
-        }
-
         return 0;
 }
 
@@ -445,23 +458,15 @@ int cfg_manager_def_conf(struct config *config) {
                 return result;
         }
 
+        if ((result = cfg_def_conf(config)) != 0) {
+                return result;
+        }
+
         if ((result = cfg_set_value(config, CFG_MANAGER_PORT, BC_DEFAULT_PORT)) != 0) {
                 return result;
         }
 
         if ((result = cfg_set_value(config, CFG_ALLOWED_NODE_NAMES, "")) != 0) {
-                return result;
-        }
-
-        if ((result = cfg_set_value(config, CFG_LOG_LEVEL, log_level_to_string(LOG_LEVEL_INFO))) != 0) {
-                return result;
-        }
-
-        if ((result = cfg_set_value(config, CFG_LOG_TARGET, BC_LOG_TARGET_JOURNALD)) != 0) {
-                return result;
-        }
-
-        if ((result = cfg_set_value(config, CFG_LOG_IS_QUIET, NULL)) != 0) {
                 return result;
         }
 

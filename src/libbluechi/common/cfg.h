@@ -17,6 +17,7 @@
 #define CFG_NODE_NAME "NodeName"
 #define CFG_ALLOWED_NODE_NAMES "AllowedNodeNames"
 #define CFG_HEARTBEAT_INTERVAL "HeartbeatInterval"
+#define CFG_IP_RECEIVE_ERRORS "IPReceiveErrors"
 
 /*
  * Global section - this is used, when configuration options are specified in the configuration file

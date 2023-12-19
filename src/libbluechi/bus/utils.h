@@ -42,6 +42,7 @@ int bus_parse_unit_on_node_info(sd_bus_message *message, UnitInfo *u);
 
 int bus_socket_set_no_delay(sd_bus *bus);
 int bus_socket_set_keepalive(sd_bus *bus);
+int bus_socket_enable_recv_err(sd_bus *bus);
 
 bool bus_id_is_valid(const char *name);
 

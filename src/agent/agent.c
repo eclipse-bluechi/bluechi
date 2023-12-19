@@ -408,6 +408,7 @@ Agent *agent_new(void) {
         agent->connection_retry_count = 0;
         agent->wildcard_subscription_active = false;
         agent->metrics_enabled = false;
+        agent->ip_receive_errors = false;
         agent->disconnect_timestamp = 0;
 
         return steal_pointer(&agent);
@@ -622,6 +623,8 @@ bool agent_parse_config(Agent *agent, const char *configfile) {
                         return false;
                 }
         }
+
+        agent->ip_receive_errors = cfg_get_bool_value(agent->config, CFG_IP_RECEIVE_ERRORS);
 
         _cleanup_free_ const char *dumped_cfg = cfg_dump(agent->config);
         bc_log_debug_with_data("Final configuration used", "\n%s", dumped_cfg);
@@ -2399,6 +2402,12 @@ static bool agent_connect(Agent *agent) {
         r = bus_socket_set_keepalive(agent->peer_dbus);
         if (r < 0) {
                 bc_log_warn("Failed to set KEEPALIVE on socket");
+        }
+        if (agent->ip_receive_errors) {
+                r = bus_socket_enable_recv_err(agent->peer_dbus);
+                if (r < 0) {
+                        bc_log_warnf("Failed to enable receiving errors on socket: %s", strerror(-r));
+                }
         }
 
         r = sd_bus_add_object_vtable(

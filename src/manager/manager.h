@@ -26,6 +26,8 @@ struct Manager {
 
         bool metrics_enabled;
 
+        bool ip_receive_errors;
+
         int n_nodes;
         LIST_HEAD(Node, nodes);
         LIST_HEAD(Node, anonymous_nodes);
