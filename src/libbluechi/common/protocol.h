@@ -5,6 +5,8 @@
 
 #define BC_DEFAULT_PORT "842"
 #define BC_DEFAULT_HOST "127.0.0.1"
+/* Enable extended reliable error message passing */
+#define BC_DEFAULT_IP_RECEIVE_ERROR "true"
 
 #define BC_DBUS_NAME "org.eclipse.bluechi"
 #define BC_AGENT_DBUS_NAME "org.eclipse.bluechi.Agent"

@@ -41,6 +41,7 @@ Manager *manager_new(void) {
                 manager->api_bus_service_name = steal_pointer(&service_name);
                 manager->event = steal_pointer(&event);
                 manager->metrics_enabled = false;
+                manager->ip_receive_errors = false;
                 LIST_HEAD_INIT(manager->nodes);
                 LIST_HEAD_INIT(manager->anonymous_nodes);
                 LIST_HEAD_INIT(manager->jobs);
@@ -345,6 +346,8 @@ bool manager_parse_config(Manager *manager, const char *configfile) {
                 }
         }
 
+        manager->ip_receive_errors = cfg_get_bool_value(manager->config, CFG_IP_RECEIVE_ERRORS);
+
         _cleanup_free_ const char *dumped_cfg = cfg_dump(manager->config);
         bc_log_debug_with_data("Final configuration used", "\n%s", dumped_cfg);
 
@@ -376,6 +379,12 @@ static int manager_accept_node_connection(
         r = bus_socket_set_keepalive(dbus_server);
         if (r < 0) {
                 bc_log_warnf("Failed to set KEEPALIVE on socket: %s", strerror(-r));
+        }
+        if (manager->ip_receive_errors) {
+                r = bus_socket_enable_recv_err(dbus_server);
+                if (r < 0) {
+                        bc_log_warnf("Failed to enable receiving errors on socket: %s", strerror(-r));
+                }
         }
 
         /* Add anonymous node */
