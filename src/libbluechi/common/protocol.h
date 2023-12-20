@@ -3,14 +3,32 @@
 
 #include <errno.h>
 
+/* Time constants */
+#define USEC_PER_SEC 1000000
+#define USEC_PER_MSEC 1000
+
+/* Configuration defaults */
 #define BC_DEFAULT_PORT "842"
 #define BC_DEFAULT_HOST "127.0.0.1"
-/* Enable extended reliable error message passing */
+/* Number of seconds idle before sending keepalive packets. Value is set to socket option TCP_KEEPIDLE. */
+#define BC_DEFAULT_TCP_KEEPALIVE_TIME "1"
+/* Number of seconds idle between each keepalive packet. Value is set to socket option TCP_KEEPINTVL. */
+#define BC_DEFAULT_TCP_KEEPALIVE_INTERVAL "1"
+/* Number of keepalive packets without ACK till connection is dropped. Value is set to socket option TCP_KEEPCNT. */
+#define BC_DEFAULT_TCP_KEEPALIVE_COUNT "6"
+/* Enable extended reliable error message passing. Sets the socket option IP_RECVERR. */
 #define BC_DEFAULT_IP_RECEIVE_ERROR "true"
+/* High-level timeout for DBus calls */
+#define BC_DEFAULT_DBUS_TIMEOUT ((uint64_t) (USEC_PER_SEC * 30))
+/* Application-level heartbeat interval */
+#define AGENT_DEFAULT_HEARTBEAT_INTERVAL_MSEC "2000"
 
+
+/* BlueChi DBus service names */
 #define BC_DBUS_NAME "org.eclipse.bluechi"
 #define BC_AGENT_DBUS_NAME "org.eclipse.bluechi.Agent"
 
+/* Root object path */
 #define BC_OBJECT_PATH "/org/eclipse/bluechi"
 
 /* Public objects */
@@ -48,18 +66,15 @@
 #define BC_BUS_ERROR_ACTIVATION_FAILED "org.eclipse.bluechi.ActivationFailed"
 
 /* Systemd protocol */
-
 #define SYSTEMD_BUS_NAME "org.freedesktop.systemd1"
 #define SYSTEMD_OBJECT_PATH "/org/freedesktop/systemd1"
 #define SYSTEMD_MANAGER_IFACE "org.freedesktop.systemd1.Manager"
 #define SYSTEMD_UNIT_IFACE "org.freedesktop.systemd1.Unit"
 
-#define USEC_PER_SEC 1000000
-#define USEC_PER_MSEC 1000
-#define BC_DEFAULT_DBUS_TIMEOUT ((uint64_t) (USEC_PER_SEC * 30))
+/* Signal names */
+#define AGENT_HEARTBEAT_SIGNAL_NAME "Heartbeat"
 
 /* Typestrings */
-
 #define UNIT_INFO_TYPESTRING "ssssssouso"
 #define UNIT_INFO_STRUCT_TYPESTRING "(" UNIT_INFO_TYPESTRING ")"
 #define UNIT_INFO_STRUCT_ARRAY_TYPESTRING "a" UNIT_INFO_STRUCT_TYPESTRING
@@ -92,12 +107,6 @@ typedef enum UnitActiveState {
 
 const char *active_state_to_string(UnitActiveState s);
 UnitActiveState active_state_from_string(const char *s);
-
-/* Agent to BlueChi heartbeat signals */
-
-// Application-level heartbeat set at 2 seconds.
-#define AGENT_HEARTBEAT_INTERVAL_MSEC "2000"
-#define AGENT_HEARTBEAT_SIGNAL_NAME "Heartbeat"
 
 /* Constants */
 #define SYMBOL_WILDCARD "*"

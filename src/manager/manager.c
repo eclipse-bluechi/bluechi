@@ -10,7 +10,6 @@
 #include "libbluechi/common/time-util.h"
 #include "libbluechi/log/log.h"
 #include "libbluechi/service/shutdown.h"
-#include "libbluechi/socket.h"
 
 #include "job.h"
 #include "manager.h"
@@ -35,13 +34,19 @@ Manager *manager_new(void) {
                 return NULL;
         }
 
+        _cleanup_free_ SocketOptions *socket_opts = socket_options_new();
+        if (socket_opts == NULL) {
+                bc_log_error("Out of memory");
+                return NULL;
+        }
+
         Manager *manager = malloc0(sizeof(Manager));
         if (manager != NULL) {
                 manager->ref_count = 1;
                 manager->api_bus_service_name = steal_pointer(&service_name);
                 manager->event = steal_pointer(&event);
                 manager->metrics_enabled = false;
-                manager->ip_receive_errors = false;
+                manager->peer_socket_options = steal_pointer(&socket_opts);
                 LIST_HEAD_INIT(manager->nodes);
                 LIST_HEAD_INIT(manager->anonymous_nodes);
                 LIST_HEAD_INIT(manager->jobs);
@@ -100,6 +105,7 @@ void manager_unref(Manager *manager) {
         sd_event_unrefp(&manager->event);
 
         free_and_null(manager->api_bus_service_name);
+        free_and_null(manager->peer_socket_options);
 
         sd_event_source_unrefp(&manager->node_connection_source);
 
@@ -346,7 +352,35 @@ bool manager_parse_config(Manager *manager, const char *configfile) {
                 }
         }
 
-        manager->ip_receive_errors = cfg_get_bool_value(manager->config, CFG_IP_RECEIVE_ERRORS);
+        /* Set socket options used for peer connections with the agents */
+        const char *keepidle = cfg_get_value(manager->config, CFG_TCP_KEEPALIVE_TIME);
+        if (keepidle) {
+                if (socket_options_set_tcp_keepidle(manager->peer_socket_options, keepidle) < 0) {
+                        bc_log_error("Failed to set TCP KEEPIDLE");
+                        return false;
+                }
+        }
+        const char *keepintvl = cfg_get_value(manager->config, CFG_TCP_KEEPALIVE_INTERVAL);
+        if (keepintvl) {
+                if (socket_options_set_tcp_keepintvl(manager->peer_socket_options, keepintvl) < 0) {
+                        bc_log_error("Failed to set TCP KEEPINTVL");
+                        return false;
+                }
+        }
+        const char *keepcnt = cfg_get_value(manager->config, CFG_TCP_KEEPALIVE_COUNT);
+        if (keepcnt) {
+                if (socket_options_set_tcp_keepcnt(manager->peer_socket_options, keepcnt) < 0) {
+                        bc_log_error("Failed to set TCP KEEPCNT");
+                        return false;
+                }
+        }
+        if (socket_options_set_ip_recverr(
+                            manager->peer_socket_options,
+                            cfg_get_bool_value(manager->config, CFG_IP_RECEIVE_ERRORS)) < 0) {
+                bc_log_error("Failed to set IP RECVERR");
+                return false;
+        }
+
 
         _cleanup_free_ const char *dumped_cfg = cfg_dump(manager->config);
         bc_log_debug_with_data("Final configuration used", "\n%s", dumped_cfg);
@@ -372,20 +406,7 @@ static int manager_accept_node_connection(
                 return -1;
         }
 
-        int r = bus_socket_set_no_delay(dbus_server);
-        if (r < 0) {
-                bc_log_warnf("Failed to set NO_DELAY on socket: %s", strerror(-r));
-        }
-        r = bus_socket_set_keepalive(dbus_server);
-        if (r < 0) {
-                bc_log_warnf("Failed to set KEEPALIVE on socket: %s", strerror(-r));
-        }
-        if (manager->ip_receive_errors) {
-                r = bus_socket_enable_recv_err(dbus_server);
-                if (r < 0) {
-                        bc_log_warnf("Failed to enable receiving errors on socket: %s", strerror(-r));
-                }
-        }
+        bus_socket_set_options(dbus_server, manager->peer_socket_options);
 
         /* Add anonymous node */
         node = manager_add_node(manager, NULL);

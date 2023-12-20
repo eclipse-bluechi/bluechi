@@ -417,6 +417,19 @@ static int cfg_def_conf(struct config *config) {
                 return result;
         }
 
+        if ((result = cfg_set_value(config, CFG_TCP_KEEPALIVE_TIME, BC_DEFAULT_TCP_KEEPALIVE_TIME)) != 0) {
+                return result;
+        }
+
+        if ((result = cfg_set_value(config, CFG_TCP_KEEPALIVE_INTERVAL, BC_DEFAULT_TCP_KEEPALIVE_INTERVAL)) !=
+            0) {
+                return result;
+        }
+
+        if ((result = cfg_set_value(config, CFG_TCP_KEEPALIVE_COUNT, BC_DEFAULT_TCP_KEEPALIVE_COUNT)) != 0) {
+                return result;
+        }
+
         return 0;
 }
 
@@ -439,7 +452,8 @@ int cfg_agent_def_conf(struct config *config) {
                 return result;
         }
 
-        if ((result = cfg_set_value(config, CFG_HEARTBEAT_INTERVAL, AGENT_HEARTBEAT_INTERVAL_MSEC)) != 0) {
+        if ((result = cfg_set_value(config, CFG_HEARTBEAT_INTERVAL, AGENT_DEFAULT_HEARTBEAT_INTERVAL_MSEC)) !=
+            0) {
                 return result;
         }
 

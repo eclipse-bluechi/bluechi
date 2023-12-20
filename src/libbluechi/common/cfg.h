@@ -18,6 +18,9 @@
 #define CFG_ALLOWED_NODE_NAMES "AllowedNodeNames"
 #define CFG_HEARTBEAT_INTERVAL "HeartbeatInterval"
 #define CFG_IP_RECEIVE_ERRORS "IPReceiveErrors"
+#define CFG_TCP_KEEPALIVE_TIME "TCPKeepAliveTime"
+#define CFG_TCP_KEEPALIVE_INTERVAL "TCPKeepAliveInterval"
+#define CFG_TCP_KEEPALIVE_COUNT "TCPKeepAliveCount"
 
 /*
  * Global section - this is used, when configuration options are specified in the configuration file
