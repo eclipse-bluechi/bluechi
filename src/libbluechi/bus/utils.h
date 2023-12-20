@@ -5,6 +5,7 @@
 #include <systemd/sd-bus.h>
 
 #include "libbluechi/common/common.h"
+#include "libbluechi/socket.h"
 
 /* return < 0 for error, 0 to continue, 1 to stop, 2 to continue and skip (if value was not consumed) */
 typedef int (*bus_property_cb)(const char *key, const char *value_type, sd_bus_message *m, void *userdata);
@@ -40,9 +41,7 @@ void unit_unref(UnitInfo *unit);
 int bus_parse_unit_info(sd_bus_message *message, UnitInfo *u);
 int bus_parse_unit_on_node_info(sd_bus_message *message, UnitInfo *u);
 
-int bus_socket_set_no_delay(sd_bus *bus);
-int bus_socket_set_keepalive(sd_bus *bus);
-int bus_socket_enable_recv_err(sd_bus *bus);
+int bus_socket_set_options(sd_bus *bus, SocketOptions *opts);
 
 bool bus_id_is_valid(const char *name);
 

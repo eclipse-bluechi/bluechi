@@ -6,6 +6,7 @@
 
 #include "libbluechi/common/cfg.h"
 #include "libbluechi/common/common.h"
+#include "libbluechi/socket.h"
 
 #include "types.h"
 
@@ -26,7 +27,7 @@ struct Manager {
 
         bool metrics_enabled;
 
-        bool ip_receive_errors;
+        SocketOptions *peer_socket_options;
 
         int n_nodes;
         LIST_HEAD(Node, nodes);

@@ -3,3 +3,4 @@
 subdir('bus')
 subdir('common')
 subdir('log')
+subdir('socket')

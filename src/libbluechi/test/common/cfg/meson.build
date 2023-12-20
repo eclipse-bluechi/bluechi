@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: LGPL-2.1-or-later
 
 cfg_src = [
+  'cfg_def_conf_test',
   'cfg_get_set_test',
   'cfg_load_complete_configuration_test',
   'cfg_load_from_env_test',

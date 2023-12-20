@@ -72,7 +72,27 @@ If this flag is set to `true`, it enables extended, reliable error message passi
 the peer connection with the controller. This results in BlueChi receiving errors such as
 host unreachable ICMP packets instantly and possibly dropping the connection. This is
 useful to detect disconnects faster, but should be used with care as this might cause
-unnecessary disconnects in less robut networks. Default: true.
+unnecessary disconnects in less robut networks.
+Default: true.
+
+#### **TCPKeepAliveTime** (long)
+
+The number of seconds the TCP connection of the agent with the controller needs to be idle before
+keepalive packets are sent. When `TCPKeepAliveTime` is set to 0, the system default will be used.
+Default: 1s.
+
+#### **TCPKeepAliveInterval** (long)
+
+The number of seconds between each keepalive packet. When `TCPKeepAliveInterval` is set to 0,
+the system default will be used.
+Default: 1s.
+
+#### **TCPKeepAliveCount** (long)
+
+The number of keepalive packets without ACK from the controller till the connection is
+dropped. When `TCPKeepAliveCount` is set to 0, the system default will be used.
+Default: 6.
+
 
 ## Example
 

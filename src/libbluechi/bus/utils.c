@@ -1,18 +1,11 @@
 /* SPDX-License-Identifier: LGPL-2.1-or-later */
 #include <errno.h>
 #include <netinet/in.h>
-#include <netinet/tcp.h>
 #include <sys/socket.h>
-
-#include "utils.h"
 
 #include "libbluechi/common/string-util.h"
 
-/* Number of seconds idle before sending keepalive packets */
-#define AGENT_KEEPALIVE_SOCKET_KEEPIDLE_SECS 1
-
-/* Number of seconds idle between each keepalive packet */
-#define AGENT_KEEPALIVE_SOCKET_KEEPINTVL_SECS 1
+#include "utils.h"
 
 int bus_parse_properties_foreach(sd_bus_message *m, bus_property_cb cb, void *userdata) {
         bool stop = false;
@@ -280,82 +273,13 @@ char *bus_path_escape(const char *s) {
         return r;
 }
 
-static bool is_socket_tcp(int fd) {
-        int type = 0;
-        socklen_t length = sizeof(int);
-
-        getsockopt(fd, SOL_SOCKET, SO_DOMAIN, &type, &length);
-
-        return type == AF_INET || type == AF_INET6;
-}
-
-int bus_socket_set_no_delay(sd_bus *bus) {
+int bus_socket_set_options(sd_bus *bus, SocketOptions *opts) {
         int fd = sd_bus_get_fd(bus);
         if (fd < 0) {
                 return fd;
         }
 
-        if (!is_socket_tcp(fd)) {
-                return 0;
-        }
-
-        int flag = 1;
-        int r = setsockopt(fd, SOL_TCP, TCP_NODELAY, (char *) &flag, sizeof(int));
-        if (r < 0) {
-                return -errno;
-        }
-
-        return 0;
-}
-
-int bus_socket_set_keepalive(sd_bus *bus) {
-        int fd = sd_bus_get_fd(bus);
-        if (fd < 0) {
-                return fd;
-        }
-
-        if (!is_socket_tcp(fd)) {
-                return 0;
-        }
-
-        int flag = 1;
-        int r = setsockopt(fd, SOL_SOCKET, SO_KEEPALIVE, (char *) &flag, sizeof(int));
-        if (r < 0) {
-                return -errno;
-        }
-
-        int keepidle = AGENT_KEEPALIVE_SOCKET_KEEPIDLE_SECS;
-        r = setsockopt(fd, IPPROTO_TCP, TCP_KEEPIDLE, &keepidle, sizeof(int));
-        if (r < 0) {
-                return -errno;
-        }
-
-        int keepintvl = AGENT_KEEPALIVE_SOCKET_KEEPINTVL_SECS;
-        r = setsockopt(fd, IPPROTO_TCP, TCP_KEEPINTVL, &keepintvl, sizeof(int));
-        if (r < 0) {
-                return -errno;
-        }
-
-        return 0;
-}
-
-int bus_socket_enable_recv_err(sd_bus *bus) {
-        int fd = sd_bus_get_fd(bus);
-        if (fd < 0) {
-                return fd;
-        }
-
-        if (!is_socket_tcp(fd)) {
-                return -EINVAL;
-        }
-
-        int flag = 1;
-        int r = setsockopt(fd, IPPROTO_IP, IP_RECVERR, &flag, sizeof(int));
-        if (r < 0) {
-                return -errno;
-        }
-
-        return 0;
+        return socket_set_options(fd, opts);
 }
 
 /*

@@ -390,10 +390,24 @@ Agent *agent_new(void) {
                 return NULL;
         }
 
+        _cleanup_free_ SocketOptions *socket_opts = socket_options_new();
+        if (socket_opts == NULL) {
+                bc_log_error("Out of memory");
+                return NULL;
+        }
+
+        struct hashmap *unit_infos = hashmap_new(
+                        sizeof(AgentUnitInfo), 0, 0, 0, unit_info_hash, unit_info_compare, unit_info_clear, NULL);
+        if (unit_infos == NULL) {
+                return NULL;
+        }
+
         _cleanup_agent_ Agent *agent = malloc0(sizeof(Agent));
         agent->ref_count = 1;
         agent->event = steal_pointer(&event);
         agent->api_bus_service_name = steal_pointer(&service_name);
+        agent->peer_socket_options = steal_pointer(&socket_opts);
+        agent->unit_infos = unit_infos;
         LIST_HEAD_INIT(agent->outstanding_requests);
         LIST_HEAD_INIT(agent->tracked_jobs);
         LIST_HEAD_INIT(agent->proxy_services);
@@ -408,7 +422,6 @@ Agent *agent_new(void) {
         agent->connection_retry_count = 0;
         agent->wildcard_subscription_active = false;
         agent->metrics_enabled = false;
-        agent->ip_receive_errors = false;
         agent->disconnect_timestamp = 0;
 
         return steal_pointer(&agent);
@@ -624,7 +637,35 @@ bool agent_parse_config(Agent *agent, const char *configfile) {
                 }
         }
 
-        agent->ip_receive_errors = cfg_get_bool_value(agent->config, CFG_IP_RECEIVE_ERRORS);
+        /* Set socket options used for peer connections with the agents */
+        const char *keepidle = cfg_get_value(agent->config, CFG_TCP_KEEPALIVE_TIME);
+        if (keepidle) {
+                if (socket_options_set_tcp_keepidle(agent->peer_socket_options, keepidle) < 0) {
+                        bc_log_error("Failed to set TCP KEEPIDLE");
+                        return false;
+                }
+        }
+        const char *keepintvl = cfg_get_value(agent->config, CFG_TCP_KEEPALIVE_INTERVAL);
+        if (keepintvl) {
+                if (socket_options_set_tcp_keepintvl(agent->peer_socket_options, keepintvl) < 0) {
+                        bc_log_error("Failed to set TCP KEEPINTVL");
+                        return false;
+                }
+        }
+        const char *keepcnt = cfg_get_value(agent->config, CFG_TCP_KEEPALIVE_COUNT);
+        if (keepcnt) {
+                if (socket_options_set_tcp_keepcnt(agent->peer_socket_options, keepcnt) < 0) {
+                        bc_log_error("Failed to set TCP KEEPCNT");
+                        return false;
+                }
+        }
+        if (socket_options_set_ip_recverr(
+                            agent->peer_socket_options,
+                            cfg_get_bool_value(agent->config, CFG_IP_RECEIVE_ERRORS)) < 0) {
+                bc_log_error("Failed to set IP RECVERR");
+                return false;
+        }
+
 
         _cleanup_free_ const char *dumped_cfg = cfg_dump(agent->config);
         bc_log_debug_with_data("Final configuration used", "\n%s", dumped_cfg);
@@ -2394,23 +2435,9 @@ static bool agent_connect(Agent *agent) {
                 return false;
         }
 
-        int r = bus_socket_set_no_delay(agent->peer_dbus);
-        if (r < 0) {
-                bc_log_warn("Failed to set NO_DELAY on socket");
-        }
+        bus_socket_set_options(agent->peer_dbus, agent->peer_socket_options);
 
-        r = bus_socket_set_keepalive(agent->peer_dbus);
-        if (r < 0) {
-                bc_log_warn("Failed to set KEEPALIVE on socket");
-        }
-        if (agent->ip_receive_errors) {
-                r = bus_socket_enable_recv_err(agent->peer_dbus);
-                if (r < 0) {
-                        bc_log_warnf("Failed to enable receiving errors on socket: %s", strerror(-r));
-                }
-        }
-
-        r = sd_bus_add_object_vtable(
+        int r = sd_bus_add_object_vtable(
                         agent->peer_dbus,
                         NULL,
                         INTERNAL_AGENT_OBJECT_PATH,
