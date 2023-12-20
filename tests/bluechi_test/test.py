@@ -119,7 +119,7 @@ class BluechiTest():
         self.gather_test_executor_logs()
 
     def gather_coverage(self, ctrl: BluechiControllerContainer, nodes: Dict[str, BluechiNodeContainer]):
-        LOGGER.debug("Collecting coverage from all containers...")
+        LOGGER.info("Collecting code coverage started")
 
         data_coverage_dir = f"{self.tmt_test_data_dir}/bluechi-coverage/"
 
@@ -130,6 +130,8 @@ class BluechiTest():
 
         for _, node in nodes.items():
             node.gather_coverage(data_coverage_dir)
+
+        LOGGER.info("Collecting code coverage finished")
 
     def gather_test_executor_logs(self) -> None:
         LOGGER.debug("Collecting logs from test executor...")
@@ -179,6 +181,7 @@ class BluechiTest():
             raise Exception(f"Memory errors found in test. Review valgrind logs in {self.tmt_test_data_dir}")
 
     def run(self, exec: Callable[[BluechiControllerContainer, Dict[str, BluechiNodeContainer]], None]):
+        LOGGER.info("Test execution started")
         successful, container = self.setup()
         ctrl_container, node_container = container
 
@@ -213,5 +216,6 @@ class BluechiTest():
 
         self.teardown(ctrl_container, node_container)
 
+        LOGGER.info("Test execution finished")
         if test_result is not None:
             raise test_result
