@@ -235,6 +235,7 @@ will be used during integration tests when creating code coverage report.
 
 %files coverage
 %license LICENSE
+%{_datadir}/bluechi-coverage/bin/*
 %{_datadir}/bluechi-coverage/*.gcno
 %dir %{_localstatedir}/tmp/bluechi-coverage/
 %endif
@@ -256,6 +257,9 @@ popd
 %meson_install
 
 %if 0%{?with_coverage}
+mkdir -p %{buildroot}/%{_datadir}/bluechi-coverage/bin
+cp tests/scripts/gather-code-coverage.sh %{buildroot}/%{_datadir}/bluechi-coverage/bin
+
 mkdir -p %{buildroot}/%{_localstatedir}/tmp/bluechi-coverage/
 %endif
 
