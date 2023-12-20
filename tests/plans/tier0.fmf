@@ -26,4 +26,9 @@ finish:
     - name: Create coverage report
       how: shell
       script: |
-           pytest -svv scripts/create_coverage_report.py
+           pytest -svv \
+               --confcutdir . \
+               --log-cli-level=${LOG_LEVEL} \
+               --log-cli-date-format="%Y-%m-%d %H:%M:%S%z" \
+               --log-cli-format="%(asctime)s,%(msecs)03d %(levelname)-7s [%(name)s] %(message)s (%(module)s:%(lineno)d)" \
+               scripts/create_coverage_report.py
