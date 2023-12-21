@@ -1,8 +1,11 @@
 # SPDX-License-Identifier: LGPL-2.1-or-later
 
+import logging
 import subprocess
 
 from typing import Union
+
+LOGGER = logging.getLogger(__name__)
 
 
 class ExecutionError(Exception):
@@ -46,10 +49,15 @@ class Command():
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
                 **kwargs)
+        LOGGER.debug(f"Executing of command '{process.args}' started")
         out, err = process.communicate()
 
         out = out.decode("utf-8")
         err = err.decode("utf-8")
+
+        LOGGER.debug(
+            f"Executing of command '{process.args}' finished with result '{process.returncode}',"
+            " stdout '{out}', stderr '{err}'")
 
         if process.returncode != 0:
             raise ExecutionError(process.returncode, out, err)
