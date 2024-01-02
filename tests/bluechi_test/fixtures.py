@@ -18,10 +18,15 @@ def tmt_test_data_dir() -> str:
     return _get_env_value('TMT_TEST_DATA', os.getcwd())
 
 
+@pytest.fixture(scope='function')
+def tmt_test_serial_number() -> str:
+    """Return serial number of current test"""
+    return _get_env_value('TMT_TEST_SERIAL_NUMBER', 'NA')
+
+
 @pytest.fixture(scope='session')
 def bluechi_image_name() -> str:
     """Returns the name of bluechi testing container images"""
-
     return _get_env_value('BLUECHI_IMAGE_NAME', 'bluechi-image')
 
 
@@ -101,6 +106,7 @@ def bluechi_test(
         bluechi_image_id: str,
         bluechi_ctrl_host_port: str,
         bluechi_ctrl_svc_port: str,
+        tmt_test_serial_number: str,
         tmt_test_data_dir: str,
         run_with_valgrind: bool,
         run_with_coverage: bool):
@@ -110,7 +116,8 @@ def bluechi_test(
         bluechi_image_id,
         bluechi_ctrl_host_port,
         bluechi_ctrl_svc_port,
+        tmt_test_serial_number,
         tmt_test_data_dir,
         run_with_valgrind,
         run_with_coverage,
-        )
+    )
