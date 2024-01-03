@@ -28,7 +28,8 @@ class BluechiTest():
             tmt_test_serial_number: str,
             tmt_test_data_dir: str,
             run_with_valgrind: bool,
-            run_with_coverage: bool) -> None:
+            run_with_coverage: bool,
+            additional_ports: dict) -> None:
 
         self.podman_client = podman_client
         self.bluechi_image_id = bluechi_image_id
@@ -38,6 +39,7 @@ class BluechiTest():
         self.tmt_test_data_dir = tmt_test_data_dir
         self.run_with_valgrind = run_with_valgrind
         self.run_with_coverage = run_with_coverage
+        self.additional_ports = additional_ports
 
         self.bluechi_controller_config: BluechiControllerConfig = None
         self.bluechi_node_configs: List[BluechiNodeConfig] = []
@@ -61,11 +63,14 @@ class BluechiTest():
             LOGGER.debug(f"Starting container for bluechi-controller with config:\
                 \n{self.bluechi_controller_config.serialize()}")
 
+            ports = {self.bluechi_ctrl_svc_port: self.bluechi_ctrl_host_port}
+            if self.additional_ports:
+                ports.update(self.additional_ports)
             c = self.podman_client.containers.run(
                 name=f"{self.bluechi_controller_config.name}-{self.tmt_test_serial_number}",
                 image=self.bluechi_image_id,
                 detach=True,
-                ports={self.bluechi_ctrl_svc_port: self.bluechi_ctrl_host_port},
+                ports=ports,
             )
             c.wait(condition="running")
 

@@ -101,6 +101,11 @@ def bluechi_node_default_config(bluechi_ctrl_svc_port: str):
 
 
 @pytest.fixture(scope='function')
+def additional_ports():
+    return None
+
+
+@pytest.fixture(scope='function')
 def bluechi_test(
         podman_client: PodmanClient,
         bluechi_image_id: str,
@@ -109,7 +114,8 @@ def bluechi_test(
         tmt_test_serial_number: str,
         tmt_test_data_dir: str,
         run_with_valgrind: bool,
-        run_with_coverage: bool):
+        run_with_coverage: bool,
+        additional_ports: dict):
 
     return BluechiTest(
         podman_client,
@@ -120,4 +126,5 @@ def bluechi_test(
         tmt_test_data_dir,
         run_with_valgrind,
         run_with_coverage,
+        additional_ports
     )
