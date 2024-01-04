@@ -2,6 +2,7 @@
 Checks: >
     *,
     -llvm-header-guard,
+    -llvm-include-order,
     -llvmlibc-restrict-system-libc-headers,
     -cert-err33-c,
     -cert-dcl37-c,
