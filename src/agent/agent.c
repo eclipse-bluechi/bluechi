@@ -485,7 +485,7 @@ void agent_unref(Agent *agent) {
         bc_log_debug("Finalizing agent");
 
         /* These are removed in agent_stop */
-        assert(agent->proxy_services == NULL);
+        assert(LIST_IS_EMPTY(agent->proxy_services));
 
         hashmap_free(agent->unit_infos);
 
