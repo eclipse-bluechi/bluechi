@@ -2378,12 +2378,6 @@ bool agent_start(Agent *agent) {
                 sd_bus_add_filter(agent->systemd_dbus, NULL, debug_systemd_message_handler, agent);
         }
 
-        r = shutdown_service_register(agent->api_bus, agent->event);
-        if (r < 0) {
-                bc_log_errorf("Failed to register shutdown service: %s", strerror(-r));
-                return false;
-        }
-
         r = event_loop_add_shutdown_signals(agent->event);
         if (r < 0) {
                 bc_log_errorf("Failed to add signals to agent event loop: %s", strerror(-r));

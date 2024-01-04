@@ -1047,12 +1047,6 @@ bool manager_start(Manager *manager) {
                 return false;
         }
 
-        r = shutdown_service_register(manager->api_bus, manager->event);
-        if (r < 0) {
-                bc_log_errorf("Failed to register shutdown service: %s", strerror(-r));
-                return false;
-        }
-
         r = event_loop_add_shutdown_signals(manager->event);
         if (r < 0) {
                 bc_log_errorf("Failed to add signals to manager event loop: %s", strerror(-r));
