@@ -198,9 +198,10 @@ void node_unref(Node *node) {
                 proxy_dependency_free(dep);
         }
 
-        sd_bus_slot_unrefp(&node->export_slot);
 
         node_unset_agent_bus(node);
+        sd_bus_slot_unrefp(&node->export_slot);
+
         hashmap_free(node->unit_subscriptions);
 
         free_and_null(node->name);

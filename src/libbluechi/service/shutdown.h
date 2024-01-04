@@ -4,5 +4,12 @@
 #include <stdbool.h>
 #include <systemd/sd-bus.h>
 
+typedef void (*ShutdownHookFn)(void *userdata);
+
+typedef struct ShutdownHook {
+        ShutdownHookFn shutdown;
+        void *userdata;
+} ShutdownHook;
+
 int shutdown_event_loop(sd_event *event_loop);
-int event_loop_add_shutdown_signals(sd_event *event);
+int event_loop_add_shutdown_signals(sd_event *event, ShutdownHook *hook);

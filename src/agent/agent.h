@@ -109,7 +109,7 @@ void agent_set_systemd_user(Agent *agent, bool systemd_user);
 bool agent_parse_config(Agent *agent, const char *configfile);
 
 bool agent_start(Agent *agent);
-bool agent_stop(Agent *agent);
+void agent_stop(Agent *agent);
 
 bool agent_is_connected(Agent *agent);
 char *agent_is_online(Agent *agent);
