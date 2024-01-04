@@ -63,39 +63,21 @@ Manager *manager_ref(Manager *manager) {
 }
 
 void manager_unref(Manager *manager) {
+        assert(manager->ref_count > 0);
+
         manager->ref_count--;
         if (manager->ref_count != 0) {
                 return;
         }
 
-        Job *job = NULL;
-        Job *next_job = NULL;
-        LIST_FOREACH_SAFE(jobs, job, next_job, manager->jobs) {
-                job_unref(job);
-        }
+        bc_log_debug("Finalizing manager");
 
-        Subscription *sub = NULL;
-        Subscription *next_sub = NULL;
-        LIST_FOREACH_SAFE(all_subscriptions, sub, next_sub, manager->all_subscriptions) {
-                manager_remove_subscription(manager, sub);
-        }
-
-        Monitor *monitor = NULL;
-        Monitor *next_monitor = NULL;
-        LIST_FOREACH_SAFE(monitors, monitor, next_monitor, manager->monitors) {
-                monitor_unref(monitor);
-        }
-
-        Node *node = NULL;
-        Node *next_node = NULL;
-        LIST_FOREACH_SAFE(nodes, node, next_node, manager->nodes) {
-                node_shutdown(node);
-                node_unref(node);
-        }
-        LIST_FOREACH_SAFE(nodes, node, next_node, manager->anonymous_nodes) {
-                node_shutdown(node);
-                node_unref(node);
-        }
+        /* These are removed in manager_stop */
+        assert(LIST_IS_EMPTY(manager->jobs));
+        assert(LIST_IS_EMPTY(manager->all_subscriptions));
+        assert(LIST_IS_EMPTY(manager->monitors));
+        assert(LIST_IS_EMPTY(manager->nodes));
+        assert(LIST_IS_EMPTY(manager->anonymous_nodes));
 
         if (manager->config) {
                 cfg_dispose(manager->config);
@@ -188,6 +170,7 @@ void manager_remove_node(Manager *manager, Node *node) {
         } else {
                 LIST_REMOVE(nodes, manager->anonymous_nodes, node);
         }
+        node_shutdown(node);
         node_unref(node);
 }
 
@@ -1047,7 +1030,10 @@ bool manager_start(Manager *manager) {
                 return false;
         }
 
-        r = event_loop_add_shutdown_signals(manager->event);
+        ShutdownHook hook;
+        hook.shutdown = (ShutdownHookFn) manager_stop;
+        hook.userdata = manager;
+        r = event_loop_add_shutdown_signals(manager->event, &hook);
         if (r < 0) {
                 bc_log_errorf("Failed to add signals to manager event loop: %s", strerror(-r));
                 return false;
@@ -1060,4 +1046,39 @@ bool manager_start(Manager *manager) {
         }
 
         return true;
+}
+
+void manager_stop(Manager *manager) {
+        if (manager == NULL) {
+                return;
+        }
+
+        bc_log_debug("Stopping manager");
+
+        Job *job = NULL;
+        Job *next_job = NULL;
+        LIST_FOREACH_SAFE(jobs, job, next_job, manager->jobs) {
+                manager_remove_job(manager, job, "cancelled due to shutdown");
+        }
+
+        Subscription *sub = NULL;
+        Subscription *next_sub = NULL;
+        LIST_FOREACH_SAFE(all_subscriptions, sub, next_sub, manager->all_subscriptions) {
+                manager_remove_subscription(manager, sub);
+        }
+
+        Monitor *monitor = NULL;
+        Monitor *next_monitor = NULL;
+        LIST_FOREACH_SAFE(monitors, monitor, next_monitor, manager->monitors) {
+                manager_remove_monitor(manager, monitor);
+        }
+
+        Node *node = NULL;
+        Node *next_node = NULL;
+        LIST_FOREACH_SAFE(nodes, node, next_node, manager->nodes) {
+                manager_remove_node(manager, node);
+        }
+        LIST_FOREACH_SAFE(nodes, node, next_node, manager->anonymous_nodes) {
+                manager_remove_node(manager, node);
+        }
 }

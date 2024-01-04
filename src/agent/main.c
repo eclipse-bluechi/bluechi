@@ -161,10 +161,8 @@ int main(int argc, char *argv[]) {
                 return EXIT_FAILURE;
         }
 
-        if (!agent_start(agent)) {
-                return EXIT_FAILURE;
+        if (agent_start(agent)) {
+                return EXIT_SUCCESS;
         }
-
-        agent_stop(agent);
-        return EXIT_SUCCESS;
+        return EXIT_FAILURE;
 }

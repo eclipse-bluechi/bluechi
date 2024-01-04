@@ -2378,7 +2378,10 @@ bool agent_start(Agent *agent) {
                 sd_bus_add_filter(agent->systemd_dbus, NULL, debug_systemd_message_handler, agent);
         }
 
-        r = event_loop_add_shutdown_signals(agent->event);
+        ShutdownHook hook;
+        hook.shutdown = (ShutdownHookFn) agent_stop;
+        hook.userdata = agent;
+        r = event_loop_add_shutdown_signals(agent->event, &hook);
         if (r < 0) {
                 bc_log_errorf("Failed to add signals to agent event loop: %s", strerror(-r));
                 return false;
@@ -2404,9 +2407,18 @@ bool agent_start(Agent *agent) {
         return true;
 }
 
-bool agent_stop(Agent *agent) {
+void agent_stop(Agent *agent) {
         if (agent == NULL) {
-                return false;
+                return;
+        }
+
+        bc_log_debug("Stopping agent");
+
+        agent->connection_state = AGENT_CONNECTION_STATE_DISCONNECTED;
+        int r = sd_bus_emit_properties_changed(
+                        agent->api_bus, BC_AGENT_OBJECT_PATH, AGENT_INTERFACE, "Status", NULL);
+        if (r < 0) {
+                bc_log_errorf("Failed to emit status property changed: %s", strerror(-r));
         }
 
         ProxyService *proxy = NULL;
@@ -2414,8 +2426,6 @@ bool agent_stop(Agent *agent) {
         LIST_FOREACH_SAFE(proxy_services, proxy, next_proxy, agent->proxy_services) {
                 agent_remove_proxy(agent, proxy, false);
         }
-
-        return true;
 }
 
 static bool agent_connect(Agent *agent) {

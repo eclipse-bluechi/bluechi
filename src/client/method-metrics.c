@@ -121,7 +121,7 @@ static int method_metrics_listen(Client *client) {
                 return r;
         }
 
-        r = event_loop_add_shutdown_signals(event);
+        r = event_loop_add_shutdown_signals(event, NULL);
         if (r < 0) {
                 fprintf(stderr, "Failed to add signals to agent event loop: %s", strerror(-r));
                 return r;

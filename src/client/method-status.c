@@ -26,7 +26,7 @@ static const struct bus_properties_map property_map[] = {
         { "FreezerState", offsetof(unit_info_t, freezer_state) },
         { "SubState", offsetof(unit_info_t, sub_state) },
         { "UnitFileState", offsetof(unit_info_t, unit_file_state) },
-        {}
+        { NULL, 0 },
 };
 
 static int get_property_map(sd_bus_message *m, const struct bus_properties_map **prop) {
