@@ -36,6 +36,8 @@ nav:
     - Configuration:
       - bluechi-controller.conf(5): man/bluechi-controller-conf.md
       - bluechi-agent.conf(5): man/bluechi-agent-conf.md
+  - Development:
+    - Code coverage: code-coverage.md
 
 theme:
   name: material
@@ -58,3 +60,8 @@ markdown_extensions:
   - pymdownx.superfences:
   - pymdownx.tabbed:
       alternate_style: true
+
+plugins:
+  - gen-files:
+      scripts:
+        - scripts/publish-code-coverage.py
