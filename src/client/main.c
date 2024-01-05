@@ -8,9 +8,11 @@
 
 #include "client.h"
 
-const struct option options[] = { { ARG_HELP, no_argument, 0, ARG_HELP_SHORT },
-                                  { ARG_FILTER, required_argument, 0, ARG_FILTER_SHORT },
-                                  { NULL, 0, 0, '\0' } };
+const struct option options[] = {
+        {ARG_HELP,    no_argument,       0, ARG_HELP_SHORT  },
+        { ARG_FILTER, required_argument, 0, ARG_FILTER_SHORT},
+        { NULL,       0,                 0, '\0'            }
+};
 
 #define OPTIONS_STR ARG_HELP_SHORT_S ARG_FILTER_SHORT_S
 

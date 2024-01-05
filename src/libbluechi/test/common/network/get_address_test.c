@@ -17,13 +17,13 @@ typedef struct get_address_test_params {
 
 long unsigned int test_data_index = 0;
 struct get_address_test_params test_data[] = {
-        { NULL, true, NULL, -EINVAL },
-        { ".", true, NULL, -1 },
-        { "redhat", true, NULL, -1 },
-        { "?10.10.10.3", true, NULL, -1 },
-        { "192.168.1.", true, NULL, -1 },
-        { "8.8.8.8", true, NULL, 0 },
-        { "localhost.localdomain", true, "127.0.0.1", 0 },
+        {NULL,                     true, NULL,        -EINVAL},
+        { ".",                     true, NULL,        -1     },
+        { "redhat",                true, NULL,        -1     },
+        { "?10.10.10.3",           true, NULL,        -1     },
+        { "192.168.1.",            true, NULL,        -1     },
+        { "8.8.8.8",               true, NULL,        0      },
+        { "localhost.localdomain", true, "127.0.0.1", 0      },
 };
 
 int getaddrinfo_mock(

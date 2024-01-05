@@ -10,16 +10,18 @@
 
 #include "agent.h"
 
-const struct option options[] = { { ARG_HOST, required_argument, 0, ARG_HOST_SHORT },
-                                  { ARG_PORT, required_argument, 0, ARG_PORT_SHORT },
-                                  { ARG_ADDRESS, required_argument, 0, ARG_ADDRESS_SHORT },
-                                  { ARG_NAME, required_argument, 0, ARG_NAME_SHORT },
-                                  { ARG_HEARTBEAT_INTERVAL, required_argument, 0, ARG_HEARTBEAT_INTERVAL_SHORT },
-                                  { ARG_CONFIG, required_argument, 0, ARG_CONFIG_SHORT },
-                                  { ARG_USER, no_argument, 0, ARG_USER_SHORT },
-                                  { ARG_HELP, no_argument, 0, ARG_HELP_SHORT },
-                                  { ARG_VERSION, no_argument, 0, ARG_VERSION_SHORT },
-                                  { NULL, 0, 0, '\0' } };
+const struct option options[] = {
+        {ARG_HOST,                required_argument, 0, ARG_HOST_SHORT              },
+        { ARG_PORT,               required_argument, 0, ARG_PORT_SHORT              },
+        { ARG_ADDRESS,            required_argument, 0, ARG_ADDRESS_SHORT           },
+        { ARG_NAME,               required_argument, 0, ARG_NAME_SHORT              },
+        { ARG_HEARTBEAT_INTERVAL, required_argument, 0, ARG_HEARTBEAT_INTERVAL_SHORT},
+        { ARG_CONFIG,             required_argument, 0, ARG_CONFIG_SHORT            },
+        { ARG_USER,               no_argument,       0, ARG_USER_SHORT              },
+        { ARG_HELP,               no_argument,       0, ARG_HELP_SHORT              },
+        { ARG_VERSION,            no_argument,       0, ARG_VERSION_SHORT           },
+        { NULL,                   0,                 0, '\0'                        }
+};
 
 #define OPTIONS_STR                                                                               \
         ARG_PORT_SHORT_S ARG_HOST_SHORT_S ARG_ADDRESS_SHORT_S ARG_HELP_SHORT_S ARG_CONFIG_SHORT_S \
