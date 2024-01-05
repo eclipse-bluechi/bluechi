@@ -10,10 +10,12 @@
 #include "libbluechi/common/opt.h"
 #include "libbluechi/log/log.h"
 
-const struct option options[] = { { ARG_USER, no_argument, 0, ARG_USER_SHORT },
-                                  { ARG_HELP, no_argument, 0, ARG_HELP_SHORT },
-                                  { ARG_VERSION, no_argument, 0, ARG_VERSION_SHORT },
-                                  { NULL, 0, 0, '\0' } };
+const struct option options[] = {
+        {ARG_USER,     no_argument, 0, ARG_USER_SHORT   },
+        { ARG_HELP,    no_argument, 0, ARG_HELP_SHORT   },
+        { ARG_VERSION, no_argument, 0, ARG_VERSION_SHORT},
+        { NULL,        0,           0, '\0'             }
+};
 
 #define OPTIONS_STR ARG_HELP_SHORT_S ARG_USER_SHORT_S ARG_VERSION_SHORT_S
 
