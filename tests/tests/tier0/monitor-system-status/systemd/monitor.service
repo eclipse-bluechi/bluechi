@@ -1,0 +1,9 @@
+[Unit]
+Description=Monitor BlueChi system
+
+[Service]
+Type=simple
+ExecStart=python3 /tmp/system-monitor.py
+
+[Install]
+WantedBy=multi-user.target

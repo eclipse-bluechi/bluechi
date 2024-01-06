@@ -122,5 +122,20 @@
       <arg name="unit" type="s" />
       <arg name="result" type="s" />
     </signal>
+
+    <!--
+      Status:
+
+      The status of the overall system. Its value is one of:
+        down:  no node is connected
+        degraded: at least one node is not connected
+        up:   all nodes listed in the AllowedNodeNames config are connected
+      A signal is emitted on the org.freedesktop.DBus.Properties interface each time the system state changes. Therefore, a (dis-)connecting node
+      doesn't necessarily result in a signal to be emitted. For this puprose, the Status property on the org.eclipse.bluechi.Node interface is a
+      better choice.
+    -->
+    <property name="Status" type="s" access="read">
+      <annotation name="org.freedesktop.DBus.Property.EmitsChangedSignal" value="true" />
+    </property>
   </interface>
 </node>

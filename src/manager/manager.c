@@ -46,6 +46,8 @@ Manager *manager_new(void) {
                 manager->api_bus_service_name = steal_pointer(&service_name);
                 manager->event = steal_pointer(&event);
                 manager->metrics_enabled = false;
+                manager->number_of_nodes = 0;
+                manager->number_of_nodes_online = 0;
                 manager->peer_socket_options = steal_pointer(&socket_opts);
                 LIST_HEAD_INIT(manager->nodes);
                 LIST_HEAD_INIT(manager->anonymous_nodes);
@@ -165,12 +167,16 @@ Node *manager_find_node_by_path(Manager *manager, const char *path) {
 
 void manager_remove_node(Manager *manager, Node *node) {
         if (node->name) {
-                manager->n_nodes--;
+                manager->number_of_nodes--;
                 LIST_REMOVE(nodes, manager->nodes, node);
         } else {
                 LIST_REMOVE(nodes, manager->anonymous_nodes, node);
         }
-        node_shutdown(node);
+
+        if (node_is_online(node)) {
+                node_shutdown(node);
+                manager->number_of_nodes_online--;
+        }
         node_unref(node);
 }
 
@@ -251,7 +257,7 @@ Node *manager_add_node(Manager *manager, const char *name) {
         }
 
         if (name) {
-                manager->n_nodes++;
+                manager->number_of_nodes++;
                 LIST_APPEND(nodes, manager->nodes, node);
         } else {
                 LIST_APPEND(nodes, manager->anonymous_nodes, node);
@@ -640,7 +646,7 @@ static int manager_method_list_units(sd_bus_message *m, void *userdata, UNUSED s
         ListUnitsRequest *req = NULL;
         Node *node = NULL;
 
-        req = malloc0_array(sizeof(*req), sizeof(req->sub_req[0]), manager->n_nodes);
+        req = malloc0_array(sizeof(*req), sizeof(req->sub_req[0]), manager->number_of_nodes);
         if (req == NULL) {
                 return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_NO_MEMORY, "Out of memory");
         }
@@ -882,6 +888,48 @@ static int manager_method_set_log_level(sd_bus_message *m, UNUSED void *userdata
         return sd_bus_reply_method_return(m, "");
 }
 
+/********************************************************
+ **** org.eclipse.bluechi.Manager.Status ****************
+ ********************************************************/
+
+static char *manager_get_system_status(Manager *manager) {
+        if (manager->number_of_nodes_online == 0) {
+                return "down";
+        } else if (manager->number_of_nodes_online == manager->number_of_nodes) {
+                return "up";
+        }
+        return "degraded";
+}
+
+void manager_check_system_status(Manager *manager, int prev_number_of_nodes_online) {
+        int diff = manager->number_of_nodes_online - prev_number_of_nodes_online;
+        // clang-format off
+        if ((prev_number_of_nodes_online == 0) ||                                       // at least one node online
+                (prev_number_of_nodes_online == manager->number_of_nodes) ||            // at least one node offline
+                ((prev_number_of_nodes_online + diff) == manager->number_of_nodes) ||   // all nodes online
+                ((prev_number_of_nodes_online + diff) == 0)) {                          // all nodes offline
+                // clang-format on
+                int r = sd_bus_emit_properties_changed(
+                                manager->api_bus, BC_MANAGER_OBJECT_PATH, MANAGER_INTERFACE, "Status", NULL);
+                if (r < 0) {
+                        bc_log_errorf("Failed to emit status property changed: %s", strerror(-r));
+                }
+        }
+}
+
+static int manager_property_get_status(
+                UNUSED sd_bus *bus,
+                UNUSED const char *path,
+                UNUSED const char *interface,
+                UNUSED const char *property,
+                sd_bus_message *reply,
+                void *userdata,
+                UNUSED sd_bus_error *ret_error) {
+        Manager *manager = userdata;
+
+        return sd_bus_message_append(reply, "s", manager_get_system_status(manager));
+}
+
 static const sd_bus_vtable manager_vtable[] = {
         SD_BUS_VTABLE_START(0),
         SD_BUS_METHOD("Ping", "s", "s", manager_method_ping, 0),
@@ -899,6 +947,7 @@ static const sd_bus_vtable manager_vtable[] = {
                         SD_BUS_PARAM(id) SD_BUS_PARAM(job) SD_BUS_PARAM(node) SD_BUS_PARAM(unit)
                                         SD_BUS_PARAM(result),
                         0),
+        SD_BUS_PROPERTY("Status", "s", manager_property_get_status, 0, SD_BUS_VTABLE_PROPERTY_EMITS_CHANGE),
         SD_BUS_VTABLE_END
 };
 
@@ -1081,4 +1130,10 @@ void manager_stop(Manager *manager) {
         LIST_FOREACH_SAFE(nodes, node, next_node, manager->anonymous_nodes) {
                 manager_remove_node(manager, node);
         }
+
+        /*
+         * We won't handle any other events incl. node disconnected since we exit the event loop
+         * right afterwards. Therefore, check the manager state and emit signal here.
+         */
+        manager_check_system_status(manager, manager->number_of_nodes_online);
 }

@@ -214,3 +214,23 @@ The following sections demonstrate how the D-Bus API of BlueChi can be interacte
     ```rust
     --8<-- "api-examples/rust/monitor-unit.rs"
     ```
+
+### Monitor system status
+
+=== "Go"
+
+    ```go
+    --8<-- "api-examples/go/monitor-system-status.go"
+    ```
+
+=== "Python"
+
+    ```python
+    --8<-- "api-examples/python/monitor-system-status.py"
+    ```
+
+=== "Rust"
+
+    ```rust
+    --8<-- "api-examples/rust/monitor-system-status.rs"
+    ```

@@ -879,6 +879,9 @@ static int node_method_register(sd_bus_message *m, void *userdata, UNUSED sd_bus
 
         node_unset_agent_bus(node);
 
+        /* update number of online nodes and check the new system state */
+        manager_check_system_status(manager, manager->number_of_nodes_online++);
+
         bc_log_infof("Registered managed node from fd %d as '%s'", sd_bus_get_fd(agent_bus), name);
 
         return sd_bus_reply_method_return(m, "");
@@ -976,6 +979,9 @@ static int node_disconnected(UNUSED sd_bus_message *message, void *userdata, UNU
                         }
                 }
                 node_unset_agent_bus(node);
+
+                /* update number of online nodes and check the new system state */
+                manager_check_system_status(manager, manager->number_of_nodes_online--);
         }
 
         return 0;
