@@ -34,6 +34,10 @@ name = "monitor-node-connections"
 path = "monitor-node-connections.rs"
 
 [[bin]]
+name = "monitor-system-status"
+path = "monitor-system-status.rs"
+
+[[bin]]
 name = "monitor-unit"
 path = "monitor-unit.rs"
 

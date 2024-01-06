@@ -16,13 +16,13 @@ more relevant to our case, the off-loading of mTLS.
 
 In its simplest form, bluechi-agent connects to the bluechi-controller’s port directly over TCP.
 
-![simple connection](../img/bluechi_secure_simple_connection.png "")
+![simple connection](../assets/img/bluechi_secure_simple_connection.png "")
 
 With the double proxy approach, instances of bluechi-agent connect to a local forward proxy over a Unix socket.
 The forward proxy connects over TCP to the remote reverse proxy for mTLS.
 Finally, the reverse proxy connects to bluechi-controller locally over a Unix socket.
 
-![double proxy connection](../img/bluechi_secure_proxy_connection.png "")
+![double proxy connection](../assets/img/bluechi_secure_proxy_connection.png "")
 
 NOTE: The bluechi-controller and bluechi-agent are not aware of the existence of the proxies.
 They just listen (bluechi-controller) and connect (bluechi-agent) to a local Unix socket.

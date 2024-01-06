@@ -579,6 +579,45 @@ class Manager(ApiBase):
         """
         self.get_proxy().JobRemoved.connect(callback)
 
+    @property
+    def status(self) -> str:
+        """
+          Status:
+
+        The status of the overall system. Its value is one of:
+          down:  no node is connected
+          degraded: at least one node is not connected
+          up:   all nodes listed in the AllowedNodeNames config are connected
+        A signal is emitted on the org.freedesktop.DBus.Properties interface each time the system state changes. Therefore, a (dis-)connecting node
+        doesn't necessarily result in a signal to be emitted. For this puprose, the Status property on the org.eclipse.bluechi.Node interface is a
+        better choice.
+        """
+        return self.get_proxy().Status
+
+    def on_status_changed(self, callback: Callable[[Variant], None]):
+        """
+          Status:
+
+        The status of the overall system. Its value is one of:
+          down:  no node is connected
+          degraded: at least one node is not connected
+          up:   all nodes listed in the AllowedNodeNames config are connected
+        A signal is emitted on the org.freedesktop.DBus.Properties interface each time the system state changes. Therefore, a (dis-)connecting node
+        doesn't necessarily result in a signal to be emitted. For this puprose, the Status property on the org.eclipse.bluechi.Node interface is a
+        better choice.
+        """
+
+        def on_properties_changed(
+            interface: str,
+            changed_props: Dict[str, Variant],
+            invalidated_props: Dict[str, Variant],
+        ) -> None:
+            value = changed_props.get("Status")
+            if value is not None:
+                callback(value)
+
+        self.get_properties_proxy().PropertiesChanged.connect(on_properties_changed)
+
 
 class Node(ApiBase):
     """

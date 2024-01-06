@@ -124,3 +124,9 @@ The following code snippets showcase more examples on how `bluechi` can be used.
 ```python
 --8<-- "bluechi-examples/MonitorAgentConnection.py"
 ```
+
+#### Monitor system status
+
+```python
+--8<-- "bluechi-examples/MonitorSystemStatus.py"
+```

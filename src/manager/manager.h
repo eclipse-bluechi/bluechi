@@ -29,7 +29,8 @@ struct Manager {
 
         SocketOptions *peer_socket_options;
 
-        int n_nodes;
+        int number_of_nodes;
+        int number_of_nodes_online;
         LIST_HEAD(Node, nodes);
         LIST_HEAD(Node, anonymous_nodes);
 
@@ -49,6 +50,8 @@ bool manager_parse_config(Manager *manager, const char *configfile);
 
 bool manager_start(Manager *manager);
 void manager_stop(Manager *manager);
+
+void manager_check_system_status(Manager *manager, int prev_number_of_nodes_online);
 
 Node *manager_find_node(Manager *manager, const char *name);
 Node *manager_find_node_by_path(Manager *manager, const char *path);
