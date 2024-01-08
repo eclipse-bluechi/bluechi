@@ -30,8 +30,7 @@
 #define ARG_NAME_SHORT_S "n:"
 
 #define ARG_FILTER "filter"
-#define ARG_FILTER_SHORT 'f'
-#define ARG_FILTER_SHORT_S "f:"
+#define ARG_FILTER_SHORT 1000
 
 #define ARG_HELP "help"
 #define ARG_HELP_SHORT 'h'
@@ -40,5 +39,15 @@
 #define ARG_VERSION "version"
 #define ARG_VERSION_SHORT 'v'
 #define ARG_VERSION_SHORT_S "v"
+
+#define ARG_FORCE "force"
+#define ARG_FORCE_SHORT 'f'
+#define ARG_FORCE_SHORT_S "f"
+
+#define ARG_RUNTIME "runtime"
+#define ARG_RUNTIME_SHORT 1001
+
+#define ARG_NO_RELOAD "no-reload"
+#define ARG_NO_RELOAD_SHORT 1002
 
 #define GETOPT_UNKNOWN_OPTION '?'

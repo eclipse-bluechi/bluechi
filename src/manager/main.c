@@ -17,7 +17,7 @@ const struct option options[] = {
         { NULL,        0,                 0, '\0'             }
 };
 
-#define OPTIONS_STR ARG_PORT_SHORT_S ARG_HELP_SHORT_S ARG_CONFIG_SHORT_S ARG_VERSION_SHORT_S
+#define GETOPT_OPTSTRING ARG_PORT_SHORT_S ARG_HELP_SHORT_S ARG_CONFIG_SHORT_S ARG_VERSION_SHORT_S
 
 static const char *opt_port = 0;
 static const char *opt_config = NULL;
@@ -44,7 +44,7 @@ static void usage(char *argv[]) {
 static int get_opts(int argc, char *argv[]) {
         int opt = 0;
 
-        while ((opt = getopt_long(argc, argv, OPTIONS_STR, options, NULL)) != -1) {
+        while ((opt = getopt_long(argc, argv, GETOPT_OPTSTRING, options, NULL)) != -1) {
                 switch (opt) {
                 case ARG_HELP_SHORT:
                         usage(argv);
