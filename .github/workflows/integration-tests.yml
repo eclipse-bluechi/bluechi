@@ -29,7 +29,7 @@ jobs:
 
       - name: Perform build
         run: |
-          ./build-scripts/build-rpm.sh $ARTIFACTS_DIR
+          WITH_COVERAGE=1 ./build-scripts/build-rpm.sh $ARTIFACTS_DIR
 
       - name: Create DNF repository
         run: |
@@ -55,6 +55,7 @@ jobs:
           sudo apt-get update
           sudo apt-get install \
                   genisoimage \
+                  lcov \
                   libkrb5-dev \
                   libvirt-daemon-system \
                   libvirt-dev \
@@ -89,17 +90,45 @@ jobs:
       - name: Run integration tests
         run: |
           cd tests
-          tmt run -v -eCONTAINER_USED=integration-test-local
+          tmt run -v -eCONTAINER_USED=integration-test-local -eWITH_COVERAGE=1
 
       - name: Show tmt log output in case of failure
         if: ${{ failure() }}
         run: |
           cat /var/tmp/tmt/run-001/log.txt
 
-      - name: Gather tests artifacts
+      # Extract the collected coverage results if they exist and remove them from
+      # the tmt directory to avoid duplication in artifacts
+      - name: Extract coverage results
+        if: always()
+        run: |
+          MERGE_FILE="/var/tmp/tmt/run-001/plans/tier0/report/default-0/merged.info"
+          COVERAGE_DIR="/var/tmp/tmt/run-001/plans/tier0/report/default-0/report/"
+          if [ -d "$COVERAGE_DIR" ]; then
+            cp -r $COVERAGE_DIR /var/tmp
+            cp $MERGE_FILE /var/tmp
+            rm -rf $COVERAGE_DIR
+            rm -rf $MERGE_FILE
+          fi
+      
+      - name: Upload tmt artifacts
         if: always()
         uses: actions/upload-artifact@v3
         with:
-          name: test-artifacts
+          name: tmt-artifacts
           path: '/var/tmp/tmt'
 
+      - name: Upload coverage HTML report
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: coverage-artifacts-html
+          path: '/var/tmp/report'
+      
+      - name: Upload coverage file
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: coverage-artifacts-info
+          path: '/var/tmp/merged.info'
+      
