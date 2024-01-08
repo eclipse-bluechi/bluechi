@@ -2,6 +2,8 @@
 #include "method-unit-actions.h"
 #include "client.h"
 
+#include "libbluechi/common/opt.h"
+
 static int method_lifecycle_action_on(Client *client, char *node_name, char *unit, char *method) {
         _cleanup_sd_bus_error_ sd_bus_error error = SD_BUS_ERROR_NULL;
         _cleanup_sd_bus_message_ sd_bus_message *message = NULL;
@@ -328,13 +330,22 @@ int method_thaw(Command *command, void *userdata) {
 
 int method_enable(Command *command, void *userdata) {
         int r = 0;
-        r = method_enable_unit_on(userdata, command->opargv[0], &command->opargv[1], command->opargc - 1, 0, 0);
+        r = method_enable_unit_on(
+                        userdata,
+                        command->opargv[0],
+                        &command->opargv[1],
+                        command->opargc - 1,
+                        command_flag_exists(command, ARG_RUNTIME_SHORT),
+                        command_flag_exists(command, ARG_FORCE_SHORT));
         if (r < 0) {
                 fprintf(stderr,
                         "Failed to enable the units on node [%s] - %s",
                         command->opargv[0],
                         strerror(-r));
-        } else {
+                return r;
+        }
+
+        if (!command_flag_exists(command, ARG_NO_RELOAD_SHORT)) {
                 r = method_daemon_reload_on(userdata, command->opargv[0]);
         }
 
@@ -343,13 +354,19 @@ int method_enable(Command *command, void *userdata) {
 
 int method_disable(Command *command, void *userdata) {
         int r = 0;
-        r = method_disable_unit_on(userdata, command->opargv[0], &command->opargv[1], command->opargc - 1, 0);
+        r = method_disable_unit_on(
+                        userdata,
+                        command->opargv[0],
+                        &command->opargv[1],
+                        command->opargc - 1,
+                        command_flag_exists(command, ARG_RUNTIME_SHORT));
         if (r < 0) {
                 fprintf(stderr,
                         "Failed to disable the units on node [%s] - %s",
                         command->opargv[0],
                         strerror(-r));
-        } else {
+        }
+        if (!command_flag_exists(command, ARG_NO_RELOAD_SHORT)) {
                 r = method_daemon_reload_on(userdata, command->opargv[0]);
         }
 

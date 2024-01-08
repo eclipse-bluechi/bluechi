@@ -17,7 +17,7 @@ const struct option options[] = {
         { NULL,        0,           0, '\0'             }
 };
 
-#define OPTIONS_STR ARG_HELP_SHORT_S ARG_USER_SHORT_S ARG_VERSION_SHORT_S
+#define GETOPT_OPTSTRING ARG_HELP_SHORT_S ARG_USER_SHORT_S ARG_VERSION_SHORT_S
 
 static const char *opt_node_unit = NULL;
 static const char *opt_operation = NULL;
@@ -71,7 +71,7 @@ int parse_node_unit_opt(const char *opt_node_unit, char **ret_node_name, char **
 
 static int get_opts(int argc, char *argv[]) {
         int opt = 0;
-        while ((opt = getopt_long(argc, argv, OPTIONS_STR, options, NULL)) != -1) {
+        while ((opt = getopt_long(argc, argv, GETOPT_OPTSTRING, options, NULL)) != -1) {
                 switch (opt) {
                 case ARG_HELP_SHORT:
                         usage(argv);
