@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: LGPL-2.1-or-later
 
 import os
+import logging
 import time
 from typing import Dict
 
@@ -9,6 +10,7 @@ from bluechi_test.test import BluechiTest
 from bluechi_test.container import BluechiControllerContainer, BluechiNodeContainer
 from bluechi_test.config import BluechiControllerConfig, BluechiNodeConfig
 
+LOGGER = logging.getLogger(__name__)
 
 node_one = "node-1"
 
@@ -29,14 +31,22 @@ def exec(ctrl: BluechiControllerContainer, nodes: Dict[str, BluechiNodeContainer
     if result != 0:
         raise Exception(f"Failed to stop bluechi-controller: {output}")
 
-    # wait a bit to process all events
-    time.sleep(1)
+    LOGGER.debug("Checking events processed by the system monitor...")
+    expected_events = ["down"]
+    while True:
+        result, output = ctrl.exec_run("cat /tmp/events")
+        if result != 0:
+            raise Exception(f"Unexpected error while getting events file: {output}")
 
-    result, output = ctrl.exec_run("cat /tmp/events")
-    if result != 0:
-        raise Exception(f"Failed to get events file: {output}")
+        events = output.split(",")
+        LOGGER.info(f"Got monitored events: '{events}', comparing with expected '{expected_events}'")
 
-    assert output == "down,"
+        # output contains format like 'degraded,up,'
+        # So -1 is used to take the additional element into account
+        if (len(events) - 1) == len(expected_events):
+            for i in range(len(expected_events)):
+                assert events[i] == expected_events[i]
+            break
 
 
 def test_monitor_system_status(
