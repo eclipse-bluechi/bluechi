@@ -10,7 +10,6 @@ function push(){
 }
 
 function build(){
-    buildah manifest rm $IMAGE &> /dev/null
     buildah manifest create $IMAGE
 
     buildah bud --tag "quay.io/bluechi/$IMAGE" \

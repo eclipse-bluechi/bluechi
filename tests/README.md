@@ -202,11 +202,15 @@ Both, `integration-test-local` as well as `integration-test-snapshot`, are based
 
 ### Updating container images in registry
 
-Currently, the base images are pushed manually to the [bluechi on quay.io](https://quay.io/organization/bluechi) organization and its repositories. If any updates are required, please reach out to the [code owners](../.github/CODEOWNERS).
+The base images can either be build and pushed locally or via a github workflow to the [bluechi on quay.io](https://quay.io/organization/bluechi) organization and its repositories. If any updates are required, please reach out to the [code owners](../.github/CODEOWNERS).
 
-**Note to codeowners:**
+#### Building and pushing via workflow
 
-The base images [build-base](./containers/build-base) and [integration-test-base](./containers/integration-test-base) can be built for multiple architectures (arm64 and amd64) using the [build-containers.sh](../build-scripts/build-containers.sh) script. It'll build the images for the supported architectures as well as a manifest, which can then be pushed to the registry.
+The base images [build-base](./containers/build-base) and [integration-test-base](./containers/integration-test-base) can be built and pushed to quay by using the [Container Image Workflow](../.github/workflows/images.yml). It can be found and triggered here in the [Actions tab](https://github.com/eclipse-bluechi/bluechi/actions/workflows/images.yml) of the BlueChi repo.
+
+#### Building and pushing locally
+
+The base images [build-base](./containers/build-base) and [integration-test-base](./containers/integration-test-base) are built for multiple architectures (arm64 and amd64) using the [build-containers.sh](../build-scripts/build-containers.sh) script. It'll build the images for the supported architectures as well as a manifest, which can then be pushed to the registry.
 
 Building for multiple architectures, the following packages are required:
 

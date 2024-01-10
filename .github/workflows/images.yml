@@ -28,7 +28,7 @@ jobs:
       - name: Push manifest o quay.io
         uses: redhat-actions/push-to-registry@v2
         with:
-          image: quay.io/bluechi/${{ inputs.image }}
+          image: ${{ inputs.image }}
           registry: quay.io/bluechi
           username: bluechi+bluechi_bot
           password: ${{ secrets.QUAY_BOT_API_TOKEN }}
