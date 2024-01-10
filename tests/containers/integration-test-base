@@ -4,6 +4,7 @@ RUN dnf upgrade --refresh --nodocs -y && \
     dnf install --nodocs epel-release -y && \
     dnf install --nodocs \
             lcov \
+            lsof \
             policycoreutils-python-utils \
             python3-dasbus \
             selinux-policy \
