@@ -274,6 +274,33 @@ popd
 
 
 %changelog
+* Mon Jan 17 2024 Michael Engel <mengel@redhat.com> - 0.7.0-1
+- Breaking change: Completed renaming of manager to controller in configuration, API, etc.
+- Breaking change: Removed D-Bus method Shutdown from controller and agent
+- Breaking change: Removed bluechictl monitor node-connection
+- Added watch option to bluechictl for bluechictl status
+- Added system status property on org.eclipse.bluechi.Manager
+- Introduced pre-shutdown hook to ensure final signals are emitted
+- Added flags to enable and disable commands in bluechictl
+- Refactored bluechictl and introduced command pattern
+- Added TCP KeepAlive options to configuration
+- Added IP_RECV_ERR option to configuration
+- Enable quicker tcp error notification by setting IP_RECV_ERR
+- Extended monitor API by adding and removing peers
+- Send monitor signals only to peer
+- Added log statements when sending monitor signals fail
+- Upgraded subproject hashmap.c to v0.7.0
+- Check for proxy service list being empty instead of NULL on shutdown
+- Fixed check that agent started successfully
+- Fixed memory leak when assembling monitoring signals
+- Added error log when at least one list units request fails
+- Integration tests are run with valgrind on testing farm
+- Integration tests produce a coverage report in GH workflow
+- Added more integration tests for new peer API, -c option and more
+- BlueChi logo has been added to the project
+- Added documentation about monitoring has been added
+- Added documentation about securint BlueChi with mTLS and double proxy
+ 
 * Mon Nov 13 2023 Michael Engel <mengel@redhat.com> - 0.6.0-1
 - Moved from containers to eclipse-bluechi organization
 - Renamed bluechi to bluechi-controller for binary, rpm and documentation
