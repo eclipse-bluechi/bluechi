@@ -4,7 +4,7 @@
 # Current version of BlueChi
 VERSION=0.7.0
 # Specify if build is a official release or a snapshot build
-IS_RELEASE=false
+IS_RELEASE=true
 # Used for official releases. Increment if necessary
 RELEASE="1"
 
