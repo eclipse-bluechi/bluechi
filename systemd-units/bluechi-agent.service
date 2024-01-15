@@ -10,6 +10,7 @@ After=network.target
 [Service]
 Type=simple
 ExecStart=/usr/libexec/bluechi-agent
+ExecStop=/bin/kill -TERM $MAINPID
 Restart=on-failure
 
 [Install]
