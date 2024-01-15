@@ -21,6 +21,7 @@
 #define OPT_FORCE 1u << 2u
 #define OPT_RUNTIME 1u << 3u
 #define OPT_NO_RELOAD 1u << 4u
+#define OPT_WATCH 1u << 5u
 
 int method_version(UNUSED Command *command, UNUSED void *userdata) {
         printf("bluechictl version %s\n", CONFIG_H_BC_VERSION);
@@ -41,7 +42,7 @@ const Method methods[] = {
         { "enable",        2, ARG_ANY, OPT_FORCE | OPT_RUNTIME | OPT_NO_RELOAD, method_enable,        usage_bluechi},
         { "disable",       2, ARG_ANY, OPT_NONE,                                method_disable,       usage_bluechi},
         { "daemon-reload", 1, 1,       OPT_NONE,                                method_daemon_reload, usage_bluechi},
-        { "status",        2, ARG_ANY, OPT_NONE,                                method_status,        usage_bluechi},
+        { "status",        0, ARG_ANY, OPT_WATCH,                               method_status,        usage_bluechi},
         { "set-loglevel",  1, 2,       OPT_NONE,                                method_set_loglevel,  usage_bluechi},
         { "version",       0, 0,       OPT_NONE,                                method_version,       usage_bluechi},
         { NULL,            0, 0,       0,                                       NULL,                 NULL         }
@@ -52,16 +53,18 @@ const OptionType option_types[] = {
         { ARG_FORCE_SHORT,     ARG_FORCE,     OPT_FORCE    },
         { ARG_RUNTIME_SHORT,   ARG_RUNTIME,   OPT_RUNTIME  },
         { ARG_NO_RELOAD_SHORT, ARG_NO_RELOAD, OPT_NO_RELOAD},
+        { ARG_WATCH_SHORT,     ARG_WATCH,     OPT_WATCH    },
         { 0,                   NULL,          0            }
 };
 
-#define GETOPT_OPTSTRING ARG_HELP_SHORT_S ARG_FORCE_SHORT_S
+#define GETOPT_OPTSTRING ARG_HELP_SHORT_S ARG_FORCE_SHORT_S ARG_WATCH_SHORT_S
 const struct option getopt_options[] = {
         {ARG_HELP,       no_argument,       0, ARG_HELP_SHORT     },
         { ARG_FILTER,    required_argument, 0, ARG_FILTER_SHORT   },
         { ARG_FORCE,     no_argument,       0, ARG_FORCE_SHORT    },
         { ARG_RUNTIME,   no_argument,       0, ARG_RUNTIME_SHORT  },
         { ARG_NO_RELOAD, no_argument,       0, ARG_NO_RELOAD_SHORT},
+        { ARG_WATCH,     no_argument,       0, ARG_WATCH_SHORT    },
         { NULL,          0,                 0, '\0'               }
 };
 

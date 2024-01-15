@@ -30,3 +30,5 @@ DEFINE_CLEANUP_FUNC(Client, client_unref)
 
 int client_create_message_new_method_call(
                 Client *client, const char *node_name, const char *member, sd_bus_message **new_message);
+
+int client_start_event_loop(Client *client);

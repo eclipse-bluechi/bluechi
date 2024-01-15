@@ -32,8 +32,8 @@ void usage_bluechi() {
         printf("    usage: metrics listen\n");
         printf("  - monitor: creates a monitor on the given node to observe changes in the specified units\n");
         printf("    usage: monitor [node] [unit1,unit2,...]\n");
-        printf("  - monitor node-connection: creates a monitor to observe changes in state of all nodes\n");
-        printf("    usage: monitor node-connection\n");
+        printf("  - status: shows the status of a node, or statuses of all nodes, or status of a unit on node\n");
+        printf("    usage: status [nodename [unitname]] [-w/--watch]\n");
         printf("  - daemon-reload: reload systemd daemon on a specific node\n");
         printf("    usage: daemon-reload nodename\n");
 }
