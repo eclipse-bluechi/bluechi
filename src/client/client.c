@@ -4,6 +4,8 @@
 
 #include "client.h"
 
+#include "libbluechi/service/shutdown.h"
+
 Client *new_client() {
         Client *client = malloc0(sizeof(Client));
         if (client == NULL) {
@@ -133,5 +135,34 @@ int client_create_message_new_method_call(
         }
 
         *new_message = sd_bus_message_ref(outgoing_message);
+        return 0;
+}
+
+int client_start_event_loop(Client *client) {
+        _cleanup_sd_event_ sd_event *event = NULL;
+        int r = sd_event_default(&event);
+        if (r < 0) {
+                fprintf(stderr, "Failed to create event loop: %s", strerror(-r));
+                return r;
+        }
+
+        r = sd_bus_attach_event(client->api_bus, event, SD_EVENT_PRIORITY_NORMAL);
+        if (r < 0) {
+                fprintf(stderr, "Failed to attach api bus to event: %s", strerror(-r));
+                return r;
+        }
+
+        r = event_loop_add_shutdown_signals(event, NULL);
+        if (r < 0) {
+                fprintf(stderr, "Failed to add signals to agent event loop: %s", strerror(-r));
+                return r;
+        }
+
+        r = sd_event_loop(event);
+        if (r < 0) {
+                fprintf(stderr, "Failed to start event loop: %s", strerror(-r));
+                return r;
+        }
+
         return 0;
 }

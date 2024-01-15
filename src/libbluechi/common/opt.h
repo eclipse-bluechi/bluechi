@@ -50,4 +50,8 @@
 #define ARG_NO_RELOAD "no-reload"
 #define ARG_NO_RELOAD_SHORT 1002
 
+#define ARG_WATCH "watch"
+#define ARG_WATCH_SHORT 'w'
+#define ARG_WATCH_SHORT_S "w"
+
 #define GETOPT_UNKNOWN_OPTION '?'
