@@ -40,7 +40,7 @@ const Method methods[] = {
         { "monitor",       0, 2,       OPT_NONE,                                method_monitor,       usage_bluechi},
         { "metrics",       1, 1,       OPT_NONE,                                method_metrics,       usage_bluechi},
         { "enable",        2, ARG_ANY, OPT_FORCE | OPT_RUNTIME | OPT_NO_RELOAD, method_enable,        usage_bluechi},
-        { "disable",       2, ARG_ANY, OPT_NONE,                                method_disable,       usage_bluechi},
+        { "disable",       2, ARG_ANY, OPT_NO_RELOAD,                           method_disable,       usage_bluechi},
         { "daemon-reload", 1, 1,       OPT_NONE,                                method_daemon_reload, usage_bluechi},
         { "status",        0, ARG_ANY, OPT_WATCH,                               method_status,        usage_bluechi},
         { "set-loglevel",  1, 2,       OPT_NONE,                                method_set_loglevel,  usage_bluechi},
