@@ -109,7 +109,7 @@ jobs:
             rm -rf $COVERAGE_DIR
             rm -rf $MERGE_FILE
           fi
-      
+
       - name: Upload tmt artifacts
         if: always()
         uses: actions/upload-artifact@v3
@@ -123,11 +123,23 @@ jobs:
         with:
           name: coverage-artifacts-html
           path: '/var/tmp/report'
-      
+
       - name: Upload coverage file
         if: always()
         uses: actions/upload-artifact@v3
         with:
           name: coverage-artifacts-info
           path: '/var/tmp/merged.info'
-      
+
+      - name: Prepare the coverage report for coveralls
+        if: always()
+        run: |
+          sed 's/\/var\/tmp\/bluechi-coverage\/src/src/' /var/tmp/merged.info > /var/tmp/coveralls.info
+
+      - name: Report to Coveralls
+        if: always()
+        uses: coverallsapp/github-action@v2
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          file: '/var/tmp/coveralls.info'
+          format: lcov
