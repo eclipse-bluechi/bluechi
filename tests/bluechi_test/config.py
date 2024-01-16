@@ -47,7 +47,7 @@ class BluechiControllerConfig(BluechiConfig):
         allowed_node_names = ",\n ".join(self.allowed_node_names)
 
         return f"""[bluechi-controller]
-ManagerPort={self.port}
+ControllerPort={self.port}
 AllowedNodeNames={allowed_node_names}
 LogLevel={self.log_level}
 LogTarget={self.log_target}
@@ -97,9 +97,9 @@ class BluechiNodeConfig(BluechiConfig):
     def serialize(self) -> str:
         return f"""[bluechi-agent]
 NodeName={self.node_name}
-ManagerHost={self.manager_host}
-ManagerPort={self.manager_port}
-ManagerAddress={self.manager_address}
+ControllerHost={self.manager_host}
+ControllerPort={self.manager_port}
+ControllerAddress={self.manager_address}
 HeartbeatInterval={self.heartbeat_interval}
 LogLevel={self.log_level}
 LogTarget={self.log_target}

@@ -33,7 +33,7 @@ The port on which `bluechi` is listening for connection request and the `bluechi
 #### **--address**, **-a**
 
 DBus address used by `bluechi-agent` to connect to `bluechi`. See `man sd_bus_set_address` for its format.
-Overrides any setting of `ManagerHost` or `ManagerPort` defined in the configuration file as well as the respective CLI options.
+Overrides any setting of `ControllerHost` or `ControllerPort` defined in the configuration file as well as the respective CLI options.
 
 #### **--name**, **-n**
 

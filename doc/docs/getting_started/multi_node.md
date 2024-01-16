@@ -26,23 +26,23 @@ Once the installations succeeded, BlueChi needs to be configured on both machine
 Lets start with the main node (the **laptop** in this case). The configuration of the controller running on the **laptop** is similar to the [single node setup](#installation-and-configuration) with the exception of adding **pi** as another node to it:
 
 ```bash
-echo -e "[bluechi-controller]\nManagerPort=2020\nAllowedNodeNames=$(hostname),pi\n" > /etc/bluechi/controller.conf.d/1.conf
+echo -e "[bluechi-controller]\nControllerPort=2020\nAllowedNodeNames=$(hostname),pi\n" > /etc/bluechi/controller.conf.d/1.conf
 ```
 
 Lets also create the configuration for the agent on the **laptop** changing the port:
 
 ```bash
-echo -e "[bluechi-agent]\nManagerPort=2020\n" > /etc/bluechi/agent.conf.d/1.conf
+echo -e "[bluechi-agent]\nControllerPort=2020\n" > /etc/bluechi/agent.conf.d/1.conf
 ```
 
 ### Configuring the managed node
 
-In the next step the managed node (the **raspberry pi** in this case) needs to be configured. The managed node needs to know where to connect to, so the settings for the [ManagerHost](../man/bluechi-agent-conf.md#managerhost-string) as well as the [ManagerPort](../man/bluechi-agent-conf.md#managerport-uint16_t) have to be set to the IP and Port of the main node. In addition, the [NodeName](../man/bluechi-agent-conf.md#nodename-string) has to be set to **pi** (as set in the **AllowedNodeNames** in the [previous section](#configuring-the-main-node)).
+In the next step the managed node (the **raspberry pi** in this case) needs to be configured. The managed node needs to know where to connect to, so the settings for the [ControllerHost](../man/bluechi-agent-conf.md#managerhost-string) as well as the [ControllerPort](../man/bluechi-agent-conf.md#managerport-uint16_t) have to be set to the IP and Port of the main node. In addition, the [NodeName](../man/bluechi-agent-conf.md#nodename-string) has to be set to **pi** (as set in the **AllowedNodeNames** in the [previous section](#configuring-the-main-node)).
 
 Assuming the main nodes IP within the network is `192.168.42.10`, the configuration file for the agent on the **raspberry pi** can be created like this:
 
 ```bash
-echo -e "[bluechi-agent]\nManagerHost=192.168.42.10\nManagerPort=2020\n" > /etc/bluechi/agent.conf.d/1.conf
+echo -e "[bluechi-agent]\nControllerHost=192.168.42.10\nControllerPort=2020\n" > /etc/bluechi/agent.conf.d/1.conf
 ```
 
 The content of the new file should be:
@@ -51,8 +51,8 @@ The content of the new file should be:
 $ cat /etc/bluechi/agent.conf.d/1.conf
 
 [bluechi-controller]
-ManagerHost=192.168.42.10
-ManagerPort=2020
+ControllerHost=192.168.42.10
+ControllerPort=2020
 ```
 
 ## Running BlueChi

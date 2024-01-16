@@ -197,7 +197,7 @@ using the drop-in file `/etc/bluechi/agent.conf.d/local_socket.conf`
 ```ini
 [bluechi-agent]
 NodeName=< NODE_NAME >
-ManagerAddress=unix:path=/var/lib/haproxy/bluechi-agent.sock
+ControllerAddress=unix:path=/var/lib/haproxy/bluechi-agent.sock
 ```
 
 Enable and start bluechi-agent:
