@@ -30,21 +30,44 @@ Print current bluechictl version
 
 Performs one of the listed lifecycle operations on the given systemd unit for the `bluechi-agent`.
 
-### **bluechictl** [*enable|disable*] [*agent*] [*unit1*,*...*]
+### **bluechictl** [*enable*] [*agent*] [*unit1*,*...*]
 
-Enable/Disable the list of systemd unit files for the `bluechi-agent`.
+Enable the list of systemd unit files for the `bluechi-agent`.
+
+
+**Options:**
+
+**--force**, **-f**
+    Override existing symlinks
+
+**--runtime**
+    Enable unit files temporarily until next reboot
+
+**--no-reload**
+    Don't reload daemon after enabling unit files
+
+### **bluechictl** [*disable*] [*agent*] [*unit1*,*...*]
+
+Disable the list of systemd unit files for the `bluechi-agent`.
+
+
+**Options:**
+
+**--no-reload**
+    Don't reload daemon after disabling unit files
 
 ### **bluechictl** *list-units* [*agent*]
 
 Fetches information about all systemd units on the bluechi-agents. If [bluechi-agent] is not specified, all agents are queried.
 
+**Options:**
+
+**--filter**
+    Use glob filter for the unit names
+
 ### **bluechictl** *monitor* [*agent*] [*unit1*,*unit2*,*...*]
 
 Creates a monitor on the given agent to observe changes in the specified units. Wildcards **\*** to match all agents and/or units are also supported.
-
-### **bluechictl** *monitor* *node-connection*
-
-Creates a monitor to observe connection state changes for all nodes.
 
 
 **Example:**
@@ -59,6 +82,25 @@ bluechictl monitor \\\* dbus.service,apache2.service
 
 Performs `daemon-reload` for the `bluechi-agent`.
 
-### **bluechictl** [*status*] [*agent*] [*unit1*,*...*]
+### **bluechictl** *status* [*agent*]
+
+Fetches the status of all the agents or a specific agent: state (online/offline) and when was it last seen
+
+
+**Options:**
+
+**--watch**, **-w**
+    Continuously display agent(s) status, updating when state change update received
+
+
+**Example:**
+
+bluechictl status
+
+bluechictl status rpi
+
+bluechictl status -w
+
+### **bluechictl** *status* [*agent*] [*unit1*,*...*]
 
 Fetches the status of the systemd units for the `bluechi-agent`.

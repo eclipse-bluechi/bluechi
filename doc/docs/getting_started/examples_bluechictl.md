@@ -17,7 +17,7 @@ laptop              |bluechi-agent.service                                      
 pi                  |bluechi-agent.service                                      |   active|  running
 ```
 
-## Monitoring of units and nodes
+## Monitoring of units
 
 The `bluechictl monitor <node-name> <unit-name>` command enables to view changes in real-time. For example, to monitor all state changes of `cow.service` on `pi` the following command can be issued:
 
@@ -48,10 +48,12 @@ Subscribing to node '*' and unit '*'
 
     This enables an observer to do the necessary re-queries since state changes could have happened while the node was disconnected.
 
+## Monitoring of nodes
+
 In addition to monitoring units, BlueChi's APIs can be used to query and monitor the node connection states:
 
 ```bash
-$ bluechictl monitor node-connection
+$ bluechictl status
 
 NODE                          | STATE     | LAST SEEN                   
 =========================================================================
@@ -67,6 +69,18 @@ NODE                          | STATE     | LAST SEEN
 laptop                        | online    | now                         
 pi                            | online    | 2023-10-06 08:38:20,000+0200                         
 ```
+
+It is also possible to show the status of a specific node
+
+```bash
+$ bluechictl status laptop
+
+NODE                          | STATE     | LAST SEEN
+=========================================================================
+laptop                        | online    | now
+```
+
+In addition, a flag `-w/--watch` can be used with `bluechictl status` to continuously display the nodes status, refreshing on node status change.
 
 ## Operations on units
 
@@ -113,4 +127,17 @@ $ bluechictl freeze pi cow.service
 
 # revert the previous freeze
 $ bluechictl thaw pi cow.service
+```
+
+## Print unit status
+
+The `bluechictl status <node-name> <unit-name>` will print the specific unit info and status
+
+```bash
+$ bluechictl status laptop httpd.service
+
+UNIT            | LOADED    | ACTIVE    | SUBSTATE  | FREEZERSTATE  | ENABLED   |
+---------------------------------------------------------------------------------
+httpd.service   | loaded    | active    | running   | running       | enabled   |
+
 ```
