@@ -22,17 +22,17 @@ by `bluechi-agent`.
 
 The unique name of this agent. The option defaults to the system's hostname.
 
-#### **ManagerAddress** (string)
+#### **ControllerAddress** (string)
 
 SD Bus address used by `bluechi-agent` to connect to `bluechi`. See `man sd_bus_set_address` for its format.
-Overrides any setting of `ManagerHost` or `ManagerPort` defined in the configuration file as well as the respective CLI
+Overrides any setting of `ControllerHost` or `ControllerPort` defined in the configuration file as well as the respective CLI
 options. The option doesn't have a default value.
 
-#### **ManagerHost** (string)
+#### **ControllerHost** (string)
 
-The host used by `bluechi-agent` to connect to `bluechi`. Must be a valid IPv4 or IPv6. ManagerHost defaults to localhost 127.0.0.1. It's mandatory to set this field if the bluechi agent is on a remote system.
+The host used by `bluechi-agent` to connect to `bluechi`. Must be a valid IPv4 or IPv6. ControllerHost defaults to localhost 127.0.0.1. It's mandatory to set this field if the bluechi agent is on a remote system.
 
-#### **ManagerPort** (uint16_t)
+#### **ControllerPort** (uint16_t)
 
 The port on which `bluechi` is listening for connection request and the `bluechi-agent` is connecting to. By default port
 `842` is used.
@@ -96,24 +96,24 @@ Default: 6.
 
 ## Example
 
-Using `ManagerHost` and `ManagerPort` options:
+Using `ControllerHost` and `ControllerPort` options:
 
 ```
 [bluechi-agent]
 NodeName=agent-007
-ManagerHost=127.0.0.1
-ManagerPort=842
+ControllerHost=127.0.0.1
+ControllerPort=842
 LogLevel=DEBUG
 LogTarget=journald
 LogIsQuiet=false
 ```
 
-Using `ManagerAddress` option:
+Using `ControllerAddress` option:
 
 ```
 [bluechi-agent]
 NodeName=agent-007
-ManagerAddress=tcp:host=127.0.0.1,port=842
+ControllerAddress=tcp:host=127.0.0.1,port=842
 LogLevel=DEBUG
 LogTarget=journald
 LogIsQuiet=false
@@ -124,7 +124,7 @@ Using a value that is continued on multiple lines:
 ```
 [bluechi-agent]
 NodeName=agent-007
-ManagerAddress=tcp:
+ControllerAddress=tcp:
   host=127.0.0.1,
   port=842
 LogLevel=DEBUG

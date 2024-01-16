@@ -21,13 +21,13 @@ BlueChi uses port **842** by default, which is considered a privileged port. To 
 Lets create a new configuration for `bluechi-controller` in its `conf.d` directory:
 
 ```bash
-echo -e "[bluechi-controller]\nManagerPort=2020\nAllowedNodeNames=$(hostname)\n" > /etc/bluechi/controller.conf.d/1.conf
+echo -e "[bluechi-controller]\nControllerPort=2020\nAllowedNodeNames=$(hostname)\n" > /etc/bluechi/controller.conf.d/1.conf
 ```
 
 Since the default port has been changed, this setting has to be adjusted for the `bluechi-agent` as well:
 
 ```bash
-echo -e "[bluechi-agent]\nManagerPort=2020\n" > /etc/bluechi/agent.conf.d/1.conf
+echo -e "[bluechi-agent]\nControllerPort=2020\n" > /etc/bluechi/agent.conf.d/1.conf
 ```
 
 After running both commands, the following files should have been created:
@@ -36,13 +36,13 @@ After running both commands, the following files should have been created:
 $ cat /etc/bluechi/controller.conf.d/1.conf
 
 [bluechi-controller]
-ManagerPort=2020
+ControllerPort=2020
 AllowedNodeNames=<hostname>
 
 $ cat /etc/bluechi/agent.conf.d/1.conf
 
 [bluechi-controller]
-ManagerPort=2020
+ControllerPort=2020
 ```
 
 !!! Note

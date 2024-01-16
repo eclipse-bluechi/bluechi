@@ -17,7 +17,7 @@ The bluechi-controller configuration file is using the
 
 All fields to bootstrap the bluechi controller are contained in the **bluechi-controller** section. The following keys are understood by `bluechi-controller`.
 
-#### **ManagerPort** (uint16_t)
+#### **ControllerPort** (uint16_t)
 
 The port the manager listens on to establish connections with the `bluechi-agent`. By default port `842` is used.
 
@@ -86,7 +86,7 @@ A basic example of a configuration file for `bluechi`:
 
 ```
 [bluechi-controller]
-ManagerPort=842
+ControllerPort=842
 AllowedNodeNames=agent-007,agent-123
 LogLevel=DEBUG
 LogTarget=journald
@@ -97,7 +97,7 @@ Using a value that is continued on multiple lines:
 
 ```
 [bluechi-controller]
-ManagerPort=842
+ControllerPort=842
 AllowedNodeNames=agent-007,
    agent-123,
    agent-456,
