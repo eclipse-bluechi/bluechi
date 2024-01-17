@@ -3,13 +3,13 @@
 
 # This script should be executed only from meson as a part of install flow!
 #
-# Install all created `*.gcno` files so they could be packaged into bluechi-coverage RPM.
+COVERAGE_ROOT="${MESON_INSTALL_DESTDIR_PREFIX}/share/bluechi-coverage"
 
-for f in $MESON_BUILD_ROOT/src/*; do
-    if [ -d "$f" ]; then
-        COV_DIR="${MESON_INSTALL_DESTDIR_PREFIX}/share/bluechi-coverage"
-        COV_DIR="${COV_DIR}/${f##*/}"
-        mkdir -p "${COV_DIR}"
-        find "${f}" -name '*.gcno' -exec cp "{}" "${COV_DIR}" \;
-    fi
-done
+# Install all created `*.gcno` files so they could be packaged into bluechi-coverage RPM.
+mkdir -p ${COVERAGE_ROOT}
+( cd $MESON_BUILD_ROOT ; find . -name "*.gcno" -exec cp -v --parents {} ${COVERAGE_ROOT} \; )
+
+# Unit test source files are not included in debugsource RPM, add them to bluechi-coverage RPM
+TEST_SUBDIR="src/libbluechi/test"
+mkdir -p ${COVERAGE_ROOT}/${TEST_SUBDIR}
+( cd $MESON_SOURCE_ROOT/${TEST_SUBDIR} ; find . -name "*.c" -exec cp -v --parents {} ${COVERAGE_ROOT}/${TEST_SUBDIR} \; )
