@@ -269,6 +269,7 @@ popd
 %if 0%{?with_coverage}
 mkdir -p %{buildroot}/%{_datadir}/bluechi-coverage/bin
 cp tests/scripts/gather-code-coverage.sh %{buildroot}/%{_datadir}/bluechi-coverage/bin
+cp tests/scripts/setup-src-dir-for-coverage.sh %{buildroot}/%{_datadir}/bluechi-coverage/bin
 
 mkdir -p %{buildroot}/%{_localstatedir}/tmp/bluechi-coverage/
 %endif
@@ -283,6 +284,12 @@ popd
 %check
 %meson_test
 
+%if 0%{?with_coverage}
+# Install gcda files from unit test execution so they could be packages into bluechi-coverage RPM.
+# Those files cannot be installed inside install section, because unit tests are executed later.
+# Files need to be moved to clean up as using clean section in spec is not recommended by Fedora Packaging Guidelines.
+mv /var/tmp/bluechi-coverage/*.gcda %{buildroot}/%{_datadir}/bluechi-coverage
+%endif
 
 %changelog
 * Mon Jan 17 2024 Michael Engel <mengel@redhat.com> - 0.7.0-1

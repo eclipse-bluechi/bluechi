@@ -20,7 +20,11 @@ def exec(ctrl: BluechiControllerContainer, nodes: Dict[str, BluechiNodeContainer
     merge_dir = "/tmp"
     report_dir_name = "/report"
 
+    LOGGER.debug("Setting up source code directory for generating coverage report")
+    ctrl.exec_run("/usr/share/bluechi-coverage/bin/setup-src-dir-for-coverage.sh")
+
     # Copy info files to the ctrl container and run lcov command
+    LOGGER.debug(f"Merging info files from integration tests to '{merge_dir}/{merge_file_name}'")
     root = pathlib.Path(path_to_info_files)
     lcov_list = list()
     lcov_list.append("lcov")
@@ -33,8 +37,11 @@ def exec(ctrl: BluechiControllerContainer, nodes: Dict[str, BluechiNodeContainer
 
     lcov_list.append("-o")
     lcov_list.append(f"{merge_dir}/{merge_file_name}")
+    result, output = ctrl.exec_run(" ".join(lcov_list))
+    if result != 0:
+        raise Exception(f"Error merging info files from each integration test: {output}")
 
-    ctrl.exec_run(" ".join(lcov_list))
+    LOGGER.debug(f"Generating report for merged info file '{merge_dir}/{merge_file_name}'")
     result, output = ctrl.exec_run(f"genhtml {merge_dir}/{merge_file_name} --output-directory={report_dir_name}")
     if result != 0:
         raise Exception(f"Failed to do run genthtml inside the container: {output}")
