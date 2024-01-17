@@ -1,11 +1,8 @@
 name: Integration tests
 
 on:
-  push:
-    branches: [main, hirte-*]
-  pull_request:
-    branches: [main, hirte-*]
-  workflow_dispatch:
+  workflow_call:
+
 
 jobs:
   rpmbuild:
@@ -105,10 +102,13 @@ jobs:
           MERGE_FILE="/var/tmp/tmt/run-001/plans/tier0/report/default-0/merged.info"
           COVERAGE_DIR="/var/tmp/tmt/run-001/plans/tier0/report/default-0/report/"
           if [ -d "$COVERAGE_DIR" ]; then
-            cp -r $COVERAGE_DIR /var/tmp
-            cp $MERGE_FILE /var/tmp
+            mkdir -p /var/tmp/coverage
+            mv $MERGE_FILE /var/tmp/coverage/integration-test-coverage.info
+
+            mkdir -p /var/tmp/coverage/integration-test-report
+            mv $COVERAGE_DIR/* /var/tmp/coverage/integration-test-report
+
             rm -rf $COVERAGE_DIR
-            rm -rf $MERGE_FILE
           fi
       
       - name: Upload tmt artifacts
@@ -118,17 +118,16 @@ jobs:
           name: tmt-artifacts
           path: '/var/tmp/tmt'
 
-      - name: Upload coverage HTML report
+      - name: Upload coverage artifact (info)
         if: always()
         uses: actions/upload-artifact@v3
         with:
-          name: coverage-artifacts-html
-          path: '/var/tmp/report'
-      
-      - name: Upload coverage file
+          name: integration-test-coverage-info
+          path: '/var/tmp/coverage/integration-test-coverage.info'
+
+      - name: Upload coverage artifact (html)
         if: always()
         uses: actions/upload-artifact@v3
         with:
-          name: coverage-artifacts-info
-          path: '/var/tmp/merged.info'
-      
+          name: integration-test-coverage-html
+          path: '/var/tmp/coverage/integration-test-report'

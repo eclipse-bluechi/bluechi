@@ -1,11 +1,8 @@
 name: Unit tests
 
 on:
-  push:
-    branches: [main, hirte-*]
-  pull_request:
-    branches: [main, hirte-*]
-  workflow_dispatch:
+  workflow_call:
+
 
 jobs:
   test:
@@ -41,9 +38,21 @@ jobs:
         run: |
           meson test --wrap='valgrind --leak-check=full --error-exitcode=1 --track-origins=yes' -C builddir
 
-      - name: Generating coverage report
+      - name: Generating coverage report (info)
+        run: |
+          ninja coverage -C builddir
+
+      - name: Generating coverage report (html)
         run: |
           ninja coverage-html -C builddir
+          
+      - name: Move and rename coverage artifacts
+        run: |
+          mkdir -p /var/tmp/coverage
+          mv builddir/meson-logs/coverage.info /var/tmp/coverage/unit-test-coverage.info
+          
+          mkdir -p /var/tmp/coverage/unit-test-report
+          mv builddir/meson-logs/coveragereport/* /var/tmp/coverage/unit-test-report/
 
       - name: Upload unit test logs
         if: always()
@@ -52,14 +61,21 @@ jobs:
           name: unit-test-logs
           path: ./builddir/meson-logs/testlog-valgrind.txt
 
-      - name: Upload coverage HTML artifact
+      - name: Upload coverage artifact (info)
         uses: actions/upload-artifact@v3
         with:
-          name: coverage
-          path: builddir/meson-logs/coveragereport
+          name: unit-test-coverage-info
+          path: /var/tmp/coverage/unit-test-coverage.info
+          if-no-files-found: error
+
+      - name: Upload coverage artifact (html)
+        uses: actions/upload-artifact@v3
+        with:
+          name: unit-test-coverage-html
+          path: /var/tmp/coverage/unit-test-report/
           if-no-files-found: error
 
       - name: Report coverage results
         run: |
-          cd builddir/meson-logs/coveragereport/
+          cd /var/tmp/coverage/unit-test-report/
           html2text --ignore-images --ignore-links -b 0 --bypass-tables index.html >> $GITHUB_STEP_SUMMARY

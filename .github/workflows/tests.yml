@@ -1,0 +1,97 @@
+name: BlueChi Tests
+
+on:
+  push:
+    branches: [main, hirte-*]
+  pull_request:
+    branches: [main, hirte-*]
+  workflow_dispatch:
+
+jobs:
+  unit-tests:
+    uses: ./.github/workflows/unit-tests.yml
+
+  integration-tests:
+    uses: ./.github/workflows/integration-tests.yml
+
+  publish-coverage:
+    runs-on: ubuntu-latest
+    container:
+      image: quay.io/bluechi/build-base:latest
+    needs: [unit-tests, integration-tests]
+
+    steps:  
+      - name: Checkout sources
+        uses: actions/checkout@v3
+        with:
+          submodules: 'true'
+
+      - name: Download unit test coverage artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: unit-test-coverage-info
+          path: '/tmp/coverage'
+
+      - name: Download integration test coverage artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: integration-test-coverage-info
+          path: '/tmp/coverage'
+      
+      - name: Download rpm artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: rpm-artifacts
+          path: '/tmp/bluechi-rpms'
+      
+      # For code coverage from integration tests
+      - name: Install debug sources for genhtml
+        run: |
+          dnf install \
+            python3-dasbus \
+            selinux-policy \
+            -y
+          dnf install --repo bluechi-rpms \
+            --repofrompath bluechi-rpms,file:///tmp/bluechi-rpms/ \
+            --nogpgcheck \
+            --nodocs \
+            bluechi-controller \
+            bluechi-controller-debuginfo \
+            bluechi-agent \
+            bluechi-agent-debuginfo \
+            bluechi-ctl \
+            bluechi-ctl-debuginfo \
+            bluechi-selinux \
+            python3-bluechi \
+            -y
+
+      # For code coverage from unit tests
+      - name: Manipulate entries from unit test coverage
+        run: | 
+          BC_VRA="$(rpm -q --qf '%{VERSION}-%{RELEASE}.%{ARCH}' bluechi-agent 2>/dev/null)"
+          sed -i "s/\/usr\/src\/debug\/bluechi-$BC_VRA\/src/\/__w\/bluechi\/bluechi\/src/g" /tmp/coverage/integration-test-coverage.info
+
+      - name: Merge unit and integration test coverage
+        run: |
+          lcov \
+            -a /tmp/coverage/unit-test-coverage.info \
+            -a /tmp/coverage/integration-test-coverage.info \
+            -o /var/tmp/overall-coverage.info
+      
+      - name: Generate overall test coverage report
+        run: |
+          genhtml /var/tmp/overall-coverage.info --output-directory=/var/tmp/test-coverage-report
+      
+      - name: Upload coverage artifact (info)
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: overall-test-coverage-info
+          path: '/var/tmp/overall-coverage.info'
+      
+      - name: Upload coverage artifact (html)
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: overall-test-coverage-html
+          path: '/var/tmp/test-coverage-report'
