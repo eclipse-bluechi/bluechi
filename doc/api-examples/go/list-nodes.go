@@ -12,7 +12,7 @@ import (
 const (
 	BcDusInterface  = "org.eclipse.bluechi"
 	BcObjectPath    = "/org/eclipse/bluechi"
-	MethodListNodes = "org.eclipse.bluechi.Manager.ListNodes"
+	MethodListNodes = "org.eclipse.bluechi.Controller.ListNodes"
 )
 
 func main() {

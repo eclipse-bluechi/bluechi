@@ -12,7 +12,7 @@ import (
 const (
 	BcDusInterface  = "org.eclipse.bluechi"
 	BcObjectPath    = "/org/eclipse/bluechi"
-	MethodGetNode   = "org.eclipse.bluechi.Manager.GetNode"
+	MethodGetNode   = "org.eclipse.bluechi.Controller.GetNode"
 	MethodStartUnit = "org.eclipse.bluechi.Node.StartUnit"
 )
 

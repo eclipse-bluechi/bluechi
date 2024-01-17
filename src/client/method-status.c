@@ -549,7 +549,7 @@ static int method_print_node_status(Client *client, char *node_name, bool do_wat
                         client->api_bus,
                         BC_INTERFACE_BASE_NAME,
                         BC_OBJECT_PATH,
-                        MANAGER_INTERFACE,
+                        CONTROLLER_INTERFACE,
                         "ListNodes",
                         &error,
                         &reply,

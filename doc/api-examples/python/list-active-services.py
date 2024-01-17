@@ -9,8 +9,8 @@ NodeUnitInfo = namedtuple("NodeUnitInfo", ["node", "name",
                                            "description", "load_state", "active_state", "sub_state", "follower",
                                            "object_path", "job_id", "job_type", "job_object_path"])
 
-manager = bus.get_proxy("org.eclipse.bluechi",  "/org/eclipse/bluechi")
-units = manager.ListUnits()
+controller = bus.get_proxy("org.eclipse.bluechi",  "/org/eclipse/bluechi")
+units = controller.ListUnits()
 for u in units:
     info = NodeUnitInfo(*u)
     if info.active_state == "active" and info.name.endswith(".service"):

@@ -1,9 +1,9 @@
 /* SPDX-License-Identifier: LGPL-2.1-or-later */
 #include <stddef.h>
 
+#include "controller.h"
 #include "job.h"
 #include "libbluechi/log/log.h"
-#include "manager.h"
 #include "node.h"
 
 static int job_property_get_nodename(
@@ -92,10 +92,10 @@ void job_unref(Job *job) {
 
 bool job_export(Job *job) {
         Node *node = job->node;
-        Manager *manager = node->manager;
+        Controller *controller = node->controller;
 
         int r = sd_bus_add_object_vtable(
-                        manager->api_bus, &job->export_slot, job->object_path, JOB_INTERFACE, job_vtable, job);
+                        controller->api_bus, &job->export_slot, job->object_path, JOB_INTERFACE, job_vtable, job);
         if (r < 0) {
                 bc_log_errorf("Failed to add job vtable: %s", strerror(-r));
                 return false;
@@ -106,12 +106,12 @@ bool job_export(Job *job) {
 
 void job_set_state(Job *job, JobState state) {
         Node *node = job->node;
-        Manager *manager = node->manager;
+        Controller *controller = node->controller;
 
         job->state = state;
 
         int r = sd_bus_emit_properties_changed(
-                        manager->api_bus, job->object_path, JOB_INTERFACE, "State", NULL);
+                        controller->api_bus, job->object_path, JOB_INTERFACE, "State", NULL);
         if (r < 0) {
                 bc_log_errorf("Failed to emit status property changed: %s", strerror(-r));
         }

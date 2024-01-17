@@ -94,7 +94,7 @@ class Monitor(ApiBase):
     org.eclipse.bluechi.Monitor:
     @short_description: Public interface of BlueChi on the managing node providing monitoring functionality.
 
-    This interface is only available if a monitor has been created before via the Manager interface.
+    This interface is only available if a monitor has been created before via the Controller interface.
     It provides methods to subscribe to changes in systemd units on managed nodes as well as signals for those changes.
     """
 
@@ -294,7 +294,7 @@ class Metrics(ApiBase):
     org.eclipse.bluechi.Metrics:
     @short_description: Public interface of BlueChi on the managing node providing signals for performance metrics.
 
-    This interface is only available if the metrics have been enabled before via the Manager interface.
+    This interface is only available if the metrics have been enabled before via the Controller interface.
     """
 
     def __init__(self, bus: MessageBus = None, use_systembus=True) -> None:
@@ -440,9 +440,9 @@ class Job(ApiBase):
         self.get_properties_proxy().PropertiesChanged.connect(on_properties_changed)
 
 
-class Manager(ApiBase):
+class Controller(ApiBase):
     """
-    org.eclipse.bluechi.Manager:
+    org.eclipse.bluechi.Controller:
     @short_description: Public interface of BlueChi on the managing node providing methods and signals for all nodes.
 
     This interface can be used to get information about all nodes and their units, create monitors and listen for job signals.
@@ -527,7 +527,7 @@ class Manager(ApiBase):
           SetLogLevel:
         @loglevel: The new loglevel to use.
 
-        Change the loglevel of the manager.
+        Change the loglevel of the controller.
         """
         self.get_proxy().SetLogLevel(
             loglevel,
@@ -633,8 +633,8 @@ class Node(ApiBase):
         # set empty node path temporary, needs to be resolved after the bus has been set
         super().__init__(BC_DBUS_INTERFACE, "", bus, use_systembus)
 
-        manager = self.bus.get_proxy(BC_DBUS_INTERFACE, BC_OBJECT_PATH)
-        self.object_path = manager.GetNode(node_name)
+        controller = self.bus.get_proxy(BC_DBUS_INTERFACE, BC_OBJECT_PATH)
+        self.object_path = controller.GetNode(node_name)
 
         self.node_name = node_name
 
@@ -650,7 +650,7 @@ class Node(ApiBase):
         fails if mode is fail.
 
           The job returned is an object path for an object implementing org.eclipse.bluechi.Job, and which be monitored for the progress of the job, or used
-        to cancel the job. To track the result of the job, follow the JobRemoved signal on the Manager.
+        to cancel the job. To track the result of the job, follow the JobRemoved signal on the Controller.
         """
         return self.get_proxy().StartUnit(
             name,
@@ -844,7 +844,7 @@ class Node(ApiBase):
           SetLogLevel:
         @loglevel: The new loglevel to use.
 
-        Change the loglevel of the manager.
+        Change the loglevel of the controller.
         """
         self.get_proxy().SetLogLevel(
             level,

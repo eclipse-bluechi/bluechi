@@ -34,7 +34,7 @@ Type=simple
 ExecStart=/usr/bin/python3 -m http.server 9000 --directory /tmp/bluechi-cdn/
 ```
 
-Reload the systemd manager configuration so it can find the newly created service:
+Reload the systemd controller configuration so it can find the newly created service:
 
 ```bash
 $ systemctl daemon-reload

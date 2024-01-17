@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: MIT-0
 
-from bluechi.api import Manager, Node
+from bluechi.api import Controller, Node
 from dasbus.loop import EventLoop
 from dasbus.typing import Variant
 
@@ -8,7 +8,7 @@ from dasbus.typing import Variant
 loop = EventLoop()
 
 nodes = []
-for node in Manager().list_nodes():
+for node in Controller().list_nodes():
     n = Node(node[0])
 
     def changed_wrapper(node_name: str):

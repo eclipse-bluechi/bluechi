@@ -1,8 +1,8 @@
 /* SPDX-License-Identifier: LGPL-2.1-or-later */
 #include "libbluechi/log/log.h"
 
+#include "controller.h"
 #include "job.h"
-#include "manager.h"
 #include "monitor.h"
 #include "node.h"
 #include "proxy_monitor.h"

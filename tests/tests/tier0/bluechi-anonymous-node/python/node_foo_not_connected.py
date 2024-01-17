@@ -2,13 +2,13 @@
 
 import unittest
 
-from bluechi.api import Manager
+from bluechi.api import Controller
 
 
 class TestNodeFooNotConnected(unittest.TestCase):
 
     def test_node_foo_not_connected(self):
-        mgr = Manager()
+        mgr = Controller()
 
         nodes = mgr.list_nodes()
         assert len(nodes) == 1

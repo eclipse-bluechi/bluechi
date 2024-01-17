@@ -16,8 +16,8 @@ if len(sys.argv) != 2:
 
 node_name = sys.argv[1]
 
-manager = bus.get_proxy("org.eclipse.bluechi", "/org/eclipse/bluechi")
-node_path = manager.GetNode(node_name)
+controller = bus.get_proxy("org.eclipse.bluechi", "/org/eclipse/bluechi")
+node_path = controller.GetNode(node_name)
 node = bus.get_proxy("org.eclipse.bluechi", node_path)
 
 units = node.ListUnits()

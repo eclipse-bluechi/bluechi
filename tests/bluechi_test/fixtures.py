@@ -96,8 +96,8 @@ def bluechi_ctrl_default_config(bluechi_ctrl_svc_port: str):
 def bluechi_node_default_config(bluechi_ctrl_svc_port: str):
     return BluechiNodeConfig(
         file_name="agent.conf",
-        manager_host=get_primary_ip(),
-        manager_port=bluechi_ctrl_svc_port)
+        controller_host=get_primary_ip(),
+        controller_port=bluechi_ctrl_svc_port)
 
 
 @pytest.fixture(scope='function')

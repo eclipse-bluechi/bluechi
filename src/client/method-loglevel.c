@@ -40,7 +40,7 @@ static int method_set_loglevel_on(Client *client, char *node_name, char *logleve
                                 client->api_bus,
                                 BC_INTERFACE_BASE_NAME,
                                 BC_OBJECT_PATH,
-                                MANAGER_INTERFACE,
+                                CONTROLLER_INTERFACE,
                                 "SetLogLevel",
                                 &error,
                                 &result,

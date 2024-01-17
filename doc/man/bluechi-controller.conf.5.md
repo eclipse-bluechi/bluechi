@@ -19,12 +19,12 @@ All fields to bootstrap the bluechi controller are contained in the **bluechi-co
 
 #### **ControllerPort** (uint16_t)
 
-The port the manager listens on to establish connections with the `bluechi-agent`. By default port `842` is used.
+The port the bluechi-controller listens on to establish connections with the `bluechi-agent`. By default port `842` is used.
 
 #### **AllowedNodeNames** (string)
 
 A comma separated list of unique bluechi-agent names. It's mandatory to set the option, only nodes with names mentioned
-in the list can connect to `bluechi` manager. These names are defined in the agent's configuration file under `NodeName`
+in the list can connect to `bluechi-controller'. These names are defined in the agent's configuration file under `NodeName`
 option (see `bluechi-agent.conf(5)`).
 
 #### **LogLevel** (string)

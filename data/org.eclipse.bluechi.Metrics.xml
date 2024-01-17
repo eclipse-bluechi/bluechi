@@ -6,7 +6,7 @@
     org.eclipse.bluechi.Metrics:
     @short_description: Public interface of BlueChi on the managing node providing signals for performance metrics.
 
-    This interface is only available if the metrics have been enabled before via the Manager interface.
+    This interface is only available if the metrics have been enabled before via the Controller interface.
   -->
   <interface name="org.eclipse.bluechi.Metrics">
 

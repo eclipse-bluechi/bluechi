@@ -4,7 +4,7 @@ import unittest
 
 from dasbus.loop import EventLoop
 
-from bluechi.api import Manager, Monitor, Node, Structure
+from bluechi.api import Controller, Monitor, Node, Structure
 
 # In this test, first the wildcard subscription is created and then the systemd units on both nodes
 # are started. These systemd only units start and exit, therefore triggering all lifecycle events.
@@ -37,7 +37,7 @@ class TestMonitorWildcardUnitChanges(unittest.TestCase):
         }
 
         self.loop = EventLoop()
-        self.mgr = Manager()
+        self.mgr = Controller()
         self.monitor = Monitor(self.mgr.create_monitor())
 
         def on_unit_new(node: str, unit: str, reason: str) -> None:

@@ -12,7 +12,7 @@ static int get_node_path(sd_bus *bus, char *node_name, char **ret_node_path) {
                         bus,
                         "org.eclipse.bluechi",
                         "/org/eclipse/bluechi",
-                        "org.eclipse.bluechi.Manager",
+                        "org.eclipse.bluechi.Controller",
                         "GetNode",
                         &error,
                         &result,

@@ -5,7 +5,7 @@ import unittest
 from dasbus.error import DBusError
 from dasbus.loop import EventLoop
 
-from bluechi.api import Manager, Monitor, Node
+from bluechi.api import Controller, Monitor, Node
 
 
 class TestMonitorWildcardNodeReconnect(unittest.TestCase):
@@ -15,7 +15,7 @@ class TestMonitorWildcardNodeReconnect(unittest.TestCase):
         self.expected_nodes_unit_removed = ["node-foo"]
 
         self.loop = EventLoop()
-        self.mgr = Manager()
+        self.mgr = Controller()
         self.monitor = Monitor(self.mgr.create_monitor())
 
         def on_unit_new(node: str, unit: str, reason: str) -> None:

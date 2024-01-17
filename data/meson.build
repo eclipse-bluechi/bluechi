@@ -4,7 +4,7 @@
 install_data(
     [
         'org.eclipse.bluechi.Job.xml',
-        'org.eclipse.bluechi.Manager.xml',
+        'org.eclipse.bluechi.Controller.xml',
         'org.eclipse.bluechi.Monitor.xml',
         'org.eclipse.bluechi.Node.xml',
         'org.eclipse.bluechi.Agent.xml'

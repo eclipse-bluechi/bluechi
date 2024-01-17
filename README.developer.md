@@ -72,7 +72,7 @@ of installation for your setup.
          /org/eclipse/bluechi
 
 NAME                                TYPE      SIGNATURE RESULT/VALUE   FLAGS
-org.eclipse.bluechi.Manager         interface -         -              -
+org.eclipse.bluechi.Controller         interface -         -              -
 .CreateMonitor                      method    -         o              -
 .DisableMetrics                     method    -         -              -
 .EnableMetrics                      method    -         -              -
@@ -100,7 +100,7 @@ org.freedesktop.DBus.Properties     interface -         -              -
 ```bash
 export SERVICE="org.eclipse.bluechi"
 export OBJECT="/org/eclipse/bluechi"
-export INTERFACE="org.eclipse.bluechi.Manager"
+export INTERFACE="org.eclipse.bluechi.Controller"
 export METHOD="ListNodes"
 
 # busctl call \

@@ -4,8 +4,8 @@
 #include "libbluechi/common/time-util.h"
 #include "libbluechi/log/log.h"
 
+#include "controller.h"
 #include "job.h"
-#include "manager.h"
 #include "metrics.h"
 #include "monitor.h"
 #include "node.h"
@@ -52,7 +52,7 @@ static int node_property_get_last_seen(
                 void *userdata,
                 sd_bus_error *ret_error);
 
-static const sd_bus_vtable internal_manager_controller_vtable[] = {
+static const sd_bus_vtable internal_controller_controller_vtable[] = {
         SD_BUS_VTABLE_START(0), SD_BUS_METHOD("Register", "s", "", node_method_register, 0), SD_BUS_VTABLE_END
 };
 
@@ -128,14 +128,14 @@ static int unit_subscriptions_compare(const void *a, const void *b, UNUSED void 
 }
 
 
-Node *node_new(Manager *manager, const char *name) {
+Node *node_new(Controller *controller, const char *name) {
         _cleanup_node_ Node *node = malloc0(sizeof(Node));
         if (node == NULL) {
                 return NULL;
         }
 
         node->ref_count = 1;
-        node->manager = manager;
+        node->controller = controller;
         LIST_INIT(nodes, node);
         LIST_HEAD_INIT(node->outstanding_requests);
         LIST_HEAD_INIT(node->proxy_monitors);
@@ -219,12 +219,17 @@ void node_shutdown(Node *node) {
 }
 
 bool node_export(Node *node) {
-        Manager *manager = node->manager;
+        Controller *controller = node->controller;
 
         assert(node->name != NULL);
 
         int r = sd_bus_add_object_vtable(
-                        manager->api_bus, &node->export_slot, node->object_path, NODE_INTERFACE, node_vtable, node);
+                        controller->api_bus,
+                        &node->export_slot,
+                        node->object_path,
+                        NODE_INTERFACE,
+                        node_vtable,
+                        node);
         if (r < 0) {
                 bc_log_errorf("Failed to add node vtable: %s", strerror(-r));
                 return false;
@@ -329,7 +334,7 @@ static struct hashmap *node_compute_unique_monitor_subscriptions(Node *node, con
 
 static int node_match_job_state_changed(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *error) {
         Node *node = userdata;
-        Manager *manager = node->manager;
+        Controller *controller = node->controller;
         uint32_t bc_job_id = 0;
         const char *state = NULL;
 
@@ -339,7 +344,7 @@ static int node_match_job_state_changed(sd_bus_message *m, void *userdata, UNUSE
                 return 0;
         }
 
-        manager_job_state_changed(manager, bc_job_id, state);
+        controller_job_state_changed(controller, bc_job_id, state);
         return 1;
 }
 
@@ -489,7 +494,7 @@ static int node_match_unit_removed(sd_bus_message *m, void *userdata, UNUSED sd_
 
 static int node_match_job_done(UNUSED sd_bus_message *m, UNUSED void *userdata, UNUSED sd_bus_error *error) {
         Node *node = userdata;
-        Manager *manager = node->manager;
+        Controller *controller = node->controller;
         uint32_t bc_job_id = 0;
         const char *result = NULL;
 
@@ -499,7 +504,7 @@ static int node_match_job_done(UNUSED sd_bus_message *m, UNUSED void *userdata, 
                 return 0;
         }
 
-        manager_finish_job(manager, bc_job_id, result);
+        controller_finish_job(controller, bc_job_id, result);
         return 1;
 }
 
@@ -528,7 +533,7 @@ static ProxyMonitor *node_find_proxy_monitor(Node *node, const char *target_node
 
 static int node_on_match_proxy_new(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *error) {
         Node *node = userdata;
-        Manager *manager = node->manager;
+        Controller *controller = node->controller;
 
         const char *target_node_name = NULL;
         const char *unit_name = NULL;
@@ -551,7 +556,7 @@ static int node_on_match_proxy_new(sd_bus_message *m, void *userdata, UNUSED sd_
                 return -ENOMEM;
         }
 
-        Node *target_node = manager_find_node(manager, target_node_name);
+        Node *target_node = controller_find_node(controller, target_node_name);
         if (target_node == NULL) {
                 bc_log_error("Proxy requested for non-existing node");
                 proxy_monitor_send_error(monitor, "No such node");
@@ -575,7 +580,7 @@ static int node_on_match_proxy_new(sd_bus_message *m, void *userdata, UNUSED sd_
 
         /* We now have a valid monitor, add it to the list and enable monitor.
            From this point we should not send errors. */
-        manager_add_subscription(manager, monitor->subscription);
+        controller_add_subscription(controller, monitor->subscription);
         LIST_APPEND(monitors, node->proxy_monitors, proxy_monitor_ref(monitor));
 
         /* TODO: What about !!node_is_online(target_node) ? Tell now or wait for it to connect? */
@@ -584,11 +589,11 @@ static int node_on_match_proxy_new(sd_bus_message *m, void *userdata, UNUSED sd_
 }
 
 void node_remove_proxy_monitor(Node *node, ProxyMonitor *monitor) {
-        Manager *manager = node->manager;
+        Controller *controller = node->controller;
 
         proxy_monitor_close(monitor);
 
-        manager_remove_subscription(manager, monitor->subscription);
+        controller_remove_subscription(controller, monitor->subscription);
         LIST_REMOVE(monitors, node->proxy_monitors, monitor);
 
         proxy_monitor_unref(monitor);
@@ -633,10 +638,10 @@ bool node_set_agent_bus(Node *node, sd_bus *bus) {
                 // can be called. We can't reconnect it during migration.
                 r = sd_bus_add_object_vtable(
                                 bus,
-                                &node->internal_manager_slot,
-                                INTERNAL_MANAGER_OBJECT_PATH,
-                                INTERNAL_MANAGER_INTERFACE,
-                                internal_manager_controller_vtable,
+                                &node->internal_controller_slot,
+                                INTERNAL_CONTROLLER_OBJECT_PATH,
+                                INTERNAL_CONTROLLER_INTERFACE,
+                                internal_controller_controller_vtable,
                                 node);
                 if (r < 0) {
                         node_unset_agent_bus(node);
@@ -758,7 +763,7 @@ bool node_set_agent_bus(Node *node, sd_bus *bus) {
                 }
 
                 r = sd_bus_emit_properties_changed(
-                                node->manager->api_bus, node->object_path, NODE_INTERFACE, "Status", NULL);
+                                node->controller->api_bus, node->object_path, NODE_INTERFACE, "Status", NULL);
                 if (r < 0) {
                         bc_log_errorf("Failed to emit status property changed: %s", strerror(-r));
                 }
@@ -814,8 +819,8 @@ void node_unset_agent_bus(Node *node) {
         sd_bus_slot_unrefp(&node->disconnect_slot);
         node->disconnect_slot = NULL;
 
-        sd_bus_slot_unrefp(&node->internal_manager_slot);
-        node->internal_manager_slot = NULL;
+        sd_bus_slot_unrefp(&node->internal_controller_slot);
+        node->internal_controller_slot = NULL;
 
         sd_bus_slot_unrefp(&node->metrics_matching_slot);
         node->metrics_matching_slot = NULL;
@@ -825,17 +830,17 @@ void node_unset_agent_bus(Node *node) {
 
         if (was_online) {
                 int r = sd_bus_emit_properties_changed(
-                                node->manager->api_bus, node->object_path, NODE_INTERFACE, "Status", NULL);
+                                node->controller->api_bus, node->object_path, NODE_INTERFACE, "Status", NULL);
                 if (r < 0) {
                         bc_log_errorf("Failed to emit status property changed: %s", strerror(-r));
                 }
         }
 }
 
-/* org.eclipse.bluechi.internal.Manager.Register(in s name)) */
+/* org.eclipse.bluechi.internal.Controller.Register(in s name)) */
 static int node_method_register(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error) {
         Node *node = userdata;
-        Manager *manager = node->manager;
+        Controller *controller = node->controller;
         char *name = NULL;
         _cleanup_free_ char *description = NULL;
 
@@ -851,7 +856,7 @@ static int node_method_register(sd_bus_message *m, void *userdata, UNUSED sd_bus
                 return r;
         }
 
-        Node *named_node = manager_find_node(manager, name);
+        Node *named_node = controller_find_node(controller, name);
         if (named_node == NULL) {
                 return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_SERVICE_UNKNOWN, "Unexpected node name");
         }
@@ -873,14 +878,14 @@ static int node_method_register(sd_bus_message *m, void *userdata, UNUSED sd_bus
                                 m, SD_BUS_ERROR_FAILED, "Internal error: Couldn't set agent bus");
         }
 
-        if (manager->metrics_enabled) {
+        if (controller->metrics_enabled) {
                 node_enable_metrics(named_node);
         }
 
         node_unset_agent_bus(node);
 
         /* update number of online nodes and check the new system state */
-        manager_check_system_status(manager, manager->number_of_nodes_online++);
+        controller_check_system_status(controller, controller->number_of_nodes_online++);
 
         bc_log_infof("Registered managed node from fd %d as '%s'", sd_bus_get_fd(agent_bus), name);
 
@@ -889,7 +894,7 @@ static int node_method_register(sd_bus_message *m, void *userdata, UNUSED sd_bus
 
 static int node_disconnected(UNUSED sd_bus_message *message, void *userdata, UNUSED sd_bus_error *error) {
         Node *node = userdata;
-        Manager *manager = node->manager;
+        Controller *controller = node->controller;
         void *item = NULL;
         size_t i = 0;
 
@@ -963,17 +968,17 @@ static int node_disconnected(UNUSED sd_bus_message *message, void *userdata, UNU
         /* Remove anonymous nodes when they disconnect */
         if (node->name == NULL) {
                 bc_log_info("Anonymous node disconnected");
-                manager_remove_node(manager, node);
+                controller_remove_node(controller, node);
         } else {
                 bc_log_infof("Node '%s' disconnected", node->name);
                 /* Remove all jobs associated with the registered node that got disconnected. */
-                if (!LIST_IS_EMPTY(manager->jobs)) {
+                if (!LIST_IS_EMPTY(controller->jobs)) {
                         Job *job = NULL;
                         Job *next_job = NULL;
-                        LIST_FOREACH_SAFE(jobs, job, next_job, manager->jobs) {
+                        LIST_FOREACH_SAFE(jobs, job, next_job, controller->jobs) {
                                 if (strcmp(job->node->name, node->name) == 0) {
                                         bc_log_debugf("Removing job %d from node %s", job->id, job->node->name);
-                                        LIST_REMOVE(jobs, manager->jobs, job);
+                                        LIST_REMOVE(jobs, controller->jobs, job);
                                         job_unref(job);
                                 }
                         }
@@ -981,7 +986,7 @@ static int node_disconnected(UNUSED sd_bus_message *message, void *userdata, UNU
                 node_unset_agent_bus(node);
 
                 /* update number of online nodes and check the new system state */
-                manager_check_system_status(manager, manager->number_of_nodes_online--);
+                controller_check_system_status(controller, controller->number_of_nodes_online--);
         }
 
         return 0;
@@ -1410,7 +1415,7 @@ static JobSetup *job_setup_new(sd_bus_message *request_message, Node *node, cons
 
 static int unit_lifecycle_method_callback(AgentRequest *req, sd_bus_message *m, UNUSED sd_bus_error *ret_error) {
         Node *node = req->node;
-        Manager *manager = node->manager;
+        Controller *controller = node->controller;
         JobSetup *setup = req->userdata;
 
         if (sd_bus_message_is_method_error(m, NULL)) {
@@ -1418,7 +1423,7 @@ static int unit_lifecycle_method_callback(AgentRequest *req, sd_bus_message *m, 
                 return sd_bus_reply_method_error(setup->request_message, sd_bus_message_get_error(m));
         }
 
-        if (!manager_add_job(manager, setup->job)) {
+        if (!controller_add_job(controller, setup->job)) {
                 return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "Failed to add a job");
         }
 
@@ -1450,7 +1455,7 @@ static int node_run_unit_lifecycle_method(
                 return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_NO_MEMORY, "Out of memory");
         }
 
-        if (node->manager->metrics_enabled) {
+        if (node->controller->metrics_enabled) {
                 setup->job->job_start_micros = start_time;
         }
 

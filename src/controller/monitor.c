@@ -1,8 +1,8 @@
 /* SPDX-License-Identifier: LGPL-2.1-or-later */
 #include "libbluechi/log/log.h"
 
+#include "controller.h"
 #include "job.h"
-#include "manager.h"
 #include "monitor.h"
 #include "node.h"
 
@@ -138,7 +138,7 @@ static const sd_bus_vtable monitor_vtable[] = {
         SD_BUS_VTABLE_END
 };
 
-Monitor *monitor_new(Manager *manager, const char *owner) {
+Monitor *monitor_new(Controller *controller, const char *owner) {
         static uint32_t next_id = 0;
         _cleanup_monitor_ Monitor *monitor = malloc0(sizeof(Monitor));
         if (monitor == NULL) {
@@ -147,7 +147,7 @@ Monitor *monitor_new(Manager *manager, const char *owner) {
 
         monitor->ref_count = 1;
         monitor->id = ++next_id;
-        monitor->manager = manager;
+        monitor->controller = controller;
         LIST_INIT(monitors, monitor);
         LIST_HEAD_INIT(monitor->subscriptions);
         LIST_HEAD_INIT(monitor->peers);
@@ -183,10 +183,10 @@ void monitor_unref(Monitor *monitor) {
 }
 
 bool monitor_export(Monitor *monitor) {
-        Manager *manager = monitor->manager;
+        Controller *controller = monitor->controller;
 
         int r = sd_bus_add_object_vtable(
-                        manager->api_bus,
+                        controller->api_bus,
                         &monitor->export_slot,
                         monitor->object_path,
                         MONITOR_INTERFACE,
@@ -201,12 +201,12 @@ bool monitor_export(Monitor *monitor) {
 }
 
 void monitor_close(Monitor *monitor) {
-        Manager *manager = monitor->manager;
+        Controller *controller = monitor->controller;
 
         Subscription *sub = NULL;
         Subscription *next_sub = NULL;
         LIST_FOREACH_SAFE(subscriptions, sub, next_sub, monitor->subscriptions) {
-                manager_remove_subscription(manager, sub);
+                controller_remove_subscription(controller, sub);
                 LIST_REMOVE(subscriptions, monitor->subscriptions, sub);
                 subscription_unref(sub);
         }
@@ -230,7 +230,7 @@ void monitor_close(Monitor *monitor) {
 
 static int monitor_method_close(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error) {
         _cleanup_monitor_ Monitor *monitor = monitor_ref(userdata);
-        Manager *manager = monitor->manager;
+        Controller *controller = monitor->controller;
 
         /* Ensure we don't close it twice somehow */
         if (monitor->export_slot == NULL) {
@@ -238,7 +238,7 @@ static int monitor_method_close(sd_bus_message *m, void *userdata, UNUSED sd_bus
         }
 
         monitor_close(monitor);
-        manager_remove_monitor(manager, monitor);
+        controller_remove_monitor(controller, monitor);
 
         return sd_bus_reply_method_return(m, "");
 }
@@ -249,7 +249,7 @@ static int monitor_method_close(sd_bus_message *m, void *userdata, UNUSED sd_bus
 
 static int monitor_method_subscribe(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error) {
         Monitor *monitor = userdata;
-        Manager *manager = monitor->manager;
+        Controller *controller = monitor->controller;
         const char *node = NULL;
         const char *unit = NULL;
 
@@ -277,7 +277,7 @@ static int monitor_method_subscribe(sd_bus_message *m, void *userdata, UNUSED sd
         }
 
         LIST_APPEND(subscriptions, monitor->subscriptions, subscription_ref(sub));
-        manager_add_subscription(manager, sub);
+        controller_add_subscription(controller, sub);
 
         return sd_bus_reply_method_return(m, "u", sub->id);
 }
@@ -288,7 +288,7 @@ static int monitor_method_subscribe(sd_bus_message *m, void *userdata, UNUSED sd
 
 static int monitor_method_subscribe_list(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error) {
         Monitor *monitor = userdata;
-        Manager *manager = monitor->manager;
+        Controller *controller = monitor->controller;
 
         const char *node = NULL;
         int r = sd_bus_message_read(m, "s", &node);
@@ -348,7 +348,7 @@ static int monitor_method_subscribe_list(sd_bus_message *m, void *userdata, UNUS
         }
 
         LIST_APPEND(subscriptions, monitor->subscriptions, subscription_ref(sub));
-        manager_add_subscription(manager, sub);
+        controller_add_subscription(controller, sub);
 
         return sd_bus_reply_method_return(m, "u", sub->id);
 }
@@ -372,7 +372,7 @@ static Subscription *monitor_find_subscription(Monitor *monitor, uint32_t sub_id
 
 static int monitor_method_unsubscribe(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error) {
         Monitor *monitor = userdata;
-        Manager *manager = monitor->manager;
+        Controller *controller = monitor->controller;
         uint32_t sub_id = 0;
 
         int r = sd_bus_message_read(m, "u", &sub_id);
@@ -390,7 +390,7 @@ static int monitor_method_unsubscribe(sd_bus_message *m, void *userdata, UNUSED 
                                 m, SD_BUS_ERROR_FAILED, "Subscription '%d' not found", sub_id);
         }
 
-        manager_remove_subscription(manager, sub);
+        controller_remove_subscription(controller, sub);
         LIST_REMOVE(subscriptions, monitor->subscriptions, sub);
         subscription_unref(sub);
 
@@ -543,14 +543,14 @@ static sd_bus_message *assemble_unit_state_changed_signal(
 int monitor_on_unit_property_changed(
                 void *userdata, const char *node, const char *unit, const char *interface, sd_bus_message *m) {
         Monitor *monitor = (Monitor *) userdata;
-        Manager *manager = monitor->manager;
+        Controller *controller = monitor->controller;
 
         int r = 0;
         _cleanup_sd_bus_message_ sd_bus_message *sig = NULL;
 
         sig = assemble_unit_property_changed_signal(monitor, node, unit, interface, m);
         if (sig != NULL) {
-                r = sd_bus_send_to(manager->api_bus, sig, monitor->owner, NULL);
+                r = sd_bus_send_to(controller->api_bus, sig, monitor->owner, NULL);
                 if (r < 0) {
                         bc_log_errorf("Monitor: %s, failed to send UnitPropertyChanged signal to monitor owner: %s",
                                       monitor->object_path,
@@ -565,7 +565,7 @@ int monitor_on_unit_property_changed(
         LIST_FOREACH_SAFE(peers, peer, next_peer, monitor->peers) {
                 sig = assemble_unit_property_changed_signal(monitor, node, unit, interface, m);
                 if (sig != NULL) {
-                        r = sd_bus_send_to(manager->api_bus, sig, peer->name, NULL);
+                        r = sd_bus_send_to(controller->api_bus, sig, peer->name, NULL);
                         if (r < 0) {
                                 bc_log_errorf("Monitor: %s, failed to send UnitPropertyChanged signal to peer '%s': %s",
                                               monitor->object_path,
@@ -582,14 +582,14 @@ int monitor_on_unit_property_changed(
 
 int monitor_on_unit_new(void *userdata, const char *node, const char *unit, const char *reason) {
         Monitor *monitor = (Monitor *) userdata;
-        Manager *manager = monitor->manager;
+        Controller *controller = monitor->controller;
 
         int r = 0;
         _cleanup_sd_bus_message_ sd_bus_message *sig = NULL;
 
         sig = assemble_unit_new_signal(monitor, node, unit, reason);
         if (sig != NULL) {
-                r = sd_bus_send_to(manager->api_bus, sig, monitor->owner, NULL);
+                r = sd_bus_send_to(controller->api_bus, sig, monitor->owner, NULL);
                 if (r < 0) {
                         bc_log_errorf("Monitor: %s, failed to send UnitNew signal to monitor owner: %s",
                                       monitor->object_path,
@@ -604,7 +604,7 @@ int monitor_on_unit_new(void *userdata, const char *node, const char *unit, cons
         LIST_FOREACH_SAFE(peers, peer, next_peer, monitor->peers) {
                 sig = assemble_unit_new_signal(monitor, node, unit, reason);
                 if (sig != NULL) {
-                        r = sd_bus_send_to(manager->api_bus, sig, peer->name, NULL);
+                        r = sd_bus_send_to(controller->api_bus, sig, peer->name, NULL);
                         if (r < 0) {
                                 bc_log_errorf("Monitor: %s, failed to send signal to peer '%s': %s",
                                               monitor->object_path,
@@ -627,14 +627,14 @@ int monitor_on_unit_state_changed(
                 const char *substate,
                 const char *reason) {
         Monitor *monitor = (Monitor *) userdata;
-        Manager *manager = monitor->manager;
+        Controller *controller = monitor->controller;
 
         int r = 0;
         _cleanup_sd_bus_message_ sd_bus_message *sig = NULL;
 
         sig = assemble_unit_state_changed_signal(monitor, node, unit, active_state, substate, reason);
         if (sig != NULL) {
-                r = sd_bus_send_to(manager->api_bus, sig, monitor->owner, NULL);
+                r = sd_bus_send_to(controller->api_bus, sig, monitor->owner, NULL);
                 if (r < 0) {
                         bc_log_errorf("Monitor: %s, failed to send signal to monitor owner: %s",
                                       monitor->object_path,
@@ -649,7 +649,7 @@ int monitor_on_unit_state_changed(
         LIST_FOREACH_SAFE(peers, peer, next_peer, monitor->peers) {
                 sig = assemble_unit_state_changed_signal(monitor, node, unit, active_state, substate, reason);
                 if (sig != NULL) {
-                        r = sd_bus_send_to(manager->api_bus, sig, peer->name, NULL);
+                        r = sd_bus_send_to(controller->api_bus, sig, peer->name, NULL);
                         if (r < 0) {
                                 bc_log_errorf("Monitor: %s, failed to send UnitStateChanged signal to peer '%s': %s",
                                               monitor->object_path,
@@ -666,14 +666,14 @@ int monitor_on_unit_state_changed(
 
 int monitor_on_unit_removed(void *userdata, const char *node, const char *unit, const char *reason) {
         Monitor *monitor = (Monitor *) userdata;
-        Manager *manager = monitor->manager;
+        Controller *controller = monitor->controller;
 
         int r = 0;
         _cleanup_sd_bus_message_ sd_bus_message *sig = NULL;
 
         sig = assemble_unit_removed_signal(monitor, node, unit, reason);
         if (sig != NULL) {
-                r = sd_bus_send_to(manager->api_bus, sig, monitor->owner, NULL);
+                r = sd_bus_send_to(controller->api_bus, sig, monitor->owner, NULL);
                 if (r < 0) {
                         bc_log_errorf("Monitor: %s, failed to send signal to monitor owner: %s",
                                       monitor->object_path,
@@ -688,7 +688,7 @@ int monitor_on_unit_removed(void *userdata, const char *node, const char *unit, 
         LIST_FOREACH_SAFE(peers, peer, next_peer, monitor->peers) {
                 sig = assemble_unit_removed_signal(monitor, node, unit, reason);
                 if (sig != NULL) {
-                        r = sd_bus_send_to(manager->api_bus, sig, peer->name, NULL);
+                        r = sd_bus_send_to(controller->api_bus, sig, peer->name, NULL);
                         if (r < 0) {
                                 bc_log_errorf("Monitor: %s, failed to send UnitRemoved signal to peer '%s': %s",
                                               monitor->object_path,
@@ -706,11 +706,11 @@ int monitor_on_unit_removed(void *userdata, const char *node, const char *unit, 
 
 static sd_bus_message *assemble_unit_new_signal(
                 Monitor *monitor, const char *node, const char *unit, const char *reason) {
-        Manager *manager = monitor->manager;
+        Controller *controller = monitor->controller;
 
         _cleanup_sd_bus_message_ sd_bus_message *sig = NULL;
         int r = sd_bus_message_new_signal(
-                        manager->api_bus, &sig, monitor->object_path, MONITOR_INTERFACE, "UnitNew");
+                        controller->api_bus, &sig, monitor->object_path, MONITOR_INTERFACE, "UnitNew");
         if (r < 0) {
                 bc_log_errorf("Monitor: %s, failed to create UnitNew signal: %s",
                               monitor->object_path,
@@ -731,11 +731,11 @@ static sd_bus_message *assemble_unit_new_signal(
 
 static sd_bus_message *assemble_unit_removed_signal(
                 Monitor *monitor, const char *node, const char *unit, const char *reason) {
-        Manager *manager = monitor->manager;
+        Controller *controller = monitor->controller;
 
         _cleanup_sd_bus_message_ sd_bus_message *sig = NULL;
         int r = sd_bus_message_new_signal(
-                        manager->api_bus, &sig, monitor->object_path, MONITOR_INTERFACE, "UnitRemoved");
+                        controller->api_bus, &sig, monitor->object_path, MONITOR_INTERFACE, "UnitRemoved");
         if (r < 0) {
                 bc_log_errorf("Monitor: %s, failed to create UnitRemoved signal: %s",
                               monitor->object_path,
@@ -756,11 +756,15 @@ static sd_bus_message *assemble_unit_removed_signal(
 
 static sd_bus_message *assemble_unit_property_changed_signal(
                 Monitor *monitor, const char *node, const char *unit, const char *interface, sd_bus_message *m) {
-        Manager *manager = monitor->manager;
+        Controller *controller = monitor->controller;
 
         _cleanup_sd_bus_message_ sd_bus_message *sig = NULL;
         int r = sd_bus_message_new_signal(
-                        manager->api_bus, &sig, monitor->object_path, MONITOR_INTERFACE, "UnitPropertiesChanged");
+                        controller->api_bus,
+                        &sig,
+                        monitor->object_path,
+                        MONITOR_INTERFACE,
+                        "UnitPropertiesChanged");
         if (r < 0) {
                 bc_log_errorf("Monitor: %s, failed to create UnitPropertiesChanged signal: %s",
                               monitor->object_path,
@@ -810,11 +814,11 @@ static sd_bus_message *assemble_unit_state_changed_signal(
                 const char *active_state,
                 const char *substate,
                 const char *reason) {
-        Manager *manager = monitor->manager;
+        Controller *controller = monitor->controller;
 
         _cleanup_sd_bus_message_ sd_bus_message *sig = NULL;
         int r = sd_bus_message_new_signal(
-                        manager->api_bus, &sig, monitor->object_path, MONITOR_INTERFACE, "UnitStateChanged");
+                        controller->api_bus, &sig, monitor->object_path, MONITOR_INTERFACE, "UnitStateChanged");
         if (r < 0) {
                 bc_log_errorf("Monitor: %s, failed to create UnitStateChanged signal: %s",
                               monitor->object_path,
@@ -835,11 +839,11 @@ static sd_bus_message *assemble_unit_state_changed_signal(
 
 static void monitor_emit_peer_removed(void *userdata, MonitorPeer *peer, const char *reason) {
         Monitor *monitor = (Monitor *) userdata;
-        Manager *manager = monitor->manager;
+        Controller *controller = monitor->controller;
 
         _cleanup_sd_bus_message_ sd_bus_message *sig = NULL;
         int r = sd_bus_message_new_signal(
-                        manager->api_bus, &sig, monitor->object_path, MONITOR_INTERFACE, "PeerRemoved");
+                        controller->api_bus, &sig, monitor->object_path, MONITOR_INTERFACE, "PeerRemoved");
         if (r < 0) {
                 bc_log_errorf("Monitor: %s, failed to create PeerRemoved signal: %s",
                               monitor->object_path,
@@ -855,7 +859,7 @@ static void monitor_emit_peer_removed(void *userdata, MonitorPeer *peer, const c
                 return;
         }
 
-        r = sd_bus_send_to(manager->api_bus, sig, peer->name, NULL);
+        r = sd_bus_send_to(controller->api_bus, sig, peer->name, NULL);
         if (r < 0) {
                 bc_log_errorf("Monitor: %s, failed to send PeerRemoved signal: %s",
                               monitor->object_path,

@@ -1,7 +1,7 @@
 /* SPDX-License-Identifier: LGPL-2.1-or-later */
 #pragma once
 
-typedef struct Manager Manager;
+typedef struct Controller Controller;
 typedef struct Node Node;
 typedef struct AgentRequest AgentRequest;
 typedef struct Job Job;

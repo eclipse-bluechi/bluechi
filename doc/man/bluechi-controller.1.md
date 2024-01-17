@@ -2,7 +2,7 @@
 
 ## NAME
 
-bluechi-controller - Manager of services across agents
+bluechi-controller - Controller of services across agents
 
 ## SYNOPSIS
 

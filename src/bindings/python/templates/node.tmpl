@@ -8,11 +8,11 @@ class Node(ApiBase):
         # set empty node path temporary, needs to be resolved after the bus has been set
         super().__init__(BC_DBUS_INTERFACE, "", bus, use_systembus)
 
-        manager = self.bus.get_proxy(
+        controller = self.bus.get_proxy(
                 BC_DBUS_INTERFACE,
                 BC_OBJECT_PATH
             )
-        self.object_path = manager.GetNode(node_name)
+        self.object_path = controller.GetNode(node_name)
 
         self.node_name = node_name
 

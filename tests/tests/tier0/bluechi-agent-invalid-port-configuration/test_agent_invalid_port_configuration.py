@@ -24,11 +24,11 @@ def test_agent_invalid_port_configuration(
 
     node_foo_cfg = bluechi_node_default_config.deep_copy()
     node_foo_cfg.node_name = NODE_FOO
-    node_foo_cfg.manager_port = "8420"
+    node_foo_cfg.controller_port = "8420"
 
     node_bar_cfg = bluechi_node_default_config.deep_copy()
     node_bar_cfg.node_name = NODE_BAR
-    node_bar_cfg.manager_port = "842O"
+    node_bar_cfg.controller_port = "842O"
 
     bluechi_ctrl_default_config.allowed_node_names = [NODE_FOO, NODE_BAR]
     bluechi_test.set_bluechi_controller_config(bluechi_ctrl_default_config)

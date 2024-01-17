@@ -17,8 +17,8 @@ def exec(ctrl: BluechiControllerContainer, nodes: Dict[str, BluechiNodeContainer
     node_foo_config = BluechiNodeConfig(
         file_name="agent.conf",
         node_name=node_foo_name,
-        manager_host="localhost",
-        manager_port=ctrl.config.port,
+        controller_host="localhost",
+        controller_port=ctrl.config.port,
     )
     ctrl.create_file(node_foo_config.get_confd_dir(), node_foo_config.file_name, node_foo_config.serialize())
     result, _, wait_result = ctrl.systemctl_start_and_wait("bluechi-agent", 1)

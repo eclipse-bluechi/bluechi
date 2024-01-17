@@ -11,15 +11,15 @@
 #include "libbluechi/log/log.h"
 #include "libbluechi/service/shutdown.h"
 
+#include "controller.h"
 #include "job.h"
-#include "manager.h"
 #include "metrics.h"
 #include "monitor.h"
 #include "node.h"
 
 #define DEBUG_MESSAGES 0
 
-Manager *manager_new(void) {
+Controller *controller_new(void) {
         int r = 0;
         _cleanup_sd_event_ sd_event *event = NULL;
         r = sd_event_default(&event);
@@ -40,81 +40,81 @@ Manager *manager_new(void) {
                 return NULL;
         }
 
-        Manager *manager = malloc0(sizeof(Manager));
-        if (manager != NULL) {
-                manager->ref_count = 1;
-                manager->api_bus_service_name = steal_pointer(&service_name);
-                manager->event = steal_pointer(&event);
-                manager->metrics_enabled = false;
-                manager->number_of_nodes = 0;
-                manager->number_of_nodes_online = 0;
-                manager->peer_socket_options = steal_pointer(&socket_opts);
-                LIST_HEAD_INIT(manager->nodes);
-                LIST_HEAD_INIT(manager->anonymous_nodes);
-                LIST_HEAD_INIT(manager->jobs);
-                LIST_HEAD_INIT(manager->monitors);
-                LIST_HEAD_INIT(manager->all_subscriptions);
+        Controller *controller = malloc0(sizeof(Controller));
+        if (controller != NULL) {
+                controller->ref_count = 1;
+                controller->api_bus_service_name = steal_pointer(&service_name);
+                controller->event = steal_pointer(&event);
+                controller->metrics_enabled = false;
+                controller->number_of_nodes = 0;
+                controller->number_of_nodes_online = 0;
+                controller->peer_socket_options = steal_pointer(&socket_opts);
+                LIST_HEAD_INIT(controller->nodes);
+                LIST_HEAD_INIT(controller->anonymous_nodes);
+                LIST_HEAD_INIT(controller->jobs);
+                LIST_HEAD_INIT(controller->monitors);
+                LIST_HEAD_INIT(controller->all_subscriptions);
         }
 
-        return manager;
+        return controller;
 }
 
-Manager *manager_ref(Manager *manager) {
-        manager->ref_count++;
-        return manager;
+Controller *controller_ref(Controller *controller) {
+        controller->ref_count++;
+        return controller;
 }
 
-void manager_unref(Manager *manager) {
-        assert(manager->ref_count > 0);
+void controller_unref(Controller *controller) {
+        assert(controller->ref_count > 0);
 
-        manager->ref_count--;
-        if (manager->ref_count != 0) {
+        controller->ref_count--;
+        if (controller->ref_count != 0) {
                 return;
         }
 
-        bc_log_debug("Finalizing manager");
+        bc_log_debug("Finalizing controller");
 
-        /* These are removed in manager_stop */
-        assert(LIST_IS_EMPTY(manager->jobs));
-        assert(LIST_IS_EMPTY(manager->all_subscriptions));
-        assert(LIST_IS_EMPTY(manager->monitors));
-        assert(LIST_IS_EMPTY(manager->nodes));
-        assert(LIST_IS_EMPTY(manager->anonymous_nodes));
+        /* These are removed in controller_stop */
+        assert(LIST_IS_EMPTY(controller->jobs));
+        assert(LIST_IS_EMPTY(controller->all_subscriptions));
+        assert(LIST_IS_EMPTY(controller->monitors));
+        assert(LIST_IS_EMPTY(controller->nodes));
+        assert(LIST_IS_EMPTY(controller->anonymous_nodes));
 
-        if (manager->config) {
-                cfg_dispose(manager->config);
-                manager->config = NULL;
+        if (controller->config) {
+                cfg_dispose(controller->config);
+                controller->config = NULL;
         }
 
-        sd_event_unrefp(&manager->event);
+        sd_event_unrefp(&controller->event);
 
-        free_and_null(manager->api_bus_service_name);
-        free_and_null(manager->peer_socket_options);
+        free_and_null(controller->api_bus_service_name);
+        free_and_null(controller->peer_socket_options);
 
-        sd_event_source_unrefp(&manager->node_connection_source);
+        sd_event_source_unrefp(&controller->node_connection_source);
 
-        sd_bus_slot_unrefp(&manager->name_owner_changed_slot);
-        sd_bus_slot_unrefp(&manager->filter_slot);
-        sd_bus_slot_unrefp(&manager->manager_slot);
-        sd_bus_slot_unrefp(&manager->metrics_slot);
-        sd_bus_unrefp(&manager->api_bus);
+        sd_bus_slot_unrefp(&controller->name_owner_changed_slot);
+        sd_bus_slot_unrefp(&controller->filter_slot);
+        sd_bus_slot_unrefp(&controller->controller_slot);
+        sd_bus_slot_unrefp(&controller->metrics_slot);
+        sd_bus_unrefp(&controller->api_bus);
 
-        free(manager);
+        free(controller);
 }
 
-void manager_add_subscription(Manager *manager, Subscription *sub) {
+void controller_add_subscription(Controller *controller, Subscription *sub) {
         Node *node = NULL;
 
-        LIST_APPEND(all_subscriptions, manager->all_subscriptions, subscription_ref(sub));
+        LIST_APPEND(all_subscriptions, controller->all_subscriptions, subscription_ref(sub));
 
         if (subscription_has_node_wildcard(sub)) {
-                LIST_FOREACH(nodes, node, manager->nodes) {
+                LIST_FOREACH(nodes, node, controller->nodes) {
                         node_subscribe(node, sub);
                 }
                 return;
         }
 
-        node = manager_find_node(manager, sub->node);
+        node = controller_find_node(controller, sub->node);
         if (node) {
                 node_subscribe(node, sub);
         } else {
@@ -122,28 +122,28 @@ void manager_add_subscription(Manager *manager, Subscription *sub) {
         }
 }
 
-void manager_remove_subscription(Manager *manager, Subscription *sub) {
+void controller_remove_subscription(Controller *controller, Subscription *sub) {
         Node *node = NULL;
 
         if (subscription_has_node_wildcard(sub)) {
-                LIST_FOREACH(nodes, node, manager->nodes) {
+                LIST_FOREACH(nodes, node, controller->nodes) {
                         node_unsubscribe(node, sub);
                 }
         } else {
-                node = manager_find_node(manager, sub->node);
+                node = controller_find_node(controller, sub->node);
                 if (node) {
                         node_unsubscribe(node, sub);
                 }
         }
 
-        LIST_REMOVE(all_subscriptions, manager->all_subscriptions, sub);
+        LIST_REMOVE(all_subscriptions, controller->all_subscriptions, sub);
         subscription_unref(sub);
 }
 
-Node *manager_find_node(Manager *manager, const char *name) {
+Node *controller_find_node(Controller *controller, const char *name) {
         Node *node = NULL;
 
-        LIST_FOREACH(nodes, node, manager->nodes) {
+        LIST_FOREACH(nodes, node, controller->nodes) {
                 if (strcmp(node->name, name) == 0) {
                         return node;
                 }
@@ -153,10 +153,10 @@ Node *manager_find_node(Manager *manager, const char *name) {
 }
 
 
-Node *manager_find_node_by_path(Manager *manager, const char *path) {
+Node *controller_find_node_by_path(Controller *controller, const char *path) {
         Node *node = NULL;
 
-        LIST_FOREACH(nodes, node, manager->nodes) {
+        LIST_FOREACH(nodes, node, controller->nodes) {
                 if (streq(node->object_path, path)) {
                         return node;
                 }
@@ -165,30 +165,30 @@ Node *manager_find_node_by_path(Manager *manager, const char *path) {
         return NULL;
 }
 
-void manager_remove_node(Manager *manager, Node *node) {
+void controller_remove_node(Controller *controller, Node *node) {
         if (node->name) {
-                manager->number_of_nodes--;
-                LIST_REMOVE(nodes, manager->nodes, node);
+                controller->number_of_nodes--;
+                LIST_REMOVE(nodes, controller->nodes, node);
         } else {
-                LIST_REMOVE(nodes, manager->anonymous_nodes, node);
+                LIST_REMOVE(nodes, controller->anonymous_nodes, node);
         }
 
         if (node_is_online(node)) {
                 node_shutdown(node);
-                manager->number_of_nodes_online--;
+                controller->number_of_nodes_online--;
         }
         node_unref(node);
 }
 
-bool manager_add_job(Manager *manager, Job *job) {
+bool controller_add_job(Controller *controller, Job *job) {
         if (!job_export(job)) {
                 return false;
         }
 
         int r = sd_bus_emit_signal(
-                        manager->api_bus,
-                        BC_MANAGER_OBJECT_PATH,
-                        MANAGER_INTERFACE,
+                        controller->api_bus,
+                        BC_CONTROLLER_OBJECT_PATH,
+                        CONTROLLER_INTERFACE,
                         "JobNew",
                         "uo",
                         job->id,
@@ -198,15 +198,15 @@ bool manager_add_job(Manager *manager, Job *job) {
                 return false;
         }
 
-        LIST_APPEND(jobs, manager->jobs, job_ref(job));
+        LIST_APPEND(jobs, controller->jobs, job_ref(job));
         return true;
 }
 
-void manager_remove_job(Manager *manager, Job *job, const char *result) {
+void controller_remove_job(Controller *controller, Job *job, const char *result) {
         int r = sd_bus_emit_signal(
-                        manager->api_bus,
-                        BC_MANAGER_OBJECT_PATH,
-                        MANAGER_INTERFACE,
+                        controller->api_bus,
+                        BC_CONTROLLER_OBJECT_PATH,
+                        CONTROLLER_INTERFACE,
                         "JobRemoved",
                         "uosss",
                         job->id,
@@ -219,17 +219,17 @@ void manager_remove_job(Manager *manager, Job *job, const char *result) {
                 /* We can't really return a failure here */
         }
 
-        LIST_REMOVE(jobs, manager->jobs, job);
-        if (manager->metrics_enabled && streq(job->type, "start")) {
+        LIST_REMOVE(jobs, controller->jobs, job);
+        if (controller->metrics_enabled && streq(job->type, "start")) {
                 metrics_produce_job_report(job);
         }
         job_unref(job);
 }
 
-void manager_job_state_changed(Manager *manager, uint32_t job_id, const char *state) {
+void controller_job_state_changed(Controller *controller, uint32_t job_id, const char *state) {
         JobState new_state = job_state_from_string(state);
         Job *job = NULL;
-        LIST_FOREACH(jobs, job, manager->jobs) {
+        LIST_FOREACH(jobs, job, controller->jobs) {
                 if (job->id == job_id) {
                         job_set_state(job, new_state);
                         break;
@@ -237,69 +237,69 @@ void manager_job_state_changed(Manager *manager, uint32_t job_id, const char *st
         }
 }
 
-void manager_finish_job(Manager *manager, uint32_t job_id, const char *result) {
+void controller_finish_job(Controller *controller, uint32_t job_id, const char *result) {
         Job *job = NULL;
-        LIST_FOREACH(jobs, job, manager->jobs) {
+        LIST_FOREACH(jobs, job, controller->jobs) {
                 if (job->id == job_id) {
-                        if (manager->metrics_enabled) {
+                        if (controller->metrics_enabled) {
                                 job->job_end_micros = get_time_micros();
                         }
-                        manager_remove_job(manager, job, result);
+                        controller_remove_job(controller, job, result);
                         break;
                 }
         }
 }
 
-Node *manager_add_node(Manager *manager, const char *name) {
-        _cleanup_node_ Node *node = node_new(manager, name);
+Node *controller_add_node(Controller *controller, const char *name) {
+        _cleanup_node_ Node *node = node_new(controller, name);
         if (node == NULL) {
                 return NULL;
         }
 
         if (name) {
-                manager->number_of_nodes++;
-                LIST_APPEND(nodes, manager->nodes, node);
+                controller->number_of_nodes++;
+                LIST_APPEND(nodes, controller->nodes, node);
         } else {
-                LIST_APPEND(nodes, manager->anonymous_nodes, node);
+                LIST_APPEND(nodes, controller->anonymous_nodes, node);
         }
 
         return steal_pointer(&node);
 }
 
-bool manager_set_port(Manager *manager, const char *port_s) {
+bool controller_set_port(Controller *controller, const char *port_s) {
         uint16_t port = 0;
 
         if (!parse_port(port_s, &port)) {
                 bc_log_errorf("Invalid port format '%s'", port_s);
                 return false;
         }
-        manager->port = port;
+        controller->port = port;
         return true;
 }
 
-bool manager_parse_config(Manager *manager, const char *configfile) {
+bool controller_parse_config(Controller *controller, const char *configfile) {
         int result = 0;
 
-        result = cfg_initialize(&manager->config);
+        result = cfg_initialize(&controller->config);
         if (result != 0) {
                 fprintf(stderr, "Error initializing configuration: '%s'.\n", strerror(-result));
                 return false;
         }
 
-        result = cfg_manager_def_conf(manager->config);
+        result = cfg_controller_def_conf(controller->config);
         if (result != 0) {
-                fprintf(stderr, "Failed to set default settings for manager: %s", strerror(-result));
+                fprintf(stderr, "Failed to set default settings for controller: %s", strerror(-result));
                 return false;
         }
 
         result = cfg_load_complete_configuration(
-                        manager->config, CFG_BC_DEFAULT_CONFIG, CFG_ETC_BC_CONF, CFG_ETC_BC_CONF_DIR);
+                        controller->config, CFG_BC_DEFAULT_CONFIG, CFG_ETC_BC_CONF, CFG_ETC_BC_CONF_DIR);
         if (result != 0) {
                 return false;
         }
 
         if (configfile != NULL) {
-                result = cfg_load_from_file(manager->config, configfile);
+                result = cfg_load_from_file(controller->config, configfile);
                 if (result < 0) {
                         fprintf(stderr,
                                 "Error loading configuration file '%s': '%s'.\n",
@@ -313,17 +313,17 @@ bool manager_parse_config(Manager *manager, const char *configfile) {
         }
 
         // set logging configuration
-        bc_log_init(manager->config);
+        bc_log_init(controller->config);
 
         const char *port = NULL;
-        port = cfg_get_value(manager->config, CFG_MANAGER_PORT);
+        port = cfg_get_value(controller->config, CFG_CONTROLLER_PORT);
         if (port) {
-                if (!manager_set_port(manager, port)) {
+                if (!controller_set_port(controller, port)) {
                         return false;
                 }
         }
 
-        const char *expected_nodes = cfg_get_value(manager->config, CFG_ALLOWED_NODE_NAMES);
+        const char *expected_nodes = cfg_get_value(controller->config, CFG_ALLOWED_NODE_NAMES);
         if (expected_nodes) {
                 char *saveptr = NULL;
 
@@ -333,8 +333,8 @@ bool manager_parse_config(Manager *manager, const char *configfile) {
 
                 char *name = strtok_r(expected_nodes_cpy, ",", &saveptr);
                 while (name != NULL) {
-                        if (manager_find_node(manager, name) == NULL) {
-                                manager_add_node(manager, name);
+                        if (controller_find_node(controller, name) == NULL) {
+                                controller_add_node(controller, name);
                         }
 
                         name = strtok_r(NULL, ",", &saveptr);
@@ -342,36 +342,36 @@ bool manager_parse_config(Manager *manager, const char *configfile) {
         }
 
         /* Set socket options used for peer connections with the agents */
-        const char *keepidle = cfg_get_value(manager->config, CFG_TCP_KEEPALIVE_TIME);
+        const char *keepidle = cfg_get_value(controller->config, CFG_TCP_KEEPALIVE_TIME);
         if (keepidle) {
-                if (socket_options_set_tcp_keepidle(manager->peer_socket_options, keepidle) < 0) {
+                if (socket_options_set_tcp_keepidle(controller->peer_socket_options, keepidle) < 0) {
                         bc_log_error("Failed to set TCP KEEPIDLE");
                         return false;
                 }
         }
-        const char *keepintvl = cfg_get_value(manager->config, CFG_TCP_KEEPALIVE_INTERVAL);
+        const char *keepintvl = cfg_get_value(controller->config, CFG_TCP_KEEPALIVE_INTERVAL);
         if (keepintvl) {
-                if (socket_options_set_tcp_keepintvl(manager->peer_socket_options, keepintvl) < 0) {
+                if (socket_options_set_tcp_keepintvl(controller->peer_socket_options, keepintvl) < 0) {
                         bc_log_error("Failed to set TCP KEEPINTVL");
                         return false;
                 }
         }
-        const char *keepcnt = cfg_get_value(manager->config, CFG_TCP_KEEPALIVE_COUNT);
+        const char *keepcnt = cfg_get_value(controller->config, CFG_TCP_KEEPALIVE_COUNT);
         if (keepcnt) {
-                if (socket_options_set_tcp_keepcnt(manager->peer_socket_options, keepcnt) < 0) {
+                if (socket_options_set_tcp_keepcnt(controller->peer_socket_options, keepcnt) < 0) {
                         bc_log_error("Failed to set TCP KEEPCNT");
                         return false;
                 }
         }
         if (socket_options_set_ip_recverr(
-                            manager->peer_socket_options,
-                            cfg_get_bool_value(manager->config, CFG_IP_RECEIVE_ERRORS)) < 0) {
+                            controller->peer_socket_options,
+                            cfg_get_bool_value(controller->config, CFG_IP_RECEIVE_ERRORS)) < 0) {
                 bc_log_error("Failed to set IP RECVERR");
                 return false;
         }
 
 
-        _cleanup_free_ const char *dumped_cfg = cfg_dump(manager->config);
+        _cleanup_free_ const char *dumped_cfg = cfg_dump(controller->config);
         bc_log_debug_with_data("Final configuration used", "\n%s", dumped_cfg);
 
         /* TODO: Handle per-node-name option section */
@@ -379,9 +379,9 @@ bool manager_parse_config(Manager *manager, const char *configfile) {
         return true;
 }
 
-static int manager_accept_node_connection(
+static int controller_accept_node_connection(
                 UNUSED sd_event_source *source, int fd, UNUSED uint32_t revents, void *userdata) {
-        Manager *manager = userdata;
+        Controller *controller = userdata;
         Node *node = NULL;
         _cleanup_fd_ int nfd = accept_tcp_connection_request(fd);
         if (nfd < 0) {
@@ -390,28 +390,28 @@ static int manager_accept_node_connection(
         }
 
         _cleanup_sd_bus_ sd_bus *dbus_server = peer_bus_open_server(
-                        manager->event, "managed-node", BC_DBUS_NAME, steal_fd(&nfd));
+                        controller->event, "managed-node", BC_DBUS_NAME, steal_fd(&nfd));
         if (dbus_server == NULL) {
                 return -1;
         }
 
-        bus_socket_set_options(dbus_server, manager->peer_socket_options);
+        bus_socket_set_options(dbus_server, controller->peer_socket_options);
 
         /* Add anonymous node */
-        node = manager_add_node(manager, NULL);
+        node = controller_add_node(controller, NULL);
         if (node == NULL) {
                 return -1;
         }
 
         if (!node_set_agent_bus(node, dbus_server)) {
-                manager_remove_node(manager, steal_pointer(&node));
+                controller_remove_node(controller, steal_pointer(&node));
                 return -1;
         }
 
         return 0;
 }
 
-static bool manager_setup_node_connection_handler(Manager *manager) {
+static bool controller_setup_node_connection_handler(Controller *controller) {
         int r = 0;
         int accept_fd = -1;
         _cleanup_fd_ int tcp_fd = -1;
@@ -426,7 +426,7 @@ static bool manager_setup_node_connection_handler(Manager *manager) {
         if (n == 1) {
                 accept_fd = SD_LISTEN_FDS_START;
         } else {
-                tcp_fd = create_tcp_socket(manager->port);
+                tcp_fd = create_tcp_socket(controller->port);
                 if (tcp_fd < 0) {
                         bc_log_errorf("Failed to create TCP socket: %s", strerror(errno));
                         return false;
@@ -435,7 +435,12 @@ static bool manager_setup_node_connection_handler(Manager *manager) {
         }
 
         r = sd_event_add_io(
-                        manager->event, &event_source, accept_fd, EPOLLIN, manager_accept_node_connection, manager);
+                        controller->event,
+                        &event_source,
+                        accept_fd,
+                        EPOLLIN,
+                        controller_accept_node_connection,
+                        controller);
         if (r < 0) {
                 bc_log_errorf("Failed to add io event: %s", strerror(-r));
                 return false;
@@ -451,17 +456,17 @@ static bool manager_setup_node_connection_handler(Manager *manager) {
 
         (void) sd_event_source_set_description(event_source, "node-accept-socket");
 
-        manager->node_connection_source = steal_pointer(&event_source);
+        controller->node_connection_source = steal_pointer(&event_source);
 
         return true;
 }
 
 /************************************************************************
- ****** org.eclipse.bluechi.Manager.Ping ******************
+ ****** org.eclipse.bluechi.Controller.Ping ******************
  ************************************************************************/
 
 /* This is a test method for now, it just returns what you passed */
-static int manager_method_ping(sd_bus_message *m, UNUSED void *userdata, UNUSED sd_bus_error *ret_error) {
+static int controller_method_ping(sd_bus_message *m, UNUSED void *userdata, UNUSED sd_bus_error *ret_error) {
         const char *arg = NULL;
 
         int r = sd_bus_message_read(m, "s", &arg);
@@ -473,7 +478,7 @@ static int manager_method_ping(sd_bus_message *m, UNUSED void *userdata, UNUSED 
 
 
 /************************************************************************
- ************** org.eclipse.bluechi.Manager.ListUnits *****
+ ************** org.eclipse.bluechi.Controller.ListUnits *****
  ************************************************************************/
 
 typedef struct ListUnitsRequest {
@@ -510,7 +515,7 @@ static void list_unit_request_freep(ListUnitsRequest **reqp) {
 #define _cleanup_list_unit_request_ _cleanup_(list_unit_request_freep)
 
 
-static int manager_method_list_units_encode_reply(ListUnitsRequest *req, sd_bus_message *reply) {
+static int controller_method_list_units_encode_reply(ListUnitsRequest *req, sd_bus_message *reply) {
         int r = sd_bus_message_open_container(reply, SD_BUS_TYPE_ARRAY, NODE_AND_UNIT_INFO_STRUCT_TYPESTRING);
         if (r < 0) {
                 return r;
@@ -581,7 +586,7 @@ static int manager_method_list_units_encode_reply(ListUnitsRequest *req, sd_bus_
 }
 
 
-static void manager_method_list_units_done(ListUnitsRequest *req) {
+static void controller_method_list_units_done(ListUnitsRequest *req) {
         /* All sub_req-requests are done, collect results and free when done */
         UNUSED _cleanup_list_unit_request_ ListUnitsRequest *free_me = req;
 
@@ -596,7 +601,7 @@ static void manager_method_list_units_done(ListUnitsRequest *req) {
                 return;
         }
 
-        r = manager_method_list_units_encode_reply(req, reply);
+        r = controller_method_list_units_encode_reply(req, reply);
         if (r < 0) {
                 sd_bus_reply_method_errorf(
                                 req->request_message,
@@ -613,13 +618,13 @@ static void manager_method_list_units_done(ListUnitsRequest *req) {
         }
 }
 
-static void manager_method_list_units_maybe_done(ListUnitsRequest *req) {
+static void controller_method_list_units_maybe_done(ListUnitsRequest *req) {
         if (req->n_done == req->n_sub_req) {
-                manager_method_list_units_done(req);
+                controller_method_list_units_done(req);
         }
 }
 
-static int manager_list_units_callback(
+static int controller_list_units_callback(
                 AgentRequest *agent_req, sd_bus_message *m, UNUSED sd_bus_error *ret_error) {
         ListUnitsRequest *req = agent_req->userdata;
         int i = 0;
@@ -635,27 +640,27 @@ static int manager_list_units_callback(
         req->sub_req[i].m = sd_bus_message_ref(m);
         req->n_done++;
 
-        manager_method_list_units_maybe_done(req);
+        controller_method_list_units_maybe_done(req);
 
         return 0;
 }
 
 
-static int manager_method_list_units(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error) {
-        Manager *manager = userdata;
+static int controller_method_list_units(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error) {
+        Controller *controller = userdata;
         ListUnitsRequest *req = NULL;
         Node *node = NULL;
 
-        req = malloc0_array(sizeof(*req), sizeof(req->sub_req[0]), manager->number_of_nodes);
+        req = malloc0_array(sizeof(*req), sizeof(req->sub_req[0]), controller->number_of_nodes);
         if (req == NULL) {
                 return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_NO_MEMORY, "Out of memory");
         }
         req->request_message = sd_bus_message_ref(m);
 
         int i = 0;
-        LIST_FOREACH(nodes, node, manager->nodes) {
+        LIST_FOREACH(nodes, node, controller->nodes) {
                 _cleanup_agent_request_ AgentRequest *agent_req = node_request_list_units(
-                                node, manager_list_units_callback, req, NULL);
+                                node, controller_list_units_callback, req, NULL);
                 if (agent_req) {
                         req->sub_req[i].agent_req = steal_pointer(&agent_req);
                         req->sub_req[i].node = node_ref(node);
@@ -665,23 +670,23 @@ static int manager_method_list_units(sd_bus_message *m, void *userdata, UNUSED s
         }
 
 // Disabling -Wanalyzer-malloc-leak temporarily due to false-positive
-//      Leak detected is based on the assumption that manager_method_list_units_maybe_done is only
+//      Leak detected is based on the assumption that controller_method_list_units_maybe_done is only
 //      called once directly after iterating over the list - when the conditional to free req is false.
-//      However, it does not take into account that manager_list_units_callback calls it for each node.
+//      However, it does not take into account that controller_list_units_callback calls it for each node.
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wanalyzer-malloc-leak"
 
-        manager_method_list_units_maybe_done(req);
+        controller_method_list_units_maybe_done(req);
 
         return 1;
 }
 #pragma GCC diagnostic pop
 
 /************************************************************************
- ***** org.eclipse.bluechi.Manager.ListNodes **************
+ ***** org.eclipse.bluechi.Controller.ListNodes **************
  ************************************************************************/
 
-static int manager_method_list_encode_node(sd_bus_message *reply, Node *node) {
+static int controller_method_list_encode_node(sd_bus_message *reply, Node *node) {
         int r = sd_bus_message_open_container(reply, SD_BUS_TYPE_STRUCT, "sos");
         if (r < 0) {
                 return r;
@@ -694,8 +699,8 @@ static int manager_method_list_encode_node(sd_bus_message *reply, Node *node) {
         return sd_bus_message_close_container(reply);
 }
 
-static int manager_method_list_nodes(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error) {
-        Manager *manager = userdata;
+static int controller_method_list_nodes(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error) {
+        Controller *controller = userdata;
         _cleanup_sd_bus_message_ sd_bus_message *reply = NULL;
         Node *node = NULL;
 
@@ -717,8 +722,8 @@ static int manager_method_list_nodes(sd_bus_message *m, void *userdata, UNUSED s
                                 strerror(-r));
         }
 
-        LIST_FOREACH(nodes, node, manager->nodes) {
-                r = manager_method_list_encode_node(reply, node);
+        LIST_FOREACH(nodes, node, controller->nodes) {
+                r = controller_method_list_encode_node(reply, node);
                 if (r < 0) {
                         return sd_bus_reply_method_errorf(
                                         reply, SD_BUS_ERROR_FAILED, "Failed to encode a node: %s", strerror(-r));
@@ -735,11 +740,11 @@ static int manager_method_list_nodes(sd_bus_message *m, void *userdata, UNUSED s
 }
 
 /************************************************************************
- **** org.eclipse.bluechi.Manager.GetNode *****************
+ **** org.eclipse.bluechi.Controller.GetNode *****************
  ************************************************************************/
 
-static int manager_method_get_node(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error) {
-        Manager *manager = userdata;
+static int controller_method_get_node(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error) {
+        Controller *controller = userdata;
         _cleanup_sd_bus_message_ sd_bus_message *reply = NULL;
         Node *node = NULL;
         const char *node_name = NULL;
@@ -750,7 +755,7 @@ static int manager_method_get_node(sd_bus_message *m, void *userdata, UNUSED sd_
                                 m, SD_BUS_ERROR_INVALID_ARGS, "Invalid argument for the node name");
         }
 
-        node = manager_find_node(manager, node_name);
+        node = controller_find_node(controller, node_name);
         if (node == NULL) {
                 return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_SERVICE_UNKNOWN, "Node not found");
         }
@@ -777,14 +782,14 @@ static int manager_method_get_node(sd_bus_message *m, void *userdata, UNUSED sd_
 }
 
 /************************************************************************
- ***** org.eclipse.bluechi.Manager.CreateMonitor **********
+ ***** org.eclipse.bluechi.Controller.CreateMonitor **********
  ************************************************************************/
 
-static int manager_method_create_monitor(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error) {
-        Manager *manager = userdata;
+static int controller_method_create_monitor(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error) {
+        Controller *controller = userdata;
         _cleanup_sd_bus_message_ sd_bus_message *reply = NULL;
 
-        _cleanup_monitor_ Monitor *monitor = monitor_new(manager, sd_bus_message_get_sender(m));
+        _cleanup_monitor_ Monitor *monitor = monitor_new(controller, sd_bus_message_get_sender(m));
         if (monitor == NULL) {
                 return sd_bus_reply_method_errorf(reply, SD_BUS_ERROR_FAILED, "Failed to create new monitor");
         }
@@ -817,28 +822,28 @@ static int manager_method_create_monitor(sd_bus_message *m, void *userdata, UNUS
         }
 
         /* We reported it to the client, now keep it alive and keep track of it */
-        LIST_APPEND(monitors, manager->monitors, monitor_ref(monitor));
+        LIST_APPEND(monitors, controller->monitors, monitor_ref(monitor));
         return 1;
 }
 
 /************************************************************************
- ***** org.eclipse.bluechi.Manager.EnableMetrics **********
+ ***** org.eclipse.bluechi.Controller.EnableMetrics **********
  ************************************************************************/
-static int manager_method_metrics_enable(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error) {
-        Manager *manager = userdata;
+static int controller_method_metrics_enable(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error) {
+        Controller *controller = userdata;
         Node *node = NULL;
         int r = 0;
-        if (manager->metrics_enabled) {
+        if (controller->metrics_enabled) {
                 return sd_bus_reply_method_errorf(
                                 m, SD_BUS_ERROR_INCONSISTENT_MESSAGE, "Metrics already enabled");
         }
-        r = metrics_export(manager);
+        r = metrics_export(controller);
         if (r < 0) {
                 return sd_bus_reply_method_errorf(
                                 m, SD_BUS_ERROR_FAILED, "Failed to register metrics service: %s", strerror(-r));
         }
-        manager->metrics_enabled = true;
-        LIST_FOREACH(nodes, node, manager->nodes) {
+        controller->metrics_enabled = true;
+        LIST_FOREACH(nodes, node, controller->nodes) {
                 node_enable_metrics(node);
         }
         bc_log_debug("Metrics enabled");
@@ -846,19 +851,19 @@ static int manager_method_metrics_enable(sd_bus_message *m, void *userdata, UNUS
 }
 
 /************************************************************************
- ***** org.eclipse.bluechi.Manager.DisableMetrics *********
+ ***** org.eclipse.bluechi.Controller.DisableMetrics *********
  ************************************************************************/
-static int manager_method_metrics_disable(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error) {
-        Manager *manager = userdata;
+static int controller_method_metrics_disable(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error) {
+        Controller *controller = userdata;
         Node *node = NULL;
-        if (!manager->metrics_enabled) {
+        if (!controller->metrics_enabled) {
                 return sd_bus_reply_method_errorf(
                                 m, SD_BUS_ERROR_INCONSISTENT_MESSAGE, "Metrics already disabled");
         }
-        sd_bus_slot_unrefp(&manager->metrics_slot);
-        manager->metrics_slot = NULL;
-        manager->metrics_enabled = false;
-        LIST_FOREACH(nodes, node, manager->nodes) {
+        sd_bus_slot_unrefp(&controller->metrics_slot);
+        controller->metrics_slot = NULL;
+        controller->metrics_enabled = false;
+        LIST_FOREACH(nodes, node, controller->nodes) {
                 node_disable_metrics(node);
         }
         bc_log_debug("Metrics disabled");
@@ -866,10 +871,11 @@ static int manager_method_metrics_disable(sd_bus_message *m, void *userdata, UNU
 }
 
 /*************************************************************************
- *** org.eclipse.bluechi.Manager.SetLogLevel ***************
+ *** org.eclipse.bluechi.Controller.SetLogLevel ***************
  *************************************************************************/
 
-static int manager_method_set_log_level(sd_bus_message *m, UNUSED void *userdata, UNUSED sd_bus_error *ret_error) {
+static int controller_method_set_log_level(
+                sd_bus_message *m, UNUSED void *userdata, UNUSED sd_bus_error *ret_error) {
         const char *level = NULL;
 
         int r = sd_bus_message_read(m, "s", &level);
@@ -889,35 +895,39 @@ static int manager_method_set_log_level(sd_bus_message *m, UNUSED void *userdata
 }
 
 /********************************************************
- **** org.eclipse.bluechi.Manager.Status ****************
+ **** org.eclipse.bluechi.Controller.Status ****************
  ********************************************************/
 
-static char *manager_get_system_status(Manager *manager) {
-        if (manager->number_of_nodes_online == 0) {
+static char *controller_get_system_status(Controller *controller) {
+        if (controller->number_of_nodes_online == 0) {
                 return "down";
-        } else if (manager->number_of_nodes_online == manager->number_of_nodes) {
+        } else if (controller->number_of_nodes_online == controller->number_of_nodes) {
                 return "up";
         }
         return "degraded";
 }
 
-void manager_check_system_status(Manager *manager, int prev_number_of_nodes_online) {
-        int diff = manager->number_of_nodes_online - prev_number_of_nodes_online;
+void controller_check_system_status(Controller *controller, int prev_number_of_nodes_online) {
+        int diff = controller->number_of_nodes_online - prev_number_of_nodes_online;
         // clang-format off
         if ((prev_number_of_nodes_online == 0) ||                                       // at least one node online
-                (prev_number_of_nodes_online == manager->number_of_nodes) ||            // at least one node offline
-                ((prev_number_of_nodes_online + diff) == manager->number_of_nodes) ||   // all nodes online
+                (prev_number_of_nodes_online == controller->number_of_nodes) ||            // at least one node offline
+                ((prev_number_of_nodes_online + diff) == controller->number_of_nodes) ||   // all nodes online
                 ((prev_number_of_nodes_online + diff) == 0)) {                          // all nodes offline
                 // clang-format on
                 int r = sd_bus_emit_properties_changed(
-                                manager->api_bus, BC_MANAGER_OBJECT_PATH, MANAGER_INTERFACE, "Status", NULL);
+                                controller->api_bus,
+                                BC_CONTROLLER_OBJECT_PATH,
+                                CONTROLLER_INTERFACE,
+                                "Status",
+                                NULL);
                 if (r < 0) {
                         bc_log_errorf("Failed to emit status property changed: %s", strerror(-r));
                 }
         }
 }
 
-static int manager_property_get_status(
+static int controller_property_get_status(
                 UNUSED sd_bus *bus,
                 UNUSED const char *path,
                 UNUSED const char *interface,
@@ -925,21 +935,21 @@ static int manager_property_get_status(
                 sd_bus_message *reply,
                 void *userdata,
                 UNUSED sd_bus_error *ret_error) {
-        Manager *manager = userdata;
+        Controller *controller = userdata;
 
-        return sd_bus_message_append(reply, "s", manager_get_system_status(manager));
+        return sd_bus_message_append(reply, "s", controller_get_system_status(controller));
 }
 
-static const sd_bus_vtable manager_vtable[] = {
+static const sd_bus_vtable controller_vtable[] = {
         SD_BUS_VTABLE_START(0),
-        SD_BUS_METHOD("Ping", "s", "s", manager_method_ping, 0),
-        SD_BUS_METHOD("ListUnits", "", NODE_AND_UNIT_INFO_STRUCT_ARRAY_TYPESTRING, manager_method_list_units, 0),
-        SD_BUS_METHOD("ListNodes", "", "a(sos)", manager_method_list_nodes, 0),
-        SD_BUS_METHOD("GetNode", "s", "o", manager_method_get_node, 0),
-        SD_BUS_METHOD("CreateMonitor", "", "o", manager_method_create_monitor, 0),
-        SD_BUS_METHOD("SetLogLevel", "s", "", manager_method_set_log_level, 0),
-        SD_BUS_METHOD("EnableMetrics", "", "", manager_method_metrics_enable, 0),
-        SD_BUS_METHOD("DisableMetrics", "", "", manager_method_metrics_disable, 0),
+        SD_BUS_METHOD("Ping", "s", "s", controller_method_ping, 0),
+        SD_BUS_METHOD("ListUnits", "", NODE_AND_UNIT_INFO_STRUCT_ARRAY_TYPESTRING, controller_method_list_units, 0),
+        SD_BUS_METHOD("ListNodes", "", "a(sos)", controller_method_list_nodes, 0),
+        SD_BUS_METHOD("GetNode", "s", "o", controller_method_get_node, 0),
+        SD_BUS_METHOD("CreateMonitor", "", "o", controller_method_create_monitor, 0),
+        SD_BUS_METHOD("SetLogLevel", "s", "", controller_method_set_log_level, 0),
+        SD_BUS_METHOD("EnableMetrics", "", "", controller_method_metrics_enable, 0),
+        SD_BUS_METHOD("DisableMetrics", "", "", controller_method_metrics_disable, 0),
         SD_BUS_SIGNAL_WITH_NAMES("JobNew", "uo", SD_BUS_PARAM(id) SD_BUS_PARAM(job), 0),
         SD_BUS_SIGNAL_WITH_NAMES(
                         "JobRemoved",
@@ -947,12 +957,12 @@ static const sd_bus_vtable manager_vtable[] = {
                         SD_BUS_PARAM(id) SD_BUS_PARAM(job) SD_BUS_PARAM(node) SD_BUS_PARAM(unit)
                                         SD_BUS_PARAM(result),
                         0),
-        SD_BUS_PROPERTY("Status", "s", manager_property_get_status, 0, SD_BUS_VTABLE_PROPERTY_EMITS_CHANGE),
+        SD_BUS_PROPERTY("Status", "s", controller_property_get_status, 0, SD_BUS_VTABLE_PROPERTY_EMITS_CHANGE),
         SD_BUS_VTABLE_END
 };
 
-static int manager_dbus_filter(UNUSED sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error) {
-        Manager *manager = userdata;
+static int controller_dbus_filter(UNUSED sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error) {
+        Controller *controller = userdata;
         const char *object_path = sd_bus_message_get_path(m);
         const char *iface = sd_bus_message_get_interface(m);
 
@@ -965,7 +975,7 @@ static int manager_dbus_filter(UNUSED sd_bus_message *m, void *userdata, UNUSED 
         }
 
         if (iface != NULL && streq(iface, NODE_INTERFACE)) {
-                Node *node = manager_find_node_by_path(manager, object_path);
+                Node *node = controller_find_node_by_path(controller, object_path);
 
                 /* All Node interface objects fail if the node is offline */
                 if (node && !node_has_agent(node)) {
@@ -976,26 +986,26 @@ static int manager_dbus_filter(UNUSED sd_bus_message *m, void *userdata, UNUSED 
         return 0;
 }
 
-void manager_remove_monitor(Manager *manager, Monitor *monitor) {
-        LIST_REMOVE(monitors, manager->monitors, monitor);
+void controller_remove_monitor(Controller *controller, Monitor *monitor) {
+        LIST_REMOVE(monitors, controller->monitors, monitor);
         monitor_unref(monitor);
 }
 
-static void manager_client_disconnected(Manager *manager, const char *client_id) {
+static void controller_client_disconnected(Controller *controller, const char *client_id) {
         /* Free any monitors owned by the client */
 
         Monitor *monitor = NULL;
         Monitor *next_monitor = NULL;
-        LIST_FOREACH_SAFE(monitors, monitor, next_monitor, manager->monitors) {
+        LIST_FOREACH_SAFE(monitors, monitor, next_monitor, controller->monitors) {
                 if (streq(monitor->owner, client_id)) {
                         monitor_close(monitor);
-                        manager_remove_monitor(manager, monitor);
+                        controller_remove_monitor(controller, monitor);
                 }
         }
 }
 
-static int manager_name_owner_changed(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error) {
-        Manager *manager = userdata;
+static int controller_name_owner_changed(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error) {
+        Controller *controller = userdata;
         const char *name = NULL;
         const char *old_owner = NULL;
         const char *new_owner = NULL;
@@ -1006,89 +1016,90 @@ static int manager_name_owner_changed(sd_bus_message *m, void *userdata, UNUSED 
         }
 
         if (*name == ':' && *new_owner == 0) {
-                manager_client_disconnected(manager, name);
+                controller_client_disconnected(controller, name);
         }
 
         return 0;
 }
 
-bool manager_start(Manager *manager) {
+bool controller_start(Controller *controller) {
         bc_log_infof("Starting bluechi-controller %s", CONFIG_H_BC_VERSION);
-        if (manager == NULL) {
+        if (controller == NULL) {
                 return false;
         }
 
 #ifdef USE_USER_API_BUS
-        manager->api_bus = user_bus_open(manager->event);
+        controller->api_bus = user_bus_open(controller->event);
 #else
-        manager->api_bus = system_bus_open(manager->event);
+        controller->api_bus = system_bus_open(controller->event);
 #endif
-        if (manager->api_bus == NULL) {
+        if (controller->api_bus == NULL) {
                 bc_log_error("Failed to open api dbus");
                 return false;
         }
 
         /* Export all known nodes */
         Node *node = NULL;
-        LIST_FOREACH(nodes, node, manager->nodes) {
+        LIST_FOREACH(nodes, node, controller->nodes) {
                 if (!node_export(node)) {
                         return false;
                 }
         }
 
         int r = sd_bus_request_name(
-                        manager->api_bus, manager->api_bus_service_name, SD_BUS_NAME_REPLACE_EXISTING);
+                        controller->api_bus, controller->api_bus_service_name, SD_BUS_NAME_REPLACE_EXISTING);
         if (r < 0) {
                 bc_log_errorf("Failed to acquire service name on api dbus: %s", strerror(-r));
                 return false;
         }
 
-        r = sd_bus_add_filter(manager->api_bus, &manager->filter_slot, manager_dbus_filter, manager);
+        r = sd_bus_add_filter(
+                        controller->api_bus, &controller->filter_slot, controller_dbus_filter, controller);
         if (r < 0) {
-                bc_log_errorf("Failed to add manager filter: %s", strerror(-r));
+                bc_log_errorf("Failed to add controller filter: %s", strerror(-r));
                 return false;
         }
 
         r = sd_bus_match_signal(
-                        manager->api_bus,
-                        &manager->name_owner_changed_slot,
+                        controller->api_bus,
+                        &controller->name_owner_changed_slot,
                         "org.freedesktop.DBus",
                         "/org/freedesktop/DBus",
                         "org.freedesktop.DBus",
                         "NameOwnerChanged",
-                        manager_name_owner_changed,
-                        manager);
+                        controller_name_owner_changed,
+                        controller);
         if (r < 0) {
                 bc_log_errorf("Failed to add nameloist filter: %s", strerror(-r));
                 return false;
         }
 
         r = sd_bus_add_object_vtable(
-                        manager->api_bus,
-                        &manager->manager_slot,
-                        BC_MANAGER_OBJECT_PATH,
-                        MANAGER_INTERFACE,
-                        manager_vtable,
-                        manager);
+                        controller->api_bus,
+                        &controller->controller_slot,
+                        BC_CONTROLLER_OBJECT_PATH,
+                        CONTROLLER_INTERFACE,
+                        controller_vtable,
+                        controller);
         if (r < 0) {
-                bc_log_errorf("Failed to add manager vtable: %s", strerror(-r));
+                bc_log_errorf("Failed to add controller vtable: %s", strerror(-r));
                 return false;
         }
 
-        if (!manager_setup_node_connection_handler(manager)) {
+        if (!controller_setup_node_connection_handler(controller)) {
                 return false;
         }
 
         ShutdownHook hook;
-        hook.shutdown = (ShutdownHookFn) manager_stop;
-        hook.userdata = manager;
-        r = event_loop_add_shutdown_signals(manager->event, &hook);
+        hook.shutdown = (ShutdownHookFn) controller_stop;
+        hook.userdata = controller;
+        r = event_loop_add_shutdown_signals(controller->event, &hook);
         if (r < 0) {
-                bc_log_errorf("Failed to add signals to manager event loop: %s", strerror(-r));
+                bc_log_errorf("Failed to add signals to controller event loop: %s", strerror(-r));
                 return false;
         }
 
-        r = sd_event_loop(manager->event);
+        r = sd_event_loop(controller->event);
         if (r < 0) {
                 bc_log_errorf("Starting event loop failed: %s", strerror(-r));
                 return false;
@@ -1097,43 +1108,43 @@ bool manager_start(Manager *manager) {
         return true;
 }
 
-void manager_stop(Manager *manager) {
-        if (manager == NULL) {
+void controller_stop(Controller *controller) {
+        if (controller == NULL) {
                 return;
         }
 
-        bc_log_debug("Stopping manager");
+        bc_log_debug("Stopping controller");
 
         Job *job = NULL;
         Job *next_job = NULL;
-        LIST_FOREACH_SAFE(jobs, job, next_job, manager->jobs) {
-                manager_remove_job(manager, job, "cancelled due to shutdown");
+        LIST_FOREACH_SAFE(jobs, job, next_job, controller->jobs) {
+                controller_remove_job(controller, job, "cancelled due to shutdown");
         }
 
         Subscription *sub = NULL;
         Subscription *next_sub = NULL;
-        LIST_FOREACH_SAFE(all_subscriptions, sub, next_sub, manager->all_subscriptions) {
-                manager_remove_subscription(manager, sub);
+        LIST_FOREACH_SAFE(all_subscriptions, sub, next_sub, controller->all_subscriptions) {
+                controller_remove_subscription(controller, sub);
         }
 
         Monitor *monitor = NULL;
         Monitor *next_monitor = NULL;
-        LIST_FOREACH_SAFE(monitors, monitor, next_monitor, manager->monitors) {
-                manager_remove_monitor(manager, monitor);
+        LIST_FOREACH_SAFE(monitors, monitor, next_monitor, controller->monitors) {
+                controller_remove_monitor(controller, monitor);
         }
 
         Node *node = NULL;
         Node *next_node = NULL;
-        LIST_FOREACH_SAFE(nodes, node, next_node, manager->nodes) {
-                manager_remove_node(manager, node);
+        LIST_FOREACH_SAFE(nodes, node, next_node, controller->nodes) {
+                controller_remove_node(controller, node);
         }
-        LIST_FOREACH_SAFE(nodes, node, next_node, manager->anonymous_nodes) {
-                manager_remove_node(manager, node);
+        LIST_FOREACH_SAFE(nodes, node, next_node, controller->anonymous_nodes) {
+                controller_remove_node(controller, node);
         }
 
         /*
          * We won't handle any other events incl. node disconnected since we exit the event loop
-         * right afterwards. Therefore, check the manager state and emit signal here.
+         * right afterwards. Therefore, check the controller state and emit signal here.
          */
-        manager_check_system_status(manager, manager->number_of_nodes_online);
+        controller_check_system_status(controller, controller->number_of_nodes_online);
 }

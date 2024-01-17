@@ -11,9 +11,9 @@
 #define CFG_LOG_LEVEL "LogLevel"
 #define CFG_LOG_TARGET "LogTarget"
 #define CFG_LOG_IS_QUIET "LogIsQuiet"
-#define CFG_MANAGER_HOST "ControllerHost"
-#define CFG_MANAGER_PORT "ControllerPort"
-#define CFG_MANAGER_ADDRESS "ControllerAddress"
+#define CFG_CONTROLLER_HOST "ControllerHost"
+#define CFG_CONTROLLER_PORT "ControllerPort"
+#define CFG_CONTROLLER_ADDRESS "ControllerAddress"
 #define CFG_NODE_NAME "NodeName"
 #define CFG_ALLOWED_NODE_NAMES "AllowedNodeNames"
 #define CFG_HEARTBEAT_INTERVAL "HeartbeatInterval"
@@ -29,7 +29,7 @@
 #define CFG_SECT_GLOBAL ""
 
 /*
- * Configuration section for bluechi manager.
+ * Configuration section for bluechi controller.
  */
 #define CFG_SECT_BLUECHI "bluechi-controller"
 
@@ -203,6 +203,6 @@ const char *cfg_dump(struct config *config);
 int cfg_agent_def_conf(struct config *config);
 
 /*
- * Populate the default manager configuration from the source code
+ * Populate the default controller configuration from the source code
  */
-int cfg_manager_def_conf(struct config *config);
+int cfg_controller_def_conf(struct config *config);

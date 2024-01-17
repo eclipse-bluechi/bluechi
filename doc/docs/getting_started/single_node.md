@@ -62,9 +62,9 @@ Once the services are up and running, the journald logs should show that the age
 ```bash
 $ journalctl -u bluechi
 
-Sep 14 14:51:58 laptop systemd[1]: Started BlueChi systemd service controller manager daemon.
-Sep 01 14:51:58 laptop bluechi[3750775]: 2023-09-14 14:51:58,685+0200 INFO        ../src/manager/manager.c:924 manager_start        msg="Starting bluechi 0.5.0"
-Sep 01 14:51:58 laptop bluechi[3750775]: 2023-09-14 14:51:58,928+0200 INFO        ../src/manager/node.c:870 node_method_register    msg="Registered managed node from fd 8 as 'laptop'"
+Sep 14 14:51:58 laptop systemd[1]: Started BlueChi systemd service controller daemon.
+Sep 01 14:51:58 laptop bluechi[3750775]: 2023-09-14 14:51:58,685+0200 INFO        ../src/controller/controller.c:924 controller_start        msg="Starting bluechi 0.7.0"
+Sep 01 14:51:58 laptop bluechi[3750775]: 2023-09-14 14:51:58,928+0200 INFO        ../src/controller/node.c:870 node_method_register    msg="Registered managed node from fd 8 as 'laptop'"
 ...
 ```
 
