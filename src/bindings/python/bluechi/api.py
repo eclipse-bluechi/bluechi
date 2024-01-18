@@ -89,265 +89,87 @@ class ApiBase:
         return self.cached_properties_proxy
 
 
-class Monitor(ApiBase):
+class Agent(ApiBase):
     """
-    org.eclipse.bluechi.Monitor:
-    @short_description: Public interface of BlueChi on the managing node providing monitoring functionality.
+    org.eclipse.bluechi.Agent:
+    @short_description: Public interface of BlueChi on the managed node providing methods and signals for the respective node.
 
-    This interface is only available if a monitor has been created before via the Controller interface.
-    It provides methods to subscribe to changes in systemd units on managed nodes as well as signals for those changes.
+    This interface is used to create proxy services resolving dependencies on services of other managed nodes.
     """
 
-    def __init__(
-        self, monitor_path: ObjPath, bus: MessageBus = None, use_systembus=True
-    ) -> None:
-        super().__init__(BC_DBUS_INTERFACE, monitor_path, bus, use_systembus)
+    def __init__(self, bus: MessageBus = None, use_systembus=True) -> None:
+        super().__init__(BC_AGENT_DBUS_INTERFACE, BC_OBJECT_PATH, bus, use_systembus)
 
-        self.monitor_path = monitor_path
-
-    def close(self) -> None:
+    def create_proxy(self, local_service_name: str, node: str, unit: str) -> None:
         """
-          Close:
+          CreateProxy:
+        @local_service_name: The service name which requests the external dependency
+        @node: The requested node to provide the service
+        @unit: The external unit requested from the local service
 
-        Close the monitor.
+        BlueChi internal usage only.
+        CreateProxy() creates a new proxy service. It is part in the chain of resolving dependencies on services running on other managed nodes.
         """
-        self.get_proxy().Close()
-
-    def subscribe(self, node: str, unit: str) -> UInt32:
-        """
-            Subscribe:
-          @node: The name of the node to subscribe to
-          @unit: The name of the unit to subscribe to
-          @id: The id of the created subscription.
-
-          Subscribe to changes of a unit on a node. Both fields support a wildcard '*'. A wildcard in the node name will create the subscription for all nodes.
-        If the unit name is a wildcard, then the subscription matches changes for all units on the node.
-        """
-        return self.get_proxy().Subscribe(
+        self.get_proxy().CreateProxy(
+            local_service_name,
             node,
             unit,
         )
 
-    def unsubscribe(self, id: UInt32) -> None:
+    def remove_proxy(self, local_service_name: str, node: str, unit: str) -> None:
         """
-          Unsubscribe:
-        @id: The id of the subscription to cancel
+          RemoveProxy:
+        @local_service_name: The service name which requests the external dependency
+        @node: The requested node to provide the service
+        @unit: The external unit requested from the local service
 
-        Cancel the subscription by ID.
+        BlueChi internal usage only.
+        RemoveProxy() removes a new proxy service. It is part in the chain of resolving dependencies on services running on other managed nodes.
         """
-        self.get_proxy().Unsubscribe(
-            id,
-        )
-
-    def subscribe_list(self, node: str, units: List[str]) -> UInt32:
-        """
-            SubscribeList:
-          @node: The name of the node to subscribe to
-          @units: A list of unit names to subscribe to
-          @id: The id of the created subscription
-
-          Subscribe to changes of a list of units on a node. The node field supports a wildcard '*'. A wildcard in the node name will create the subscription
-        for all nodes.
-        """
-        return self.get_proxy().SubscribeList(
+        self.get_proxy().RemoveProxy(
+            local_service_name,
             node,
-            units,
+            unit,
         )
 
-    def add_peer(self, name: str) -> UInt32:
+    @property
+    def status(self) -> str:
         """
-          AddPeer:
-        @name: The name of the peer to add as listener to all monitor events. Needs to be unique name on the bus.
-        @id: The id of the created peer
+          Status:
 
-        Add a new peer to the monitor. A peer will receive all events that the monitor subscribes to.
+        The connection status of the agent with the BlueChi controller.
+        On any change, a signal is emitted on the org.freedesktop.DBus.Properties interface.
         """
-        return self.get_proxy().AddPeer(
-            name,
-        )
+        return self.get_proxy().Status
 
-    def remove_peer(self, id: UInt32, reason: str) -> None:
+    def on_status_changed(self, callback: Callable[[Variant], None]):
         """
-          RemovePeer:
-        @id: The id of the peer to remove
-        @reason: The reason for removing the peer
+          Status:
 
-        Remove a previously added peer from the monitor. The reason will be part of the PeerRemoved signal, which is only sent to the respective peer.
+        The connection status of the agent with the BlueChi controller.
+        On any change, a signal is emitted on the org.freedesktop.DBus.Properties interface.
         """
-        self.get_proxy().RemovePeer(
-            id,
-            reason,
-        )
 
-    def on_unit_properties_changed(
-        self,
-        callback: Callable[
-            [
-                str,
-                str,
-                str,
-                Structure,
-            ],
-            None,
-        ],
-    ) -> None:
+        def on_properties_changed(
+            interface: str,
+            changed_props: Dict[str, Variant],
+            invalidated_props: Dict[str, Variant],
+        ) -> None:
+            value = changed_props.get("Status")
+            if value is not None:
+                callback(value)
+
+        self.get_properties_proxy().PropertiesChanged.connect(on_properties_changed)
+
+    @property
+    def disconnect_timestamp(self) -> UInt64:
         """
-          UnitPropertiesChanged:
-        @node: The node name this signal originated from
-        @unit: The unit for which the properties changed
-        @interface: The originating interface
-        @props: The changed properties as key-value pair with the name of the property as key
+          DisconnectTimestamp:
 
-        Whenever the properties change for any of the units that are currently subscribed to, this signal is emitted.
+        A timestamp indicating when the agent lost connection to the BlueChi controller.
+        If the connection is active (agent is online), this value is 0.
         """
-        self.get_proxy().UnitPropertiesChanged.connect(callback)
-
-    def on_unit_state_changed(
-        self,
-        callback: Callable[
-            [
-                str,
-                str,
-                str,
-                str,
-                str,
-            ],
-            None,
-        ],
-    ) -> None:
-        """
-          UnitStateChanged:
-        @node: The node name this signal originated from
-        @unit: The unit for which the properties changed
-        @active_state: The active state of the unit
-        @sub_state: The sub state of the unit
-        @reason: The reason for the state change, the value is either real or virtual
-
-        Emitted when the active state (and substate) of a monitored unit changes.
-        """
-        self.get_proxy().UnitStateChanged.connect(callback)
-
-    def on_unit_new(
-        self,
-        callback: Callable[
-            [
-                str,
-                str,
-                str,
-            ],
-            None,
-        ],
-    ) -> None:
-        """
-            UnitNew:
-          @node: The node name this signal originated from
-          @unit: The unit for which the properties changed
-          @reason: The reason for the state change, the value is either real or virtual
-
-          Emitted when a new unit is loaded by systemd, for example when a service is started (reason=real), or if BlueChi learns of an already loaded unit
-        (reason=virtual).
-        """
-        self.get_proxy().UnitNew.connect(callback)
-
-    def on_unit_removed(
-        self,
-        callback: Callable[
-            [
-                str,
-                str,
-                str,
-            ],
-            None,
-        ],
-    ) -> None:
-        """
-            UnitRemoved:
-          @node: The node name this signal originated from
-          @unit: The unit for which the properties changed
-          @reason: The reason for the state change, the value is either real or virtual
-
-          Emitted when a unit is unloaded by systemd (reason=real), or when the agent disconnects and we previously reported the unit as loaded
-        (reason=virtual).
-        """
-        self.get_proxy().UnitRemoved.connect(callback)
-
-    def on_peer_removed(
-        self,
-        callback: Callable[
-            [
-                str,
-            ],
-            None,
-        ],
-    ) -> None:
-        """
-          PeerRemoved:
-        @reason: The reason the peer got removed from the monitor.
-
-        Emitted when a peer is removed from the monitor, e.g. when the monitor has been closed, and only sent to the respective peer.
-        """
-        self.get_proxy().PeerRemoved.connect(callback)
-
-
-class Metrics(ApiBase):
-    """
-    org.eclipse.bluechi.Metrics:
-    @short_description: Public interface of BlueChi on the managing node providing signals for performance metrics.
-
-    This interface is only available if the metrics have been enabled before via the Controller interface.
-    """
-
-    def __init__(self, bus: MessageBus = None, use_systembus=True) -> None:
-        super().__init__(BC_DBUS_INTERFACE, BC_METRICS_OBJECT_PATH, bus, use_systembus)
-
-    def on_start_unit_job_metrics(
-        self,
-        callback: Callable[
-            [
-                str,
-                str,
-                str,
-                UInt64,
-                UInt64,
-            ],
-            None,
-        ],
-    ) -> None:
-        """
-          StartUnitJobMetrics:
-        @node_name: The node name this metrics has been collected for
-        @job_id: The id of the job linked to the collected metrics
-        @unit: The unit name this metrics has been collected for
-        @job_measured_time_micros: The measured time it took starting the unit on the node in microseconds
-        @unit_start_prop_time_micros: The systemd time it took starting the unit on the node in microseconds
-
-        Emitted when a start operation processed by BlueChi finishes and the collection of metrics has been enabled previously.
-        """
-        self.get_proxy().StartUnitJobMetrics.connect(callback)
-
-    def on_agent_job_metrics(
-        self,
-        callback: Callable[
-            [
-                str,
-                str,
-                str,
-                UInt64,
-            ],
-            None,
-        ],
-    ) -> None:
-        """
-            AgentJobMetrics:
-          @node_name: The node name this metrics has been collected for
-          @unit: The unit name this metrics has been collected for
-          @method: The lifecycle operation
-          @systemd_job_time_micros: The systemd time it took starting the unit on the node in microseconds
-
-          Emitted for all unit lifecycle operations (e.g. Start, Stop, Reload, etc.) processed by BlueChi when these finish and the collection of metrics has
-        been enabled previously.
-        """
-        self.get_proxy().AgentJobMetrics.connect(callback)
+        return self.get_proxy().DisconnectTimestamp
 
 
 class Job(ApiBase):
@@ -440,183 +262,65 @@ class Job(ApiBase):
         self.get_properties_proxy().PropertiesChanged.connect(on_properties_changed)
 
 
-class Controller(ApiBase):
+class Metrics(ApiBase):
     """
-    org.eclipse.bluechi.Controller:
-    @short_description: Public interface of BlueChi on the managing node providing methods and signals for all nodes.
+    org.eclipse.bluechi.Metrics:
+    @short_description: Public interface of BlueChi on the managing node providing signals for performance metrics.
 
-    This interface can be used to get information about all nodes and their units, create monitors and listen for job signals.
+    This interface is only available if the metrics have been enabled before via the Controller interface.
     """
 
     def __init__(self, bus: MessageBus = None, use_systembus=True) -> None:
-        super().__init__(BC_DBUS_INTERFACE, BC_OBJECT_PATH, bus, use_systembus)
+        super().__init__(BC_DBUS_INTERFACE, BC_METRICS_OBJECT_PATH, bus, use_systembus)
 
-    def list_units(
-        self,
-    ) -> List[Tuple[str, str, str, str, str, str, str, ObjPath, UInt32, str, ObjPath]]:
-        """
-          ListUnits:
-        @units: A list of all units on each node:
-          - The node name
-          - The primary unit name as string
-          - The human readable description string
-          - The load state (i.e. whether the unit file has been loaded successfully)
-          - The active state (i.e. whether the unit is currently started or not)
-          - The sub state (a more fine-grained version of the active state that is specific to the unit type, which the active state is not)
-          - A unit that is being followed in its state by this unit, if there is any, otherwise the empty string.
-          - The unit object path
-          - If there is a job queued for the job unit the numeric job id, 0 otherwise
-          - The job type as string
-          - The job object path
-
-        List all loaded systemd units on all nodes which are online.
-        """
-        return self.get_proxy().ListUnits()
-
-    def list_nodes(self) -> List[Tuple[str, ObjPath, str]]:
-        """
-          ListNodes:
-        @nodes: A list of all nodes:
-          - The node name
-          - The object path of the node
-          - the current state of that node, either online or offline
-
-        List all nodes managed by BlueChi regardless if they are offline or online.
-        """
-        return self.get_proxy().ListNodes()
-
-    def get_node(self, name: str) -> ObjPath:
-        """
-          GetNode:
-        @name: Name of the node
-        @path: The path of the requested node
-
-        Get the object path of the named node.
-        """
-        return self.get_proxy().GetNode(
-            name,
-        )
-
-    def create_monitor(self) -> ObjPath:
-        """
-          CreateMonitor:
-        @monitor: The path of the created monitor.
-
-        Create a new monitor on which subscriptions can be added. It will automatically be closed as soon as the connection is closed.
-        """
-        return self.get_proxy().CreateMonitor()
-
-    def enable_metrics(self) -> None:
-        """
-          EnableMetrics:
-
-        Enable collecting performance metrics.
-        """
-        self.get_proxy().EnableMetrics()
-
-    def disable_metrics(self) -> None:
-        """
-          DisableMetrics:
-
-        Disable collecting performance metrics.
-        """
-        self.get_proxy().DisableMetrics()
-
-    def set_log_level(self, loglevel: str) -> None:
-        """
-          SetLogLevel:
-        @loglevel: The new loglevel to use.
-
-        Change the loglevel of the controller.
-        """
-        self.get_proxy().SetLogLevel(
-            loglevel,
-        )
-
-    def on_job_new(
+    def on_start_unit_job_metrics(
         self,
         callback: Callable[
             [
-                UInt32,
-                ObjPath,
+                str,
+                str,
+                str,
+                UInt64,
+                UInt64,
             ],
             None,
         ],
     ) -> None:
         """
-          JobNew:
-        @id: The id of the new job
-        @job: The path of the job
+          StartUnitJobMetrics:
+        @node_name: The node name this metrics has been collected for
+        @job_id: The id of the job linked to the collected metrics
+        @unit: The unit name this metrics has been collected for
+        @job_measured_time_micros: The measured time it took starting the unit on the node in microseconds
+        @unit_start_prop_time_micros: The systemd time it took starting the unit on the node in microseconds
 
-        Emitted each time a new BlueChi job is queued.
+        Emitted when a start operation processed by BlueChi finishes and the collection of metrics has been enabled previously.
         """
-        self.get_proxy().JobNew.connect(callback)
+        self.get_proxy().StartUnitJobMetrics.connect(callback)
 
-    def on_job_removed(
+    def on_agent_job_metrics(
         self,
         callback: Callable[
             [
-                UInt32,
-                ObjPath,
                 str,
                 str,
                 str,
+                UInt64,
             ],
             None,
         ],
     ) -> None:
         """
-            JobRemoved:
-          @id: The id of the new job
-          @job: The path of the job
-          @node: The name of the node the job has been completed on
-          @unit: The name of the unit the job has been completed on
-          @result: The result of the job
+            AgentJobMetrics:
+          @node_name: The node name this metrics has been collected for
+          @unit: The unit name this metrics has been collected for
+          @method: The lifecycle operation
+          @systemd_job_time_micros: The systemd time it took starting the unit on the node in microseconds
 
-          Emitted each time a new job is dequeued or the underlying systemd job finished. result is one of: done, failed, cancelled, timeout, dependency,
-        skipped. This is either the result from systemd on the node, or cancelled if the job was cancelled in BlueChi before any systemd job was started
-        for it.
+          Emitted for all unit lifecycle operations (e.g. Start, Stop, Reload, etc.) processed by BlueChi when these finish and the collection of metrics has
+        been enabled previously.
         """
-        self.get_proxy().JobRemoved.connect(callback)
-
-    @property
-    def status(self) -> str:
-        """
-          Status:
-
-        The status of the overall system. Its value is one of:
-          down:  no node is connected
-          degraded: at least one node is not connected
-          up:   all nodes listed in the AllowedNodeNames config are connected
-        A signal is emitted on the org.freedesktop.DBus.Properties interface each time the system state changes. Therefore, a (dis-)connecting node
-        doesn't necessarily result in a signal to be emitted. For this puprose, the Status property on the org.eclipse.bluechi.Node interface is a
-        better choice.
-        """
-        return self.get_proxy().Status
-
-    def on_status_changed(self, callback: Callable[[Variant], None]):
-        """
-          Status:
-
-        The status of the overall system. Its value is one of:
-          down:  no node is connected
-          degraded: at least one node is not connected
-          up:   all nodes listed in the AllowedNodeNames config are connected
-        A signal is emitted on the org.freedesktop.DBus.Properties interface each time the system state changes. Therefore, a (dis-)connecting node
-        doesn't necessarily result in a signal to be emitted. For this puprose, the Status property on the org.eclipse.bluechi.Node interface is a
-        better choice.
-        """
-
-        def on_properties_changed(
-            interface: str,
-            changed_props: Dict[str, Variant],
-            invalidated_props: Dict[str, Variant],
-        ) -> None:
-            value = changed_props.get("Status")
-            if value is not None:
-                callback(value)
-
-        self.get_properties_proxy().PropertiesChanged.connect(on_properties_changed)
+        self.get_proxy().AgentJobMetrics.connect(callback)
 
 
 class Node(ApiBase):
@@ -898,56 +602,357 @@ class Node(ApiBase):
         return self.get_proxy().LastSeenTimestamp
 
 
-class Agent(ApiBase):
+class Monitor(ApiBase):
     """
-    org.eclipse.bluechi.Agent:
-    @short_description: Public interface of BlueChi on the managed node providing methods and signals for the respective node.
+    org.eclipse.bluechi.Monitor:
+    @short_description: Public interface of BlueChi on the managing node providing monitoring functionality.
 
-    This interface is used to create proxy services resolving dependencies on services of other managed nodes.
+    This interface is only available if a monitor has been created before via the Controller interface.
+    It provides methods to subscribe to changes in systemd units on managed nodes as well as signals for those changes.
+    """
+
+    def __init__(
+        self, monitor_path: ObjPath, bus: MessageBus = None, use_systembus=True
+    ) -> None:
+        super().__init__(BC_DBUS_INTERFACE, monitor_path, bus, use_systembus)
+
+        self.monitor_path = monitor_path
+
+    def close(self) -> None:
+        """
+          Close:
+
+        Close the monitor.
+        """
+        self.get_proxy().Close()
+
+    def subscribe(self, node: str, unit: str) -> UInt32:
+        """
+            Subscribe:
+          @node: The name of the node to subscribe to
+          @unit: The name of the unit to subscribe to
+          @id: The id of the created subscription.
+
+          Subscribe to changes of a unit on a node. Both fields support a wildcard '*'. A wildcard in the node name will create the subscription for all nodes.
+        If the unit name is a wildcard, then the subscription matches changes for all units on the node.
+        """
+        return self.get_proxy().Subscribe(
+            node,
+            unit,
+        )
+
+    def unsubscribe(self, id: UInt32) -> None:
+        """
+          Unsubscribe:
+        @id: The id of the subscription to cancel
+
+        Cancel the subscription by ID.
+        """
+        self.get_proxy().Unsubscribe(
+            id,
+        )
+
+    def subscribe_list(self, node: str, units: List[str]) -> UInt32:
+        """
+            SubscribeList:
+          @node: The name of the node to subscribe to
+          @units: A list of unit names to subscribe to
+          @id: The id of the created subscription
+
+          Subscribe to changes of a list of units on a node. The node field supports a wildcard '*'. A wildcard in the node name will create the subscription
+        for all nodes.
+        """
+        return self.get_proxy().SubscribeList(
+            node,
+            units,
+        )
+
+    def add_peer(self, name: str) -> UInt32:
+        """
+          AddPeer:
+        @name: The name of the peer to add as listener to all monitor events. Needs to be unique name on the bus.
+        @id: The id of the created peer
+
+        Add a new peer to the monitor. A peer will receive all events that the monitor subscribes to.
+        """
+        return self.get_proxy().AddPeer(
+            name,
+        )
+
+    def remove_peer(self, id: UInt32, reason: str) -> None:
+        """
+          RemovePeer:
+        @id: The id of the peer to remove
+        @reason: The reason for removing the peer
+
+        Remove a previously added peer from the monitor. The reason will be part of the PeerRemoved signal, which is only sent to the respective peer.
+        """
+        self.get_proxy().RemovePeer(
+            id,
+            reason,
+        )
+
+    def on_unit_properties_changed(
+        self,
+        callback: Callable[
+            [
+                str,
+                str,
+                str,
+                Structure,
+            ],
+            None,
+        ],
+    ) -> None:
+        """
+          UnitPropertiesChanged:
+        @node: The node name this signal originated from
+        @unit: The unit for which the properties changed
+        @interface: The originating interface
+        @props: The changed properties as key-value pair with the name of the property as key
+
+        Whenever the properties change for any of the units that are currently subscribed to, this signal is emitted.
+        """
+        self.get_proxy().UnitPropertiesChanged.connect(callback)
+
+    def on_unit_state_changed(
+        self,
+        callback: Callable[
+            [
+                str,
+                str,
+                str,
+                str,
+                str,
+            ],
+            None,
+        ],
+    ) -> None:
+        """
+          UnitStateChanged:
+        @node: The node name this signal originated from
+        @unit: The unit for which the properties changed
+        @active_state: The active state of the unit
+        @sub_state: The sub state of the unit
+        @reason: The reason for the state change, the value is either real or virtual
+
+        Emitted when the active state (and substate) of a monitored unit changes.
+        """
+        self.get_proxy().UnitStateChanged.connect(callback)
+
+    def on_unit_new(
+        self,
+        callback: Callable[
+            [
+                str,
+                str,
+                str,
+            ],
+            None,
+        ],
+    ) -> None:
+        """
+            UnitNew:
+          @node: The node name this signal originated from
+          @unit: The unit for which the properties changed
+          @reason: The reason for the state change, the value is either real or virtual
+
+          Emitted when a new unit is loaded by systemd, for example when a service is started (reason=real), or if BlueChi learns of an already loaded unit
+        (reason=virtual).
+        """
+        self.get_proxy().UnitNew.connect(callback)
+
+    def on_unit_removed(
+        self,
+        callback: Callable[
+            [
+                str,
+                str,
+                str,
+            ],
+            None,
+        ],
+    ) -> None:
+        """
+            UnitRemoved:
+          @node: The node name this signal originated from
+          @unit: The unit for which the properties changed
+          @reason: The reason for the state change, the value is either real or virtual
+
+          Emitted when a unit is unloaded by systemd (reason=real), or when the agent disconnects and we previously reported the unit as loaded
+        (reason=virtual).
+        """
+        self.get_proxy().UnitRemoved.connect(callback)
+
+    def on_peer_removed(
+        self,
+        callback: Callable[
+            [
+                str,
+            ],
+            None,
+        ],
+    ) -> None:
+        """
+          PeerRemoved:
+        @reason: The reason the peer got removed from the monitor.
+
+        Emitted when a peer is removed from the monitor, e.g. when the monitor has been closed, and only sent to the respective peer.
+        """
+        self.get_proxy().PeerRemoved.connect(callback)
+
+
+class Controller(ApiBase):
+    """
+    org.eclipse.bluechi.Controller:
+    @short_description: Public interface of BlueChi on the managing node providing methods and signals for all nodes.
+
+    This interface can be used to get information about all nodes and their units, create monitors and listen for job signals.
     """
 
     def __init__(self, bus: MessageBus = None, use_systembus=True) -> None:
-        super().__init__(BC_AGENT_DBUS_INTERFACE, BC_OBJECT_PATH, bus, use_systembus)
+        super().__init__(BC_DBUS_INTERFACE, BC_OBJECT_PATH, bus, use_systembus)
 
-    def create_proxy(self, local_service_name: str, node: str, unit: str) -> None:
+    def list_units(
+        self,
+    ) -> List[Tuple[str, str, str, str, str, str, str, ObjPath, UInt32, str, ObjPath]]:
         """
-          CreateProxy:
-        @local_service_name: The service name which requests the external dependency
-        @node: The requested node to provide the service
-        @unit: The external unit requested from the local service
+          ListUnits:
+        @units: A list of all units on each node:
+          - The node name
+          - The primary unit name as string
+          - The human readable description string
+          - The load state (i.e. whether the unit file has been loaded successfully)
+          - The active state (i.e. whether the unit is currently started or not)
+          - The sub state (a more fine-grained version of the active state that is specific to the unit type, which the active state is not)
+          - A unit that is being followed in its state by this unit, if there is any, otherwise the empty string.
+          - The unit object path
+          - If there is a job queued for the job unit the numeric job id, 0 otherwise
+          - The job type as string
+          - The job object path
 
-        BlueChi internal usage only.
-        CreateProxy() creates a new proxy service. It is part in the chain of resolving dependencies on services running on other managed nodes.
+        List all loaded systemd units on all nodes which are online.
         """
-        self.get_proxy().CreateProxy(
-            local_service_name,
-            node,
-            unit,
+        return self.get_proxy().ListUnits()
+
+    def list_nodes(self) -> List[Tuple[str, ObjPath, str]]:
+        """
+          ListNodes:
+        @nodes: A list of all nodes:
+          - The node name
+          - The object path of the node
+          - the current state of that node, either online or offline
+
+        List all nodes managed by BlueChi regardless if they are offline or online.
+        """
+        return self.get_proxy().ListNodes()
+
+    def get_node(self, name: str) -> ObjPath:
+        """
+          GetNode:
+        @name: Name of the node
+        @path: The path of the requested node
+
+        Get the object path of the named node.
+        """
+        return self.get_proxy().GetNode(
+            name,
         )
 
-    def remove_proxy(self, local_service_name: str, node: str, unit: str) -> None:
+    def create_monitor(self) -> ObjPath:
         """
-          RemoveProxy:
-        @local_service_name: The service name which requests the external dependency
-        @node: The requested node to provide the service
-        @unit: The external unit requested from the local service
+          CreateMonitor:
+        @monitor: The path of the created monitor.
 
-        BlueChi internal usage only.
-        RemoveProxy() removes a new proxy service. It is part in the chain of resolving dependencies on services running on other managed nodes.
+        Create a new monitor on which subscriptions can be added. It will automatically be closed as soon as the connection is closed.
         """
-        self.get_proxy().RemoveProxy(
-            local_service_name,
-            node,
-            unit,
+        return self.get_proxy().CreateMonitor()
+
+    def enable_metrics(self) -> None:
+        """
+          EnableMetrics:
+
+        Enable collecting performance metrics.
+        """
+        self.get_proxy().EnableMetrics()
+
+    def disable_metrics(self) -> None:
+        """
+          DisableMetrics:
+
+        Disable collecting performance metrics.
+        """
+        self.get_proxy().DisableMetrics()
+
+    def set_log_level(self, loglevel: str) -> None:
+        """
+          SetLogLevel:
+        @loglevel: The new loglevel to use.
+
+        Change the loglevel of the controller.
+        """
+        self.get_proxy().SetLogLevel(
+            loglevel,
         )
+
+    def on_job_new(
+        self,
+        callback: Callable[
+            [
+                UInt32,
+                ObjPath,
+            ],
+            None,
+        ],
+    ) -> None:
+        """
+          JobNew:
+        @id: The id of the new job
+        @job: The path of the job
+
+        Emitted each time a new BlueChi job is queued.
+        """
+        self.get_proxy().JobNew.connect(callback)
+
+    def on_job_removed(
+        self,
+        callback: Callable[
+            [
+                UInt32,
+                ObjPath,
+                str,
+                str,
+                str,
+            ],
+            None,
+        ],
+    ) -> None:
+        """
+            JobRemoved:
+          @id: The id of the new job
+          @job: The path of the job
+          @node: The name of the node the job has been completed on
+          @unit: The name of the unit the job has been completed on
+          @result: The result of the job
+
+          Emitted each time a new job is dequeued or the underlying systemd job finished. result is one of: done, failed, cancelled, timeout, dependency,
+        skipped. This is either the result from systemd on the node, or cancelled if the job was cancelled in BlueChi before any systemd job was started
+        for it.
+        """
+        self.get_proxy().JobRemoved.connect(callback)
 
     @property
     def status(self) -> str:
         """
           Status:
 
-        The connection status of the agent with the BlueChi controller.
-        On any change, a signal is emitted on the org.freedesktop.DBus.Properties interface.
+        The status of the overall system. Its value is one of:
+          down:  no node is connected
+          degraded: at least one node is not connected
+          up:   all nodes listed in the AllowedNodeNames config are connected
+        A signal is emitted on the org.freedesktop.DBus.Properties interface each time the system state changes. Therefore, a (dis-)connecting node
+        doesn't necessarily result in a signal to be emitted. For this puprose, the Status property on the org.eclipse.bluechi.Node interface is a
+        better choice.
         """
         return self.get_proxy().Status
 
@@ -955,8 +960,13 @@ class Agent(ApiBase):
         """
           Status:
 
-        The connection status of the agent with the BlueChi controller.
-        On any change, a signal is emitted on the org.freedesktop.DBus.Properties interface.
+        The status of the overall system. Its value is one of:
+          down:  no node is connected
+          degraded: at least one node is not connected
+          up:   all nodes listed in the AllowedNodeNames config are connected
+        A signal is emitted on the org.freedesktop.DBus.Properties interface each time the system state changes. Therefore, a (dis-)connecting node
+        doesn't necessarily result in a signal to be emitted. For this puprose, the Status property on the org.eclipse.bluechi.Node interface is a
+        better choice.
         """
 
         def on_properties_changed(
@@ -969,13 +979,3 @@ class Agent(ApiBase):
                 callback(value)
 
         self.get_properties_proxy().PropertiesChanged.connect(on_properties_changed)
-
-    @property
-    def disconnect_timestamp(self) -> UInt64:
-        """
-          DisconnectTimestamp:
-
-        A timestamp indicating when the agent lost connection to the BlueChi controller.
-        If the connection is active (agent is online), this value is 0.
-        """
-        return self.get_proxy().DisconnectTimestamp
