@@ -3,12 +3,12 @@
 <node>
 
   <!-- 
-    org.eclipse.bluechi.Manager:
+    org.eclipse.bluechi.Controller:
     @short_description: Public interface of BlueChi on the managing node providing methods and signals for all nodes.
 
     This interface can be used to get information about all nodes and their units, create monitors and listen for job signals.
   -->
-  <interface name="org.eclipse.bluechi.Manager">
+  <interface name="org.eclipse.bluechi.Controller">
 
     <!-- 
       ListUnits:
@@ -84,7 +84,7 @@
       SetLogLevel:
       @loglevel: The new loglevel to use. 
 
-      Change the loglevel of the manager.
+      Change the loglevel of the controller.
     -->
     <method name="SetLogLevel">
       <arg name="loglevel" type="s" direction="in" />

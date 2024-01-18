@@ -17,7 +17,7 @@ struct ProxyService {
 
         sd_bus_message *request_message;
 
-        bool sent_new_proxy; /* We told manager about the proxy */
+        bool sent_new_proxy; /* We told controller about the proxy */
         bool dont_stop_proxy;
         bool sent_successful_ready;
 

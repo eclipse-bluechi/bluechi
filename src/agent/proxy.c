@@ -19,7 +19,7 @@ static const sd_bus_vtable proxy_service_vtable[] = {
         SD_BUS_VTABLE_END
 };
 
-/* This is called by the manager when the service that is the target
+/* This is called by the controller when the service that is the target
  * of a proxy changes state.
  */
 
@@ -86,7 +86,7 @@ static int proxy_service_method_target_state_changed(
 
         UnitActiveState active_state = active_state_from_string(active_state_str);
 
-        bc_log_debugf("Proxy service '%s' got TargetStateChanged from manager: %s %s %s",
+        bc_log_debugf("Proxy service '%s' got TargetStateChanged from controller: %s %s %s",
                       proxy->local_service_name,
                       active_state_str,
                       substate,
@@ -145,7 +145,7 @@ static int proxy_service_method_target_new(sd_bus_message *m, void *userdata, UN
                 return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_INVALID_ARGS, "Invalid arguments");
         }
 
-        bc_log_debugf("Proxy service '%s' got TargetNew from manager: %s", proxy->local_service_name, reason);
+        bc_log_debugf("Proxy service '%s' got TargetNew from controller: %s", proxy->local_service_name, reason);
 
         return sd_bus_reply_method_return(m, "");
 }
@@ -167,7 +167,7 @@ static int proxy_service_method_target_removed(sd_bus_message *m, void *userdata
                                 strerror(-r));
         }
 
-        bc_log_debugf("Proxy service '%s' got TargetRemoved from manager: %s",
+        bc_log_debugf("Proxy service '%s' got TargetRemoved from controller: %s",
                       proxy->local_service_name,
                       reason);
 
@@ -180,7 +180,7 @@ static int proxy_service_method_target_removed(sd_bus_message *m, void *userdata
         return sd_bus_reply_method_return(m, "");
 }
 
-/* This is called by the manager when there was an error setting up the monitor.
+/* This is called by the controller when there was an error setting up the monitor.
  * Note, this is only sent once, and if it is sent, expect no other messages.
  */
 
@@ -316,7 +316,7 @@ int proxy_service_emit_proxy_new(ProxyService *proxy) {
 int proxy_service_emit_proxy_removed(ProxyService *proxy) {
         Agent *agent = proxy->agent;
 
-        /* No need to tell the manager if we didn't announce this */
+        /* No need to tell the controller if we didn't announce this */
         if (!proxy->sent_new_proxy) {
                 return 0;
         }

@@ -2,7 +2,7 @@
 
 import unittest
 
-from bluechi.api import Manager, Monitor
+from bluechi.api import Controller, Monitor
 from dasbus.error import DBusError
 
 node = "node-foo"
@@ -13,7 +13,7 @@ class TestListenerAddedIsOwner(unittest.TestCase):
 
     def test_listener_added_is_owner(self):
 
-        mgr = Manager()
+        mgr = Controller()
         monitor_path = mgr.create_monitor()
         monitor = Monitor(monitor_path)
 

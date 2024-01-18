@@ -97,20 +97,20 @@ bool test_cfg_agent_def_conf() {
                         CFG_NODE_NAME);
                 result = false;
         }
-        value = cfg_get_value(config, CFG_MANAGER_HOST);
+        value = cfg_get_value(config, CFG_CONTROLLER_HOST);
         if (!streq(value, BC_DEFAULT_HOST)) {
                 fprintf(stderr,
                         "Expected config option %s to have default value '%s', but got '%s'\n",
-                        CFG_MANAGER_HOST,
+                        CFG_CONTROLLER_HOST,
                         BC_DEFAULT_HOST,
                         value);
                 result = false;
         }
-        value = cfg_get_value(config, CFG_MANAGER_PORT);
+        value = cfg_get_value(config, CFG_CONTROLLER_PORT);
         if (!streq(value, BC_DEFAULT_PORT)) {
                 fprintf(stderr,
                         "Expected config option %s to have default value '%s', but got '%s'\n",
-                        CFG_MANAGER_PORT,
+                        CFG_CONTROLLER_PORT,
                         BC_DEFAULT_PORT,
                         value);
                 result = false;
@@ -129,11 +129,11 @@ bool test_cfg_agent_def_conf() {
         return result;
 }
 
-bool test_cfg_manager_def_conf() {
+bool test_cfg_controller_def_conf() {
         struct config *config = NULL;
         cfg_initialize(&config);
 
-        int r = cfg_manager_def_conf(config);
+        int r = cfg_controller_def_conf(config);
         if (r < 0) {
                 fprintf(stderr, "Unexpected error while setting agent default values: %s", strerror(-r));
                 cfg_dispose(config);
@@ -208,12 +208,12 @@ bool test_cfg_manager_def_conf() {
                 result = false;
         }
 
-        /* Manager specific options */
-        value = cfg_get_value(config, CFG_MANAGER_PORT);
+        /* Controller specific options */
+        value = cfg_get_value(config, CFG_CONTROLLER_PORT);
         if (!streq(value, BC_DEFAULT_PORT)) {
                 fprintf(stderr,
                         "Expected config option %s to have default value '%s', but got '%s'\n",
-                        CFG_MANAGER_PORT,
+                        CFG_CONTROLLER_PORT,
                         BC_DEFAULT_PORT,
                         value);
                 result = false;
@@ -236,7 +236,7 @@ int main() {
         bool result = true;
 
         result = result && test_cfg_agent_def_conf();
-        result = result && test_cfg_manager_def_conf();
+        result = result && test_cfg_controller_def_conf();
 
         if (result) {
                 return EXIT_SUCCESS;

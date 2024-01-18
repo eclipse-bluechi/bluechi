@@ -93,7 +93,7 @@ subdir('config')
 subdir('selinux')
 
 # build each binary
-subdir('src/manager')
+subdir('src/controller')
 subdir('src/agent')
 subdir('src/client')
 subdir('src/proxy')

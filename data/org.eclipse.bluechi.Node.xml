@@ -21,7 +21,7 @@
     fails if mode is fail.
 
       The job returned is an object path for an object implementing org.eclipse.bluechi.Job, and which be monitored for the progress of the job, or used
-    to cancel the job. To track the result of the job, follow the JobRemoved signal on the Manager.
+    to cancel the job. To track the result of the job, follow the JobRemoved signal on the Controller.
     -->
     <method name="StartUnit">
       <arg name="name" type="s" direction="in" />
@@ -205,7 +205,7 @@
       SetLogLevel:
       @loglevel: The new loglevel to use. 
 
-      Change the loglevel of the manager.
+      Change the loglevel of the controller.
     -->
     <method name="SetLogLevel">
       <arg name="level" type="s" direction="in" />

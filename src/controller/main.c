@@ -7,7 +7,7 @@
 #include "libbluechi/common/parse-util.h"
 #include "libbluechi/service/shutdown.h"
 
-#include "manager.h"
+#include "controller.h"
 
 const struct option options[] = {
         {ARG_PORT,     required_argument, 0, ARG_PORT_SHORT   },
@@ -81,23 +81,23 @@ int main(int argc, char *argv[]) {
                 return EXIT_SUCCESS;
         }
 
-        _cleanup_manager_ Manager *manager = manager_new();
-        if (manager == NULL) {
+        _cleanup_controller_ Controller *controller = controller_new();
+        if (controller == NULL) {
                 return EXIT_FAILURE;
         }
 
         /* First load config */
-        if (!manager_parse_config(manager, opt_config)) {
+        if (!controller_parse_config(controller, opt_config)) {
                 return EXIT_FAILURE;
         }
 
         /* Then override individual options */
 
-        if (opt_port && !manager_set_port(manager, opt_port)) {
+        if (opt_port && !controller_set_port(controller, opt_port)) {
                 return EXIT_FAILURE;
         }
 
-        if (manager_start(manager)) {
+        if (controller_start(controller)) {
                 return EXIT_SUCCESS;
         }
         return EXIT_FAILURE;

@@ -36,14 +36,14 @@ int agent_request_cancel(AgentRequest *r);
 struct Node {
         int ref_count;
 
-        Manager *manager; /* weak ref */
+        Controller *controller; /* weak ref */
 
         /* public bus api */
         sd_bus_slot *export_slot;
 
         /* internal bus api */
         sd_bus *agent_bus;
-        sd_bus_slot *internal_manager_slot;
+        sd_bus_slot *internal_controller_slot;
         sd_bus_slot *disconnect_slot;
         sd_bus_slot *metrics_matching_slot;
 
@@ -62,7 +62,7 @@ struct Node {
         bool is_shutdown;
 };
 
-Node *node_new(Manager *manager, const char *name);
+Node *node_new(Controller *controller, const char *name);
 Node *node_ref(Node *node);
 void node_unref(Node *node);
 void node_shutdown(Node *node);

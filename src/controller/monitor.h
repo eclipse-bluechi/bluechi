@@ -34,7 +34,7 @@ struct Subscription {
         LIST_HEAD(SubscribedUnit, subscribed_units);
 
         LIST_FIELDS(Subscription, subscriptions);     /* List in Monitor */
-        LIST_FIELDS(Subscription, all_subscriptions); /* List in Manager */
+        LIST_FIELDS(Subscription, all_subscriptions); /* List in Controller */
 
         unit_new_handler_func_t *handle_unit_new;
         unit_removed_handler_func_t *handle_unit_removed;
@@ -67,7 +67,7 @@ struct Monitor {
         char *owner;
         LIST_HEAD(MonitorPeer, peers);
 
-        Manager *manager; /* weak ref */
+        Controller *controller; /* weak ref */
 
         sd_bus_slot *export_slot;
         char *object_path;
@@ -77,7 +77,7 @@ struct Monitor {
         LIST_FIELDS(Monitor, monitors);
 };
 
-Monitor *monitor_new(Manager *manager, const char *owner);
+Monitor *monitor_new(Controller *controller, const char *owner);
 Monitor *monitor_ref(Monitor *monitor);
 void monitor_unref(Monitor *monitor);
 

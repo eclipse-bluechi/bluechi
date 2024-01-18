@@ -76,9 +76,9 @@ class BluechiNodeConfig(BluechiConfig):
             self,
             file_name: str,
             node_name: str = "",
-            manager_host: str = "",
-            manager_port: str = "8420",
-            manager_address: str = "",
+            controller_host: str = "",
+            controller_port: str = "8420",
+            controller_address: str = "",
             heartbeat_interval: str = "2000",
             log_level: str = "DEBUG",
             log_target: str = "journald",
@@ -86,9 +86,9 @@ class BluechiNodeConfig(BluechiConfig):
         super().__init__(file_name)
 
         self.node_name = node_name
-        self.manager_host = manager_host
-        self.manager_port = manager_port
-        self.manager_address = manager_address
+        self.controller_host = controller_host
+        self.controller_port = controller_port
+        self.controller_address = controller_address
         self.heartbeat_interval = heartbeat_interval
         self.log_level = log_level
         self.log_target = log_target
@@ -97,9 +97,9 @@ class BluechiNodeConfig(BluechiConfig):
     def serialize(self) -> str:
         return f"""[bluechi-agent]
 NodeName={self.node_name}
-ControllerHost={self.manager_host}
-ControllerPort={self.manager_port}
-ControllerAddress={self.manager_address}
+ControllerHost={self.controller_host}
+ControllerPort={self.controller_port}
+ControllerAddress={self.controller_address}
 HeartbeatInterval={self.heartbeat_interval}
 LogLevel={self.log_level}
 LogTarget={self.log_target}
@@ -112,9 +112,9 @@ LogIsQuiet={self.log_is_quiet}
     def deep_copy(self) -> "BluechiNodeConfig":
         cfg = BluechiNodeConfig(self.file_name)
         cfg.node_name = self.node_name
-        cfg.manager_host = self.manager_host
-        cfg.manager_port = self.manager_port
-        cfg.manager_address = self.manager_address
+        cfg.controller_host = self.controller_host
+        cfg.controller_port = self.controller_port
+        cfg.controller_address = self.controller_address
         cfg.heartbeat_interval = self.heartbeat_interval
         cfg.log_level = self.log_level
         cfg.log_target = self.log_target

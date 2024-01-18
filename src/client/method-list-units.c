@@ -76,7 +76,7 @@ static int method_list_units_on_all(sd_bus *api_bus, print_unit_list_fn print, c
                         api_bus,
                         NULL,
                         BC_OBJECT_PATH,
-                        MANAGER_INTERFACE,
+                        CONTROLLER_INTERFACE,
                         NODE_AND_UNIT_INFO_STRUCT_TYPESTRING,
                         &bus_parse_unit_on_node_info,
                         unit_list);

@@ -87,11 +87,11 @@ The dependency used for the dep service is `BindsTo` and `After`, which is a ver
 
 ## Implementation Details
 
-Tracking service state across multiple nodes is very tricky, as the state can diverge due to disconnects, delays, or races. To minimize such problems most state and intelligence is kept in the agent. Whenever the agent registers a new proxy it will announce this to the manager (if connected), and this will start a one-directional flow of non-interpreted state-change events from the target service to the manager to the agent, until the agent explicitly removes the proxy.
+Tracking service state across multiple nodes is very tricky, as the state can diverge due to disconnects, delays, or races. To minimize such problems most state and intelligence is kept in the agent. Whenever the agent registers a new proxy it will announce this to the controller (if connected), and this will start a one-directional flow of non-interpreted state-change events from the target service to the controller to the agent, until the agent explicitly removes the proxy.
 
-If an agent is disconnected from the manager, then the manager treats that as if the agent removed the proxy. On re-connection the agent will re-send the registering of the proxy.
+If an agent is disconnected from the controller, then the controller treats that as if the agent removed the proxy. On re-connection the agent will re-send the registering of the proxy.
 
-In addition to the monitoring, each time a proxy is registered the manager will tell the target node to start the dep service for the target service. BlueChi keeps track of how many proxies are outstanding for the target service and only tell the agent to stop the dep service when this reaches zero. Similar to the above, when the target node reconnect we re-sent starts for any outstanding proxies.
+In addition to the monitoring, each time a proxy is registered the controller will tell the target node to start the dep service for the target service. BlueChi keeps track of how many proxies are outstanding for the target service and only tell the agent to stop the dep service when this reaches zero. Similar to the above, when the target node reconnect we re-sent starts for any outstanding proxies.
 
 !!! Note
 

@@ -4,7 +4,7 @@ import unittest
 
 from dasbus.loop import EventLoop
 
-from bluechi.api import Manager, Monitor, Node
+from bluechi.api import Controller, Monitor, Node
 
 
 node_name_foo = "node-foo"
@@ -15,7 +15,7 @@ class TestUnsubscribe(unittest.TestCase):
 
     def setUp(self) -> None:
         self.loop = EventLoop()
-        self.mgr = Manager()
+        self.mgr = Controller()
         monitor_path = self.mgr.create_monitor()
         self.monitor = Monitor(monitor_path=monitor_path)
 

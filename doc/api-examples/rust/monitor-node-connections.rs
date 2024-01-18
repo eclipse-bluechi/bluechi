@@ -17,7 +17,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     );
 
     let (nodes,): (Vec<(String, dbus::Path, String)>,) =
-        bluechi.method_call("org.eclipse.bluechi.Manager", "ListNodes", ())?;
+        bluechi.method_call("org.eclipse.bluechi.Controller", "ListNodes", ())?;
 
     for (name, path, _) in nodes {
         let node_name = name;

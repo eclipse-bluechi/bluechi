@@ -10,9 +10,9 @@ import (
 )
 
 const (
-	BcDusInterface     = "org.eclipse.bluechi"
-	BcObjectPath       = "/org/eclipse/bluechi"
-	BcManagerInterface = "org.eclipse.bluechi.Manager"
+	BcDusInterface        = "org.eclipse.bluechi"
+	BcObjectPath          = "/org/eclipse/bluechi"
+	BcControllerInterface = "org.eclipse.bluechi.Controller"
 )
 
 func main() {
@@ -34,7 +34,7 @@ func main() {
 	conn.Signal(c)
 	for v := range c {
 		ifaceName := v.Body[0]
-		if ifaceName == BcManagerInterface {
+		if ifaceName == BcControllerInterface {
 			changedValues, ok := v.Body[1].(map[string]dbus.Variant)
 			if !ok {
 				fmt.Println("Received invalid property changed signal")

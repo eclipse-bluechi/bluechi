@@ -66,7 +66,7 @@ When checking the status of the unit or starting and stopping it now, `create-an
 
     ```python
     import sys
-    from bluechi.api import Manager, Monitor
+    from bluechi.api import Controller, Monitor
     from dasbus.loop import EventLoop
 
     if len(sys.argv) != 3:
@@ -78,7 +78,7 @@ When checking the status of the unit or starting and stopping it now, `create-an
 
     loop = EventLoop()
 
-    mgr = Manager()
+    mgr = Controller()
     monitor_path = mgr.create_monitor()
     print(f"Monitor path: {monitor_path}")
 

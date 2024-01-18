@@ -8,8 +8,8 @@ bus = dasbus.connection.SystemMessageBus()
 
 NodeInfo = namedtuple("NodeInfo", ["name", "object_path", "status"])
 
-manager = bus.get_proxy("org.eclipse.bluechi", "/org/eclipse/bluechi")
-nodes = manager.ListNodes()
+controller = bus.get_proxy("org.eclipse.bluechi", "/org/eclipse/bluechi")
+nodes = controller.ListNodes()
 for n in nodes:
     info = NodeInfo(*n)
     print(f"Node: {info.name}, State: {info.status}")

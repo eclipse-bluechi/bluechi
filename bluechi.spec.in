@@ -68,7 +68,7 @@ This package contains the controller service.
 %license LICENSE
 %{_libexecdir}/bluechi-controller
 %{_datadir}/dbus-1/interfaces/org.eclipse.bluechi.Job.xml
-%{_datadir}/dbus-1/interfaces/org.eclipse.bluechi.Manager.xml
+%{_datadir}/dbus-1/interfaces/org.eclipse.bluechi.Controller.xml
 %{_datadir}/dbus-1/interfaces/org.eclipse.bluechi.Monitor.xml
 %{_datadir}/dbus-1/interfaces/org.eclipse.bluechi.Node.xml
 %{_datadir}/dbus-1/system.d/org.eclipse.bluechi.conf

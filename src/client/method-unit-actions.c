@@ -21,8 +21,8 @@ static int method_lifecycle_action_on(Client *client, char *node_name, char *uni
                         client->api_bus,
                         NULL,
                         BC_INTERFACE_BASE_NAME,
-                        BC_MANAGER_OBJECT_PATH,
-                        MANAGER_INTERFACE,
+                        BC_CONTROLLER_OBJECT_PATH,
+                        CONTROLLER_INTERFACE,
                         "JobRemoved",
                         match_job_removed_signal,
                         client);

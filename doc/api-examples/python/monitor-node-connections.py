@@ -9,8 +9,8 @@ from typing import Dict
 loop = EventLoop()
 bus = dasbus.connection.SystemMessageBus()
 
-manager = bus.get_proxy("org.eclipse.bluechi", "/org/eclipse/bluechi")
-nodes = manager.ListNodes()
+controller = bus.get_proxy("org.eclipse.bluechi", "/org/eclipse/bluechi")
+nodes = controller.ListNodes()
 cached_nodes = []
 for n in nodes:
     # node: [name, path, status]

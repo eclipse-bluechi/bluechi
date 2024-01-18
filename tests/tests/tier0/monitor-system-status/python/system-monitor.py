@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: LGPL-2.1-or-later
 
-from bluechi.api import Manager
+from bluechi.api import Controller
 from dasbus.loop import EventLoop
 from dasbus.typing import Variant
 
@@ -26,7 +26,7 @@ try:
 
     loop = EventLoop()
 
-    mgr = Manager()
+    mgr = Controller()
     mgr.on_status_changed(on_system_status_changed)
 
     loop.run()

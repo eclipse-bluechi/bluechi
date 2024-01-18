@@ -89,12 +89,525 @@ class ApiBase:
         return self.cached_properties_proxy
 
 
+class Agent(ApiBase):
+    """
+    org.eclipse.bluechi.Agent:
+    @short_description: Public interface of BlueChi on the managed node providing methods and signals for the respective node.
+
+    This interface is used to create proxy services resolving dependencies on services of other managed nodes.
+    """
+
+    def __init__(self, bus: MessageBus = None, use_systembus=True) -> None:
+        super().__init__(BC_AGENT_DBUS_INTERFACE, BC_OBJECT_PATH, bus, use_systembus)
+
+    def create_proxy(self, local_service_name: str, node: str, unit: str) -> None:
+        """
+          CreateProxy:
+        @local_service_name: The service name which requests the external dependency
+        @node: The requested node to provide the service
+        @unit: The external unit requested from the local service
+
+        BlueChi internal usage only.
+        CreateProxy() creates a new proxy service. It is part in the chain of resolving dependencies on services running on other managed nodes.
+        """
+        self.get_proxy().CreateProxy(
+            local_service_name,
+            node,
+            unit,
+        )
+
+    def remove_proxy(self, local_service_name: str, node: str, unit: str) -> None:
+        """
+          RemoveProxy:
+        @local_service_name: The service name which requests the external dependency
+        @node: The requested node to provide the service
+        @unit: The external unit requested from the local service
+
+        BlueChi internal usage only.
+        RemoveProxy() removes a new proxy service. It is part in the chain of resolving dependencies on services running on other managed nodes.
+        """
+        self.get_proxy().RemoveProxy(
+            local_service_name,
+            node,
+            unit,
+        )
+
+    @property
+    def status(self) -> str:
+        """
+          Status:
+
+        The connection status of the agent with the BlueChi controller.
+        On any change, a signal is emitted on the org.freedesktop.DBus.Properties interface.
+        """
+        return self.get_proxy().Status
+
+    def on_status_changed(self, callback: Callable[[Variant], None]):
+        """
+          Status:
+
+        The connection status of the agent with the BlueChi controller.
+        On any change, a signal is emitted on the org.freedesktop.DBus.Properties interface.
+        """
+
+        def on_properties_changed(
+            interface: str,
+            changed_props: Dict[str, Variant],
+            invalidated_props: Dict[str, Variant],
+        ) -> None:
+            value = changed_props.get("Status")
+            if value is not None:
+                callback(value)
+
+        self.get_properties_proxy().PropertiesChanged.connect(on_properties_changed)
+
+    @property
+    def disconnect_timestamp(self) -> UInt64:
+        """
+          DisconnectTimestamp:
+
+        A timestamp indicating when the agent lost connection to the BlueChi controller.
+        If the connection is active (agent is online), this value is 0.
+        """
+        return self.get_proxy().DisconnectTimestamp
+
+
+class Job(ApiBase):
+    """
+    org.eclipse.bluechi.Job:
+    @short_description: Public interface of BlueChi on the managing node for all job objects.
+
+    This interface is used to either cancel a job, get its properties and monitor its state.
+    """
+
+    def __init__(
+        self, job_path: ObjPath, bus: MessageBus = None, use_systembus=True
+    ) -> None:
+        super().__init__(BC_DBUS_INTERFACE, job_path, bus, use_systembus)
+
+        self.job_path = job_path
+
+    def cancel(self) -> None:
+        """
+          Cancel:
+
+        Cancels the job.
+        It cancels the corresponding systemd job if it was already started. Otherwise it cancels the BlueChi job.
+        """
+        self.get_proxy().Cancel()
+
+    @property
+    def id(self) -> UInt32:
+        """
+          Id:
+
+        An integer giving the id of the job.
+        """
+        return self.get_proxy().Id
+
+    @property
+    def node(self) -> str:
+        """
+          Node:
+
+        The name of the node the job is on.
+        """
+        return self.get_proxy().Node
+
+    @property
+    def unit(self) -> str:
+        """
+          Unit:
+
+        The name of the unit the job works on.
+        """
+        return self.get_proxy().Unit
+
+    @property
+    def job_type(self) -> str:
+        """
+          JobType:
+
+        Type of the job, either Start or Stop.
+        """
+        return self.get_proxy().JobType
+
+    @property
+    def state(self) -> str:
+        """
+          State:
+
+        The current state of the job, one of: waiting (queued jobs) or running.
+        On any change, a signal is emitted on the org.freedesktop.DBus.Properties interface.
+        """
+        return self.get_proxy().State
+
+    def on_state_changed(self, callback: Callable[[Variant], None]):
+        """
+          State:
+
+        The current state of the job, one of: waiting (queued jobs) or running.
+        On any change, a signal is emitted on the org.freedesktop.DBus.Properties interface.
+        """
+
+        def on_properties_changed(
+            interface: str,
+            changed_props: Dict[str, Variant],
+            invalidated_props: Dict[str, Variant],
+        ) -> None:
+            value = changed_props.get("State")
+            if value is not None:
+                callback(value)
+
+        self.get_properties_proxy().PropertiesChanged.connect(on_properties_changed)
+
+
+class Metrics(ApiBase):
+    """
+    org.eclipse.bluechi.Metrics:
+    @short_description: Public interface of BlueChi on the managing node providing signals for performance metrics.
+
+    This interface is only available if the metrics have been enabled before via the Controller interface.
+    """
+
+    def __init__(self, bus: MessageBus = None, use_systembus=True) -> None:
+        super().__init__(BC_DBUS_INTERFACE, BC_METRICS_OBJECT_PATH, bus, use_systembus)
+
+    def on_start_unit_job_metrics(
+        self,
+        callback: Callable[
+            [
+                str,
+                str,
+                str,
+                UInt64,
+                UInt64,
+            ],
+            None,
+        ],
+    ) -> None:
+        """
+          StartUnitJobMetrics:
+        @node_name: The node name this metrics has been collected for
+        @job_id: The id of the job linked to the collected metrics
+        @unit: The unit name this metrics has been collected for
+        @job_measured_time_micros: The measured time it took starting the unit on the node in microseconds
+        @unit_start_prop_time_micros: The systemd time it took starting the unit on the node in microseconds
+
+        Emitted when a start operation processed by BlueChi finishes and the collection of metrics has been enabled previously.
+        """
+        self.get_proxy().StartUnitJobMetrics.connect(callback)
+
+    def on_agent_job_metrics(
+        self,
+        callback: Callable[
+            [
+                str,
+                str,
+                str,
+                UInt64,
+            ],
+            None,
+        ],
+    ) -> None:
+        """
+            AgentJobMetrics:
+          @node_name: The node name this metrics has been collected for
+          @unit: The unit name this metrics has been collected for
+          @method: The lifecycle operation
+          @systemd_job_time_micros: The systemd time it took starting the unit on the node in microseconds
+
+          Emitted for all unit lifecycle operations (e.g. Start, Stop, Reload, etc.) processed by BlueChi when these finish and the collection of metrics has
+        been enabled previously.
+        """
+        self.get_proxy().AgentJobMetrics.connect(callback)
+
+
+class Node(ApiBase):
+    """
+    org.eclipse.bluechi.Node:
+    @short_description: Public interface of BlueChi on the managing node providing methods, signals and  for a specific node.
+
+    This interface can be used to get information about a specific node and its units as well as control them, e.g. by starting or stopping them.
+    """
+
+    def __init__(
+        self, node_name: str, bus: MessageBus = None, use_systembus=True
+    ) -> None:
+        # set empty node path temporary, needs to be resolved after the bus has been set
+        super().__init__(BC_DBUS_INTERFACE, "", bus, use_systembus)
+
+        controller = self.bus.get_proxy(BC_DBUS_INTERFACE, BC_OBJECT_PATH)
+        self.object_path = controller.GetNode(node_name)
+
+        self.node_name = node_name
+
+    def start_unit(self, name: str, mode: str) -> ObjPath:
+        """
+            StartUnit:
+          @name: The name of the unit to start
+          @mode: The mode used to start the unit
+          @job: The path for the job associated with the start operation
+
+          Queues a unit activate job for the named unit on this node. The queue is per-unit name, which means there is only ever one active job per unit. Mode
+        can be one of replace or fail. If there is an outstanding queued (but not running) job, that is replaced if mode is replace, or the job
+        fails if mode is fail.
+
+          The job returned is an object path for an object implementing org.eclipse.bluechi.Job, and which be monitored for the progress of the job, or used
+        to cancel the job. To track the result of the job, follow the JobRemoved signal on the Controller.
+        """
+        return self.get_proxy().StartUnit(
+            name,
+            mode,
+        )
+
+    def stop_unit(self, name: str, mode: str) -> ObjPath:
+        """
+          StopUnit:
+        @name: The name of the unit to stop
+        @mode: The mode used to stop the unit
+        @job: The path for the job associated with the stop operation
+
+        StopUnit() is similar to StartUnit() but stops the specified unit rather than starting it.
+        """
+        return self.get_proxy().StopUnit(
+            name,
+            mode,
+        )
+
+    def freeze_unit(self, name: str) -> None:
+        """
+            FreezeUnit:
+          @name: The name of the unit to freeze
+
+          Freezing the unit will cause all processes contained within the cgroup corresponding to the unit to be suspended. Being suspended means that unit's
+        processes won't be scheduled to run on CPU until thawed.
+        """
+        self.get_proxy().FreezeUnit(
+            name,
+        )
+
+    def thaw_unit(self, name: str) -> None:
+        """
+          ThawUnit:
+        @name: The name of the unit to thaw
+
+        This is the inverse operation to the freeze command and resumes the execution of processes in the unit's cgroup.
+        """
+        self.get_proxy().ThawUnit(
+            name,
+        )
+
+    def reload_unit(self, name: str, mode: str) -> ObjPath:
+        """
+          ReloadUnit:
+        @name: The name of the unit to reload
+        @mode: The mode used to reload the unit
+        @job: The path for the job associated with the reload operation
+
+        ReloadUnit() is similar to StartUnit() but can be used to reload a unit instead. See equivalent systemd methods for details.
+        """
+        return self.get_proxy().ReloadUnit(
+            name,
+            mode,
+        )
+
+    def restart_unit(self, name: str, mode: str) -> ObjPath:
+        """
+          RestartUnit:
+        @name: The name of the unit to restart
+        @mode: The mode used to restart the unit
+        @job: The path for the job associated with the restart operation
+
+        RestartUnit() is similar to StartUnit() but can be used to restart a unit instead. See equivalent systemd methods for details.
+        """
+        return self.get_proxy().RestartUnit(
+            name,
+            mode,
+        )
+
+    def get_unit_properties(self, name: str, interface: str) -> Structure:
+        """
+          GetUnitProperties:
+        @name: The name of unit
+        @interface: The interface name
+        @props: The  as key-value pair with the name of the property as key
+
+        Returns the current  for a named unit on the node. The returned  are the same as you would get in the systemd  apis.
+        """
+        return self.get_proxy().GetUnitProperties(
+            name,
+            interface,
+        )
+
+    def get_unit_property(self, name: str, interface: str, property: str) -> Variant:
+        """
+          GetUnitProperty:
+        @name: The name of unit
+        @interface: The interface name
+        @property: The property name
+        @value: The value of the property
+
+        Get one named property, otherwise similar to GetUnit.
+        """
+        return self.get_proxy().GetUnitProperty(
+            name,
+            interface,
+            property,
+        )
+
+    def set_unit_properties(
+        self, name: str, runtime: bool, keyvalues: List[Tuple[str, Variant]]
+    ) -> None:
+        """
+          SetUnitProperties:
+        @name: The name of the unit
+        @runtime: Specify if the changes should persist after reboot or not
+        @keyvalues: A list of the new values as key-value pair with the key being the name of the property
+
+        Set named . If runtime is true the property changes do not persist across reboots.
+        """
+        self.get_proxy().SetUnitProperties(
+            name,
+            runtime,
+            keyvalues,
+        )
+
+    def enable_unit_files(
+        self, files: List[str], runtime: bool, force: bool
+    ) -> Tuple[bool, List[Tuple[str, str, str]],]:
+        """
+          EnableUnitFiles:
+        @files: A list of units to enable
+        @runtime: Specify if the changes should persist after reboot or not
+        @force: Specify if replacing the symlinks pointing to other units should be enforced
+        @carries_install_info: True if the units contained enablement information
+        @changes: The changes made
+          - type of change (one of: symlink, unlink)
+          - file name of the symlink
+          - destination of the symlink
+
+        EnableUnitFiles() may be used to enable one or more units in the system (by creating symlinks to them in /etc/ or /run/).
+        """
+        return self.get_proxy().EnableUnitFiles(
+            files,
+            runtime,
+            force,
+        )
+
+    def disable_unit_files(
+        self, files: List[str], runtime: bool
+    ) -> List[Tuple[str, str, str]]:
+        """
+          DisableUnitFiles:
+        @files: A list of units to enable
+        @runtime: Specify if the changes should persist after reboot or not
+        @changes: The changes made
+          - type of change (one of: symlink, unlink)
+          - file name of the symlink
+          - destination of the symlink
+
+        DisableUnitFiles() is similar to EnableUnitFiles() but disables the specified units by removing all symlinks to them in /etc/ and /run/
+        """
+        return self.get_proxy().DisableUnitFiles(
+            files,
+            runtime,
+        )
+
+    def list_units(
+        self,
+    ) -> List[Tuple[str, str, str, str, str, str, ObjPath, UInt32, str, ObjPath]]:
+        """
+          ListUnits:
+        @units: A list of all units on the node:
+          - The primary unit name as string
+          - The human readable description string
+          - The load state (i.e. whether the unit file has been loaded successfully)
+          - The active state (i.e. whether the unit is currently started or not)
+          - The sub state (a more fine-grained version of the active state that is specific to the unit type, which the active state is not)
+          - A unit that is being followed in its state by this unit, if there is any, otherwise the empty string.
+          - The unit object path
+          - If there is a job queued for the job unit the numeric job id, 0 otherwise
+          - The job type as string
+          - The job object path
+
+        List all loaded systemd units.
+        """
+        return self.get_proxy().ListUnits()
+
+    def reload(self) -> None:
+        """
+          Reload:
+
+        Reload() may be invoked to reload all unit files.
+        """
+        self.get_proxy().Reload()
+
+    def set_log_level(self, level: str) -> None:
+        """
+          SetLogLevel:
+        @loglevel: The new loglevel to use.
+
+        Change the loglevel of the controller.
+        """
+        self.get_proxy().SetLogLevel(
+            level,
+        )
+
+    @property
+    def name(self) -> str:
+        """
+          Name:
+
+        The name of the node.
+        """
+        return self.get_proxy().Name
+
+    @property
+    def status(self) -> str:
+        """
+          Status:
+
+        The connection status of the node with the BlueChi controller.
+        On any change, a signal is emitted on the org.freedesktop.DBus.Properties interface.
+        """
+        return self.get_proxy().Status
+
+    def on_status_changed(self, callback: Callable[[Variant], None]):
+        """
+          Status:
+
+        The connection status of the node with the BlueChi controller.
+        On any change, a signal is emitted on the org.freedesktop.DBus.Properties interface.
+        """
+
+        def on_properties_changed(
+            interface: str,
+            changed_props: Dict[str, Variant],
+            invalidated_props: Dict[str, Variant],
+        ) -> None:
+            value = changed_props.get("Status")
+            if value is not None:
+                callback(value)
+
+        self.get_properties_proxy().PropertiesChanged.connect(on_properties_changed)
+
+    @property
+    def last_seen_timestamp(self) -> UInt64:
+        """
+          LastSeenTimestamp:
+
+        A timestamp indicating when the last connection test (e.g. via heartbeat) was successful.
+        """
+        return self.get_proxy().LastSeenTimestamp
+
+
 class Monitor(ApiBase):
     """
     org.eclipse.bluechi.Monitor:
     @short_description: Public interface of BlueChi on the managing node providing monitoring functionality.
 
-    This interface is only available if a monitor has been created before via the Manager interface.
+    This interface is only available if a monitor has been created before via the Controller interface.
     It provides methods to subscribe to changes in systemd units on managed nodes as well as signals for those changes.
     """
 
@@ -289,160 +802,9 @@ class Monitor(ApiBase):
         self.get_proxy().PeerRemoved.connect(callback)
 
 
-class Metrics(ApiBase):
+class Controller(ApiBase):
     """
-    org.eclipse.bluechi.Metrics:
-    @short_description: Public interface of BlueChi on the managing node providing signals for performance metrics.
-
-    This interface is only available if the metrics have been enabled before via the Manager interface.
-    """
-
-    def __init__(self, bus: MessageBus = None, use_systembus=True) -> None:
-        super().__init__(BC_DBUS_INTERFACE, BC_METRICS_OBJECT_PATH, bus, use_systembus)
-
-    def on_start_unit_job_metrics(
-        self,
-        callback: Callable[
-            [
-                str,
-                str,
-                str,
-                UInt64,
-                UInt64,
-            ],
-            None,
-        ],
-    ) -> None:
-        """
-          StartUnitJobMetrics:
-        @node_name: The node name this metrics has been collected for
-        @job_id: The id of the job linked to the collected metrics
-        @unit: The unit name this metrics has been collected for
-        @job_measured_time_micros: The measured time it took starting the unit on the node in microseconds
-        @unit_start_prop_time_micros: The systemd time it took starting the unit on the node in microseconds
-
-        Emitted when a start operation processed by BlueChi finishes and the collection of metrics has been enabled previously.
-        """
-        self.get_proxy().StartUnitJobMetrics.connect(callback)
-
-    def on_agent_job_metrics(
-        self,
-        callback: Callable[
-            [
-                str,
-                str,
-                str,
-                UInt64,
-            ],
-            None,
-        ],
-    ) -> None:
-        """
-            AgentJobMetrics:
-          @node_name: The node name this metrics has been collected for
-          @unit: The unit name this metrics has been collected for
-          @method: The lifecycle operation
-          @systemd_job_time_micros: The systemd time it took starting the unit on the node in microseconds
-
-          Emitted for all unit lifecycle operations (e.g. Start, Stop, Reload, etc.) processed by BlueChi when these finish and the collection of metrics has
-        been enabled previously.
-        """
-        self.get_proxy().AgentJobMetrics.connect(callback)
-
-
-class Job(ApiBase):
-    """
-    org.eclipse.bluechi.Job:
-    @short_description: Public interface of BlueChi on the managing node for all job objects.
-
-    This interface is used to either cancel a job, get its properties and monitor its state.
-    """
-
-    def __init__(
-        self, job_path: ObjPath, bus: MessageBus = None, use_systembus=True
-    ) -> None:
-        super().__init__(BC_DBUS_INTERFACE, job_path, bus, use_systembus)
-
-        self.job_path = job_path
-
-    def cancel(self) -> None:
-        """
-          Cancel:
-
-        Cancels the job.
-        It cancels the corresponding systemd job if it was already started. Otherwise it cancels the BlueChi job.
-        """
-        self.get_proxy().Cancel()
-
-    @property
-    def id(self) -> UInt32:
-        """
-          Id:
-
-        An integer giving the id of the job.
-        """
-        return self.get_proxy().Id
-
-    @property
-    def node(self) -> str:
-        """
-          Node:
-
-        The name of the node the job is on.
-        """
-        return self.get_proxy().Node
-
-    @property
-    def unit(self) -> str:
-        """
-          Unit:
-
-        The name of the unit the job works on.
-        """
-        return self.get_proxy().Unit
-
-    @property
-    def job_type(self) -> str:
-        """
-          JobType:
-
-        Type of the job, either Start or Stop.
-        """
-        return self.get_proxy().JobType
-
-    @property
-    def state(self) -> str:
-        """
-          State:
-
-        The current state of the job, one of: waiting (queued jobs) or running.
-        On any change, a signal is emitted on the org.freedesktop.DBus.Properties interface.
-        """
-        return self.get_proxy().State
-
-    def on_state_changed(self, callback: Callable[[Variant], None]):
-        """
-          State:
-
-        The current state of the job, one of: waiting (queued jobs) or running.
-        On any change, a signal is emitted on the org.freedesktop.DBus.Properties interface.
-        """
-
-        def on_properties_changed(
-            interface: str,
-            changed_props: Dict[str, Variant],
-            invalidated_props: Dict[str, Variant],
-        ) -> None:
-            value = changed_props.get("State")
-            if value is not None:
-                callback(value)
-
-        self.get_properties_proxy().PropertiesChanged.connect(on_properties_changed)
-
-
-class Manager(ApiBase):
-    """
-    org.eclipse.bluechi.Manager:
+    org.eclipse.bluechi.Controller:
     @short_description: Public interface of BlueChi on the managing node providing methods and signals for all nodes.
 
     This interface can be used to get information about all nodes and their units, create monitors and listen for job signals.
@@ -527,7 +889,7 @@ class Manager(ApiBase):
           SetLogLevel:
         @loglevel: The new loglevel to use.
 
-        Change the loglevel of the manager.
+        Change the loglevel of the controller.
         """
         self.get_proxy().SetLogLevel(
             loglevel,
@@ -617,365 +979,3 @@ class Manager(ApiBase):
                 callback(value)
 
         self.get_properties_proxy().PropertiesChanged.connect(on_properties_changed)
-
-
-class Node(ApiBase):
-    """
-    org.eclipse.bluechi.Node:
-    @short_description: Public interface of BlueChi on the managing node providing methods, signals and  for a specific node.
-
-    This interface can be used to get information about a specific node and its units as well as control them, e.g. by starting or stopping them.
-    """
-
-    def __init__(
-        self, node_name: str, bus: MessageBus = None, use_systembus=True
-    ) -> None:
-        # set empty node path temporary, needs to be resolved after the bus has been set
-        super().__init__(BC_DBUS_INTERFACE, "", bus, use_systembus)
-
-        manager = self.bus.get_proxy(BC_DBUS_INTERFACE, BC_OBJECT_PATH)
-        self.object_path = manager.GetNode(node_name)
-
-        self.node_name = node_name
-
-    def start_unit(self, name: str, mode: str) -> ObjPath:
-        """
-            StartUnit:
-          @name: The name of the unit to start
-          @mode: The mode used to start the unit
-          @job: The path for the job associated with the start operation
-
-          Queues a unit activate job for the named unit on this node. The queue is per-unit name, which means there is only ever one active job per unit. Mode
-        can be one of replace or fail. If there is an outstanding queued (but not running) job, that is replaced if mode is replace, or the job
-        fails if mode is fail.
-
-          The job returned is an object path for an object implementing org.eclipse.bluechi.Job, and which be monitored for the progress of the job, or used
-        to cancel the job. To track the result of the job, follow the JobRemoved signal on the Manager.
-        """
-        return self.get_proxy().StartUnit(
-            name,
-            mode,
-        )
-
-    def stop_unit(self, name: str, mode: str) -> ObjPath:
-        """
-          StopUnit:
-        @name: The name of the unit to stop
-        @mode: The mode used to stop the unit
-        @job: The path for the job associated with the stop operation
-
-        StopUnit() is similar to StartUnit() but stops the specified unit rather than starting it.
-        """
-        return self.get_proxy().StopUnit(
-            name,
-            mode,
-        )
-
-    def freeze_unit(self, name: str) -> None:
-        """
-            FreezeUnit:
-          @name: The name of the unit to freeze
-
-          Freezing the unit will cause all processes contained within the cgroup corresponding to the unit to be suspended. Being suspended means that unit's
-        processes won't be scheduled to run on CPU until thawed.
-        """
-        self.get_proxy().FreezeUnit(
-            name,
-        )
-
-    def thaw_unit(self, name: str) -> None:
-        """
-          ThawUnit:
-        @name: The name of the unit to thaw
-
-        This is the inverse operation to the freeze command and resumes the execution of processes in the unit's cgroup.
-        """
-        self.get_proxy().ThawUnit(
-            name,
-        )
-
-    def reload_unit(self, name: str, mode: str) -> ObjPath:
-        """
-          ReloadUnit:
-        @name: The name of the unit to reload
-        @mode: The mode used to reload the unit
-        @job: The path for the job associated with the reload operation
-
-        ReloadUnit() is similar to StartUnit() but can be used to reload a unit instead. See equivalent systemd methods for details.
-        """
-        return self.get_proxy().ReloadUnit(
-            name,
-            mode,
-        )
-
-    def restart_unit(self, name: str, mode: str) -> ObjPath:
-        """
-          RestartUnit:
-        @name: The name of the unit to restart
-        @mode: The mode used to restart the unit
-        @job: The path for the job associated with the restart operation
-
-        RestartUnit() is similar to StartUnit() but can be used to restart a unit instead. See equivalent systemd methods for details.
-        """
-        return self.get_proxy().RestartUnit(
-            name,
-            mode,
-        )
-
-    def get_unit_properties(self, name: str, interface: str) -> Structure:
-        """
-          GetUnitProperties:
-        @name: The name of unit
-        @interface: The interface name
-        @props: The  as key-value pair with the name of the property as key
-
-        Returns the current  for a named unit on the node. The returned  are the same as you would get in the systemd  apis.
-        """
-        return self.get_proxy().GetUnitProperties(
-            name,
-            interface,
-        )
-
-    def get_unit_property(self, name: str, interface: str, property: str) -> Variant:
-        """
-          GetUnitProperty:
-        @name: The name of unit
-        @interface: The interface name
-        @property: The property name
-        @value: The value of the property
-
-        Get one named property, otherwise similar to GetUnit.
-        """
-        return self.get_proxy().GetUnitProperty(
-            name,
-            interface,
-            property,
-        )
-
-    def set_unit_properties(
-        self, name: str, runtime: bool, keyvalues: List[Tuple[str, Variant]]
-    ) -> None:
-        """
-          SetUnitProperties:
-        @name: The name of the unit
-        @runtime: Specify if the changes should persist after reboot or not
-        @keyvalues: A list of the new values as key-value pair with the key being the name of the property
-
-        Set named . If runtime is true the property changes do not persist across reboots.
-        """
-        self.get_proxy().SetUnitProperties(
-            name,
-            runtime,
-            keyvalues,
-        )
-
-    def enable_unit_files(
-        self, files: List[str], runtime: bool, force: bool
-    ) -> Tuple[bool, List[Tuple[str, str, str]],]:
-        """
-          EnableUnitFiles:
-        @files: A list of units to enable
-        @runtime: Specify if the changes should persist after reboot or not
-        @force: Specify if replacing the symlinks pointing to other units should be enforced
-        @carries_install_info: True if the units contained enablement information
-        @changes: The changes made
-          - type of change (one of: symlink, unlink)
-          - file name of the symlink
-          - destination of the symlink
-
-        EnableUnitFiles() may be used to enable one or more units in the system (by creating symlinks to them in /etc/ or /run/).
-        """
-        return self.get_proxy().EnableUnitFiles(
-            files,
-            runtime,
-            force,
-        )
-
-    def disable_unit_files(
-        self, files: List[str], runtime: bool
-    ) -> List[Tuple[str, str, str]]:
-        """
-          DisableUnitFiles:
-        @files: A list of units to enable
-        @runtime: Specify if the changes should persist after reboot or not
-        @changes: The changes made
-          - type of change (one of: symlink, unlink)
-          - file name of the symlink
-          - destination of the symlink
-
-        DisableUnitFiles() is similar to EnableUnitFiles() but disables the specified units by removing all symlinks to them in /etc/ and /run/
-        """
-        return self.get_proxy().DisableUnitFiles(
-            files,
-            runtime,
-        )
-
-    def list_units(
-        self,
-    ) -> List[Tuple[str, str, str, str, str, str, ObjPath, UInt32, str, ObjPath]]:
-        """
-          ListUnits:
-        @units: A list of all units on the node:
-          - The primary unit name as string
-          - The human readable description string
-          - The load state (i.e. whether the unit file has been loaded successfully)
-          - The active state (i.e. whether the unit is currently started or not)
-          - The sub state (a more fine-grained version of the active state that is specific to the unit type, which the active state is not)
-          - A unit that is being followed in its state by this unit, if there is any, otherwise the empty string.
-          - The unit object path
-          - If there is a job queued for the job unit the numeric job id, 0 otherwise
-          - The job type as string
-          - The job object path
-
-        List all loaded systemd units.
-        """
-        return self.get_proxy().ListUnits()
-
-    def reload(self) -> None:
-        """
-          Reload:
-
-        Reload() may be invoked to reload all unit files.
-        """
-        self.get_proxy().Reload()
-
-    def set_log_level(self, level: str) -> None:
-        """
-          SetLogLevel:
-        @loglevel: The new loglevel to use.
-
-        Change the loglevel of the manager.
-        """
-        self.get_proxy().SetLogLevel(
-            level,
-        )
-
-    @property
-    def name(self) -> str:
-        """
-          Name:
-
-        The name of the node.
-        """
-        return self.get_proxy().Name
-
-    @property
-    def status(self) -> str:
-        """
-          Status:
-
-        The connection status of the node with the BlueChi controller.
-        On any change, a signal is emitted on the org.freedesktop.DBus.Properties interface.
-        """
-        return self.get_proxy().Status
-
-    def on_status_changed(self, callback: Callable[[Variant], None]):
-        """
-          Status:
-
-        The connection status of the node with the BlueChi controller.
-        On any change, a signal is emitted on the org.freedesktop.DBus.Properties interface.
-        """
-
-        def on_properties_changed(
-            interface: str,
-            changed_props: Dict[str, Variant],
-            invalidated_props: Dict[str, Variant],
-        ) -> None:
-            value = changed_props.get("Status")
-            if value is not None:
-                callback(value)
-
-        self.get_properties_proxy().PropertiesChanged.connect(on_properties_changed)
-
-    @property
-    def last_seen_timestamp(self) -> UInt64:
-        """
-          LastSeenTimestamp:
-
-        A timestamp indicating when the last connection test (e.g. via heartbeat) was successful.
-        """
-        return self.get_proxy().LastSeenTimestamp
-
-
-class Agent(ApiBase):
-    """
-    org.eclipse.bluechi.Agent:
-    @short_description: Public interface of BlueChi on the managed node providing methods and signals for the respective node.
-
-    This interface is used to create proxy services resolving dependencies on services of other managed nodes.
-    """
-
-    def __init__(self, bus: MessageBus = None, use_systembus=True) -> None:
-        super().__init__(BC_AGENT_DBUS_INTERFACE, BC_OBJECT_PATH, bus, use_systembus)
-
-    def create_proxy(self, local_service_name: str, node: str, unit: str) -> None:
-        """
-          CreateProxy:
-        @local_service_name: The service name which requests the external dependency
-        @node: The requested node to provide the service
-        @unit: The external unit requested from the local service
-
-        BlueChi internal usage only.
-        CreateProxy() creates a new proxy service. It is part in the chain of resolving dependencies on services running on other managed nodes.
-        """
-        self.get_proxy().CreateProxy(
-            local_service_name,
-            node,
-            unit,
-        )
-
-    def remove_proxy(self, local_service_name: str, node: str, unit: str) -> None:
-        """
-          RemoveProxy:
-        @local_service_name: The service name which requests the external dependency
-        @node: The requested node to provide the service
-        @unit: The external unit requested from the local service
-
-        BlueChi internal usage only.
-        RemoveProxy() removes a new proxy service. It is part in the chain of resolving dependencies on services running on other managed nodes.
-        """
-        self.get_proxy().RemoveProxy(
-            local_service_name,
-            node,
-            unit,
-        )
-
-    @property
-    def status(self) -> str:
-        """
-          Status:
-
-        The connection status of the agent with the BlueChi controller.
-        On any change, a signal is emitted on the org.freedesktop.DBus.Properties interface.
-        """
-        return self.get_proxy().Status
-
-    def on_status_changed(self, callback: Callable[[Variant], None]):
-        """
-          Status:
-
-        The connection status of the agent with the BlueChi controller.
-        On any change, a signal is emitted on the org.freedesktop.DBus.Properties interface.
-        """
-
-        def on_properties_changed(
-            interface: str,
-            changed_props: Dict[str, Variant],
-            invalidated_props: Dict[str, Variant],
-        ) -> None:
-            value = changed_props.get("Status")
-            if value is not None:
-                callback(value)
-
-        self.get_properties_proxy().PropertiesChanged.connect(on_properties_changed)
-
-    @property
-    def disconnect_timestamp(self) -> UInt64:
-        """
-          DisconnectTimestamp:
-
-        A timestamp indicating when the agent lost connection to the BlueChi controller.
-        If the connection is active (agent is online), this value is 0.
-        """
-        return self.get_proxy().DisconnectTimestamp

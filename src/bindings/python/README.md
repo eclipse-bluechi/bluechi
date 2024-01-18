@@ -22,9 +22,9 @@ pip3 install --force dist/bluechi-<version>-py3-none-any.whl
 Listing all connected nodes and their current state:
 
 ```python
-from bluechi.api import Manager
+from bluechi.api import Controller
 
-for node in Manager().list_nodes():
+for node in Controller().list_nodes():
     # node[name, obj_path, status]
     print(f"Node: {node[0]}, State: {node[3]}")
 ```

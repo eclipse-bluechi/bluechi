@@ -110,7 +110,7 @@ static bool agent_reconnect(Agent *agent);
 static int agent_disconnected(UNUSED sd_bus_message *message, void *userdata, UNUSED sd_bus_error *error) {
         Agent *agent = (Agent *) userdata;
 
-        bc_log_error("Disconnected from manager");
+        bc_log_error("Disconnected from controller");
 
         agent->connection_state = AGENT_CONNECTION_STATE_RETRY;
         int r = sd_bus_emit_properties_changed(
@@ -147,7 +147,7 @@ static int agent_heartbeat_timer_callback(sd_event_source *event_source, UNUSED 
                 }
         } else if (agent->connection_state == AGENT_CONNECTION_STATE_RETRY) {
                 agent->connection_retry_count++;
-                bc_log_infof("Trying to connect to manager (try %d)", agent->connection_retry_count);
+                bc_log_infof("Trying to connect to controller (try %d)", agent->connection_retry_count);
                 if (!agent_reconnect(agent)) {
                         bc_log_debugf("Connection retry %d failed", agent->connection_retry_count);
                 }
@@ -493,7 +493,7 @@ void agent_unref(Agent *agent) {
         free_and_null(agent->host);
         free_and_null(agent->orch_addr);
         free_and_null(agent->api_bus_service_name);
-        free_and_null(agent->manager_address);
+        free_and_null(agent->controller_address);
 
         if (agent->event != NULL) {
                 sd_event_unrefp(&agent->event);
@@ -531,8 +531,8 @@ bool agent_set_port(Agent *agent, const char *port_s) {
         return true;
 }
 
-bool agent_set_manager_address(Agent *agent, const char *address) {
-        return copy_str(&agent->manager_address, address);
+bool agent_set_controller_address(Agent *agent, const char *address) {
+        return copy_str(&agent->controller_address, address);
 }
 
 bool agent_set_orch_address(Agent *agent, const char *address) {
@@ -609,23 +609,23 @@ bool agent_parse_config(Agent *agent, const char *configfile) {
                 }
         }
 
-        value = cfg_get_value(agent->config, CFG_MANAGER_HOST);
+        value = cfg_get_value(agent->config, CFG_CONTROLLER_HOST);
         if (value) {
                 if (!agent_set_host(agent, value)) {
                         return false;
                 }
         }
 
-        value = cfg_get_value(agent->config, CFG_MANAGER_PORT);
+        value = cfg_get_value(agent->config, CFG_CONTROLLER_PORT);
         if (value) {
                 if (!agent_set_port(agent, value)) {
                         return false;
                 }
         }
 
-        value = cfg_get_value(agent->config, CFG_MANAGER_ADDRESS);
+        value = cfg_get_value(agent->config, CFG_CONTROLLER_ADDRESS);
         if (value) {
-                if (!agent_set_manager_address(agent, value)) {
+                if (!agent_set_controller_address(agent, value)) {
                         return false;
                 }
         }
@@ -2158,12 +2158,12 @@ static bool ensure_orch_address(Agent *agent) {
                 return true;
         }
 
-        if (agent->manager_address != NULL) {
-                return agent_set_orch_address(agent, agent->manager_address);
+        if (agent->controller_address != NULL) {
+                return agent_set_orch_address(agent, agent->controller_address);
         }
 
         if (agent->host == NULL) {
-                bc_log_errorf("No manager host specified for agent '%s'", agent->name);
+                bc_log_errorf("No controller host specified for agent '%s'", agent->name);
                 return false;
         }
 
@@ -2394,7 +2394,7 @@ bool agent_start(Agent *agent) {
         }
 
         if (!agent_connect(agent)) {
-                bc_log_error("Initial manager connection failed, retrying");
+                bc_log_error("Initial controller connection failed, retrying");
                 agent->connection_state = AGENT_CONNECTION_STATE_RETRY;
         }
 
@@ -2431,7 +2431,7 @@ void agent_stop(Agent *agent) {
 static bool agent_connect(Agent *agent) {
         peer_bus_close(agent->peer_dbus);
 
-        bc_log_infof("Connecting to manager on %s", agent->orch_addr);
+        bc_log_infof("Connecting to controller on %s", agent->orch_addr);
 
         agent->peer_dbus = peer_bus_open(agent->event, "peer-bus-to-controller", agent->orch_addr);
         if (agent->peer_dbus == NULL) {
@@ -2458,8 +2458,8 @@ static bool agent_connect(Agent *agent) {
         r = sd_bus_call_method(
                         agent->peer_dbus,
                         BC_DBUS_NAME,
-                        INTERNAL_MANAGER_OBJECT_PATH,
-                        INTERNAL_MANAGER_INTERFACE,
+                        INTERNAL_CONTROLLER_OBJECT_PATH,
+                        INTERNAL_CONTROLLER_INTERFACE,
                         "Register",
                         &error,
                         &bus_msg,
@@ -2477,7 +2477,7 @@ static bool agent_connect(Agent *agent) {
                 return false;
         }
 
-        bc_log_infof("Connected to manager as '%s'", agent->name);
+        bc_log_infof("Connected to controller as '%s'", agent->name);
 
         agent->connection_state = AGENT_CONNECTION_STATE_CONNECTED;
         agent->connection_retry_count = 0;

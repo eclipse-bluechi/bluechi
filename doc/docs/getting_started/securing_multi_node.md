@@ -217,10 +217,10 @@ On the bluechi-agent machine, review the bluechi-agent journal logs:
 ```bash
 journalctl -u bluechi-agent.service
 
-Oct 31 08:53:46 bluechi systemd[1]: Started BlueChi systemd service controller agent daemon.
-Oct 31 08:53:46 bluechi bluechi-agent[16279]: Starting bluechi-agent 0.6.0
-Oct 31 08:53:46 bluechi bluechi-agent[16279]: Connecting to manager on unix:path=/var/lib/haproxy/bluechi-agent.sock
-Oct 31 08:53:46 bluechi bluechi-agent[16279]: Connected to manager as 'self'
+Oct 31 08:53:46 bluechi systemd[1]: Started BlueChi systemd service agent daemon.
+Oct 31 08:53:46 bluechi bluechi-agent[16279]: Starting bluechi-agent 0.7.0
+Oct 31 08:53:46 bluechi bluechi-agent[16279]: Connecting to controller on unix:path=/var/lib/haproxy/bluechi-agent.sock
+Oct 31 08:53:46 bluechi bluechi-agent[16279]: Connected to controller as 'self'
 ```
 
 #### bluechi-controller logs
@@ -231,7 +231,7 @@ On the bluechi-controller machine, review the bluechi journal logs:
 journalctl -u bluechi-controller.service
 
 Oct 31 08:53:46 bluechi systemd[1]: Started BlueChi Controller systemd service.
-Oct 31 08:53:46 bluechi bluechi-controller[16280]: Starting bluechi 0.6.0
+Oct 31 08:53:46 bluechi bluechi-controller[16280]: Starting bluechi 0.7.0
 Oct 31 08:53:46 bluechi bluechi-controller[16280]: Registered managed node from fd 9 as 'self'
 ```
 

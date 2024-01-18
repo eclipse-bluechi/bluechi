@@ -3,8 +3,8 @@
 # orch build configuration
 
 orch_src = [
-    'manager.h',
-    'manager.c',
+    'controller.h',
+    'controller.c',
     'node.h',
     'node.c',
     'job.h',

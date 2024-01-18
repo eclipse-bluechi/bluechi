@@ -14,15 +14,15 @@ local_node_name = "local-foo"
 def create_local_node_config() -> BluechiNodeConfig:
     return BluechiNodeConfig(
         file_name="agent.conf",
-        manager_host=get_primary_ip(),
-        manager_port='8420')
+        controller_host=get_primary_ip(),
+        controller_port='8420')
 
 
 def verify_resolving_fqdn(ctrl: BluechiControllerContainer, _: Dict[str, BluechiNodeContainer]):
     # create config for local bluechi-agent and adding config to controller container
     local_node_cfg = create_local_node_config()
     local_node_cfg.node_name = local_node_name
-    local_node_cfg.manager_host = "localhost"
+    local_node_cfg.controller_host = "localhost"
     ctrl.create_file(local_node_cfg.get_confd_dir(), local_node_cfg.file_name, local_node_cfg.serialize())
 
     ctrl.systemctl_start_and_wait("bluechi-agent", 1)

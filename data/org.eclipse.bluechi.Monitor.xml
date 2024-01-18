@@ -6,7 +6,7 @@
     org.eclipse.bluechi.Monitor:
     @short_description: Public interface of BlueChi on the managing node providing monitoring functionality.
 
-    This interface is only available if a monitor has been created before via the Manager interface.
+    This interface is only available if a monitor has been created before via the Controller interface.
     It provides methods to subscribe to changes in systemd units on managed nodes as well as signals for those changes.
   -->
   <interface name="org.eclipse.bluechi.Monitor">

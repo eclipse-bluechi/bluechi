@@ -15,7 +15,7 @@ static int method_metrics_toggle(Client *client, char *method) {
                         client->api_bus,
                         BC_INTERFACE_BASE_NAME,
                         BC_OBJECT_PATH,
-                        MANAGER_INTERFACE,
+                        CONTROLLER_INTERFACE,
                         method,
                         &error,
                         &message,

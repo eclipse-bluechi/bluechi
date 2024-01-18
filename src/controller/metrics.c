@@ -4,8 +4,8 @@
 #include "libbluechi/common/parse-util.h"
 #include "libbluechi/log/log.h"
 
+#include "controller.h"
 #include "job.h"
-#include "manager.h"
 #include "metrics.h"
 #include "node.h"
 
@@ -27,10 +27,10 @@ static const sd_bus_vtable metrics_api_vtable[] = {
         SD_BUS_VTABLE_END
 };
 
-int metrics_export(Manager *manager) {
+int metrics_export(Controller *controller) {
         int r = sd_bus_add_object_vtable(
-                        manager->api_bus,
-                        &manager->metrics_slot,
+                        controller->api_bus,
+                        &controller->metrics_slot,
                         METRICS_OBJECT_PATH,
                         METRICS_INTERFACE,
                         metrics_api_vtable,
@@ -59,7 +59,7 @@ static int node_metrics_match_agent_job(sd_bus_message *m, void *userdata, UNUSE
                       systemd_job_time,
                       node->name);
         r = sd_bus_emit_signal(
-                        node->manager->api_bus,
+                        node->controller->api_bus,
                         METRICS_OBJECT_PATH,
                         METRICS_INTERFACE,
                         "AgentJobMetrics",
@@ -120,7 +120,7 @@ void metrics_produce_job_report(Job *job) {
                       unit_net_start_time_micros);
 
         r = sd_bus_emit_signal(
-                        job->node->manager->api_bus,
+                        job->node->controller->api_bus,
                         METRICS_OBJECT_PATH,
                         METRICS_INTERFACE,
                         "StartUnitJobMetrics",

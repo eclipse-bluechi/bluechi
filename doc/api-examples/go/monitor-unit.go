@@ -13,7 +13,7 @@ import (
 const (
 	BcDusInterface      = "org.eclipse.bluechi"
 	BcObjectPath        = "/org/eclipse/bluechi"
-	MethodCreateMonitor = "org.eclipse.bluechi.Manager.CreateMonitor"
+	MethodCreateMonitor = "org.eclipse.bluechi.Controller.CreateMonitor"
 	MethodSubscribe     = "org.eclipse.bluechi.Monitor.Subscribe"
 
 	SignalUnitNew               = "UnitNew"

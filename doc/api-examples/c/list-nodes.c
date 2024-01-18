@@ -20,7 +20,7 @@ int main() {
                         bus,
                         "org.eclipse.bluechi",
                         "/org/eclipse/bluechi",
-                        "org.eclipse.bluechi.Manager",
+                        "org.eclipse.bluechi.Controller",
                         "ListNodes",
                         &error,
                         &result,

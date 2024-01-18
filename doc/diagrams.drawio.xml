@@ -158,7 +158,7 @@
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
-        <mxCell id="cNh8NexcxSdfIfK-n4i8-1" value="Node - Manager" style="rounded=1;whiteSpace=wrap;html=1;arcSize=7;align=left;verticalAlign=top;spacingLeft=35;fontSize=20;fontStyle=4" parent="1" vertex="1">
+        <mxCell id="cNh8NexcxSdfIfK-n4i8-1" value="Node - Controller" style="rounded=1;whiteSpace=wrap;html=1;arcSize=7;align=left;verticalAlign=top;spacingLeft=35;fontSize=20;fontStyle=4" parent="1" vertex="1">
           <mxGeometry x="20" y="310" width="280" height="180" as="geometry" />
         </mxCell>
         <mxCell id="cNh8NexcxSdfIfK-n4i8-2" value="bluechi" style="rounded=0;whiteSpace=wrap;html=1;fontSize=18;" parent="1" vertex="1">

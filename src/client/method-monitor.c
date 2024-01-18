@@ -141,7 +141,7 @@ static int method_monitor_units_on_nodes(Client *client, char *node, char *units
                         client->api_bus,
                         BC_INTERFACE_BASE_NAME,
                         BC_OBJECT_PATH,
-                        MANAGER_INTERFACE,
+                        CONTROLLER_INTERFACE,
                         "CreateMonitor",
                         &error,
                         &reply,

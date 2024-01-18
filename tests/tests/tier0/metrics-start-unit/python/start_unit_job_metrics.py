@@ -2,7 +2,7 @@
 
 import unittest
 
-from bluechi.api import Manager, Metrics, Node, UInt64
+from bluechi.api import Controller, Metrics, Node, UInt64
 from dasbus.loop import EventLoop
 
 
@@ -11,7 +11,7 @@ class TestStartUnitJobMetrics(unittest.TestCase):
     def setUp(self) -> None:
         self.loop = EventLoop()
 
-        self.mgr = Manager()
+        self.mgr = Controller()
         self.mgr.enable_metrics()
 
         self.metrics = Metrics()

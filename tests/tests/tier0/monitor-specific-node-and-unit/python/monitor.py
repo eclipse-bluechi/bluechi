@@ -4,7 +4,7 @@ import unittest
 
 from dasbus.loop import EventLoop
 
-from bluechi.api import Manager, Monitor, Node, Structure
+from bluechi.api import Controller, Monitor, Node, Structure
 
 node_name_foo = "node-foo"
 
@@ -15,7 +15,7 @@ class TestMonitorSpecificNodeAndUnit(unittest.TestCase):
 
     def setUp(self) -> None:
         self.loop = EventLoop()
-        self.mgr = Manager()
+        self.mgr = Controller()
 
         self.times_new_called = 0
         self.times_state_changed_called = 0

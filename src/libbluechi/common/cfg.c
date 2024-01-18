@@ -448,7 +448,7 @@ int cfg_agent_def_conf(struct config *config) {
                 return result;
         }
 
-        if ((result = cfg_set_value(config, CFG_MANAGER_HOST, BC_DEFAULT_HOST)) != 0) {
+        if ((result = cfg_set_value(config, CFG_CONTROLLER_HOST, BC_DEFAULT_HOST)) != 0) {
                 return result;
         }
 
@@ -457,14 +457,14 @@ int cfg_agent_def_conf(struct config *config) {
                 return result;
         }
 
-        if ((result = cfg_set_value(config, CFG_MANAGER_PORT, BC_DEFAULT_PORT)) != 0) {
+        if ((result = cfg_set_value(config, CFG_CONTROLLER_PORT, BC_DEFAULT_PORT)) != 0) {
                 return result;
         }
 
         return 0;
 }
 
-int cfg_manager_def_conf(struct config *config) {
+int cfg_controller_def_conf(struct config *config) {
         int result = 0;
 
         result = cfg_set_default_section(config, CFG_SECT_BLUECHI);
@@ -476,7 +476,7 @@ int cfg_manager_def_conf(struct config *config) {
                 return result;
         }
 
-        if ((result = cfg_set_value(config, CFG_MANAGER_PORT, BC_DEFAULT_PORT)) != 0) {
+        if ((result = cfg_set_value(config, CFG_CONTROLLER_PORT, BC_DEFAULT_PORT)) != 0) {
                 return result;
         }
 
