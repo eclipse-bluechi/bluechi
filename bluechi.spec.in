@@ -8,21 +8,23 @@
 %global coverage_flags -Dwith_coverage=true
 %endif
 
-Name:    bluechi
-Version: @VERSION@
-Release: @RELEASE@%{?dist}
-Summary: A systemd service controller for multi-nodes environments
-License: LGPL-2.1-or-later
-URL:     https://github.com/eclipse-bluechi/bluechi
-Source0: %{url}/archive/v%{version}/%{name}-%{version}.tar.gz
+Name:		bluechi
+Version:	@VERSION@
+Release:	@RELEASE@%{?dist}
+Summary:	A systemd service controller for multi-nodes environments
+License:	LGPL-2.1-or-later AND CC0-1.0
+URL:		https://github.com/containers/bluechi
+Source0:	%{url}/releases/download/v%{version}/%{name}-%{version}.tar.gz
 
-BuildRequires: gcc
+# Required to apply the patch
+BuildRequires:	git-core
+BuildRequires:	gcc
 # Meson needs to detect C++, because part of inih library (which we don't use) provides C++ functionality
-BuildRequires: gcc-c++
-BuildRequires: meson
-BuildRequires: systemd-devel
-BuildRequires: systemd-rpm-macros
-BuildRequires: golang-github-cpuguy83-md2man
+BuildRequires:	gcc-c++
+BuildRequires:	meson
+BuildRequires:	systemd-devel
+BuildRequires:	systemd-rpm-macros
+BuildRequires:	golang-github-cpuguy83-md2man
 
 %description
 BlueChi is a systemd service controller for multi-nodes environements with a
@@ -30,19 +32,19 @@ predefined number of nodes and with a focus on highly regulated environment
 such as those requiring functional safety (for example in cars).
 
 
-%package controller
-Summary:  BlueChi service controller
-Requires: systemd
-Recommends: bluechi-selinux
+%package	controller
+Summary:	BlueChi service controller
+Requires:	systemd
+Recommends:	bluechi-selinux
 
 %if 0%{?with_coverage}
-Requires: bluechi-coverage = %{version}-%{release}
+Requires:	bluechi-coverage = %{version}-%{release}
 %endif
 
-Obsoletes: hirte < 0.6.0
-Provides: hirte = %{version}-%{release}
-Obsoletes: bluechi < 0.7.0
-Provides: bluechi = %{version}-%{release}
+Obsoletes:	hirte < 0.6.0
+Provides:	hirte = %{version}-%{release}
+Obsoletes:	bluechi < 0.7.0
+Provides:	bluechi = %{version}-%{release}
 
 %description controller
 BlueChi is a systemd service controller for multi-nodes environements with a
@@ -81,16 +83,16 @@ This package contains the controller service.
 
 
 %package agent
-Summary:  BlueChi service controller agent
-Requires: systemd
-Recommends: bluechi-selinux
+Summary:	BlueChi service controller agent
+Requires:	systemd
+Recommends:	bluechi-selinux
 
 %if 0%{?with_coverage}
-Requires: bluechi-coverage = %{version}-%{release}
+Requires:	bluechi-coverage = %{version}-%{release}
 %endif
 
-Obsoletes: hirte-agent < 0.6.0
-Provides: hirte-agent = %{version}-%{release}
+Obsoletes:	hirte-agent < 0.6.0
+Provides:	hirte-agent = %{version}-%{release}
 
 %description agent
 BlueChi is a systemd service controller for multi-nodes environements with a
@@ -131,22 +133,23 @@ This package contains the node agent.
 
 
 %package selinux
-Summary:  BlueChi SELinux policy
-BuildRequires: checkpolicy
-BuildRequires: selinux-policy-devel
+Summary:	BlueChi SELinux policy
+BuildArch:	noarch
+BuildRequires:	checkpolicy
+BuildRequires:	selinux-policy-devel
 
 %if "%{_selinux_policy_version}" != ""
-Requires: selinux-policy >= %{_selinux_policy_version}
+Requires:	selinux-policy >= %{_selinux_policy_version}
 %endif
 
-Requires(post): policycoreutils
-Requires(post): policycoreutils-python-utils
-Requires(postun): policycoreutils-python-utils
+Requires(post):	policycoreutils
+Requires(post):	policycoreutils-python-utils
+Requires(postun):	policycoreutils-python-utils
 
-Obsoletes: hirte-selinux < 0.6.0
-Provides: hirte-selinux = %{version}-%{release}
+Obsoletes:	hirte-selinux < 0.6.0
+Provides:	hirte-selinux = %{version}-%{release}
 
-%global selinuxtype	targeted
+%global selinuxtype targeted
 
 %description selinux
 SELinux policy associated with the bluechi and bluechi-agent daemons
@@ -180,16 +183,17 @@ fi
 semanage port -a -t bluechi_port_t -p udp 842 2>/dev/null || semanage port -m -t bluechi_port_t -p udp 842
 semanage port -a -t bluechi_port_t -p tcp 842 2>/dev/null || semanage port -m -t bluechi_port_t -p tcp 842
 
+
 %package ctl
-Summary:  BlueChi service controller command line tool
-Requires: %{name} = %{version}-%{release}
+Summary:	BlueChi service controller command line tool
+Requires:	%{name} = %{version}-%{release}
 
 %if 0%{?with_coverage}
-Requires: bluechi-coverage = %{version}-%{release}
+Requires:	bluechi-coverage = %{version}-%{release}
 %endif
 
-Obsoletes: hirte-ctl < 0.6.0
-Provides: hirte-ctl = %{version}-%{release}
+Obsoletes:	hirte-ctl < 0.6.0
+Provides:	hirte-ctl = %{version}-%{release}
 
 %description ctl
 BlueChi is a systemd service controller for multi-nodes environements with a
@@ -203,15 +207,17 @@ This package contains the service controller command line tool.
 %{_bindir}/bluechictl
 %{_mandir}/man1/bluechictl.*
 
+
 %if %{with_python}
 %package -n python3-bluechi
-Summary: Python bindings for BlueChi
-BuildRequires:  python3-devel
-BuildRequires:  python3-setuptools
-Requires:       python3-dasbus
+Summary:	Python bindings for BlueChi
+BuildArch:	noarch
+BuildRequires:	python3-devel
+BuildRequires:	python3-setuptools
+Requires:	python3-dasbus
 
-Obsoletes: python3-hirte < 0.6.0
-Provides: python3-hirte = %{version}-%{release}
+Obsoletes:	python3-hirte < 0.6.0
+Provides:	python3-hirte = %{version}-%{release}
 
 %description -n python3-bluechi
 bluechi is a python module to access the public D-Bus API of BlueChi project.
@@ -225,9 +231,10 @@ API description and manually written code to simplify recurring tasks.
 %{python3_sitelib}/bluechi/
 %endif
 
+
 %if 0%{?with_coverage}
 %package coverage
-Summary: Code coverage files for BlueChi
+Summary:	Code coverage files for BlueChi
 
 %description coverage
 This package contains code coverage files created during the build. Those files
@@ -240,8 +247,10 @@ will be used during integration tests when creating code coverage report.
 %dir %{_localstatedir}/tmp/bluechi-coverage/
 %endif
 
+
 %prep
-%autosetup
+%autosetup -S git_am
+
 
 %build
 %meson -Dapi_bus=system %{?coverage_flags}
@@ -252,6 +261,7 @@ pushd src/bindings/python
 %py3_build
 popd
 %endif
+
 
 %install
 %meson_install
@@ -268,6 +278,7 @@ pushd src/bindings/python
 %py3_install
 popd
 %endif
+
 
 %check
 %meson_test
