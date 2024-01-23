@@ -27,16 +27,20 @@ jobs:
       - name: Build source rpm
         run: |
           ./build-scripts/build-srpm.sh
+      
+      - name: Get BlueChi version
+        run: |
+          echo "BLUECHI_VERSION=$(./build-scripts/version.sh)" >> $GITHUB_ENV
 
       - name: Create source zip and tarball
         run: |
-          mkdir -p /tmp/bluechi-${{ github.ref_name }}
-          cp -r ./ /tmp/bluechi-${{ github.ref_name }}/
-          rm -rf /tmp/bluechi-${{ github.ref_name }}/.git/
-          mv /tmp/bluechi-${{ github.ref_name }}/ ./ 
+          mkdir -p /tmp/bluechi-${{ env.BLUECHI_VERSION }}
+          cp -r ./ /tmp/bluechi-${{ env.BLUECHI_VERSION }}/
+          rm -rf /tmp/bluechi-${{ env.BLUECHI_VERSION }}/.git/
+          mv /tmp/bluechi-${{ env.BLUECHI_VERSION }}/ ./ 
 
-          zip -r bluechi-${{ github.ref_name }}.zip ./bluechi-${{ github.ref_name }}/
-          tar czf bluechi-${{ github.ref_name }}.tar.gz ./bluechi-${{ github.ref_name }}/
+          zip -r bluechi-${{ env.BLUECHI_VERSION }}.zip bluechi-${{ env.BLUECHI_VERSION }}/
+          tar czf bluechi-${{ env.BLUECHI_VERSION }}.tar.gz bluechi-${{ env.BLUECHI_VERSION }}/
       
       - name: Release
         uses: softprops/action-gh-release@v1
@@ -47,8 +51,8 @@ jobs:
           draft: false
           token: ${{ secrets.GH_RELEASE_TOKEN }}
           files: |
-            bluechi-${{ github.ref_name }}.zip
-            bluechi-${{ github.ref_name }}.tar.gz
+            bluechi-${{ env.BLUECHI_VERSION }}.zip
+            bluechi-${{ env.BLUECHI_VERSION }}.tar.gz
             rpmbuild/SRPMS/*.src.rpm
 
 
