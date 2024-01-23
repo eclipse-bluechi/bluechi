@@ -21,8 +21,6 @@ libbluechi_src = [
     'common/network.c',
     'common/time-util.c',
     'common/time-util.h',
-    'service/service.c',
-    'service/service.h',
     'service/shutdown.c',
     'service/shutdown.h',
     'socket.c',
