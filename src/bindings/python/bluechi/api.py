@@ -50,6 +50,7 @@ DBUS_PROPERTIES_INTERFACE = "org.freedesktop.DBus.Properties"
 
 
 class ApiBase:
+
     def __init__(
         self,
         interface: str,
@@ -141,6 +142,26 @@ class Agent(ApiBase):
         If the connection is active (agent is online), this value is 0.
         """
         return self.get_proxy().DisconnectTimestamp
+
+    @property
+    def log_level(self) -> str:
+        """
+          LogLevel:
+
+        The LogLevel of the agent node that is currently used. Its value is one of:
+          INFO, DEBUG, ERROR and WARN
+        """
+        return self.get_proxy().LogLevel
+
+    @property
+    def log_target(self) -> str:
+        """
+          LogTarget:
+
+        The LogTarget of the agent node that is currently used. Its value is one of:
+          stderr, stderr-full, journald
+        """
+        return self.get_proxy().LogTarget
 
     @property
     def status(self) -> str:
@@ -310,6 +331,26 @@ class Controller(ApiBase):
         for it.
         """
         self.get_proxy().JobRemoved.connect(callback)
+
+    @property
+    def log_level(self) -> str:
+        """
+          LogLevel:
+
+        The LogLevel of the controller node that is currently used. Its value is one of:
+          INFO, DEBUG, ERROR and WARN
+        """
+        return self.get_proxy().LogLevel
+
+    @property
+    def log_target(self) -> str:
+        """
+          LogTarget:
+
+        The LogTarget of the controller node that is currently used. Its value is one of:
+          stderr, stderr-full, journald
+        """
+        return self.get_proxy().LogTarget
 
     @property
     def status(self) -> str:
@@ -740,9 +781,10 @@ class Node(ApiBase):
             runtime,
         )
 
-    def enable_unit_files(
-        self, files: List[str], runtime: bool, force: bool
-    ) -> Tuple[bool, List[Tuple[str, str, str]],]:
+    def enable_unit_files(self, files: List[str], runtime: bool, force: bool) -> Tuple[
+        bool,
+        List[Tuple[str, str, str]],
+    ]:
         """
           EnableUnitFiles:
         @files: A list of units to enable

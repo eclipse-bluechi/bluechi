@@ -137,5 +137,26 @@
     <property name="Status" type="s" access="read">
       <annotation name="org.freedesktop.DBus.Property.EmitsChangedSignal" value="true" />
     </property>
+
+    <!--
+      LogLevel:
+
+      The LogLevel of the controller node that is currently used. Its value is one of:
+        INFO, DEBUG, ERROR and WARN 
+    -->
+    <property name="LogLevel" type="s" access="read">
+      <annotation name="org.freedesktop.DBus.Property.EmitsChangedSignal" value="false" />
+    </property>
+
+    <!--
+      LogTarget:
+
+      The LogTarget of the controller node that is currently used. Its value is one of:
+        stderr, stderr-full, journald
+    -->
+    <property name="LogTarget" type="s" access="read">
+      <annotation name="org.freedesktop.DBus.Property.EmitsChangedSignal" value="const" />
+    </property>
+
   </interface>
 </node>

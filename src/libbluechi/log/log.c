@@ -13,6 +13,21 @@ const char *log_level_to_string(LogLevel l) {
         return log_level_strings[l];
 }
 
+const char *log_target_to_str(LogFn logfn) {
+        const char *log_target = NULL;
+        if (bc_log_to_journald_with_location == logfn) {
+                log_target = BC_LOG_TARGET_JOURNALD;
+        }
+        if (bc_log_to_stderr_full_with_location == logfn) {
+                log_target = BC_LOG_TARGET_STDERR;
+        }
+        if (bc_log_to_stderr_with_location == logfn) {
+                log_target = BC_LOG_TARGET_STDERR_FULL;
+        }
+
+        return log_target;
+}
+
 LogLevel string_to_log_level(const char *l) {
         if (l == NULL) {
                 return LOG_LEVEL_INVALID;

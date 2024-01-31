@@ -1790,6 +1790,37 @@ static int agent_property_get_disconnect_timestamp(
         return sd_bus_message_append(reply, "t", agent->disconnect_timestamp);
 }
 
+/*************************************************************************
+ **** org.eclipse.bluechi.Agent.LogLevel ****************
+ *************************************************************************/
+
+static int agent_property_get_log_level(
+                UNUSED sd_bus *bus,
+                UNUSED const char *path,
+                UNUSED const char *interface,
+                UNUSED const char *property,
+                sd_bus_message *reply,
+                UNUSED void *userdata,
+                UNUSED sd_bus_error *ret_error) {
+        const char *log_level = log_level_to_string(bc_log_get_level());
+        return sd_bus_message_append(reply, "s", log_level);
+}
+
+/*************************************************************************
+ **** org.eclipse.bluechi.Agent.LogTarget ****************
+ *************************************************************************/
+
+static int agent_property_get_log_target(
+                UNUSED sd_bus *bus,
+                UNUSED const char *path,
+                UNUSED const char *interface,
+                UNUSED const char *property,
+                sd_bus_message *reply,
+                UNUSED void *userdata,
+                UNUSED sd_bus_error *ret_error) {
+        return sd_bus_message_append(reply, "s", log_target_to_str(bc_log_get_log_fn()));
+}
+
 
 static const sd_bus_vtable agent_vtable[] = {
         SD_BUS_VTABLE_START(0),
@@ -1797,6 +1828,8 @@ static const sd_bus_vtable agent_vtable[] = {
         SD_BUS_METHOD("RemoveProxy", "sss", "", agent_method_remove_proxy, 0),
 
         SD_BUS_PROPERTY("Status", "s", agent_property_get_status, 0, SD_BUS_VTABLE_PROPERTY_EMITS_CHANGE),
+        SD_BUS_PROPERTY("LogLevel", "s", agent_property_get_log_level, 0, SD_BUS_VTABLE_PROPERTY_EXPLICIT),
+        SD_BUS_PROPERTY("LogTarget", "s", agent_property_get_log_target, 0, SD_BUS_VTABLE_PROPERTY_CONST),
         SD_BUS_PROPERTY("DisconnectTimestamp",
                         "t",
                         agent_property_get_disconnect_timestamp,
