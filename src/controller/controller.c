@@ -940,6 +940,29 @@ static int controller_property_get_status(
         return sd_bus_message_append(reply, "s", controller_get_system_status(controller));
 }
 
+static int controller_property_get_loglevel(
+                UNUSED sd_bus *bus,
+                UNUSED const char *path,
+                UNUSED const char *interface,
+                UNUSED const char *property,
+                sd_bus_message *reply,
+                UNUSED void *userdata,
+                UNUSED sd_bus_error *ret_error) {
+        const char *log_level = log_level_to_string(bc_log_get_level());
+        return sd_bus_message_append(reply, "s", log_level);
+}
+
+static int controller_property_get_log_target(
+                UNUSED sd_bus *bus,
+                UNUSED const char *path,
+                UNUSED const char *interface,
+                UNUSED const char *property,
+                sd_bus_message *reply,
+                UNUSED void *userdata,
+                UNUSED sd_bus_error *ret_error) {
+        return sd_bus_message_append(reply, "s", log_target_to_str(bc_log_get_log_fn()));
+}
+
 static const sd_bus_vtable controller_vtable[] = {
         SD_BUS_VTABLE_START(0),
         SD_BUS_METHOD("Ping", "s", "s", controller_method_ping, 0),
@@ -957,6 +980,8 @@ static const sd_bus_vtable controller_vtable[] = {
                         SD_BUS_PARAM(id) SD_BUS_PARAM(job) SD_BUS_PARAM(node) SD_BUS_PARAM(unit)
                                         SD_BUS_PARAM(result),
                         0),
+        SD_BUS_PROPERTY("LogLevel", "s", controller_property_get_loglevel, 0, SD_BUS_VTABLE_PROPERTY_EXPLICIT),
+        SD_BUS_PROPERTY("LogTarget", "s", controller_property_get_log_target, 0, SD_BUS_VTABLE_PROPERTY_CONST),
         SD_BUS_PROPERTY("Status", "s", controller_property_get_status, 0, SD_BUS_VTABLE_PROPERTY_EMITS_CHANGE),
         SD_BUS_VTABLE_END
 };

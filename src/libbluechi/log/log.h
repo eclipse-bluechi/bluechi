@@ -31,6 +31,8 @@ typedef int (*LogFn)(
                 const char *msg,
                 const char *data);
 
+const char *log_target_to_str(LogFn logfn);
+
 int bc_log_to_journald_with_location(
                 LogLevel lvl,
                 const char *file,
