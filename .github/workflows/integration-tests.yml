@@ -65,7 +65,7 @@ jobs:
 
       - name: Install unpackaged python libraries from PyPi
         run: |
-          pip install "tmt[provision]" "tmt[report-junit]" podman pytest pytest-timeout
+          pip install "tmt[provision]" "tmt[report-junit]" podman pytest pytest-timeout pyyaml paramiko
           # Mitigate https://github.com/containers/podman-py/issues/350
           pip install rich
 
@@ -89,7 +89,7 @@ jobs:
       - name: Run integration tests
         run: |
           cd tests
-          tmt run -v -eCONTAINER_USED=integration-test-local -eWITH_COVERAGE=1
+          tmt run -eCONTAINER_USED=integration-test-local -eWITH_COVERAGE=1 plans --name tier0
 
       - name: Show tmt log output in case of failure
         if: ${{ failure() }}

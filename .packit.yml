@@ -45,6 +45,7 @@ jobs:
     trigger: pull_request
     identifier: integration-tests
     fmf_path: tests
+    tmt_plan: tier0
     labels:
       - standard
     env:
@@ -58,6 +59,7 @@ jobs:
     trigger: pull_request
     identifier: integration-tests-valgrind
     fmf_path: tests
+    tmt_plan: tier0
     labels:
       - valgrind
     env:

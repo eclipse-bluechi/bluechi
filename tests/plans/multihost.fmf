@@ -1,0 +1,58 @@
+summary: Tier 1 - Basic functionality tests
+discover:
+    how: fmf
+    filter: multihost:yes
+    where: test-executor
+provision:
+  - name: test-executor
+    how: local
+    role: manager
+  - name: bluechi-controller
+    how: connect
+    guest: 127.0.0.1
+    port: 2020
+    user: root
+    key: ~/.ssh/id_rsa
+    role: managed
+  - name: bluechi-agent-1
+    how: connect
+    guest: 127.0.0.1
+    port: 2021
+    user: root
+    key: ~/.ssh/id_rsa
+    role: managed
+  - name: bluechi-agent-2
+    how: connect
+    guest: 127.0.0.1
+    port: 2022
+    user: root
+    key: ~/.ssh/id_rsa
+    role: managed
+  # extend with more hosts
+environment:
+    FMF_FILE_NAME: multihost.fmf
+    BLUECHI_RPM_DIR: bluechi-rpms
+    BLUECHI_RPM_COPR: "@centos-automotive-sig/bluechi-snapshot"
+    BLUECHI_RPM_USED: local
+    INSTALL_MANAGER_DEPS: no
+    INSTALL_MANAGED_DEPS: no
+
+    BLUECHI_CTRL_SVC_PORT: 8420
+    WITH_COVERAGE: 0
+    WITH_VALGRIND: 0
+    LOG_LEVEL: INFO
+prepare:
+    - name: Prepare managed host machines
+      how: shell
+      script: |
+        #bash ./scripts/tests-setup-multihost.sh setup_managed
+      where: managed
+    - name: Prepare test executor
+      how: shell
+      script: |
+        #bash ./scripts/tests-setup-multihost.sh setup_manager
+      where: manager
+execute:
+    how: tmt
+report:
+    how: junit
