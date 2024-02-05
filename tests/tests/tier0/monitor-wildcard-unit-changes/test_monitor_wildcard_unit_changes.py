@@ -3,9 +3,9 @@
 import os
 from typing import Dict
 
-from bluechi_test.test import BluechiTest
-from bluechi_test.container import BluechiControllerContainer, BluechiNodeContainer
-from bluechi_test.config import BluechiControllerConfig, BluechiNodeConfig
+from bluechi_test.test import BlueChiTest
+from bluechi_test.machine import BlueChiControllerMachine, BlueChiAgentMachine
+from bluechi_test.config import BlueChiControllerConfig, BlueChiAgentConfig
 
 
 node_name_foo = "node-foo"
@@ -15,7 +15,7 @@ service_simple = "simple.service"
 service_also_simple = "also-simple.service"
 
 
-def exec(ctrl: BluechiControllerContainer, nodes: Dict[str, BluechiNodeContainer]):
+def exec(ctrl: BlueChiControllerMachine, nodes: Dict[str, BlueChiAgentMachine]):
 
     nodes[node_name_foo].copy_systemd_service(
         service_simple, "systemd", os.path.join("/", "etc", "systemd", "system"))
@@ -31,9 +31,9 @@ def exec(ctrl: BluechiControllerContainer, nodes: Dict[str, BluechiNodeContainer
 
 
 def test_monitor_wildcard_unit_changes(
-        bluechi_test: BluechiTest,
-        bluechi_ctrl_default_config: BluechiControllerConfig,
-        bluechi_node_default_config: BluechiNodeConfig):
+        bluechi_test: BlueChiTest,
+        bluechi_ctrl_default_config: BlueChiControllerConfig,
+        bluechi_node_default_config: BlueChiAgentConfig):
 
     config_node_foo = bluechi_node_default_config.deep_copy()
     config_node_bar = bluechi_node_default_config.deep_copy()
@@ -46,8 +46,8 @@ def test_monitor_wildcard_unit_changes(
         node_name_bar,
     ]
 
-    bluechi_test.set_bluechi_controller_config(bluechi_ctrl_default_config)
-    bluechi_test.add_bluechi_node_config(config_node_foo)
-    bluechi_test.add_bluechi_node_config(config_node_bar)
+    bluechi_test.set_bluechi_ctrl_machine_config(bluechi_ctrl_default_config)
+    bluechi_test.add_bluechi_agent_machine_configs(config_node_foo)
+    bluechi_test.add_bluechi_agent_machine_configs(config_node_bar)
 
     bluechi_test.run(exec)

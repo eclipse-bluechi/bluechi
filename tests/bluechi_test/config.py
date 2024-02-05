@@ -3,7 +3,7 @@
 from typing import List
 
 
-class BluechiConfig():
+class BlueChiConfig():
 
     # use a smaller max line length than possible
     # to prevent any accidental faults
@@ -19,7 +19,7 @@ class BluechiConfig():
         raise Exception("Not implemented")
 
 
-class BluechiControllerConfig(BluechiConfig):
+class BlueChiControllerConfig(BlueChiConfig):
 
     confd_dir = "/etc/bluechi/controller.conf.d"
 
@@ -57,8 +57,8 @@ LogIsQuiet={self.log_is_quiet}
     def get_confd_dir(self) -> str:
         return self.confd_dir
 
-    def deep_copy(self) -> "BluechiControllerConfig":
-        cfg = BluechiControllerConfig(self.file_name)
+    def deep_copy(self) -> "BlueChiControllerConfig":
+        cfg = BlueChiControllerConfig(self.file_name)
         cfg.name = self.name
         cfg.port = self.port
         cfg.allowed_node_names = self.allowed_node_names
@@ -68,7 +68,7 @@ LogIsQuiet={self.log_is_quiet}
         return cfg
 
 
-class BluechiNodeConfig(BluechiConfig):
+class BlueChiAgentConfig(BlueChiConfig):
 
     confd_dir = "/etc/bluechi/agent.conf.d"
 
@@ -109,8 +109,8 @@ LogIsQuiet={self.log_is_quiet}
     def get_confd_dir(self) -> str:
         return self.confd_dir
 
-    def deep_copy(self) -> "BluechiNodeConfig":
-        cfg = BluechiNodeConfig(self.file_name)
+    def deep_copy(self) -> "BlueChiAgentConfig":
+        cfg = BlueChiAgentConfig(self.file_name)
         cfg.node_name = self.node_name
         cfg.controller_host = self.controller_host
         cfg.controller_port = self.controller_port

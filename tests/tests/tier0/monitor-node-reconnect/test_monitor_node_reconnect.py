@@ -4,15 +4,15 @@ import os
 import time
 from typing import Dict
 
-from bluechi_test.test import BluechiTest
-from bluechi_test.container import BluechiControllerContainer, BluechiNodeContainer
-from bluechi_test.config import BluechiControllerConfig, BluechiNodeConfig
+from bluechi_test.test import BlueChiTest
+from bluechi_test.machine import BlueChiControllerMachine, BlueChiAgentMachine
+from bluechi_test.config import BlueChiControllerConfig, BlueChiAgentConfig
 
 
 node_name = "node-foo"
 
 
-def exec(ctrl: BluechiControllerContainer, nodes: Dict[str, BluechiNodeContainer]):
+def exec(ctrl: BlueChiControllerMachine, nodes: Dict[str, BlueChiAgentMachine]):
     result, output = ctrl.run_python(os.path.join("python", "is_node_connected.py"))
     if result != 0:
         raise Exception(output)
@@ -24,7 +24,7 @@ def exec(ctrl: BluechiControllerContainer, nodes: Dict[str, BluechiNodeContainer
     time.sleep(1)
 
     ctrl.exec_run("systemctl start bluechi-controller")
-    ctrl.wait_for_bluechi()
+    ctrl.wait_for_bluechi_controller()
     # since the heartbeat (incl. a try to reconnect) is going to happen
     # every n milliseconds, lets wait a bit so this test is not becoming flaky
     time.sleep(1)
@@ -35,9 +35,9 @@ def exec(ctrl: BluechiControllerContainer, nodes: Dict[str, BluechiNodeContainer
 
 
 def test_monitor_node_disconnect(
-        bluechi_test: BluechiTest,
-        bluechi_ctrl_default_config: BluechiControllerConfig,
-        bluechi_node_default_config: BluechiNodeConfig):
+        bluechi_test: BlueChiTest,
+        bluechi_ctrl_default_config: BlueChiControllerConfig,
+        bluechi_node_default_config: BlueChiAgentConfig):
 
     node_foo_config = bluechi_node_default_config.deep_copy()
     node_foo_config.node_name = node_name
@@ -45,7 +45,7 @@ def test_monitor_node_disconnect(
 
     bluechi_ctrl_default_config.allowed_node_names = [node_foo_config.node_name]
 
-    bluechi_test.set_bluechi_controller_config(bluechi_ctrl_default_config)
-    bluechi_test.add_bluechi_node_config(node_foo_config)
+    bluechi_test.set_bluechi_ctrl_machine_config(bluechi_ctrl_default_config)
+    bluechi_test.add_bluechi_agent_machine_configs(node_foo_config)
 
     bluechi_test.run(exec)

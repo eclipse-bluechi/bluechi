@@ -11,6 +11,8 @@ if [ "$INSTALL_DEPS" == "yes" ]; then
         python3-podman \
         python3-pytest \
         python3-pytest-timeout \
+        python3-yaml \
+        python3-paramiko \
         -y
     # Mitigate https://github.com/containers/podman-py/issues/350
     dnf install python3-rich -y
