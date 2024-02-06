@@ -910,10 +910,10 @@ static char *controller_get_system_status(Controller *controller) {
 void controller_check_system_status(Controller *controller, int prev_number_of_nodes_online) {
         int diff = controller->number_of_nodes_online - prev_number_of_nodes_online;
         // clang-format off
-        if ((prev_number_of_nodes_online == 0) ||                                       // at least one node online
+        if ((prev_number_of_nodes_online == 0) ||                                          // at least one node online
                 (prev_number_of_nodes_online == controller->number_of_nodes) ||            // at least one node offline
                 ((prev_number_of_nodes_online + diff) == controller->number_of_nodes) ||   // all nodes online
-                ((prev_number_of_nodes_online + diff) == 0)) {                          // all nodes offline
+                ((prev_number_of_nodes_online + diff) == 0)) {                             // all nodes offline
                 // clang-format on
                 int r = sd_bus_emit_properties_changed(
                                 controller->api_bus,
@@ -1158,6 +1158,9 @@ void controller_stop(Controller *controller) {
                 controller_remove_monitor(controller, monitor);
         }
 
+        /* If all nodes were already offline, we don't need to emit a changed signal */
+        bool status_changed = controller->number_of_nodes_online > 0;
+
         Node *node = NULL;
         Node *next_node = NULL;
         LIST_FOREACH_SAFE(nodes, node, next_node, controller->nodes) {
@@ -1171,5 +1174,7 @@ void controller_stop(Controller *controller) {
          * We won't handle any other events incl. node disconnected since we exit the event loop
          * right afterwards. Therefore, check the controller state and emit signal here.
          */
-        controller_check_system_status(controller, controller->number_of_nodes_online);
+        if (status_changed) {
+                controller_check_system_status(controller, controller->number_of_nodes_online);
+        }
 }
