@@ -100,5 +100,6 @@ int main(int argc, char *argv[]) {
         if (controller_start(controller)) {
                 return EXIT_SUCCESS;
         }
+        controller_stop(controller);
         return EXIT_FAILURE;
 }
