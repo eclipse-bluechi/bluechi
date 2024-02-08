@@ -65,7 +65,7 @@ jobs:
 
       - name: Install unpackaged python libraries from PyPi
         run: |
-          pip install "tmt[provision]" "tmt[report-junit]" podman pytest pytest-timeout
+          pip install "tmt[provision]==1.30" "tmt[report-junit]==1.30" podman pytest pytest-timeout
           # Mitigate https://github.com/containers/podman-py/issues/350
           pip install rich
 
