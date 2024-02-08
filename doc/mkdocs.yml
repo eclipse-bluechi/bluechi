@@ -19,6 +19,8 @@ nav:
   - Monitoring:
     - monitoring/index.md
     - Peer Listener: monitoring/peers.md
+  - Network:
+    - network/index.md
   - Cross-Node Dependencies:
     - cross_node_dependencies/index.md
     - Proxy Services: cross_node_dependencies/proxy_services.md
