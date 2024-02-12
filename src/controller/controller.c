@@ -886,7 +886,7 @@ static int controller_method_set_log_level(
         }
         LogLevel loglevel = string_to_log_level(level);
         if (loglevel == LOG_LEVEL_INVALID) {
-                bc_log_errorf("Invalid input for log level: %s", loglevel);
+                bc_log_errorf("Invalid input for log level: %s", level);
                 return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_INVALID_ARGS, "Invalid input for log level");
         }
         bc_log_set_level(loglevel);
