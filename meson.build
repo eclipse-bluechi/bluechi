@@ -33,10 +33,10 @@ endif
 
 # Set option to get coverage collection
 with_coverage = get_option('with_coverage')
-if with_coverage == 'true'
+if with_coverage
   add_project_arguments('-coverage', language : 'c')
   add_project_arguments(
-    '-fprofile-dir=' + join_paths(get_option('prefix'), get_option('localstatedir'), 'tmp', 'bluechi-coverage'), 
+    '-fprofile-dir=' + join_paths(get_option('prefix'), get_option('localstatedir'), 'tmp', 'bluechi-coverage'),
     language : 'c')
   add_project_link_arguments('-lgcov', language : 'c')
   # Coverage source code mapping files `*.gcno` are created as a part of the build for each `*.c` file, but it's

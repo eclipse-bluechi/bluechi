@@ -7,9 +7,8 @@ option('dbus-srv-user', type: 'string', description: 'The (existing) user which 
 option('with_analyzer', type : 'boolean', value : false,
     description : 'Add the gcc option -fanalyzer for static analysis')
 
-option('with_coverage', type : 'combo',
-    choices : ['true', 'false'], value : 'false',
-    description : 'Add coverage collection')
+option('with_coverage', type : 'boolean', value : false,
+    description : 'Enable the code coverage collection')
 
 option('with_man_pages', type : 'boolean', value : true,
     description : 'Build and install man pages')
