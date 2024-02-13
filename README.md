@@ -4,6 +4,7 @@
 # BlueChi: A systemd service controller for multi-node environments
 
 [![Copr build status](https://copr.fedorainfracloud.org/coprs/g/centos-automotive-sig/bluechi-snapshot/package/bluechi/status_image/last_build.png)](https://copr.fedorainfracloud.org/coprs/g/centos-automotive-sig/bluechi-snapshot/package/bluechi/)
+[![Coverage Status](https://coveralls.io/repos/github/eclipse-bluechi/bluechi/badge.svg?branch=main)](https://coveralls.io/github/eclipse-bluechi/bluechi?branch=main)
 
 BlueChi (formerly know as hirte) is a systemd service controller intended for
 multi-node environments with a predefined number of nodes and with a focus on
