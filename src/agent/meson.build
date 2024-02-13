@@ -24,3 +24,6 @@ executable(
   install: true,
   install_dir: join_paths(prefixdir, get_option('libexecdir'))
 )
+
+# build test binaries
+subdir('test')

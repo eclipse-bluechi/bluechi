@@ -34,3 +34,6 @@ executable(
   c_args: common_cflags,
   include_directories: include_directories('..')
 )
+
+# build test binaries
+subdir('test')
