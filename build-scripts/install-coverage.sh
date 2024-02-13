@@ -8,8 +8,3 @@ COVERAGE_ROOT="${MESON_INSTALL_DESTDIR_PREFIX}/share/bluechi-coverage"
 # Install all created `*.gcno` files so they could be packaged into bluechi-coverage RPM.
 mkdir -p ${COVERAGE_ROOT}
 ( cd $MESON_BUILD_ROOT ; find . -name "*.gcno" -exec cp -v --parents {} ${COVERAGE_ROOT} \; )
-
-# Unit test source files are not included in debugsource RPM, add them to bluechi-coverage RPM
-TEST_SUBDIR="src/libbluechi/test"
-mkdir -p ${COVERAGE_ROOT}/${TEST_SUBDIR}
-( cd $MESON_SOURCE_ROOT/${TEST_SUBDIR} ; find . -name "*.c" -exec cp -v --parents {} ${COVERAGE_ROOT}/${TEST_SUBDIR} \; )
