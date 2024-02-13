@@ -24,5 +24,3 @@ install_data(
   ['bluechi_agent_selinux.8', 'bluechi_controller_selinux.8'],
   install_dir : join_paths(get_option('mandir'), ('man8')),
 )
-
-
