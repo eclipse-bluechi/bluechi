@@ -35,6 +35,11 @@ def exec(ctrl: BluechiControllerMachine, nodes: Dict[str, BluechiAgentMachine]):
         lcov_list.append("-a")
         lcov_list.append(f"{merge_dir}/{file_path.name}")
 
+    # Skip creating coverage report when no .info files are found
+    if len(lcov_list) == 1:
+        LOGGER.info(f"No .info files found in {root.name}, skipping...")
+        return
+
     lcov_list.append("-o")
     lcov_list.append(f"{merge_dir}/{merge_file_name}")
     result, output = ctrl.exec_run(" ".join(lcov_list))
