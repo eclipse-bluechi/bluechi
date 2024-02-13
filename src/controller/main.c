@@ -4,8 +4,7 @@
 #include <stdlib.h>
 
 #include "libbluechi/common/opt.h"
-#include "libbluechi/common/parse-util.h"
-#include "libbluechi/service/shutdown.h"
+#include "libbluechi/log/log.h"
 
 #include "controller.h"
 
@@ -86,12 +85,19 @@ int main(int argc, char *argv[]) {
                 return EXIT_FAILURE;
         }
 
-        /* First load config */
         if (!controller_parse_config(controller, opt_config)) {
                 return EXIT_FAILURE;
         }
 
-        /* Then override individual options */
+        bc_log_init(controller->config);
+        _cleanup_free_ const char *dumped_cfg = cfg_dump(controller->config);
+        bc_log_debug_with_data("Final configuration used", "\n%s", dumped_cfg);
+
+        if (!controller_apply_config(controller)) {
+                return EXIT_FAILURE;
+        }
+
+        /* Override individual options */
 
         if (opt_port && !controller_set_port(controller, opt_port)) {
                 return EXIT_FAILURE;

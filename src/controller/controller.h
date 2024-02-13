@@ -47,6 +47,7 @@ void controller_unref(Controller *controller);
 
 bool controller_set_port(Controller *controller, const char *port);
 bool controller_parse_config(Controller *controller, const char *configfile);
+bool controller_apply_config(Controller *controller);
 
 bool controller_start(Controller *controller);
 void controller_stop(Controller *controller);
