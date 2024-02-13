@@ -408,21 +408,14 @@ Agent *agent_new(void) {
         agent->api_bus_service_name = steal_pointer(&service_name);
         agent->peer_socket_options = steal_pointer(&socket_opts);
         agent->unit_infos = unit_infos;
-        LIST_HEAD_INIT(agent->outstanding_requests);
-        LIST_HEAD_INIT(agent->tracked_jobs);
-        LIST_HEAD_INIT(agent->proxy_services);
-
-        agent->unit_infos = hashmap_new(
-                        sizeof(AgentUnitInfo), 0, 0, 0, unit_info_hash, unit_info_compare, unit_info_clear, NULL);
-        if (agent->unit_infos == NULL) {
-                return NULL;
-        }
-
         agent->connection_state = AGENT_CONNECTION_STATE_DISCONNECTED;
         agent->connection_retry_count = 0;
         agent->wildcard_subscription_active = false;
         agent->metrics_enabled = false;
         agent->disconnect_timestamp = 0;
+        LIST_HEAD_INIT(agent->outstanding_requests);
+        LIST_HEAD_INIT(agent->tracked_jobs);
+        LIST_HEAD_INIT(agent->proxy_services);
 
         return steal_pointer(&agent);
 }
@@ -494,6 +487,7 @@ void agent_unref(Agent *agent) {
         free_and_null(agent->orch_addr);
         free_and_null(agent->api_bus_service_name);
         free_and_null(agent->controller_address);
+        free_and_null(agent->peer_socket_options);
 
         if (agent->event != NULL) {
                 sd_event_unrefp(&agent->event);
