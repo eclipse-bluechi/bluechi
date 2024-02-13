@@ -597,14 +597,15 @@ bool agent_parse_config(Agent *agent, const char *configfile) {
                 }
         }
 
+        return true;
+}
 
-        // set logging configuration
-        bc_log_init(agent->config);
-
+bool agent_apply_config(Agent *agent) {
         const char *value = NULL;
         value = cfg_get_value(agent->config, CFG_NODE_NAME);
         if (value) {
                 if (!agent_set_name(agent, value)) {
+                        bc_log_error("Failed to set CONTROLLER NAME");
                         return false;
                 }
         }
@@ -612,6 +613,7 @@ bool agent_parse_config(Agent *agent, const char *configfile) {
         value = cfg_get_value(agent->config, CFG_CONTROLLER_HOST);
         if (value) {
                 if (!agent_set_host(agent, value)) {
+                        bc_log_error("Failed to set CONTROLLER HOST");
                         return false;
                 }
         }
@@ -626,6 +628,7 @@ bool agent_parse_config(Agent *agent, const char *configfile) {
         value = cfg_get_value(agent->config, CFG_CONTROLLER_ADDRESS);
         if (value) {
                 if (!agent_set_controller_address(agent, value)) {
+                        bc_log_error("Failed to set CONTROLLER ADDRESS");
                         return false;
                 }
         }
@@ -665,10 +668,6 @@ bool agent_parse_config(Agent *agent, const char *configfile) {
                 bc_log_error("Failed to set IP RECVERR");
                 return false;
         }
-
-
-        _cleanup_free_ const char *dumped_cfg = cfg_dump(agent->config);
-        bc_log_debug_with_data("Final configuration used", "\n%s", dumped_cfg);
 
         return true;
 }

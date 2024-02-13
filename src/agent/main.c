@@ -133,12 +133,20 @@ int main(int argc, char *argv[]) {
                 return EXIT_FAILURE;
         }
 
-        /* First load config */
         if (!agent_parse_config(agent, opt_config)) {
                 return EXIT_FAILURE;
         }
 
-        /* Then override individual options */
+        bc_log_init(agent->config);
+        _cleanup_free_ const char *dumped_cfg = cfg_dump(agent->config);
+        bc_log_debug_with_data("Final configuration used", "\n%s", dumped_cfg);
+
+        if (!agent_apply_config(agent)) {
+                return EXIT_FAILURE;
+        }
+
+        /* Override individual options */
+
         agent_set_systemd_user(agent, opt_user);
 
         if (opt_port && !agent_set_port(agent, opt_port)) {

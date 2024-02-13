@@ -107,6 +107,7 @@ bool agent_set_name(Agent *agent, const char *name);
 bool agent_set_heartbeat_interval(Agent *agent, const char *interval_msec);
 void agent_set_systemd_user(Agent *agent, bool systemd_user);
 bool agent_parse_config(Agent *agent, const char *configfile);
+bool agent_apply_config(Agent *agent);
 
 bool agent_start(Agent *agent);
 void agent_stop(Agent *agent);

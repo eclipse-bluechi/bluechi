@@ -312,9 +312,10 @@ bool controller_parse_config(Controller *controller, const char *configfile) {
                 }
         }
 
-        // set logging configuration
-        bc_log_init(controller->config);
+        return true;
+}
 
+bool controller_apply_config(Controller *controller) {
         const char *port = NULL;
         port = cfg_get_value(controller->config, CFG_CONTROLLER_PORT);
         if (port) {
@@ -369,12 +370,6 @@ bool controller_parse_config(Controller *controller, const char *configfile) {
                 bc_log_error("Failed to set IP RECVERR");
                 return false;
         }
-
-
-        _cleanup_free_ const char *dumped_cfg = cfg_dump(controller->config);
-        bc_log_debug_with_data("Final configuration used", "\n%s", dumped_cfg);
-
-        /* TODO: Handle per-node-name option section */
 
         return true;
 }
