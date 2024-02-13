@@ -5,7 +5,7 @@ import os
 import pathlib
 
 from typing import Dict
-from bluechi_test.container import BluechiControllerContainer, BluechiNodeContainer
+from bluechi_test.machine import BluechiControllerMachine, BluechiAgentMachine
 from bluechi_test.config import BluechiControllerConfig
 from bluechi_test.test import BluechiTest
 from bluechi_test.util import read_file
@@ -13,7 +13,7 @@ from bluechi_test.util import read_file
 LOGGER = logging.getLogger(__name__)
 
 
-def exec(ctrl: BluechiControllerContainer, nodes: Dict[str, BluechiNodeContainer]):
+def exec(ctrl: BluechiControllerMachine, nodes: Dict[str, BluechiAgentMachine]):
     path_to_info_files = os.environ["TMT_TREE"].split('/tree')[0] + "/execute/data/"
     path_to_tests_results = os.environ["TMT_TREE"].split('/tree')[0] + "/report/default-0"
     merge_file_name = "merged.info"

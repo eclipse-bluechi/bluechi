@@ -2,11 +2,11 @@
 
 from typing import Dict
 from bluechi_test.test import BluechiTest
-from bluechi_test.container import BluechiControllerContainer, BluechiNodeContainer
+from bluechi_test.machine import BluechiControllerMachine, BluechiAgentMachine
 from bluechi_test.config import BluechiControllerConfig
 
 
-def exec(ctrl: BluechiControllerContainer, _: Dict[str, BluechiNodeContainer]):
+def exec(ctrl: BluechiControllerMachine, _: Dict[str, BluechiAgentMachine]):
     service = "org.eclipse.bluechi"
     object = "/org/eclipse/bluechi"
     interface = "org.eclipse.bluechi.Controller"

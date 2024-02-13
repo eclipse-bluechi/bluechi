@@ -68,7 +68,7 @@ LogIsQuiet={self.log_is_quiet}
         return cfg
 
 
-class BluechiNodeConfig(BluechiConfig):
+class BluechiAgentConfig(BluechiConfig):
 
     confd_dir = "/etc/bluechi/agent.conf.d"
 
@@ -109,8 +109,8 @@ LogIsQuiet={self.log_is_quiet}
     def get_confd_dir(self) -> str:
         return self.confd_dir
 
-    def deep_copy(self) -> "BluechiNodeConfig":
-        cfg = BluechiNodeConfig(self.file_name)
+    def deep_copy(self) -> "BluechiAgentConfig":
+        cfg = BluechiAgentConfig(self.file_name)
         cfg.node_name = self.node_name
         cfg.controller_host = self.controller_host
         cfg.controller_port = self.controller_port

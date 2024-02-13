@@ -5,8 +5,8 @@ import logging
 
 from typing import Dict
 from bluechi_test.test import BluechiTest
-from bluechi_test.container import BluechiControllerContainer, BluechiNodeContainer
-from bluechi_test.config import BluechiControllerConfig, BluechiNodeConfig
+from bluechi_test.machine import BluechiControllerMachine, BluechiAgentMachine
+from bluechi_test.config import BluechiControllerConfig, BluechiAgentConfig
 from bluechi_test.util import read_file
 
 LOGGER = logging.getLogger(__name__)
@@ -15,7 +15,7 @@ NODE_FOO = "node-foo"
 failed_status = "failed"
 
 
-def exec(ctrl: BluechiControllerContainer, nodes: Dict[str, BluechiNodeContainer]):
+def exec(ctrl: BluechiControllerMachine, nodes: Dict[str, BluechiAgentMachine]):
 
     node_foo = nodes[NODE_FOO]
     config_file_location = "/var/tmp"
@@ -33,11 +33,11 @@ def exec(ctrl: BluechiControllerContainer, nodes: Dict[str, BluechiNodeContainer
 
 def test_agent_config_c_option(
         bluechi_test: BluechiTest,
-        bluechi_node_default_config: BluechiNodeConfig, bluechi_ctrl_default_config: BluechiControllerConfig):
+        bluechi_node_default_config: BluechiAgentConfig, bluechi_ctrl_default_config: BluechiControllerConfig):
     node_foo_cfg = bluechi_node_default_config.deep_copy()
     node_foo_cfg.node_name = NODE_FOO
 
-    bluechi_test.add_bluechi_node_config(node_foo_cfg)
+    bluechi_test.add_bluechi_agent_config(node_foo_cfg)
 
     bluechi_ctrl_default_config.allowed_node_names = [NODE_FOO]
     bluechi_test.set_bluechi_controller_config(bluechi_ctrl_default_config)

@@ -5,7 +5,7 @@ import logging
 
 from typing import Dict
 from bluechi_test.test import BluechiTest
-from bluechi_test.container import BluechiControllerContainer, BluechiNodeContainer
+from bluechi_test.machine import BluechiControllerMachine, BluechiAgentMachine
 from bluechi_test.config import BluechiControllerConfig
 from bluechi_test.util import read_file
 
@@ -14,7 +14,7 @@ LOGGER = logging.getLogger(__name__)
 failed_status = "failed"
 
 
-def exec(ctrl: BluechiControllerContainer, nodes: Dict[str, BluechiNodeContainer]):
+def exec(ctrl: BluechiControllerMachine, nodes: Dict[str, BluechiAgentMachine]):
     config_file_location = "/var/tmp"
     bluechi_controller_str = "bluechi-controller"
     invalid_conf_str = "config-files/invalid.conf"
