@@ -2,15 +2,14 @@ option('api_bus', type: 'combo',
     choices: ['user', 'system'], value: 'system',
     description: 'The D-Bus daemon on which the public BlueChi API is provided')
 
-option('man', type : 'combo',
-    choices : ['true', 'false'], value : 'true',
-    description : 'Build and install man pages')
+option('dbus-srv-user', type: 'string', description: 'The (existing) user which runs bluechi')
+
+option('with_analyzer', type : 'boolean', value : false,
+    description : 'Add the gcc option -fanalyzer for static analysis')
 
 option('with_coverage', type : 'combo',
     choices : ['true', 'false'], value : 'false',
     description : 'Add coverage collection')
 
-option('with_analyzer', type : 'boolean', value : false,
-    description : 'Add the gcc option -fanalyzer for static analysis')
-
-option('dbus-srv-user', type: 'string', description: 'The (existing) user which runs bluechi')
+option('with_man_pages', type : 'boolean', value : true,
+    description : 'Build and install man pages')

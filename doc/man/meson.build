@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: LGPL-2.1-or-later
 
-want_man = get_option('man') == 'true'
+want_man = get_option('with_man_pages')
 md2man = find_program('go-md2man', required : false)
 if want_man and not md2man.found()
   message('go-md2man not found, man page generation disabled automatically')
