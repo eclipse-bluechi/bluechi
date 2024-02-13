@@ -35,8 +35,12 @@ def exec(ctrl: BluechiControllerMachine, nodes: Dict[str, BluechiAgentMachine]):
         lcov_list.append("-a")
         lcov_list.append(f"{merge_dir}/{file_path.name}")
 
+    # Append unit tests code coverage results
+    lcov_list.append("-a")
+    lcov_list.append("/var/tmp/bluechi-coverage/unit-test-results/coverage.info")
+
     # Skip creating coverage report when no .info files are found
-    if len(lcov_list) == 1:
+    if len(lcov_list) == 3:
         LOGGER.info(f"No .info files found in {root.name}, skipping...")
         return
 
@@ -45,11 +49,6 @@ def exec(ctrl: BluechiControllerMachine, nodes: Dict[str, BluechiAgentMachine]):
     result, output = ctrl.exec_run(" ".join(lcov_list))
     if result != 0:
         raise Exception(f"Error merging info files from each integration test: {output}")
-
-    result, output = ctrl.exec_run(
-        f"lcov --remove {merge_dir}/{merge_file_name} -o {merge_dir}/{merge_file_name} '*/src/*/test/*'")
-    if result != 0:
-        raise Exception(f"Error removing coverage for unit test file: {output}")
 
     LOGGER.debug(f"Generating report for merged info file '{merge_dir}/{merge_file_name}'")
     result, output = ctrl.exec_run(f"genhtml {merge_dir}/{merge_file_name} --output-directory={report_dir_name}")

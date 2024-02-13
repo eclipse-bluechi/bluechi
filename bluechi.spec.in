@@ -5,7 +5,7 @@
 
 # coverage collection is disabled by default , it can be enabled passing `--define "with_coverage 1"` option to rpmbuild
 %if 0%{?with_coverage}
-%global coverage_flags -Dwith_coverage=true
+%global coverage_flags -Dwith_coverage=true -Db_coverage=true
 %endif
 
 Name:		bluechi
@@ -25,6 +25,11 @@ BuildRequires:	meson
 BuildRequires:	systemd-devel
 BuildRequires:	systemd-rpm-macros
 BuildRequires:	golang-github-cpuguy83-md2man
+
+%if 0%{?with_coverage}
+BuildRequires:	lcov
+BuildRequires: sed
+%endif
 
 %description
 BlueChi is a systemd service controller for multi-nodes environements with a
@@ -271,6 +276,8 @@ mkdir -p %{buildroot}/%{_datadir}/bluechi-coverage/bin
 cp tests/scripts/gather-code-coverage.sh %{buildroot}/%{_datadir}/bluechi-coverage/bin
 cp tests/scripts/setup-src-dir-for-coverage.sh %{buildroot}/%{_datadir}/bluechi-coverage/bin
 
+mkdir -p %{buildroot}/%{_datadir}/bluechi-coverage/unit-test-results
+
 mkdir -p %{buildroot}/%{_localstatedir}/tmp/bluechi-coverage/
 %endif
 
@@ -285,11 +292,24 @@ popd
 %meson_test
 
 %if 0%{?with_coverage}
-# Install gcda files from unit test execution so they could be packages into bluechi-coverage RPM.
-# Those files cannot be installed inside install section, because unit tests are executed later.
-# Files need to be moved to clean up as using clean section in spec is not recommended by Fedora Packaging Guidelines.
-mv /var/tmp/bluechi-coverage/*.gcda %{buildroot}/%{_datadir}/bluechi-coverage
+# Generate code coverage report from unit tests execution
+ninja coverage-html -C %{_vpath_builddir}
+
+# Remove tests executable files from generate code coverage info, because we want to measure only non-testing source
+# files, and code coverage .info file into bluchi-coverage package, so it can be merged with integration test results
+# later
+lcov --remove \
+    %{_vpath_builddir}/meson-logs/coverage.info \
+    -o %{buildroot}/%{_datadir}/bluechi-coverage/unit-test-results/coverage.info \
+    '*/src/*/test/*'
+
+# Make path to source code local to current directory, because source codes will be on a different place during
+# the merge with integration test results
+sed -i \
+    's/SF:.*src/SF:\/var\/tmp\/bluechi-coverage\/src/' \
+    %{buildroot}/%{_datadir}/bluechi-coverage/unit-test-results/coverage.info
 %endif
+
 
 %changelog
 * Wed Jan 17 2024 Michael Engel <mengel@redhat.com> - 0.7.0-1
