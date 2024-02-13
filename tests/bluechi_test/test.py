@@ -11,8 +11,8 @@ from podman import PodmanClient
 from typing import List, Dict, Callable, Tuple
 
 from bluechi_test.command import Command
-from bluechi_test.config import BluechiControllerConfig, BluechiNodeConfig
-from bluechi_test.container import BluechiNodeContainer, BluechiControllerContainer
+from bluechi_test.config import BluechiControllerConfig, BluechiAgentConfig
+from bluechi_test.machine import BluechiAgentMachine, BluechiControllerMachine
 
 LOGGER = logging.getLogger(__name__)
 
@@ -42,23 +42,23 @@ class BluechiTest():
         self.additional_ports = additional_ports
 
         self.bluechi_controller_config: BluechiControllerConfig = None
-        self.bluechi_node_configs: List[BluechiNodeConfig] = []
+        self.bluechi_node_configs: List[BluechiAgentConfig] = []
 
         self._test_init_time = datetime.datetime.now()
 
     def set_bluechi_controller_config(self, cfg: BluechiControllerConfig):
         self.bluechi_controller_config = cfg
 
-    def add_bluechi_node_config(self, cfg: BluechiNodeConfig):
+    def add_bluechi_agent_config(self, cfg: BluechiAgentConfig):
         self.bluechi_node_configs.append(cfg)
 
-    def setup(self) -> Tuple[bool, Tuple[BluechiControllerContainer, Dict[str, BluechiNodeContainer]]]:
+    def setup(self) -> Tuple[bool, Tuple[BluechiControllerMachine, Dict[str, BluechiAgentMachine]]]:
         if self.bluechi_controller_config is None:
             raise Exception("Bluechi Controller configuration not set")
 
         success = True
-        ctrl_container: BluechiControllerContainer = None
-        node_container: Dict[str, BluechiNodeContainer] = dict()
+        ctrl_container: BluechiControllerMachine = None
+        node_container: Dict[str, BluechiAgentMachine] = dict()
         try:
             LOGGER.debug(f"Starting container for bluechi-controller with config:\
                 \n{self.bluechi_controller_config.serialize()}")
@@ -74,7 +74,7 @@ class BluechiTest():
             )
             c.wait(condition="running")
 
-            ctrl_container = BluechiControllerContainer(c, self.bluechi_controller_config)
+            ctrl_container = BluechiControllerMachine(c, self.bluechi_controller_config)
             if self.run_with_valgrind:
                 ctrl_container.enable_valgrind()
             ctrl_container.exec_run('systemctl start bluechi-controller')
@@ -90,7 +90,7 @@ class BluechiTest():
                 )
                 c.wait(condition="running")
 
-                node = BluechiNodeContainer(c, cfg)
+                node = BluechiAgentMachine(c, cfg)
                 node_container[cfg.node_name] = node
 
                 if self.run_with_valgrind:
@@ -110,7 +110,7 @@ class BluechiTest():
 
         return (success, (ctrl_container, node_container))
 
-    def gather_logs(self, ctrl: BluechiControllerContainer, nodes: Dict[str, BluechiNodeContainer]):
+    def gather_logs(self, ctrl: BluechiControllerMachine, nodes: Dict[str, BluechiAgentMachine]):
         LOGGER.debug("Collecting logs from all containers...")
 
         if ctrl is not None:
@@ -125,7 +125,7 @@ class BluechiTest():
 
         self.gather_test_executor_logs()
 
-    def gather_coverage(self, ctrl: BluechiControllerContainer, nodes: Dict[str, BluechiNodeContainer]):
+    def gather_coverage(self, ctrl: BluechiControllerMachine, nodes: Dict[str, BluechiAgentMachine]):
         LOGGER.info("Collecting code coverage started")
 
         data_coverage_dir = f"{self.tmt_test_data_dir}/bluechi-coverage/"
@@ -149,7 +149,7 @@ class BluechiTest():
         except Exception as ex:
             LOGGER.error(f"Failed to gather test executor journal: {ex}")
 
-    def shutdown_bluechi(self, ctrl: BluechiControllerContainer, nodes: Dict[str, BluechiNodeContainer]):
+    def shutdown_bluechi(self, ctrl: BluechiControllerMachine, nodes: Dict[str, BluechiAgentMachine]):
         LOGGER.debug("Stopping all BlueChi components in all container...")
 
         for _, node in nodes.items():
@@ -159,7 +159,7 @@ class BluechiTest():
             ctrl.exec_run("systemctl stop bluechi-agent")
             ctrl.exec_run("systemctl stop bluechi-controller")
 
-    def teardown(self, ctrl: BluechiControllerContainer, nodes: Dict[str, BluechiNodeContainer]):
+    def teardown(self, ctrl: BluechiControllerMachine, nodes: Dict[str, BluechiAgentMachine]):
         LOGGER.debug("Stopping and removing all container...")
 
         if ctrl is not None:
@@ -187,7 +187,7 @@ class BluechiTest():
         if errors_found:
             raise Exception(f"Memory errors found in test. Review valgrind logs in {self.tmt_test_data_dir}")
 
-    def run(self, exec: Callable[[BluechiControllerContainer, Dict[str, BluechiNodeContainer]], None]):
+    def run(self, exec: Callable[[BluechiControllerMachine, Dict[str, BluechiAgentMachine]], None]):
         LOGGER.info("Test execution started")
         successful, container = self.setup()
         ctrl_container, node_container = container

@@ -4,21 +4,21 @@ from typing import Dict
 
 from bluechi_test.fixtures import get_primary_ip
 from bluechi_test.test import BluechiTest
-from bluechi_test.container import BluechiControllerContainer, BluechiNodeContainer
-from bluechi_test.config import BluechiControllerConfig, BluechiNodeConfig
+from bluechi_test.machine import BluechiControllerMachine, BluechiAgentMachine
+from bluechi_test.config import BluechiControllerConfig, BluechiAgentConfig
 
 
 local_node_name = "local-foo"
 
 
-def create_local_node_config() -> BluechiNodeConfig:
-    return BluechiNodeConfig(
+def create_local_node_config() -> BluechiAgentConfig:
+    return BluechiAgentConfig(
         file_name="agent.conf",
         controller_host=get_primary_ip(),
         controller_port='8420')
 
 
-def verify_resolving_fqdn(ctrl: BluechiControllerContainer, _: Dict[str, BluechiNodeContainer]):
+def verify_resolving_fqdn(ctrl: BluechiControllerMachine, _: Dict[str, BluechiAgentMachine]):
     # create config for local bluechi-agent and adding config to controller container
     local_node_cfg = create_local_node_config()
     local_node_cfg.node_name = local_node_name

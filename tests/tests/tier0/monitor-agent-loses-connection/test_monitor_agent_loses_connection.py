@@ -4,16 +4,16 @@ import os
 from typing import Dict
 
 from bluechi_test.test import BluechiTest
-from bluechi_test.container import BluechiControllerContainer, BluechiNodeContainer
-from bluechi_test.config import BluechiControllerConfig, BluechiNodeConfig
+from bluechi_test.machine import BluechiControllerMachine, BluechiAgentMachine
+from bluechi_test.config import BluechiControllerConfig, BluechiAgentConfig
 
 node_foo_name = "node-foo"
 
 
-def start_agent_in_ctrl_container(ctrl: BluechiControllerContainer):
+def start_agent_in_ctrl_container(ctrl: BluechiControllerMachine):
     assert ctrl.wait_for_unit_state_to_be("bluechi-controller", "active")
 
-    node_foo_config = BluechiNodeConfig(
+    node_foo_config = BluechiAgentConfig(
         file_name="agent.conf",
         node_name=node_foo_name,
         controller_host="localhost",
@@ -25,7 +25,7 @@ def start_agent_in_ctrl_container(ctrl: BluechiControllerContainer):
     assert wait_result
 
 
-def exec(ctrl: BluechiControllerContainer, nodes: Dict[str, BluechiNodeContainer]):
+def exec(ctrl: BluechiControllerMachine, nodes: Dict[str, BluechiAgentMachine]):
     start_agent_in_ctrl_container(ctrl)
 
     # bluechi-agent is running, check if it is connected in Agent

@@ -3,11 +3,11 @@
 from typing import Dict
 
 from bluechi_test.test import BluechiTest
-from bluechi_test.container import BluechiControllerContainer, BluechiNodeContainer
+from bluechi_test.machine import BluechiControllerMachine, BluechiAgentMachine
 from bluechi_test.config import BluechiControllerConfig
 
 
-def exec(ctrl: BluechiControllerContainer, _: Dict[str, BluechiNodeContainer]):
+def exec(ctrl: BluechiControllerMachine, _: Dict[str, BluechiAgentMachine]):
 
     assert ctrl.wait_for_unit_state_to_be("bluechi-controller", "active")
 

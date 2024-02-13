@@ -9,7 +9,7 @@ import tarfile
 from podman.domain.containers import Container
 from typing import Any, Iterator, Optional, Tuple, Union, IO
 
-from bluechi_test.config import BluechiConfig, BluechiNodeConfig, BluechiControllerConfig
+from bluechi_test.config import BluechiConfig, BluechiAgentConfig, BluechiControllerConfig
 from bluechi_test.util import read_file, get_random_name
 
 LOGGER = logging.getLogger(__name__)
@@ -18,7 +18,7 @@ valgrind_log_path_controller = '/var/log/valgrind/bluechi-controller-valgrind.lo
 valgrind_log_path_agent = '/var/log/valgrind/bluechi-agent-valgrind.log'
 
 
-class BluechiContainer():
+class BluechiMachine():
 
     def __init__(self, container: Container, config: BluechiConfig) -> None:
         self.container: Container = container
@@ -213,9 +213,9 @@ class BluechiContainer():
         self.exec_run(f"systemctl restart {service}.service")
 
 
-class BluechiNodeContainer(BluechiContainer):
+class BluechiAgentMachine(BluechiMachine):
 
-    def __init__(self, container: Container, config: BluechiNodeConfig) -> None:
+    def __init__(self, container: Container, config: BluechiAgentConfig) -> None:
         super().__init__(container, config)
 
         self.config = config
@@ -231,7 +231,7 @@ class BluechiNodeContainer(BluechiContainer):
         self.wait_for_bluechi_agent()
 
 
-class BluechiControllerContainer(BluechiContainer):
+class BluechiControllerMachine(BluechiMachine):
 
     def __init__(self, container: Container, config: BluechiControllerConfig) -> None:
         super().__init__(container, config)

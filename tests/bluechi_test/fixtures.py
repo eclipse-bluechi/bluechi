@@ -7,7 +7,7 @@ from podman import PodmanClient
 from typing import Union
 
 from bluechi_test.test import BluechiTest
-from bluechi_test.config import BluechiControllerConfig, BluechiNodeConfig
+from bluechi_test.config import BluechiControllerConfig, BluechiAgentConfig
 from bluechi_test.util import get_primary_ip
 
 
@@ -94,7 +94,7 @@ def bluechi_ctrl_default_config(bluechi_ctrl_svc_port: str):
 
 @pytest.fixture(scope='function')
 def bluechi_node_default_config(bluechi_ctrl_svc_port: str):
-    return BluechiNodeConfig(
+    return BluechiAgentConfig(
         file_name="agent.conf",
         controller_host=get_primary_ip(),
         controller_port=bluechi_ctrl_svc_port)

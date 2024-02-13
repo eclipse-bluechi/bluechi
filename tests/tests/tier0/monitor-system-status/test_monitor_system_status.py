@@ -7,8 +7,8 @@ from typing import Dict, List
 
 from bluechi_test.util import read_file
 from bluechi_test.test import BluechiTest
-from bluechi_test.container import BluechiControllerContainer, BluechiNodeContainer
-from bluechi_test.config import BluechiControllerConfig, BluechiNodeConfig
+from bluechi_test.machine import BluechiControllerMachine, BluechiAgentMachine
+from bluechi_test.config import BluechiControllerConfig, BluechiAgentConfig
 
 
 LOGGER = logging.getLogger(__name__)
@@ -19,7 +19,7 @@ node_three = "node-3"
 nodes = [node_one, node_two, node_three]
 
 
-def stop_all_agents(nodes: Dict[str, BluechiControllerContainer]):
+def stop_all_agents(nodes: Dict[str, BluechiControllerMachine]):
     LOGGER.debug("Stopping all agents...")
     for node_name, node in nodes.items():
         result, output = node.exec_run("systemctl stop bluechi-agent")
@@ -27,7 +27,7 @@ def stop_all_agents(nodes: Dict[str, BluechiControllerContainer]):
             raise Exception(f"Failed to stop bluechi-agent on node '{node_name}': {output}")
 
 
-def start_all_agents(nodes: Dict[str, BluechiControllerContainer]):
+def start_all_agents(nodes: Dict[str, BluechiControllerMachine]):
     LOGGER.debug("Starting all agents...")
     for node_name, node in nodes.items():
         result, output = node.exec_run("systemctl start bluechi-agent")
@@ -35,7 +35,7 @@ def start_all_agents(nodes: Dict[str, BluechiControllerContainer]):
             raise Exception(f"Failed to stop bluechi-agent on node '{node_name}': {output}")
 
 
-def check_events(ctrl: BluechiControllerContainer, expected_events: List[str]):
+def check_events(ctrl: BluechiControllerMachine, expected_events: List[str]):
     """
     Continuously poll the current content in /tmp/events. As soon as the file
     contains the same number of events as the expected_events, assert that the
@@ -64,7 +64,7 @@ def check_events(ctrl: BluechiControllerContainer, expected_events: List[str]):
         time.sleep(1)
 
 
-def exec(ctrl: BluechiControllerContainer, nodes: Dict[str, BluechiNodeContainer]):
+def exec(ctrl: BluechiControllerMachine, nodes: Dict[str, BluechiAgentMachine]):
 
     ctrl.create_file("/tmp", "system-monitor.py", read_file("python/system-monitor.py"))
     ctrl.copy_systemd_service("monitor.service", "systemd", os.path.join("/", "etc", "systemd", "system"))
@@ -88,7 +88,7 @@ def exec(ctrl: BluechiControllerContainer, nodes: Dict[str, BluechiNodeContainer
 def test_monitor_system_status(
         bluechi_test: BluechiTest,
         bluechi_ctrl_default_config: BluechiControllerConfig,
-        bluechi_node_default_config: BluechiNodeConfig):
+        bluechi_node_default_config: BluechiAgentConfig):
 
     node_one_config = bluechi_node_default_config.deep_copy()
     node_one_config.node_name = node_one
@@ -100,8 +100,8 @@ def test_monitor_system_status(
     bluechi_ctrl_default_config.allowed_node_names = nodes
 
     bluechi_test.set_bluechi_controller_config(bluechi_ctrl_default_config)
-    bluechi_test.add_bluechi_node_config(node_one_config)
-    bluechi_test.add_bluechi_node_config(node_two_config)
-    bluechi_test.add_bluechi_node_config(node_three_config)
+    bluechi_test.add_bluechi_agent_config(node_one_config)
+    bluechi_test.add_bluechi_agent_config(node_two_config)
+    bluechi_test.add_bluechi_agent_config(node_three_config)
 
     bluechi_test.run(exec)
