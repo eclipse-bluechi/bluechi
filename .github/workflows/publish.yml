@@ -15,19 +15,19 @@ jobs:
 
     steps:
       - name: Checkout sources
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
           submodules: 'true'
 
       - name: Mark source directory as safe
-        run: | 
+        run: |
           git config --global --add safe.directory $(pwd)
-      
+
       - name: Build source rpm
         run: |
           ./build-scripts/build-srpm.sh
-      
+
       - name: Get BlueChi version
         run: |
           echo "BLUECHI_VERSION=$(./build-scripts/version.sh)" >> $GITHUB_ENV
@@ -37,11 +37,11 @@ jobs:
           mkdir -p /tmp/bluechi-${{ env.BLUECHI_VERSION }}
           cp -r ./ /tmp/bluechi-${{ env.BLUECHI_VERSION }}/
           rm -rf /tmp/bluechi-${{ env.BLUECHI_VERSION }}/.git/
-          mv /tmp/bluechi-${{ env.BLUECHI_VERSION }}/ ./ 
+          mv /tmp/bluechi-${{ env.BLUECHI_VERSION }}/ ./
 
           zip -r bluechi-${{ env.BLUECHI_VERSION }}.zip bluechi-${{ env.BLUECHI_VERSION }}/
           tar czf bluechi-${{ env.BLUECHI_VERSION }}.tar.gz bluechi-${{ env.BLUECHI_VERSION }}/
-      
+
       - name: Release
         uses: softprops/action-gh-release@v1
         if: startsWith(github.ref, 'refs/tags/')
@@ -64,7 +64,7 @@ jobs:
 
     steps:
       - name: Checkout sources
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           submodules: 'true'
 
