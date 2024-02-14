@@ -10,6 +10,7 @@ import traceback
 from podman import PodmanClient
 from typing import List, Dict, Callable, Tuple
 
+from bluechi_test.client import ContainerClient
 from bluechi_test.command import Command
 from bluechi_test.config import BluechiControllerConfig, BluechiAgentConfig
 from bluechi_test.machine import BluechiAgentMachine, BluechiControllerMachine
@@ -52,6 +53,12 @@ class BluechiTest():
     def add_bluechi_agent_config(self, cfg: BluechiAgentConfig):
         self.bluechi_node_configs.append(cfg)
 
+    def assemble_controller_machine_name(self, cfg: BluechiControllerConfig):
+        return f"{cfg.name}-{self.tmt_test_serial_number}"
+
+    def assemble_agent_machine_name(self, cfg: BluechiAgentConfig):
+        return f"{cfg.node_name}-{self.tmt_test_serial_number}"
+
     def setup(self) -> Tuple[bool, Tuple[BluechiControllerMachine, Dict[str, BluechiAgentMachine]]]:
         if self.bluechi_controller_config is None:
             raise Exception("Bluechi Controller configuration not set")
@@ -63,18 +70,15 @@ class BluechiTest():
             LOGGER.debug(f"Starting container for bluechi-controller with config:\
                 \n{self.bluechi_controller_config.serialize()}")
 
+            name = self.assemble_controller_machine_name(self.bluechi_controller_config)
             ports = {self.bluechi_ctrl_svc_port: self.bluechi_ctrl_host_port}
             if self.additional_ports:
                 ports.update(self.additional_ports)
-            c = self.podman_client.containers.run(
-                name=f"{self.bluechi_controller_config.name}-{self.tmt_test_serial_number}",
-                image=self.bluechi_image_id,
-                detach=True,
-                ports=ports,
-            )
-            c.wait(condition="running")
 
-            ctrl_container = BluechiControllerMachine(c, self.bluechi_controller_config)
+            ctrl_container = BluechiControllerMachine(name,
+                                                      ContainerClient(self.podman_client,
+                                                                      self.bluechi_image_id, name, ports),
+                                                      self.bluechi_controller_config)
             if self.run_with_valgrind:
                 ctrl_container.enable_valgrind()
             ctrl_container.exec_run('systemctl start bluechi-controller')
@@ -83,14 +87,11 @@ class BluechiTest():
             for cfg in self.bluechi_node_configs:
                 LOGGER.debug(f"Starting container bluechi-node '{cfg.node_name}' with config:\n{cfg.serialize()}")
 
-                c = self.podman_client.containers.run(
-                    name=f"{cfg.node_name}-{self.tmt_test_serial_number}",
-                    image=self.bluechi_image_id,
-                    detach=True,
-                )
-                c.wait(condition="running")
+                name = self.assemble_agent_machine_name(cfg)
 
-                node = BluechiAgentMachine(c, cfg)
+                node = BluechiAgentMachine(name,
+                                           ContainerClient(self.podman_client, self.bluechi_image_id, name, {}),
+                                           cfg)
                 node_container[cfg.node_name] = node
 
                 if self.run_with_valgrind:
