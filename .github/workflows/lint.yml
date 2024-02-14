@@ -44,7 +44,7 @@ jobs:
 
     steps:
       - name: Checkout sources
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           submodules: 'true'
 
@@ -68,7 +68,7 @@ jobs:
 
     steps:
       - name: Checkout sources
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           submodules: 'true'
 
@@ -94,7 +94,7 @@ jobs:
 
     steps:
       - name: Checkout sources
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           submodules: 'true'
 
@@ -113,7 +113,7 @@ jobs:
 
     steps:
       - name: Checkout sources
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           submodules: 'true'
 
@@ -127,24 +127,24 @@ jobs:
   apispec:
     needs: changes
     if: ${{ needs.changes.outputs.apispec == 'true' }}
-    name: 
+    name:
     runs-on: ubuntu-latest
     container:
       image: quay.io/bluechi/build-base:latest
 
     steps:
       - name: Checkout sources
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           submodules: 'true'
-      
+
       - name: Install dependencies
-        run: | 
+        run: |
           python3 -m ensurepip --default-pip
           python3 -m pip install -r src/bindings/generator/requirements.txt
           pip install wheel
           dnf install -y python3-gobject
-      
+
       - name: Generate and build python bindings
         run: |
           ./build-scripts/generate-bindings.sh python

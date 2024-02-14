@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       image:
-        description: Name of the image to build and push to quay.io 
+        description: Name of the image to build and push to quay.io
         required: true
         type: choice
         options:
@@ -16,7 +16,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout sources
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v1
@@ -24,7 +24,7 @@ jobs:
       - name: Build manifest
         run: |
           ./build-scripts/build-push-containers.sh ${{ inputs.image }}
-      
+
       - name: Push manifest o quay.io
         uses: redhat-actions/push-to-registry@v2
         with:

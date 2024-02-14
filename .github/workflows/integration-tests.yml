@@ -16,7 +16,7 @@ jobs:
       ARTIFACTS_DIR: exported-artifacts
     steps:
       - name: Checkout sources
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
           submodules: 'true'
@@ -36,7 +36,7 @@ jobs:
           createrepo_c $ARTIFACTS_DIR
 
       - name: Upload artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: rpm-artifacts
           path: ${{ env.ARTIFACTS_DIR}}
@@ -46,7 +46,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Install Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: '3.9'
 
@@ -70,12 +70,12 @@ jobs:
           pip install rich
 
       - name: Checkout sources
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           submodules: 'true'
 
       - name: Download artifact
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: rpm-artifacts
           path: 'tests/bluechi-rpms'
@@ -112,21 +112,21 @@ jobs:
 
       - name: Upload tmt artifacts
         if: always()
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: tmt-artifacts
           path: '/var/tmp/tmt'
 
       - name: Upload coverage HTML report
         if: always()
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: coverage-artifacts-html
           path: '/var/tmp/report'
 
       - name: Upload coverage file
         if: always()
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: coverage-artifacts-info
           path: '/var/tmp/merged.info'
