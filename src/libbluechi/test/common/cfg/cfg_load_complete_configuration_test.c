@@ -13,12 +13,13 @@
 #include "libbluechi/common/common.h"
 
 #define MAX_CUSTOM_CONFIGS 2
-#define MAX_EXPECTED_ENTRIES 3
+#define MAX_EXPECTED_ENTRIES 4
 
 typedef struct cfg_test_input {
         char *default_config_content;
         char *custom_config_content;
         char *custom_configs[MAX_CUSTOM_CONFIGS];
+        char *cli_option_config_content;
 } cfg_test_input;
 
 typedef struct cfg_test_expected_entry {
@@ -37,49 +38,59 @@ typedef struct cfg_test_param {
 struct cfg_test_param test_data[] = {
   /* basic single config file tests */
         {"no config files",
-         { NULL, NULL, { NULL, NULL } },
-         0,       { { NULL, NULL }, { NULL, NULL }, { NULL, NULL } }                          },
+         { NULL, NULL, { NULL, NULL }, NULL },
+         0,       { { NULL, NULL }, { NULL, NULL }, { NULL, NULL } }             },
         { "only default config file",
-         { "NodeName = laptop\n", NULL, { NULL, NULL } },
-         0,       { { "NodeName", "laptop" }, { NULL, NULL }, { NULL, NULL } }                },
+         { "NodeName = laptop\n", NULL, { NULL, NULL }, NULL },
+         0,       { { "NodeName", "laptop" }, { NULL, NULL }, { NULL, NULL } }   },
         { "only custom config file",
-         { NULL, "NodeName = laptop\n", { NULL, NULL } },
-         0,       { { "NodeName", "laptop" }, { NULL, NULL }, { NULL, NULL } }                },
+         { NULL, "NodeName = laptop\n", { NULL, NULL }, NULL },
+         0,       { { "NodeName", "laptop" }, { NULL, NULL }, { NULL, NULL } }   },
         { "only file in confd",
-         { NULL, "NodeName = laptop\n", { "NodeName = laptop\n", NULL } },
-         0,       { { "NodeName", "laptop" }, { NULL, NULL }, { NULL, NULL } }                },
+         { NULL, NULL, { "NodeName = laptop\n", NULL }, NULL },
+         0,       { { "NodeName", "laptop" }, { NULL, NULL }, { NULL, NULL } }   },
+        { "only file via CLI",
+         { NULL, NULL, { NULL, NULL }, "NodeName = laptop\n" },
+         0,       { { "NodeName", "laptop" }, { NULL, NULL }, { NULL, NULL } }   },
 
  /* testing of loading order and overwrite */
         { "with custom config file",
-         { "NodeName = laptop\n", "NodeName = pi\n", { NULL, NULL } },
-         0,       { { "NodeName", "pi" }, { NULL, NULL }, { NULL, NULL } }                    },
+         { "NodeName = laptop\n", "NodeName = pi\n", { NULL, NULL }, NULL },
+         0,       { { "NodeName", "pi" }, { NULL, NULL }, { NULL, NULL } }       },
         { "with config file in confd",
-         { "NodeName = laptop\n", "NodeName = pi\n", { "NodeName = vm\n", NULL } },
-         0,       { { "NodeName", "vm" }, { NULL, NULL }, { NULL, NULL } }                    },
+         { "NodeName = laptop\n", "NodeName = pi\n", { "NodeName = vm\n", NULL }, NULL },
+         0,       { { "NodeName", "vm" }, { NULL, NULL }, { NULL, NULL } }       },
+        { "with config CLI option",
+         { "NodeName = laptop\n", "NodeName = pi\n", { "NodeName = vm\n", NULL }, "NodeName = container\n" },
+         0,       { { "NodeName", "container" }, { NULL, NULL }, { NULL, NULL } }},
         { "with multiple config files in confd",
-         { "NodeName = laptop\n", "NodeName = pi\n", { "NodeName = vm\n", "NodeName = container\n" } },
-         0,       { { "NodeName", "container" }, { NULL, NULL }, { NULL, NULL } }             },
+         { "NodeName = laptop\n", "NodeName = pi\n", { "NodeName = vm\n", "NodeName = container\n" }, NULL },
+         0,       { { "NodeName", "container" }, { NULL, NULL }, { NULL, NULL } }},
 
  /* testing of loading order, overwrite and merges */
         { "with multiple, duplicate keys",
          { "NodeName = laptop\nLogLevel=INFO\n",
             "NodeName = pi\n",
-            { "LogLevel=DEBUG\n", "LogTarget=stderr\n" } },
-         0,       { { "NodeName", "pi" }, { "LogLevel", "DEBUG" }, { "LogTarget", "stderr" } }},
+            { "LogLevel=DEBUG\n", "LogTarget=stderr\n" },
+            "LogTarget=journald\nControllerPort=1337" },
+         0,       { { "NodeName", "pi" },
+            { "LogLevel", "DEBUG" },
+            { "LogTarget", "journald" },
+            { "ControllerPort", "1337" } }                            },
 
  /* testing invalid entries */
         { "with invalid value in default config file",
-         { "NodeName 0 laptop\n", "NodeName = pi\n", { "LogLevel=DEBUG\n", "LogTarget=stderr\n" } },
+         { "NodeName 0 laptop\n", "NodeName = pi\n", { "LogLevel=DEBUG\n", "LogTarget=stderr\n" }, NULL },
          -EINVAL,
-         { { NULL, NULL }, { NULL, NULL }, { NULL, NULL } }                                   },
+         { { NULL, NULL }, { NULL, NULL }, { NULL, NULL } }                      },
         { "with invalid value in custom config file",
-         { "NodeName = laptop\n", "NodeName 0 pi\n", { "LogLevel=DEBUG\n", "LogTarget=stderr\n" } },
+         { "NodeName = laptop\n", "NodeName 0 pi\n", { "LogLevel=DEBUG\n", "LogTarget=stderr\n" }, NULL },
          -EINVAL,
-         { { "NodeName", "laptop" }, { NULL, NULL }, { NULL, NULL } }                         },
+         { { "NodeName", "laptop" }, { NULL, NULL }, { NULL, NULL } }            },
         { "with invalid value in one of the confd files",
-         { "NodeName = laptop\n", "NodeName = pi\n", { "LogLevel=DEBUG\n", "LogTarget0stderr\n" } },
+         { "NodeName = laptop\n", "NodeName = pi\n", { "LogLevel=DEBUG\n", "LogTarget0stderr\n" }, NULL },
          -EINVAL,
-         { { "NodeName", "pi" }, { "LogLevel", "DEBUG" }, { NULL, NULL } }                    },
+         { { "NodeName", "pi" }, { "LogLevel", "DEBUG" }, { NULL, NULL } }       },
 };
 
 void create_file(const char *file_path, const char *cfg_file_content) {
@@ -95,6 +106,7 @@ int setup_test_directory(
                 char **ret_default_config_file,
                 char **ret_custom_config_file,
                 char **ret_custom_config_directory,
+                char **ret_cli_option_config_file,
                 char *ret_custom_configs[]) {
         int r = asprintf(ret_test_dir_path, "/tmp/cfg-test-%6d", rand() % 999999);
         if (r < 0) {
@@ -119,6 +131,13 @@ int setup_test_directory(
                         return r;
                 }
                 create_file(*ret_custom_config_file, test_input->custom_config_content);
+        }
+        if (test_input->cli_option_config_content != NULL) {
+                r = asprintf(ret_cli_option_config_file, "%s/cfg-file-%6d", *ret_test_dir_path, rand() % 999999);
+                if (r < 0) {
+                        return r;
+                }
+                create_file(*ret_cli_option_config_file, test_input->cli_option_config_content);
         }
 
         r = asprintf(ret_custom_config_directory, "%s/conf.d", *ret_test_dir_path);
@@ -192,6 +211,7 @@ bool test_cfg_load_complete_configuration(cfg_test_param *test_case) {
         _cleanup_free_ char *custom_config_file = NULL;
         _cleanup_free_ char *custom_config_directory = NULL;
         char *custom_configs[MAX_CUSTOM_CONFIGS] = { NULL, NULL };
+        _cleanup_free_ char *cli_option_config_file = NULL;
 
         int r = setup_test_directory(
                         &test_case->input,
@@ -199,6 +219,7 @@ bool test_cfg_load_complete_configuration(cfg_test_param *test_case) {
                         &default_config_file,
                         &custom_config_file,
                         &custom_config_directory,
+                        &cli_option_config_file,
                         custom_configs);
         if (r < 0) {
                 fprintf(stderr,
@@ -213,7 +234,11 @@ bool test_cfg_load_complete_configuration(cfg_test_param *test_case) {
 
         bool result = true;
         r = cfg_load_complete_configuration(
-                        cfg, default_config_file, custom_config_file, custom_config_directory);
+                        cfg,
+                        default_config_file,
+                        custom_config_file,
+                        custom_config_directory,
+                        cli_option_config_file);
         if (r != test_case->expected_ret) {
                 fprintf(stderr,
                         "Failed '%s': Expected return code '%d', but got '%d'\n",

@@ -293,25 +293,14 @@ bool controller_parse_config(Controller *controller, const char *configfile) {
         }
 
         result = cfg_load_complete_configuration(
-                        controller->config, CFG_BC_DEFAULT_CONFIG, CFG_ETC_BC_CONF, CFG_ETC_BC_CONF_DIR);
+                        controller->config,
+                        CFG_BC_DEFAULT_CONFIG,
+                        CFG_ETC_BC_CONF,
+                        CFG_ETC_BC_CONF_DIR,
+                        configfile);
         if (result != 0) {
                 return false;
         }
-
-        if (configfile != NULL) {
-                result = cfg_load_from_file(controller->config, configfile);
-                if (result < 0) {
-                        fprintf(stderr,
-                                "Error loading configuration file '%s': '%s'.\n",
-                                configfile,
-                                strerror(-result));
-                        return false;
-                } else if (result > 0) {
-                        fprintf(stderr, "Error parsing configuration file '%s' on line %d\n", configfile, result);
-                        return false;
-                }
-        }
-
         return true;
 }
 

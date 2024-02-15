@@ -89,6 +89,7 @@ void cfg_dispose(struct config *config);
  *   2. Load custom application configuration file, for example /etc/<NAME>.conf
  *   3. Load custom application configuration directory, for example /etc/<NAME>.conf.d
  *   4. Load configuration from environment variables
+ *   5. Load custom application configuration file from CLI option parameter
  *
  * WARNING: this method should be invoked only once after execution of config_initialize() to ensure
  * standardized configuration loading flow is used.
@@ -99,7 +100,8 @@ int cfg_load_complete_configuration(
                 struct config *config,
                 const char *default_config_file,
                 const char *custom_config_file,
-                const char *custom_config_directory);
+                const char *custom_config_directory,
+                const char *cli_option_config_file);
 
 /*
  * Load the application configuration from the specified file and override any existing options values.
