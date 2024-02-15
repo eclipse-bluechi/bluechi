@@ -22,7 +22,7 @@ nodes = [node_one, node_two, node_three]
 def stop_all_agents(nodes: Dict[str, BluechiControllerMachine]):
     LOGGER.debug("Stopping all agents...")
     for node_name, node in nodes.items():
-        result, output = node.exec_run("systemctl stop bluechi-agent")
+        result, output = node.systemctl.stop_unit("bluechi-agent")
         if result != 0:
             raise Exception(f"Failed to stop bluechi-agent on node '{node_name}': {output}")
 
@@ -30,7 +30,7 @@ def stop_all_agents(nodes: Dict[str, BluechiControllerMachine]):
 def start_all_agents(nodes: Dict[str, BluechiControllerMachine]):
     LOGGER.debug("Starting all agents...")
     for node_name, node in nodes.items():
-        result, output = node.exec_run("systemctl start bluechi-agent")
+        result, output = node.systemctl.start_unit("bluechi-agent")
         if result != 0:
             raise Exception(f"Failed to stop bluechi-agent on node '{node_name}': {output}")
 
@@ -69,7 +69,7 @@ def exec(ctrl: BluechiControllerMachine, nodes: Dict[str, BluechiAgentMachine]):
     ctrl.create_file("/tmp", "system-monitor.py", read_file("python/system-monitor.py"))
     ctrl.copy_systemd_service("monitor.service", "systemd", os.path.join("/", "etc", "systemd", "system"))
 
-    result, output = ctrl.exec_run("systemctl start monitor.service")
+    result, output = ctrl.systemctl.start_unit("monitor.service")
     if result != 0:
         raise Exception(f"Failed to start monitor service: {output}")
 

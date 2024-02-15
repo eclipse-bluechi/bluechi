@@ -8,8 +8,8 @@ from bluechi_test.config import BluechiControllerConfig, BluechiAgentConfig
 
 
 def foo_startup_verify(ctrl: BluechiControllerMachine, nodes: Dict[str, BluechiAgentMachine]):
-    result, output = ctrl.exec_run('bluechictl status node-foo bluechi-agent.service')
 
+    result, output = ctrl.bluechictl.get_status("node-foo", "bluechi-agent.service")
     assert result == 0
     assert str(output).split('\n')[2].split('|')[2].strip() == 'active'
 

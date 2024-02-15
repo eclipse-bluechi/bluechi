@@ -1,5 +1,6 @@
 # SPDX-License-Identifier: LGPL-2.1-or-later
 from typing import Dict
+
 from bluechi_test.test import BluechiTest
 from bluechi_test.machine import BluechiControllerMachine, BluechiAgentMachine
 from bluechi_test.config import BluechiControllerConfig, BluechiAgentConfig
@@ -10,12 +11,12 @@ NODE_FOO = "node-foo"
 
 def exec(ctrl: BluechiControllerMachine, _: Dict[str, BluechiAgentMachine]):
 
-    _, output = ctrl.exec_run(f"bluechictl set-loglevel {NODE_FOO} INF")
+    _, output = ctrl.bluechictl.set_log_level_on_node(NODE_FOO, "INF", check_result=False)
     print(output)
     assert b'Disconnect' not in output
 
 
-def test_agent_config_c_option(
+def test_bluechi_agent_set_loglevel_invalid(
         bluechi_test: BluechiTest,
         bluechi_ctrl_default_config: BluechiControllerConfig,
         bluechi_node_default_config: BluechiAgentConfig):

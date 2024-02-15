@@ -28,7 +28,7 @@ def verify_resolving_fqdn(ctrl: BluechiControllerMachine, _: Dict[str, BluechiAg
     ctrl.systemctl_start_and_wait("bluechi-agent", 1)
     ctrl.wait_for_unit_state_to_be('bluechi-agent', 'active')
 
-    result, output = ctrl.exec_run(f'bluechictl list-units {local_node_name}')
+    result, _ = ctrl.bluechictl.list_units(local_node_name)
     assert result == 0
 
 

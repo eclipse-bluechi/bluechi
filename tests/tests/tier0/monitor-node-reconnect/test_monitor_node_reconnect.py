@@ -17,14 +17,14 @@ def exec(ctrl: BluechiControllerMachine, nodes: Dict[str, BluechiAgentMachine]):
     if result != 0:
         raise Exception(output)
 
-    ctrl.exec_run("systemctl stop bluechi-controller")
+    ctrl.systemctl.stop_unit("bluechi-controller")
     ctrl.wait_for_unit_state_to_be('bluechi-controller', 'inactive')
 
     # lets wait a bit so the agent has at least one failing reconnect attempt
     time.sleep(1)
 
-    ctrl.exec_run("systemctl start bluechi-controller")
-    ctrl.wait_for_bluechi()
+    ctrl.systemctl.start_unit("bluechi-controller")
+    ctrl.wait_for_bluechi_controller()
     # since the heartbeat (incl. a try to reconnect) is going to happen
     # every n milliseconds, lets wait a bit so this test is not becoming flaky
     time.sleep(1)
