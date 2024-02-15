@@ -122,9 +122,11 @@ int cfg_load_complete_configuration(
                 struct config *config,
                 const char *default_config_file,
                 const char *custom_config_file,
-                const char *custom_config_directory) {
+                const char *custom_config_directory,
+                const char *cli_option_config_file) {
         int result = 0;
 
+        /* 1. Load default configuration file */
         if (default_config_file != NULL) {
                 result = cfg_load_from_file(config, default_config_file);
                 if (result < 0) {
@@ -142,6 +144,7 @@ int cfg_load_complete_configuration(
                 }
         }
 
+        /* 2. Load custom application configuration file, for example /etc/<NAME>.conf */
         if (custom_config_file != NULL) {
                 result = cfg_load_from_file(config, custom_config_file);
                 if (result != 0 && result != -ENOENT) {
@@ -161,6 +164,7 @@ int cfg_load_complete_configuration(
                 }
         }
 
+        /* 3. Load custom application configuration directory, for example /etc/<NAME>.conf.d */
         if (custom_config_directory != NULL) {
                 result = cfg_load_from_dir(config, custom_config_directory);
                 if (result < 0) {
@@ -175,7 +179,26 @@ int cfg_load_complete_configuration(
                 }
         }
 
+        /* 4. Load configuration from environment variables */
         result = cfg_load_from_env(config);
+
+        /* 5. Load custom application configuration file from CLI option parameter */
+        if (cli_option_config_file != NULL) {
+                result = cfg_load_from_file(config, cli_option_config_file);
+                if (result < 0) {
+                        fprintf(stderr,
+                                "Error loading configuration file '%s', error code '%s'.\n",
+                                cli_option_config_file,
+                                strerror(-result));
+                        return result;
+                } else if (result > 0) {
+                        fprintf(stderr,
+                                "Error parsing configuration file '%s' on line %d\n",
+                                cli_option_config_file,
+                                result);
+                        return -EINVAL;
+                }
+        }
 
         return result;
 }
