@@ -21,15 +21,13 @@ def exec(ctrl: BluechiControllerMachine, nodes: Dict[str, BluechiAgentMachine]):
     foo.copy_systemd_service(simple_service, source_dir, target_dir)
     assert foo.wait_for_unit_state_to_be(simple_service, "inactive")
 
-    _, output = foo.exec_run(f"systemctl is-enabled {simple_service}")
-    if output != "disabled":
-        raise Exception(f"Failed pre-check if unit {simple_service} is enabled: {output}")
+    if not foo.systemctl.is_unit_disabled(simple_service, check_result=False):
+        raise Exception(f"Failed pre-check if unit {simple_service} is disabled")
 
-    ctrl.enable_unit(node_foo_name, simple_service)
+    ctrl.bluechictl.enable_unit(node_foo_name, simple_service)
 
-    _, output = foo.exec_run(f"systemctl is-enabled {simple_service}")
-    if output != "enabled":
-        raise Exception(f"Unit {simple_service} expected to be enabled, but got: {output}")
+    if not foo.systemctl.is_unit_enabled(simple_service, check_result=False):
+        raise Exception(f"Unit {simple_service} expected to be enabled, but is not")
 
 
 def test_proxy_service_start(

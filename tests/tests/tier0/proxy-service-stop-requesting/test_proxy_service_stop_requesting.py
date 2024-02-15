@@ -49,9 +49,9 @@ def exec(ctrl: BluechiControllerMachine, nodes: Dict[str, BluechiAgentMachine]):
     assert foo.wait_for_unit_state_to_be(requesting_service, "inactive")
     assert bar.wait_for_unit_state_to_be(simple_service, "inactive")
 
-    ctrl.start_unit(node_foo_name, requesting_service)
+    ctrl.bluechictl.start_unit(node_foo_name, requesting_service)
     verify_proxy_start(foo, bar)
-    ctrl.stop_unit(node_foo_name, requesting_service)
+    ctrl.bluechictl.stop_unit(node_foo_name, requesting_service)
     verify_proxy_stop(foo, bar)
 
 

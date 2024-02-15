@@ -36,7 +36,7 @@ def exec(ctrl: BluechiControllerMachine, nodes: Dict[str, BluechiAgentMachine]):
     foo.copy_systemd_service(requesting_service, source_dir, target_dir)
     bar.copy_systemd_service(simple_service, source_dir, target_dir)
 
-    ctrl.start_unit(node_foo_name, requesting_service)
+    ctrl.bluechictl.start_unit(node_foo_name, requesting_service)
     verify_proxy_start_failed(foo, bar)
 
 

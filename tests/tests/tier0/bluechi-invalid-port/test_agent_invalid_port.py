@@ -17,7 +17,7 @@ def exec(ctrl: BluechiControllerMachine, _: Dict[str, BluechiAgentMachine]):
     new_cfg = original_cfg.deep_copy()
     new_cfg.port = "542O"
     ctrl.create_file(new_cfg.get_confd_dir(), new_cfg.file_name, new_cfg.serialize())
-    ctrl.exec_run("systemctl restart bluechi-controller")
+    ctrl.systemctl.restart_unit("bluechi-controller")
     assert ctrl.wait_for_unit_state_to_be("bluechi-controller", "failed")
 
     # port out of range
@@ -25,16 +25,16 @@ def exec(ctrl: BluechiControllerMachine, _: Dict[str, BluechiAgentMachine]):
     new_cfg.port = "65538"
     ctrl.create_file(new_cfg.get_confd_dir(), new_cfg.file_name, new_cfg.serialize())
     # to ensure that a restart is possible, reset the lock due to too many failed attempts
-    ctrl.exec_run("systemctl reset-failed bluechi-controller")
-    ctrl.exec_run("systemctl restart bluechi-controller")
+    ctrl.systemctl.reset_failed_for_unit("bluechi-controller")
+    ctrl.systemctl.restart_unit("bluechi-controller")
     assert ctrl.wait_for_unit_state_to_be("bluechi-controller", "failed")
 
     # valid config again
     new_cfg = original_cfg.deep_copy()
     ctrl.create_file(new_cfg.get_confd_dir(), new_cfg.file_name, new_cfg.serialize())
     # to ensure that a restart is possible, reset the lock due to too many failed attempts
-    ctrl.exec_run("systemctl reset-failed bluechi-controller")
-    ctrl.exec_run("systemctl restart bluechi-controller")
+    ctrl.systemctl.reset_failed_for_unit("bluechi-controller")
+    ctrl.systemctl.restart_unit("bluechi-controller")
     assert ctrl.wait_for_unit_state_to_be("bluechi-controller", "active")
 
 

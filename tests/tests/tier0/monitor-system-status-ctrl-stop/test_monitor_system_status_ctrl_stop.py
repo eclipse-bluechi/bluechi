@@ -20,14 +20,14 @@ def exec(ctrl: BluechiControllerMachine, nodes: Dict[str, BluechiAgentMachine]):
     ctrl.create_file("/tmp", "system-monitor.py", read_file("python/system-monitor.py"))
     ctrl.copy_systemd_service("monitor.service", "systemd", os.path.join("/", "etc", "systemd", "system"))
 
-    result, output = ctrl.exec_run("systemctl start monitor.service")
+    result, output = ctrl.systemctl.start_unit("monitor.service")
     if result != 0:
         raise Exception(f"Failed to start monitor service: {output}")
 
     # wait a bit so monitor is set up
     time.sleep(2)
 
-    result, output = ctrl.exec_run("systemctl stop bluechi-controller")
+    result, output = ctrl.systemctl.stop_unit("bluechi-controller")
     if result != 0:
         raise Exception(f"Failed to stop bluechi-controller: {output}")
 
