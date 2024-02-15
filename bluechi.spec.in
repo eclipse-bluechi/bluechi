@@ -292,7 +292,7 @@ mv /var/tmp/bluechi-coverage/*.gcda %{buildroot}/%{_datadir}/bluechi-coverage
 %endif
 
 %changelog
-* Mon Jan 17 2024 Michael Engel <mengel@redhat.com> - 0.7.0-1
+* Wed Jan 17 2024 Michael Engel <mengel@redhat.com> - 0.7.0-1
 - Breaking change: Completed renaming of manager to controller in configuration, API, etc.
 - Breaking change: Removed D-Bus method Shutdown from controller and agent
 - Breaking change: Removed bluechictl monitor node-connection
@@ -318,7 +318,7 @@ mv /var/tmp/bluechi-coverage/*.gcda %{buildroot}/%{_datadir}/bluechi-coverage
 - BlueChi logo has been added to the project
 - Added documentation about monitoring has been added
 - Added documentation about securint BlueChi with mTLS and double proxy
- 
+
 * Mon Nov 13 2023 Michael Engel <mengel@redhat.com> - 0.6.0-1
 - Moved from containers to eclipse-bluechi organization
 - Renamed bluechi to bluechi-controller for binary, rpm and documentation
