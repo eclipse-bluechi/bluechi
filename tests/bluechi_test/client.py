@@ -74,11 +74,12 @@ class ContainerClient(Client):
             Tuple[Optional[int], Union[Iterator[bytes], Any, Tuple[bytes, bytes]]]:
 
         result, output = self.container.exec_run(command, tty=tty)
-        LOGGER.debug(f"Executed command '{command}' with result '{result}' and output '{output}'")
 
         if not raw_output and output:
-            output = output.decode('utf-8').strip()
+            # When using tty is enabled, podman uses CRLF line ends, so we need to convert to LF
+            output = output.replace(b"\r", b"").decode("utf-8").strip()
 
+        LOGGER.debug(f"Executed command '{command}' with result '{result}' and output '{output}'")
         return result, output
 
 
