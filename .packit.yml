@@ -45,6 +45,7 @@ jobs:
     trigger: pull_request
     identifier: integration-tests
     fmf_path: tests
+    tmt_plan: multihost
     labels:
       - standard
     env:

@@ -1,0 +1,36 @@
+summary: Tier 1 - Basic functionality tests
+discover:
+    how: fmf
+    filter: multihost:yes
+    where: test-executor
+provision:
+  - name: test-executor
+    how: local
+    role: executor
+  - name: bluechi-controller
+    how: fedora-38
+    role: controller
+  - name: bluechi-agent-1
+    how: fedora-38
+    role: agent
+  # extend with more hosts
+environment:
+    BLUECHI_RPM_DIR: bluechi-rpms
+    BLUECHI_RPM_COPR: "@centos-automotive-sig/bluechi-snapshot"
+    BLUECHI_RPM_USED: local
+    INSTALL_MANAGER_DEPS: no
+    INSTALL_MANAGED_DEPS: no
+
+    BLUECHI_CTRL_SVC_PORT: 8420
+    WITH_COVERAGE: 0
+    WITH_VALGRIND: 0
+    LOG_LEVEL: INFO
+prepare:
+    - name: Prepare
+      how: shell
+      script: |
+        bash ./scripts/tests-setup-multihost.sh
+execute:
+    how: tmt
+report:
+    how: junit
