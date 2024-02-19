@@ -133,6 +133,45 @@ class Agent(ApiBase):
             unit,
         )
 
+    def set_controller_address(self, controller_address: str, reconnect: bool) -> None:
+        """
+          SetControllerAddress:
+        @controller_address: SD Bus address used by bluechi agent to connect to bluechi controller
+        @reconnect: Specify if bluechi agent reconnects to new bluechi controller right now
+
+        SetControllerAddress() changes SD Bus address used by bluechi agent to connect to bluechi controller.
+        """
+        self.get_proxy().SetControllerAddress(
+            controller_address,
+            reconnect,
+        )
+
+    def set_controller_host(self, controller_host: str, reconnect: bool) -> None:
+        """
+          SetControllerHost:
+        @controller_host: The host used by bluechi agent to connect to bluechi controller
+        @reconnect: Specify if bluechi agent reconnects to new bluechi controller right now
+
+        SetControllerHost() changes the host used by bluechi agent to connect to bluechi controller.
+        """
+        self.get_proxy().SetControllerHost(
+            controller_host,
+            reconnect,
+        )
+
+    def set_controller_port(self, controller_port: str, reconnect: bool) -> None:
+        """
+          SetControllerPort:
+        @controller_port: The port the bluechi controller listens on to establish connections with the bluechi agents
+        @reconnect: Specify if bluechi agent reconnects to new bluechi controller right now
+
+        SetControllerPort() changes the port on which bluechi controller is listening for connection request and the bluechi agent is connecting to.
+        """
+        self.get_proxy().SetControllerPort(
+            controller_port,
+            reconnect,
+        )
+
     @property
     def disconnect_timestamp(self) -> UInt64:
         """

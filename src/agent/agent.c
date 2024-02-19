@@ -1740,6 +1740,105 @@ static int agent_method_remove_proxy(sd_bus_message *m, UNUSED void *userdata, U
 
 
 /*************************************************************************
+ **** org.eclipse.bluechi.Agent.SetControllerAddress **
+ *************************************************************************/
+
+static int agent_method_set_controller_address(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error) {
+        Agent *agent = userdata;
+        const char *controller_address = NULL;
+        int reconnect = 0;
+
+        int r = sd_bus_message_read(m, "sb", &controller_address, &reconnect);
+        if (r < 0) {
+                bc_log_errorf("Failed to read ControllerAddress parameter: %s", strerror(-r));
+                return sd_bus_reply_method_errorf(
+                                m,
+                                SD_BUS_ERROR_FAILED,
+                                "Failed to read ControllerAddress parameter: %s",
+                                strerror(-r));
+        }
+
+        if (!agent_set_controller_address(agent, controller_address)) {
+                bc_log_error("Failed to set CONTROLLER ADDRESS");
+                return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "Failed to set CONTROLLER ADDRESS");
+        }
+        bc_log_infof("CONTROLLER ADDRESS changed to %s", controller_address);
+
+        if (reconnect) {
+                agent_disconnected(NULL, userdata, NULL);
+        }
+
+        return sd_bus_reply_method_return(m, "");
+}
+
+
+/*************************************************************************
+ **** org.eclipse.bluechi.Agent.SetControllerHost *****
+ *************************************************************************/
+
+static int agent_method_set_controller_host(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error) {
+        Agent *agent = userdata;
+        const char *controller_host = NULL;
+        int reconnect = 0;
+
+        int r = sd_bus_message_read(m, "sb", &controller_host, &reconnect);
+        if (r < 0) {
+                bc_log_errorf("Failed to read ControllerHost parameter: %s", strerror(-r));
+                return sd_bus_reply_method_errorf(
+                                m,
+                                SD_BUS_ERROR_FAILED,
+                                "Failed to read ControllerHost parameter: %s",
+                                strerror(-r));
+        }
+
+        if (!agent_set_host(agent, controller_host)) {
+                bc_log_error("Failed to set CONTROLLER HOST");
+                return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "Failed to set CONTROLLER HOST");
+        }
+        bc_log_infof("CONTROLLER HOST changed to %s", controller_host);
+
+        if (reconnect) {
+                agent_disconnected(NULL, userdata, NULL);
+        }
+
+        return sd_bus_reply_method_return(m, "");
+}
+
+
+/*************************************************************************
+ **** org.eclipse.bluechi.Agent.SetControllerPort *****
+ *************************************************************************/
+
+static int agent_method_set_controller_port(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error) {
+        Agent *agent = userdata;
+        const char *controller_port = NULL;
+        int reconnect = 0;
+
+        int r = sd_bus_message_read(m, "sb", &controller_port, &reconnect);
+        if (r < 0) {
+                bc_log_errorf("Failed to read ControllerPort parameter: %s", strerror(-r));
+                return sd_bus_reply_method_errorf(
+                                m,
+                                SD_BUS_ERROR_FAILED,
+                                "Failed to read ControllerPort parameter: %s",
+                                strerror(-r));
+        }
+
+        if (!agent_set_port(agent, controller_port)) {
+                bc_log_error("Failed to set CONTROLLER PORT");
+                return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "Failed to set CONTROLLER PORT");
+        }
+        bc_log_infof("CONTROLLER PORT changed to %s", controller_port);
+
+        if (reconnect) {
+                agent_disconnected(NULL, userdata, NULL);
+        }
+
+        return sd_bus_reply_method_return(m, "");
+}
+
+
+/*************************************************************************
  **** org.eclipse.bluechi.Agent.Status ****************
  *************************************************************************/
 
@@ -1809,6 +1908,9 @@ static const sd_bus_vtable agent_vtable[] = {
         SD_BUS_VTABLE_START(0),
         SD_BUS_METHOD("CreateProxy", "sss", "", agent_method_create_proxy, 0),
         SD_BUS_METHOD("RemoveProxy", "sss", "", agent_method_remove_proxy, 0),
+        SD_BUS_METHOD("SetControllerAddress", "sb", "", agent_method_set_controller_address, 0),
+        SD_BUS_METHOD("SetControllerHost", "sb", "", agent_method_set_controller_host, 0),
+        SD_BUS_METHOD("SetControllerPort", "sb", "", agent_method_set_controller_port, 0),
 
         SD_BUS_PROPERTY("Status", "s", agent_property_get_status, 0, SD_BUS_VTABLE_PROPERTY_EMITS_CHANGE),
         SD_BUS_PROPERTY("LogLevel", "s", agent_property_get_log_level, 0, SD_BUS_VTABLE_PROPERTY_EXPLICIT),

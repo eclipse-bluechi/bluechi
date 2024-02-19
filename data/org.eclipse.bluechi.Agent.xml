@@ -40,6 +40,42 @@
       <arg name="unit" type="s" direction="in" />
     </method>
 
+    <!--
+      SetControllerAddress:
+      @controller_address: SD Bus address used by bluechi agent to connect to bluechi controller
+      @reconnect: Specify if bluechi agent reconnects to new bluechi controller right now
+
+      SetControllerAddress() changes SD Bus address used by bluechi agent to connect to bluechi controller.
+    -->
+    <method name="SetControllerAddress">
+      <arg name="controller_address" type="s" direction="in" />
+      <arg name="reconnect" type="b" direction="in" />
+    </method>
+
+    <!--
+      SetControllerHost:
+      @controller_host: The host used by bluechi agent to connect to bluechi controller
+      @reconnect: Specify if bluechi agent reconnects to new bluechi controller right now
+
+      SetControllerHost() changes the host used by bluechi agent to connect to bluechi controller.
+    -->
+    <method name="SetControllerHost">
+      <arg name="controller_host" type="s" direction="in" />
+      <arg name="reconnect" type="b" direction="in" />
+    </method>
+
+    <!--
+      SetControllerPort:
+      @controller_port: The port the bluechi controller listens on to establish connections with the bluechi agents
+      @reconnect: Specify if bluechi agent reconnects to new bluechi controller right now
+
+      SetControllerPort() changes the port on which bluechi controller is listening for connection request and the bluechi agent is connecting to.
+    -->
+    <method name="SetControllerPort">
+      <arg name="controller_port" type="s" direction="in" />
+      <arg name="reconnect" type="b" direction="in" />
+    </method>
+
 
     <!-- 
       Status:
