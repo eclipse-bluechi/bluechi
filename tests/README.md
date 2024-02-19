@@ -23,9 +23,11 @@ Then install the required packages:
 dnf install \
     createrepo_c \
     podman \
+    python3-paramiko \
     python3-podman \
     python3-pytest \
     python3-pytest-timeout \
+    python3-pyyaml \
     tmt \
     tmt-report-junit \
     -y

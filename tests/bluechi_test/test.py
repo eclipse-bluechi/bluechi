@@ -10,7 +10,7 @@ import traceback
 from podman import PodmanClient
 from typing import List, Dict, Callable, Tuple
 
-from bluechi_test.client import ContainerClient
+from bluechi_test.client import ContainerClient, SSHClient
 from bluechi_test.command import Command
 from bluechi_test.config import BluechiControllerConfig, BluechiAgentConfig
 from bluechi_test.machine import BluechiAgentMachine, BluechiControllerMachine
@@ -22,25 +22,15 @@ class BluechiTest():
 
     def __init__(
             self,
-            podman_client: PodmanClient,
-            bluechi_image_id: str,
-            bluechi_ctrl_host_port: str,
-            bluechi_ctrl_svc_port: str,
             tmt_test_serial_number: str,
             tmt_test_data_dir: str,
             run_with_valgrind: bool,
-            run_with_coverage: bool,
-            additional_ports: dict) -> None:
+            run_with_coverage: bool) -> None:
 
-        self.podman_client = podman_client
-        self.bluechi_image_id = bluechi_image_id
-        self.bluechi_ctrl_host_port = bluechi_ctrl_host_port
-        self.bluechi_ctrl_svc_port = bluechi_ctrl_svc_port
         self.tmt_test_serial_number = tmt_test_serial_number
         self.tmt_test_data_dir = tmt_test_data_dir
         self.run_with_valgrind = run_with_valgrind
         self.run_with_coverage = run_with_coverage
-        self.additional_ports = additional_ports
 
         self.bluechi_controller_config: BluechiControllerConfig = None
         self.bluechi_node_configs: List[BluechiAgentConfig] = []
@@ -60,56 +50,10 @@ class BluechiTest():
         return f"{cfg.node_name}-{self.tmt_test_serial_number}"
 
     def setup(self) -> Tuple[bool, Tuple[BluechiControllerMachine, Dict[str, BluechiAgentMachine]]]:
-        if self.bluechi_controller_config is None:
-            raise Exception("Bluechi Controller configuration not set")
+        raise Exception("Not implemented!")
 
-        success = True
-        ctrl_container: BluechiControllerMachine = None
-        node_container: Dict[str, BluechiAgentMachine] = dict()
-        try:
-            LOGGER.debug(f"Starting container for bluechi-controller with config:\
-                \n{self.bluechi_controller_config.serialize()}")
-
-            name = self.assemble_controller_machine_name(self.bluechi_controller_config)
-            ports = {self.bluechi_ctrl_svc_port: self.bluechi_ctrl_host_port}
-            if self.additional_ports:
-                ports.update(self.additional_ports)
-
-            ctrl_container = BluechiControllerMachine(name,
-                                                      ContainerClient(self.podman_client,
-                                                                      self.bluechi_image_id, name, ports),
-                                                      self.bluechi_controller_config)
-            if self.run_with_valgrind:
-                ctrl_container.enable_valgrind()
-            ctrl_container.systemctl.start_unit("bluechi-controller")
-            ctrl_container.wait_for_unit_state_to_be("bluechi-controller.service", "active")
-
-            for cfg in self.bluechi_node_configs:
-                LOGGER.debug(f"Starting container bluechi-node '{cfg.node_name}' with config:\n{cfg.serialize()}")
-
-                name = self.assemble_agent_machine_name(cfg)
-
-                node = BluechiAgentMachine(name,
-                                           ContainerClient(self.podman_client, self.bluechi_image_id, name, {}),
-                                           cfg)
-                node_container[cfg.node_name] = node
-
-                if self.run_with_valgrind:
-                    node.enable_valgrind()
-
-                node.systemctl.start_unit("bluechi-agent")
-                node.wait_for_unit_state_to_be("bluechi-agent.service", "active")
-
-        except Exception as ex:
-            success = False
-            LOGGER.error(f"Failed to setup bluechi container: {ex}")
-            traceback.print_exc()
-
-        if self.run_with_valgrind:
-            # Give some more time for bluechi to start and connect while running with valgrind
-            time.sleep(2)
-
-        return (success, (ctrl_container, node_container))
+    def teardown(self, ctrl: BluechiControllerMachine, nodes: Dict[str, BluechiAgentMachine]):
+        raise Exception("Not implemented!")
 
     def gather_logs(self, ctrl: BluechiControllerMachine, nodes: Dict[str, BluechiAgentMachine]):
         LOGGER.debug("Collecting logs from all containers...")
@@ -159,15 +103,6 @@ class BluechiTest():
         if ctrl is not None:
             ctrl.systemctl.stop_unit("bluechi-agent")
             ctrl.systemctl.stop_unit("bluechi-controller")
-
-    def teardown(self, ctrl: BluechiControllerMachine, nodes: Dict[str, BluechiAgentMachine]):
-        LOGGER.debug("Stopping and removing all container...")
-
-        if ctrl is not None:
-            ctrl.cleanup()
-
-        for _, node in nodes.items():
-            node.cleanup()
 
     def check_valgrind_logs(self) -> None:
         LOGGER.debug("Checking valgrind logs...")
@@ -229,3 +164,195 @@ class BluechiTest():
         LOGGER.info("Test execution finished")
         if test_result is not None:
             raise test_result
+
+
+class BluechiContainerTest(BluechiTest):
+
+    def __init__(self,
+                 podman_client: PodmanClient,
+                 bluechi_image_id: str,
+                 bluechi_ctrl_host_port: str,
+                 bluechi_ctrl_svc_port: str,
+                 tmt_test_serial_number: str,
+                 tmt_test_data_dir: str,
+                 run_with_valgrind: bool,
+                 run_with_coverage: bool,
+                 additional_ports: Dict) -> None:
+
+        super().__init__(tmt_test_serial_number,
+                         tmt_test_data_dir,
+                         run_with_valgrind,
+                         run_with_coverage)
+
+        self.podman_client = podman_client
+        self.bluechi_image_id = bluechi_image_id
+        self.bluechi_ctrl_host_port = bluechi_ctrl_host_port
+        self.bluechi_ctrl_svc_port = bluechi_ctrl_svc_port
+        self.additional_ports = additional_ports
+
+    def setup(self) -> Tuple[bool, Tuple[BluechiControllerMachine, Dict[str, BluechiAgentMachine]]]:
+        if self.bluechi_controller_config is None:
+            raise Exception("Bluechi Controller configuration not set")
+
+        success = True
+        ctrl_container: BluechiControllerMachine = None
+        node_container: Dict[str, BluechiAgentMachine] = dict()
+        try:
+            LOGGER.debug(f"Starting container for bluechi-controller with config:\
+                \n{self.bluechi_controller_config.serialize()}")
+
+            name = self.assemble_controller_machine_name(self.bluechi_controller_config)
+            ports = {self.bluechi_ctrl_svc_port: self.bluechi_ctrl_host_port}
+            if self.additional_ports:
+                ports.update(self.additional_ports)
+
+            ctrl_container = BluechiControllerMachine(name,
+                                                      ContainerClient(self.podman_client,
+                                                                      self.bluechi_image_id, name, ports),
+                                                      self.bluechi_controller_config)
+            if self.run_with_valgrind:
+                ctrl_container.enable_valgrind()
+            ctrl_container.systemctl.start_unit('bluechi-controller')
+            ctrl_container.wait_for_unit_state_to_be("bluechi-controller.service", "active")
+
+            for cfg in self.bluechi_node_configs:
+                LOGGER.debug(f"Starting container bluechi-node '{cfg.node_name}' with config:\n{cfg.serialize()}")
+
+                name = self.assemble_agent_machine_name(cfg)
+                node = BluechiAgentMachine(name,
+                                           ContainerClient(self.podman_client, self.bluechi_image_id, name, {}),
+                                           cfg)
+                node_container[cfg.node_name] = node
+
+                if self.run_with_valgrind:
+                    node.enable_valgrind()
+
+                node.systemctl.start_unit('bluechi-agent')
+                node.wait_for_unit_state_to_be("bluechi-agent.service", "active")
+
+        except Exception as ex:
+            success = False
+            LOGGER.error(f"Failed to setup bluechi container: {ex}")
+            traceback.print_exc()
+
+        if self.run_with_valgrind:
+            # Give some more time for bluechi to start and connect while running with valgrind
+            time.sleep(2)
+
+        return (success, (ctrl_container, node_container))
+
+    def teardown(self, ctrl: BluechiControllerMachine, nodes: Dict[str, BluechiAgentMachine]):
+        LOGGER.debug("Stopping and removing all container...")
+
+        if ctrl is not None:
+            ctrl.cleanup()
+
+        for _, node in nodes.items():
+            node.cleanup()
+
+
+class BluechiSSHTest(BluechiTest):
+
+    def __init__(self,
+                 available_hosts: Dict[str, List[Tuple[str, str]]],
+                 ssh_user: str,
+                 ssh_password: str,
+                 bluechi_ctrl_port: str,
+                 tmt_test_serial_number: str,
+                 tmt_test_data_dir: str,
+                 run_with_valgrind: bool,
+                 run_with_coverage: bool) -> None:
+
+        super().__init__(tmt_test_serial_number,
+                         tmt_test_data_dir,
+                         run_with_valgrind,
+                         run_with_coverage)
+
+        self.available_hosts = available_hosts
+        self.ssh_user = ssh_user
+        self.ssh_password = ssh_password
+        self.bluechi_ctrl_port = bluechi_ctrl_port
+
+    def add_bluechi_agent_config(self, cfg: BluechiAgentConfig):
+        if len(self.bluechi_node_configs) >= len(self.available_hosts["agent"]):
+            raise Exception(
+                f"Failed to add agent config: "
+                f"Maximum requested hosts reached (# available: {len(self.available_hosts['agent'])})")
+        super().add_bluechi_agent_config(cfg)
+
+    def setup(self) -> Tuple[bool, Tuple[BluechiControllerMachine, Dict[str, BluechiAgentMachine]]]:
+        if self.bluechi_controller_config is None:
+            raise Exception("Bluechi Controller configuration not set")
+        if len(self.available_hosts) < 1:
+            raise Exception("No available hosts!")
+
+        success = True
+        ctrl_machine: BluechiControllerMachine = None
+        agent_machines: Dict[str, BluechiAgentMachine] = dict()
+
+        try:
+            LOGGER.debug(f"Starting bluechi-controller with config:\
+                \n{self.bluechi_controller_config.serialize()}")
+
+            name = self.assemble_controller_machine_name(self.bluechi_controller_config)
+            guest, host = self.available_hosts["controller"][0]
+
+            LOGGER.debug(f"Setting up controller machine on guest '{guest}' with host '{host}'")
+            ctrl_machine = BluechiControllerMachine(
+                name,
+                SSHClient(host, user=self.ssh_user, password=self.ssh_password),
+                self.bluechi_controller_config,
+            )
+            if self.run_with_valgrind:
+                ctrl_machine.enable_valgrind()
+            ctrl_machine.systemctl.start_unit("bluechi-controller.service")
+            ctrl_machine.wait_for_unit_state_to_be("bluechi-controller.service", "active")
+
+            i = 0
+            for cfg in self.bluechi_node_configs:
+                LOGGER.debug(f"Starting bluechi-agent '{cfg.node_name}' with config:\n{cfg.serialize()}")
+
+                name = self.assemble_agent_machine_name(cfg)
+                guest, host = self.available_hosts["agent"][i]
+
+                LOGGER.debug(f"Setting up agent machine on guest '{guest}' with host '{host}'")
+                agent_machine = BluechiAgentMachine(
+                    name,
+                    SSHClient(host, user=self.ssh_user, password=self.ssh_password),
+                    cfg,
+                )
+
+                agent_machines[cfg.node_name] = agent_machine
+
+                if self.run_with_valgrind:
+                    agent_machine.enable_valgrind()
+
+                agent_machine.systemctl.start_unit("bluechi-agent.service")
+                agent_machine.wait_for_unit_state_to_be("bluechi-agent.service", "active")
+
+        except Exception as ex:
+            success = False
+            LOGGER.error(f"Failed to setup bluechi machines: {ex}")
+            traceback.print_exc()
+
+        if self.run_with_valgrind:
+            # Give some more time for bluechi to start and connect while running with valgrind
+            time.sleep(2)
+
+        return (success, (ctrl_machine, agent_machines))
+
+    def teardown(self, ctrl: BluechiControllerMachine, nodes: Dict[str, BluechiAgentMachine]):
+        LOGGER.debug("Cleaning up all machines...")
+
+        # TODO:
+        # Proper cleanup on remote machines. Restore
+        #   - added
+        #   - changed
+        #   - deleted
+        # files to previous state, e.g. when calling create_file or enable_valgrind.
+
+        if ctrl is not None:
+            ctrl.cleanup()
+
+        for _, node in nodes.items():
+            node.cleanup()
