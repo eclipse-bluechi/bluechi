@@ -1,5 +1,6 @@
 # SPDX-License-Identifier: LGPL-2.1-or-later
 
+import logging
 import os
 import pytest
 
@@ -68,6 +69,9 @@ def _get_env_value(env_var: str, default_value: str) -> str:
 @pytest.fixture(scope='session')
 def podman_client() -> PodmanClient:
     """Returns the podman client instance"""
+    # urllib3 produces too much information in DEBUG mode, which are not interesting for bluechi tests
+    urllib3_logger = logging.getLogger("urllib3.connectionpool")
+    urllib3_logger.setLevel(logging.INFO)
     return PodmanClient()
 
 
