@@ -174,12 +174,12 @@ class BluechiMachine():
         gcda_file_location = "/var/tmp/bluechi-coverage"
         coverage_file = f"{gcda_file_location}/coverage-{self.name}.info"
 
-        LOGGER.info("Generating info file started")
+        LOGGER.info(f"Generating info file '{coverage_file}' started")
         result, output = self.client.exec_run(
             f"/usr/share/bluechi-coverage/bin/gather-code-coverage.sh {coverage_file}")
         if result != 0:
             LOGGER.error(f"Failed to gather code coverage: {output}")
-        LOGGER.info("Generating info file finished")
+        LOGGER.info(f"Generating info file '{coverage_file}' finished")
 
         self.client.get_file(f"{coverage_file}", data_coverage_dir)
 
