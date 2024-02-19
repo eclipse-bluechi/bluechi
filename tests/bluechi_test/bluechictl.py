@@ -28,8 +28,7 @@ class BluechiCtl():
             -> Tuple[Optional[int], Union[Iterator[bytes], Any, Tuple[bytes, bytes]]]:
         LOGGER.debug(log_txt)
         result, output = self.client.exec_run(f"{BluechiCtl.binary_name} {cmd}")
-        LOGGER.debug(f"{log_txt} finished with result '{result}' \
-            and output:\n{output}")
+        LOGGER.debug(f"{log_txt} finished with result '{result}' and output:\n{output}")
         if check_result and result != expected_result:
             raise Exception(f"{log_txt} failed with {result} (expected {expected_result}): {output}")
         return result, output
