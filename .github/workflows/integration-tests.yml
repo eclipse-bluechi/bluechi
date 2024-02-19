@@ -89,7 +89,7 @@ jobs:
       - name: Run integration tests
         run: |
           cd tests
-          tmt run -v -eCONTAINER_USED=integration-test-local -eWITH_COVERAGE=1
+          tmt run -v -eCONTAINER_USED=integration-test-local -eWITH_COVERAGE=1 -eLOG_LEVEL=DEBUG
 
       - name: Show tmt log output in case of failure
         if: ${{ failure() }}
