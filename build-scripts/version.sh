@@ -7,6 +7,8 @@ VERSION=0.8.0
 IS_RELEASE=false
 # Used for official releases. Increment if necessary
 RELEASE="1"
+# Used to cache generated snapshot release for further usage
+RELEASE_FILE=$(dirname "$(readlink -f "$0")")/RELEASE
 
 function short(){
     echo ${VERSION}
@@ -21,9 +23,18 @@ function release(){
 
     if [ $IS_RELEASE = false ]; then
         # Used for nightly builds
-        RELEASE="0.$(date +%04Y%02m%02d%02H%02M).git$(git rev-parse --short ${GITHUB_SHA:-HEAD})"
+        if [ -f "${RELEASE_FILE}" ]; then
+            RELEASE="$(cat ${RELEASE_FILE})"
+        else
+            RELEASE="0.$(date +%04Y%02m%02d%02H%02M).git$(git rev-parse --short ${GITHUB_SHA:-HEAD})"
+            echo ${RELEASE} > ${RELEASE_FILE}
+        fi
     fi
     echo $RELEASE
+}
+
+function clean(){
+    rm -f "${RELEASE_FILE}"
 }
 
 [ -z $1 ] && short || $1
