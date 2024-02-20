@@ -78,6 +78,15 @@ class BluechiCtl():
             expected_result
         )
 
+    def disable_unit(self, node_name: str, unit_name: str, check_result: bool = True, expected_result: int = 0) \
+            -> Tuple[Optional[int], Union[Iterator[bytes], Any, Tuple[bytes, bytes]]]:
+        return self._run(
+            f"Disabling unit '{unit_name}' on node '{node_name}'",
+            f"disable {node_name} {unit_name}",
+            check_result,
+            expected_result
+        )
+
     def freeze_unit(self, node_name: str, unit_name: str, check_result: bool = True, expected_result: int = 0) \
             -> Tuple[Optional[int], Union[Iterator[bytes], Any, Tuple[bytes, bytes]]]:
         return self._run(
