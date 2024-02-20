@@ -7,6 +7,8 @@ builddir/
 bluechi.spec
 rpmbuild/
 artifacts/
+build-scripts/RELEASE
+
 ## python build artifacts
 build/
 dist/
