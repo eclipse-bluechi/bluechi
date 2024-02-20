@@ -29,6 +29,11 @@ def exec(ctrl: BluechiControllerMachine, nodes: Dict[str, BluechiAgentMachine]):
     if not foo.systemctl.is_unit_enabled(simple_service, check_result=False):
         raise Exception(f"Unit {simple_service} expected to be enabled, but is not")
 
+    ctrl.bluechictl.disable_unit(node_foo_name, simple_service)
+
+    if not foo.systemctl.is_unit_disabled(simple_service, check_result=False):
+        raise Exception(f"Unit {simple_service} expected to be disabled, but is not")
+
 
 def test_proxy_service_start(
         bluechi_test: BluechiTest,
