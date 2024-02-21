@@ -129,3 +129,21 @@ class BluechiCtl():
             check_result,
             expected_result
         )
+
+    def enable_metrics(self, check_result: bool = True, expected_result: int = 0) \
+            -> Tuple[Optional[int], Union[Iterator[bytes], Any, Tuple[bytes, bytes]]]:
+        return self._run(
+            "Enabling metrics",
+            "metrics enable",
+            check_result,
+            expected_result
+        )
+
+    def disable_metrics(self, check_result: bool = True, expected_result: int = 0) \
+            -> Tuple[Optional[int], Union[Iterator[bytes], Any, Tuple[bytes, bytes]]]:
+        return self._run(
+            "Disabling metrics",
+            "metrics disable",
+            check_result,
+            expected_result
+        )
