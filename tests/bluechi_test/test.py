@@ -209,6 +209,7 @@ class BluechiTest():
         try:
             self.shutdown_bluechi(ctrl_container, node_container)
         except Exception as ex:
+            test_result = ex
             LOGGER.error(f"Failed to shutdown BlueChi components: {ex}")
             traceback.print_exc()
 
@@ -219,6 +220,7 @@ class BluechiTest():
             if self.run_with_coverage:
                 self.gather_coverage(ctrl_container, node_container)
         except Exception as ex:
+            test_result = ex
             LOGGER.error(f"Failed to collect logs: {ex}")
             traceback.print_exc()
 
