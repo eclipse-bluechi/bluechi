@@ -21,11 +21,6 @@ Command *new_command() {
         return steal_pointer(&command);
 }
 
-Command *command_ref(Command *command) {
-        command->ref_count++;
-        return command;
-}
-
 void command_unref(Command *command) {
         command->ref_count--;
         if (command->ref_count != 0) {

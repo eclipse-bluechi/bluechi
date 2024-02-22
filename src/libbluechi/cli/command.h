@@ -24,7 +24,6 @@ struct Command {
 };
 
 Command *new_command();
-Command *command_ref(Command *command);
 void command_unref(Command *command);
 DEFINE_CLEANUP_FUNC(Command, command_unref)
 #define _cleanup_command_ _cleanup_(command_unrefp)
