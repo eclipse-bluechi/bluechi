@@ -81,7 +81,7 @@ class BluechiTest():
                                                       self.bluechi_controller_config)
             if self.run_with_valgrind:
                 ctrl_container.enable_valgrind()
-            ctrl_container.exec_run('systemctl start bluechi-controller')
+            ctrl_container.systemctl.start_unit("bluechi-controller")
             ctrl_container.wait_for_unit_state_to_be("bluechi-controller.service", "active")
 
             for cfg in self.bluechi_node_configs:
@@ -97,7 +97,7 @@ class BluechiTest():
                 if self.run_with_valgrind:
                     node.enable_valgrind()
 
-                node.exec_run('systemctl start bluechi-agent')
+                node.systemctl.start_unit("bluechi-agent")
                 node.wait_for_unit_state_to_be("bluechi-agent.service", "active")
 
         except Exception as ex:
@@ -154,11 +154,11 @@ class BluechiTest():
         LOGGER.debug("Stopping all BlueChi components in all container...")
 
         for _, node in nodes.items():
-            node.exec_run("systemctl stop bluechi-agent")
+            node.systemctl.stop_unit("bluechi-agent")
 
         if ctrl is not None:
-            ctrl.exec_run("systemctl stop bluechi-agent")
-            ctrl.exec_run("systemctl stop bluechi-controller")
+            ctrl.systemctl.stop_unit("bluechi-agent")
+            ctrl.systemctl.stop_unit("bluechi-controller")
 
     def teardown(self, ctrl: BluechiControllerMachine, nodes: Dict[str, BluechiAgentMachine]):
         LOGGER.debug("Stopping and removing all container...")
