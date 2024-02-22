@@ -147,3 +147,12 @@ class BluechiCtl():
             check_result,
             expected_result
         )
+
+    def version(self, check_result: bool = True, expected_result: int = 0) \
+            -> Tuple[Optional[int], Union[Iterator[bytes], Any, Tuple[bytes, bytes]]]:
+        return self._run(
+            "Getting version",
+            "version",
+            check_result,
+            expected_result
+        )
