@@ -42,7 +42,7 @@ class BluechiCtl():
             expected_result
         )
 
-    def get_status(self, node_name: str, unit_name: str, check_result: bool = True, expected_result: int = 0) \
+    def get_unit_status(self, node_name: str, unit_name: str, check_result: bool = True, expected_result: int = 0) \
             -> Tuple[Optional[int], Union[Iterator[bytes], Any, Tuple[bytes, bytes]]]:
         return self._run(
             f"Getting status of unit '{unit_name}' on node '{node_name}'",
