@@ -1563,6 +1563,7 @@ static int agent_method_disable_metrics(sd_bus_message *m, void *userdata, UNUSE
         }
         agent->metrics_enabled = false;
         sd_bus_slot_unrefp(&agent->metrics_slot);
+        agent->metrics_slot = NULL;
         bc_log_debug("Metrics disabled");
         return sd_bus_reply_method_return(m, "");
 }
