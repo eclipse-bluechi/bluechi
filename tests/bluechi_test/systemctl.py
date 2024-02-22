@@ -2,7 +2,7 @@
 
 import logging
 
-from typing import Any, Iterator, Optional, Tuple, Union
+from typing import Any, Iterator, Optional, Set, Tuple, Union
 
 from bluechi_test.client import Client
 
@@ -31,9 +31,28 @@ class SystemCtl():
             -> Tuple[Optional[int], Union[Iterator[bytes], Any, Tuple[bytes, bytes]]]:
         return self._do_operation_on_unit(unit_name, "start", check_result, expected_result)
 
-    def stop_unit(self, unit_name: str, check_result: bool = True, expected_result: int = 0)  \
+    def stop_unit(self,
+                  unit_name: str,
+                  check_result: bool = True,
+                  expected_result: int = 0,
+                  operation_results: Set[str] = ("success", "exit-code"))  \
             -> Tuple[Optional[int], Union[Iterator[bytes], Any, Tuple[bytes, bytes]]]:
-        return self._do_operation_on_unit(unit_name, "stop", check_result, expected_result)
+        result, output = self._do_operation_on_unit(unit_name, "stop", check_result, expected_result)
+
+        if check_result:
+            # It's not enough to check result for systemctl stop, it will return failure only if stopping unit is
+            # prohibited or unit doesn't exist, so we need to check also operation result
+            op_res, op_out = self._do_operation_on_unit(unit_name, 'show --property="Result"', check_result, 0)
+            if op_res != 0:
+                raise Exception(
+                    f"Failed to fetch stop operation result for service {unit_name} with {op_res}: {op_out}")
+            op_res_value = op_out.replace("Result=", "")
+            if op_res_value not in operation_results:
+                raise Exception(
+                    f"Operation stop on service {unit_name} finished with result {op_res_value}"
+                    f" (expected {operation_results})")
+
+        return result, output
 
     def restart_unit(self, unit_name: str, check_result: bool = True, expected_result: int = 0)  \
             -> Tuple[Optional[int], Union[Iterator[bytes], Any, Tuple[bytes, bytes]]]:
