@@ -27,6 +27,10 @@ def check_help_option(ctrl: BluechiControllerMachine, _: Dict[str, BluechiAgentM
         assert s_out == l_out
         assert bc_ver_rel in s_out
 
+    bctl_re, bctl_out = ctrl.bluechictl.version()
+    assert bctl_re == 0
+    assert bc_ver_rel in bctl_out
+
 
 def test_version_option_provided(bluechi_test: BluechiTest, bluechi_ctrl_default_config: BluechiControllerConfig):
     bluechi_test.set_bluechi_controller_config(bluechi_ctrl_default_config)
