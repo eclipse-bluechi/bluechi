@@ -51,6 +51,23 @@ class BluechiCtl():
             expected_result
         )
 
+    def get_node_status(self, node_name: str = None, check_result: bool = True, expected_result: int = 0) \
+            -> Tuple[Optional[int], Union[Iterator[bytes], Any, Tuple[bytes, bytes]]]:
+        if node_name:
+            return self._run(
+                f"Getting status of node '{node_name}'",
+                f"status {node_name}",
+                check_result,
+                expected_result
+            )
+
+        return self._run(
+            "Getting status of all nodes",
+            "status",
+            check_result,
+            expected_result
+        )
+
     def start_unit(self, node_name: str, unit_name: str, check_result: bool = True, expected_result: int = 0) \
             -> Tuple[Optional[int], Union[Iterator[bytes], Any, Tuple[bytes, bytes]]]:
         return self._run(
