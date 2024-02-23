@@ -10,6 +10,7 @@
 #include "monitor.h"
 #include "node.h"
 #include "proxy_monitor.h"
+#include <systemd/sd-bus.h>
 
 #define DEBUG_AGENT_MESSAGES 0
 
@@ -1569,6 +1570,7 @@ static int node_method_set_log_level(sd_bus_message *m, UNUSED void *userdata, U
                         level);
         if (r < 0) {
                 bc_log_errorf("Failed to set log level call: %s", error.message);
+                sd_bus_error_free(&error);
                 return sd_bus_reply_method_errorf(
                                 m,
                                 SD_BUS_ERROR_FAILED,
