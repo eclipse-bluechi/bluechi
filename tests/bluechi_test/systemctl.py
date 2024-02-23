@@ -27,6 +27,15 @@ class SystemCtl():
                 f"Failed to {operation} service {unit_name} with {result} (expected {expected_result}): {output}")
         return result, output
 
+    def _do_operation(self, operation: str, check_result: bool, expected_result: int) \
+            -> Tuple[Optional[int], Union[Iterator[bytes], Any, Tuple[bytes, bytes]]]:
+
+        result, output = self.client.exec_run(f"{SystemCtl.binary_name} {operation}")
+        if check_result and result != expected_result:
+            raise Exception(
+                f"Failed to execute {operation} with {result} (expected {expected_result}): {output}")
+        return result, output
+
     def start_unit(self, unit_name: str, check_result: bool = True, expected_result: int = 0)  \
             -> Tuple[Optional[int], Union[Iterator[bytes], Any, Tuple[bytes, bytes]]]:
         return self._do_operation_on_unit(unit_name, "start", check_result, expected_result)
@@ -94,3 +103,8 @@ class SystemCtl():
         if len(state) > 1:
             result = state[1]
         return result
+
+    def list_units(self, all_units: bool = False, check_result: bool = True, expected_result: int = 0)  \
+            -> Tuple[Optional[int], Union[Iterator[bytes], Any, Tuple[bytes, bytes]]]:
+        command = "list-units --legend=false{}".format(" --all" if all_units else "")
+        return self._do_operation(command, check_result, expected_result)
