@@ -33,11 +33,19 @@ class BluechiCtl():
             raise Exception(f"{log_txt} failed with {result} (expected {expected_result}): {output}")
         return result, output
 
-    def list_units(self, node_name: str, check_result: bool = True, expected_result: int = 0) \
+    def list_units(self, node_name: str = None, check_result: bool = True, expected_result: int = 0) \
             -> Tuple[Optional[int], Union[Iterator[bytes], Any, Tuple[bytes, bytes]]]:
+        if node_name:
+            return self._run(
+                f"Listing units on node {node_name}",
+                f"list-units {node_name}",
+                check_result,
+                expected_result
+            )
+
         return self._run(
-            f"Listing units on node {node_name}",
-            f"list-units {node_name}",
+            "Listing units on all nodes",
+            "list-units",
             check_result,
             expected_result
         )

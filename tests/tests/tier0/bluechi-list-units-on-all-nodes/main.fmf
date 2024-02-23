@@ -1,0 +1,3 @@
+summary: Test if bluechi list-nodes returns the same list of units from all
+    nodes which can be gathered by running systemctl on each node
+id: efbf2397-de69-4f67-a8a8-b2c10bc68c13
