@@ -19,9 +19,7 @@ class SystemCtl():
     def _do_operation_on_unit(self, unit_name: str, operation: str, check_result: bool, expected_result: int) \
             -> Tuple[Optional[int], Union[Iterator[bytes], Any, Tuple[bytes, bytes]]]:
 
-        LOGGER.debug(f"{operation} unit '{unit_name}'")
         result, output = self.client.exec_run(f"{SystemCtl.binary_name} {operation} {unit_name}")
-        LOGGER.debug(f"{operation} unit '{unit_name}' finished with result '{result}' and output '{output}'")
         if check_result and result != expected_result:
             raise Exception(
                 f"Failed to {operation} service {unit_name} with {result} (expected {expected_result}): {output}")
