@@ -17,11 +17,6 @@ Client *new_client() {
         return client;
 }
 
-Client *client_ref(Client *client) {
-        client->ref_count++;
-        return client;
-}
-
 void client_unref(Client *client) {
         client->ref_count--;
         if (client->ref_count != 0) {
