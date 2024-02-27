@@ -17,7 +17,6 @@ struct Client {
 };
 
 Client *new_client();
-Client *client_ref(Client *client);
 void client_unref(Client *client);
 
 int client_open_sd_bus(Client *client);
