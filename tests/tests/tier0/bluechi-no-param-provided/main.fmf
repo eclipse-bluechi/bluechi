@@ -1,0 +1,3 @@
+summary: Test if bluechictl without any parameters shows help message and then exits
+    with error
+id: 1c40b19a-0e1c-47b0-97af-dfb74f26fde8
