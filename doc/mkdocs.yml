@@ -16,6 +16,8 @@ nav:
     - Cross-node dependencies: getting_started/cross_node_dependencies.md
     - Securing connection with mTLS: getting_started/securing_multi_node.md
   - Configuration: configuration.md
+  - Ansible:
+    - ansible/index.md
   - Monitoring:
     - monitoring/index.md
     - Peer Listener: monitoring/peers.md
