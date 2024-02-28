@@ -17,12 +17,12 @@ def read_file(local_file: str) -> Union[str, None]:
     return content
 
 
-def get_primary_ip() -> str:
+def get_primary_ip(address: str = "254.254.254.254") -> str:
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     s.settimeout(0)
     try:
         # connect to an arbitrary address
-        s.connect(("254.254.254.254", 1))
+        s.connect((address, 1))
         ip = s.getsockname()[0]
     except Exception:
         LOGGER.exception("Failed to get IP, falling back to localhost.")

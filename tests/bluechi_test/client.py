@@ -3,8 +3,10 @@
 import io
 import logging
 import os
+import pathlib
 import tarfile
 
+from paramiko import SSHClient as ParamikoSSH, AutoAddPolicy, RSAKey, SFTP
 from podman import PodmanClient
 from podman.domain.containers import Container
 from typing import Any, Dict, Iterator, Optional, Tuple, Union, IO
@@ -85,15 +87,79 @@ class ContainerClient(Client):
 
 class SSHClient(Client):
 
-    def __init__(self, host: str, user: str, port: int, key_path: str, password: str = "") -> None:
-        raise Exception("TBD: Not implemented yet!")
+    def __init__(self,
+                 host: str,
+                 port: int = 22,
+                 user: Union[str, None] = None,
+                 password: Union[str, None] = None,
+                 pk_path: Union[str, None] = None,
+                 pk_passphrase: Union[str, None] = None) -> None:
+
+        self.ssh = ParamikoSSH()
+        self.ssh.set_missing_host_key_policy(AutoAddPolicy())
+
+        # paramiko produces too much information in DEBUG mode, which are not interesting for bluechi tests
+        paramiko_logger = logging.getLogger("paramiko.transport")
+        paramiko_logger.setLevel(logging.INFO)
+
+        if password is not None:
+            self.ssh.connect(hostname=host, port=port, username=user, password=password)
+        elif pk_path is not None:
+            self.ssh.connect(hostname=host,
+                             port=port,
+                             username=user,
+                             pkey=RSAKey.from_private_key_file(pk_path),
+                             passphrase=pk_passphrase,
+                             look_for_keys=False)
+        else:
+            raise Exception("Neither password nor private key provided!")
 
     def create_file(self, target_dir: str, file_name: str, content: str) -> None:
-        raise Exception("TBD: Not implemented yet!")
+        ftp: SFTP = None
+        try:
+            ftp = self.ssh.open_sftp()
+            ftp.putfo(io.BytesIO(content.encode()), os.path.join(target_dir, file_name))
+        finally:
+            if ftp is not None:
+                ftp.close()
 
     def get_file(self, machine_path: str, local_path: str) -> None:
-        raise Exception("TBD: Not implemented yet!")
+        local_file_name = pathlib.Path(machine_path).name
+        ftp: SFTP = None
+        try:
+            ftp = self.ssh.open_sftp()
+            file = ftp.file(machine_path, "r", -1)
+            with open(os.path.join(local_path, local_file_name), "w") as f:
+                f.write(file.read().decode("utf-8"))
+                f.flush()
+        finally:
+            if ftp is not None:
+                ftp.close()
 
     def exec_run(self, command: (Union[str, list[str]]), raw_output: bool = False, tty: bool = True) -> \
             Tuple[Optional[int], Union[Iterator[bytes], Any, Tuple[bytes, bytes]]]:
-        raise Exception("TBD: Not implemented yet!")
+
+        stdin, stdout, stderr = None, None, None
+        try:
+            stdin, stdout, stderr = self.ssh.exec_command(command)
+
+            result = stdout.channel.recv_exit_status()
+            output = stdout.read()
+            err = stderr.read()
+
+            if not raw_output and output:
+                output = output.decode('utf-8').strip()
+                err = err.decode("utf8").strip()
+
+            LOGGER.debug(f"Executed command '{command}' with result '{result}' and output '{output}' and error '{err}'")
+            return result, output
+        finally:
+            if stdin is not None:
+                stdin.close()
+            if stdout is not None:
+                stdout.close()
+            if stderr is not None:
+                stderr.close()
+
+    def close(self):
+        self.ssh.close()
