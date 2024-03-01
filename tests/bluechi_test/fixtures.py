@@ -76,7 +76,7 @@ def _read_topology() -> Dict[str, Any]:
     if tmt_yaml_file is None or tmt_yaml_file == "":
         return get_primary_ip()
 
-    topology = ""
+    topology = dict()
     with open(tmt_yaml_file, "r") as f:
         topology = yaml.safe_load(f.read())
     return topology
@@ -94,9 +94,9 @@ def bluechi_ctrl_host_ip() -> str:
     if "guests" not in topology:
         return get_primary_ip()
 
-    for guest in topology["guests"]:
-        if "name" in guest and "controller" in guest["role"]:
-            return guest["hostname"]
+    for _, values in topology["guests"].items():
+        if values["role"] == "controller":
+            return values["hostname"]
 
     return get_primary_ip()
 
@@ -215,7 +215,6 @@ def bluechi_test(
         return BluechiSSHTest(available_hosts,
                               machines_ssh_user,
                               machines_ssh_password,
-                              bluechi_ctrl_svc_port,
                               tmt_test_serial_number,
                               tmt_test_data_dir,
                               run_with_valgrind,

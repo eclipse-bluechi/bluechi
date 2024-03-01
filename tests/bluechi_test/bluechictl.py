@@ -3,7 +3,7 @@
 import logging
 
 from enum import Enum
-from typing import Tuple, Iterator, Any, Optional, Union
+from typing import Tuple, Iterator, Any, Optional, Union, Dict, List
 
 from bluechi_test.client import Client
 
@@ -23,6 +23,8 @@ class BluechiCtl():
 
     def __init__(self, client: Client) -> None:
         self.client = client
+
+        self.tracked_services: Dict[str, List[str]] = dict()
 
     def _run(self, log_txt: str, cmd: str, check_result: bool, expected_result: int) \
             -> Tuple[Optional[int], Union[Iterator[bytes], Any, Tuple[bytes, bytes]]]:
@@ -78,6 +80,11 @@ class BluechiCtl():
 
     def start_unit(self, node_name: str, unit_name: str, check_result: bool = True, expected_result: int = 0) \
             -> Tuple[Optional[int], Union[Iterator[bytes], Any, Tuple[bytes, bytes]]]:
+        # track started units to stop and reset failures on cleanup
+        if node_name not in self.tracked_services:
+            self.tracked_services[node_name] = []
+        self.tracked_services[node_name].append(unit_name)
+
         return self._run(
             f"Starting unit '{unit_name}' on node '{node_name}'",
             f"start {node_name} {unit_name}",

@@ -13,7 +13,7 @@ from typing import List, Dict, Callable, Tuple
 from bluechi_test.client import ContainerClient, SSHClient
 from bluechi_test.command import Command
 from bluechi_test.config import BluechiControllerConfig, BluechiAgentConfig
-from bluechi_test.machine import BluechiAgentMachine, BluechiControllerMachine
+from bluechi_test.machine import BluechiMachine, BluechiAgentMachine, BluechiControllerMachine
 
 LOGGER = logging.getLogger(__name__)
 
@@ -244,11 +244,18 @@ class BluechiContainerTest(BluechiTest):
     def teardown(self, ctrl: BluechiControllerMachine, nodes: Dict[str, BluechiAgentMachine]):
         LOGGER.debug("Stopping and removing all container...")
 
-        if ctrl is not None:
-            ctrl.cleanup()
+        if ctrl is not None and isinstance(ctrl.client, ContainerClient):
+            if ctrl.client.container.status == 'running':
+                kw_params = {'timeout': 0}
+                ctrl.client.container.stop(**kw_params)
+            ctrl.client.container.remove()
 
         for _, node in nodes.items():
-            node.cleanup()
+            if node is not None and isinstance(node.client, ContainerClient):
+                if node.client.container.status == 'running':
+                    kw_params = {'timeout': 0}
+                    node.client.container.stop(**kw_params)
+                node.client.container.remove()
 
 
 class BluechiSSHTest(BluechiTest):
@@ -257,7 +264,6 @@ class BluechiSSHTest(BluechiTest):
                  available_hosts: Dict[str, List[Tuple[str, str]]],
                  ssh_user: str,
                  ssh_password: str,
-                 bluechi_ctrl_port: str,
                  tmt_test_serial_number: str,
                  tmt_test_data_dir: str,
                  run_with_valgrind: bool,
@@ -271,7 +277,6 @@ class BluechiSSHTest(BluechiTest):
         self.available_hosts = available_hosts
         self.ssh_user = ssh_user
         self.ssh_password = ssh_password
-        self.bluechi_ctrl_port = bluechi_ctrl_port
 
     def add_bluechi_agent_config(self, cfg: BluechiAgentConfig):
         if len(self.bluechi_node_configs) >= len(self.available_hosts["agent"]):
@@ -314,6 +319,7 @@ class BluechiSSHTest(BluechiTest):
 
                 name = self.assemble_agent_machine_name(cfg)
                 guest, host = self.available_hosts["agent"][i]
+                i = i + 1
 
                 LOGGER.debug(f"Setting up agent machine on guest '{guest}' with host '{host}'")
                 agent_machine = BluechiAgentMachine(
@@ -342,17 +348,40 @@ class BluechiSSHTest(BluechiTest):
         return (success, (ctrl_machine, agent_machines))
 
     def teardown(self, ctrl: BluechiControllerMachine, nodes: Dict[str, BluechiAgentMachine]):
-        LOGGER.debug("Cleaning up all machines...")
-
-        # TODO:
-        # Proper cleanup on remote machines. Restore
-        #   - added
-        #   - changed
-        #   - deleted
-        # files to previous state, e.g. when calling create_file or enable_valgrind.
-
         if ctrl is not None:
-            ctrl.cleanup()
+            self._cleanup(ctrl)
 
         for _, node in nodes.items():
-            node.cleanup()
+            bluechictl_started_services: List[str] = []
+            if node.config.node_name in ctrl.bluechictl.tracked_services:
+                bluechictl_started_services = ctrl.bluechictl.tracked_services[node.config.node_name]
+            self._cleanup(node, bluechictl_started_services)
+
+    def _cleanup(self, machine: BluechiMachine, other_tracked_service: List[str] = []):
+
+        LOGGER.info("Stopping and resetting tracked units...")
+        tracked_services = machine.systemctl.tracked_services + other_tracked_service
+        for service in tracked_services:
+            machine.systemctl.stop_unit(service, check_result=False)
+            machine.systemctl.reset_failed_for_unit(service, check_result=False)
+
+        LOGGER.info("Removing created files...")
+        cmd_rm_created_files = "rm " + " ".join(machine.created_files)
+        machine.client.exec_run(cmd_rm_created_files)
+
+        LOGGER.info("Restoring changed files...")
+        for changed_file in machine.changed_files:
+            backup_file = changed_file + BluechiMachine.backup_file_suffix
+            machine.client.exec_run(f"mv {backup_file} {changed_file}")
+
+        # ensure changed systemd services are reloaded
+        machine.systemctl.daemon_reload()
+
+        # ensure that both, agent and controller can be started again
+        # if they failed to quickly previously
+        machine.systemctl.reset_failed_for_unit("bluechi-agent", check_result=False)
+        machine.systemctl.reset_failed_for_unit("bluechi-controller", check_result=False)
+
+        machine.cleanup_valgrind_logs()
+        machine.cleanup_journal_logs()
+        machine.cleanup_coverage()
