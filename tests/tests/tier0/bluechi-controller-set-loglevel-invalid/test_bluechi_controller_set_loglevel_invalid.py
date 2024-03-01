@@ -7,8 +7,9 @@ from bluechi_test.config import BluechiControllerConfig
 
 def exec(ctrl: BluechiControllerMachine, _: Dict[str, BluechiAgentMachine]):
 
-    _, output = ctrl.bluechictl.set_log_level_on_controller("INF", check_result=False)
-    assert "Disconnect" not in output
+    result, _ = ctrl.bluechictl.set_log_level_on_controller("INF", check_result=False)
+    # call to set invalid loglevel should fail
+    assert result != 0
 
 
 def test_bluechi_controller_set_loglevel_invalid(
