@@ -18,12 +18,12 @@ failed_status = "failed"
 def exec(ctrl: BluechiControllerMachine, nodes: Dict[str, BluechiAgentMachine]):
 
     node_foo = nodes[NODE_FOO]
-    config_file_location = "/var/tmp"
+    config_file_location = "/tmp"
     bluechi_agent_str = "bluechi-agent"
-    invalid_conf_str = "config-files/invalid.conf"
+    invalid_conf_str = "invalid.conf"
 
     # Copying relevant config files into node container
-    content = read_file(invalid_conf_str)
+    content = read_file(os.path.join("config-files", invalid_conf_str))
     node_foo.create_file(config_file_location, invalid_conf_str, content)
 
     LOGGER.debug("Setting invalid.conf as conf file for foo and checking if failed")

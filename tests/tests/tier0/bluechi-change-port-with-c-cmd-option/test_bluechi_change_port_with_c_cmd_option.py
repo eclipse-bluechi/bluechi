@@ -16,14 +16,13 @@ def exec(ctrl: BluechiControllerMachine, nodes: Dict[str, BluechiAgentMachine]):
     config_file_location = "/var/tmp"
     bluechi_agent_str = "bluechi-agent"
     bluechi_controller_str = "bluechi-controller"
-    file_location_ctrl = os.path.join("config-files", "ctrl_port_8421.conf")
-    file_location_agent = os.path.join("config-files", "agent_port_8421.conf")
 
     # Copying relevant config files into the nodes container
-    content = read_file(file_location_agent)
-    node_foo.create_file(config_file_location, file_location_agent, content)
-    content = read_file(file_location_ctrl)
-    ctrl.create_file(config_file_location, file_location_ctrl, content)
+    content = read_file(os.path.join("config-files", "agent_port_8421.conf"))
+    node_foo.create_file(config_file_location, "agent_port_8421.conf", content)
+
+    content = read_file(os.path.join("config-files", "ctrl_port_8421.conf"))
+    ctrl.create_file(config_file_location, "ctrl_port_8421.conf", content)
 
     ctrl.restart_with_config_file(
         os.path.join(config_file_location, "ctrl_port_8421.conf"), bluechi_controller_str)

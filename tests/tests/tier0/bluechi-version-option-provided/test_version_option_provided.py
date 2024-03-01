@@ -12,7 +12,7 @@ def check_help_option(ctrl: BluechiControllerMachine, _: Dict[str, BluechiAgentM
     assert rpm_re == 0
 
     # There is no way to strip dist part from the release using rpm query flags, so we need to replace it manually
-    bc_ver_rel = rpm_out.replace(".el9", "")
+    bc_ver_rel = ".".join(rpm_out.split(".")[:-1])
     executables = [
         '/usr/libexec/bluechi-controller',
         '/usr/libexec/bluechi-agent'

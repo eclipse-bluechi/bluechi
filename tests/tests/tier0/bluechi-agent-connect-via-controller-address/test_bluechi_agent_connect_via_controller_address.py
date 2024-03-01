@@ -13,9 +13,9 @@ NODE_FOO = "node-FOO"
 
 def exec(ctrl: BluechiControllerMachine, nodes: Dict[str, BluechiAgentMachine]):
     node_foo = nodes[NODE_FOO]
-    config_file_location = "/var/tmp"
+    config_file_location = "/tmp"
     bluechi_agent_str = "bluechi-agent"
-    invalid_conf_str = "config/Invalid-ControllerAddress.conf"
+    invalid_conf_str = "Invalid-ControllerAddress.conf"
     invalid_controller_address = "Invalid-ControllerAddress.conf"
     service = "org.eclipse.bluechi"
     object = "/org/eclipse/bluechi"
@@ -25,7 +25,7 @@ def exec(ctrl: BluechiControllerMachine, nodes: Dict[str, BluechiAgentMachine]):
     assert node_foo.wait_for_unit_state_to_be(bluechi_agent_str, "active", delay=2)
     assert 's "up"' == ctrl.exec_run(f"busctl get-property {service} {object} {interface} {property}")[1]
 
-    content = read_file(invalid_conf_str)
+    content = read_file(os.path.join("config", invalid_conf_str))
     node_foo.create_file(config_file_location, invalid_conf_str, content)
 
     node_foo.restart_with_config_file(os.path.join(config_file_location, invalid_controller_address), bluechi_agent_str)
