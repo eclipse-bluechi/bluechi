@@ -1,7 +1,12 @@
 /* SPDX-License-Identifier: LGPL-2.1-or-later */
-#include "method-list-units.h"
-#include "client.h"
+#include <stdarg.h>
+#include <stdio.h>
+#include <string.h>
 
+#include "client.h"
+#include "method-list-units.h"
+
+#include "libbluechi/common/math-util.h"
 #include "libbluechi/common/opt.h"
 #include "libbluechi/common/string-util.h"
 
@@ -153,18 +158,52 @@ void unit_list_unref(UnitList *unit_list) {
         free(unit_list);
 }
 
-/* Prints 100-characters-wide table */
 void print_unit_list_simple(UnitList *unit_list, const char *glob_filter) {
         UnitInfo *unit = NULL;
-        printf("%-20.20s|%-59.59s|%9s|%9s\n", "NODE", "ID", "ACTIVE", "SUB");
-        printf("====================================================================================================\n");
+        const unsigned int FMT_STR_MAX_LEN = 255;
+        char fmt_str[FMT_STR_MAX_LEN];
+        const char node_title[] = "NODE";
+        const char id_title[] = "ID";
+        const char active_title[] = "ACTIVE";
+        const char sub_title[] = "SUB";
+        const char col_sep[] = " | ";
+
+        unsigned long max_node_len = strlen(node_title);
+        unsigned long max_id_len = strlen(id_title);
+        unsigned long max_active_len = strlen(active_title);
+        unsigned long max_sub_len = strlen(sub_title);
+        unsigned long sep_len = strlen(col_sep);
+
+        LIST_FOREACH(units, unit, unit_list->units) {
+                max_node_len = umaxl(max_node_len, strlen(unit->node));
+                max_id_len = umaxl(max_id_len, strlen(unit->id));
+                max_active_len = umaxl(max_active_len, strlen(unit->active_state));
+                max_sub_len = umaxl(max_sub_len, strlen(unit->sub_state));
+        }
+
+        unsigned long max_line_len = max_node_len + sep_len + max_id_len + sep_len + max_active_len +
+                        sep_len + max_sub_len;
+        char sep_line[max_line_len + 1];
+
+        snprintf(fmt_str,
+                 FMT_STR_MAX_LEN,
+                 "%%-%lus%s%%-%lus%s%%-%lus%s%%-%lus\n",
+                 max_node_len,
+                 col_sep,
+                 max_id_len,
+                 col_sep,
+                 max_active_len,
+                 col_sep,
+                 max_sub_len);
+
+        printf(fmt_str, "NODE", "ID", "ACTIVE", "SUB");
+        memset(&sep_line, '=', sizeof(char) * max_line_len);
+        sep_line[max_line_len] = '\0';
+        printf("%s\n", sep_line);
+
         LIST_FOREACH(units, unit, unit_list->units) {
                 if (glob_filter == NULL || match_glob(unit->id, glob_filter)) {
-                        printf("%-20.20s|%-59.59s|%9s|%9s\n",
-                               unit->node,
-                               unit->id,
-                               unit->active_state,
-                               unit->sub_state);
+                        printf(fmt_str, unit->node, unit->id, unit->active_state, unit->sub_state);
                 }
         }
 }
