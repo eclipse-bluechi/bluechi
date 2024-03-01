@@ -2,7 +2,7 @@
 
 import logging
 
-from typing import Any, Iterator, Optional, Set, Tuple, Union
+from typing import Any, Iterator, Optional, Set, Tuple, Union, List
 
 from bluechi_test.client import Client
 
@@ -15,6 +15,8 @@ class SystemCtl():
 
     def __init__(self, client: Client) -> None:
         self.client = client
+
+        self.tracked_services: List[str] = []
 
     def _do_operation_on_unit(self, unit_name: str, operation: str, check_result: bool, expected_result: int) \
             -> Tuple[Optional[int], Union[Iterator[bytes], Any, Tuple[bytes, bytes]]]:
@@ -36,6 +38,9 @@ class SystemCtl():
 
     def start_unit(self, unit_name: str, check_result: bool = True, expected_result: int = 0)  \
             -> Tuple[Optional[int], Union[Iterator[bytes], Any, Tuple[bytes, bytes]]]:
+        # track started units to stop and reset failures on cleanup
+        self.tracked_services.append(unit_name)
+
         return self._do_operation_on_unit(unit_name, "start", check_result, expected_result)
 
     def stop_unit(self,
@@ -63,6 +68,9 @@ class SystemCtl():
 
     def restart_unit(self, unit_name: str, check_result: bool = True, expected_result: int = 0)  \
             -> Tuple[Optional[int], Union[Iterator[bytes], Any, Tuple[bytes, bytes]]]:
+        # track started units to stop and reset failures on cleanup
+        self.tracked_services.append(unit_name)
+
         return self._do_operation_on_unit(unit_name, "restart", check_result, expected_result)
 
     def reset_failed_for_unit(self, unit_name: str, check_result: bool = True, expected_result: int = 0)  \
