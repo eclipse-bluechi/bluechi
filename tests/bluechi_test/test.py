@@ -14,6 +14,7 @@ from bluechi_test.client import ContainerClient, SSHClient
 from bluechi_test.command import Command
 from bluechi_test.config import BluechiControllerConfig, BluechiAgentConfig
 from bluechi_test.machine import BluechiMachine, BluechiAgentMachine, BluechiControllerMachine
+from bluechi_test.util import Timeout, TIMEOUT_SETUP, TIMEOUT_TEST, TIMEOUT_GATHER
 
 LOGGER = logging.getLogger(__name__)
 
@@ -123,10 +124,22 @@ class BluechiTest():
         if errors_found:
             raise Exception(f"Memory errors found in test. Review valgrind logs in {self.tmt_test_data_dir}")
 
-    def run(self, exec: Callable[[BluechiControllerMachine, Dict[str, BluechiAgentMachine]], None]):
+    def run(self,
+            exec: Callable[[BluechiControllerMachine, Dict[str, BluechiAgentMachine]], None],
+            timeout_setup: int = TIMEOUT_SETUP,
+            timeout_test: int = TIMEOUT_TEST,
+            timeout_gather: int = TIMEOUT_GATHER,
+            ):
         LOGGER.info("Test execution started")
-        successful, container = self.setup()
-        ctrl_container, node_container = container
+
+        successful = False
+        try:
+            with Timeout(timeout_setup, "Timeout setting up BlueChi system"):
+                successful, container = self.setup()
+            ctrl_container, node_container = container
+        except TimeoutError as ex:
+            successful = False
+            LOGGER.error(f"Failed to setup bluechi test: {ex}")
 
         if not successful:
             self.teardown(ctrl_container, node_container)
@@ -135,7 +148,8 @@ class BluechiTest():
 
         test_result = None
         try:
-            exec(ctrl_container, node_container)
+            with Timeout(timeout_test, "Timeout running test"):
+                exec(ctrl_container, node_container)
         except Exception as ex:
             test_result = ex
             LOGGER.error(f"Failed to execute test: {ex}")
@@ -149,11 +163,12 @@ class BluechiTest():
             traceback.print_exc()
 
         try:
-            self.gather_logs(ctrl_container, node_container)
-            if self.run_with_valgrind:
-                self.check_valgrind_logs()
-            if self.run_with_coverage:
-                self.gather_coverage(ctrl_container, node_container)
+            with Timeout(timeout_gather, "Timeout collecting test artifacts"):
+                self.gather_logs(ctrl_container, node_container)
+                if self.run_with_valgrind:
+                    self.check_valgrind_logs()
+                if self.run_with_coverage:
+                    self.gather_coverage(ctrl_container, node_container)
         except Exception as ex:
             test_result = ex
             LOGGER.error(f"Failed to collect logs: {ex}")

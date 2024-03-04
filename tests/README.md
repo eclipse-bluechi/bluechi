@@ -26,7 +26,6 @@ dnf install \
     python3-paramiko \
     python3-podman \
     python3-pytest \
-    python3-pytest-timeout \
     python3-pyyaml \
     tmt \
     tmt-report-junit \

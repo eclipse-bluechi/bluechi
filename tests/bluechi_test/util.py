@@ -2,6 +2,7 @@
 
 import logging
 import random
+import signal
 import string
 import socket
 
@@ -44,3 +45,27 @@ def get_random_name(name_length: int) -> str:
     # choose from all lowercase letter
     letters = string.ascii_lowercase
     return ''.join(random.choice(letters) for _ in range(name_length))
+
+
+# timeout for setting up tests in s
+TIMEOUT_SETUP = 20
+# timeout for running tests in s
+TIMEOUT_TEST = 45
+# timeout for collecting test results in s
+TIMEOUT_GATHER = 20
+
+
+class Timeout:
+    def __init__(self, seconds=1, error_message='Timeout'):
+        self.seconds = seconds
+        self.error_message = error_message
+
+    def handle_timeout(self, signum, frame):
+        raise TimeoutError(self.error_message)
+
+    def __enter__(self):
+        signal.signal(signal.SIGALRM, self.handle_timeout)
+        signal.alarm(self.seconds)
+
+    def __exit__(self, type, value, traceback):
+        signal.alarm(0)

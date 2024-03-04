@@ -12,7 +12,6 @@ function install_worker_deps(){
         python3-paramiko \
         python3-podman \
         python3-pytest \
-        python3-pytest-timeout \
         python3-pyyaml \
         -y
     # Mitigate https://github.com/containers/podman-py/issues/350
