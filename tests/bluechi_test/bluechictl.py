@@ -92,6 +92,15 @@ class BluechiCtl():
             expected_result
         )
 
+    def reload_unit(self, node_name: str, unit_name: str, check_result: bool = True, expected_result: int = 0) \
+            -> Tuple[Optional[int], Union[Iterator[bytes], Any, Tuple[bytes, bytes]]]:
+        return self._run(
+            f"Reloading unit {unit_name} on node {node_name}",
+            f"reload {node_name} {unit_name}",
+            check_result,
+            expected_result
+        )
+
     def stop_unit(self, node_name: str, unit_name: str, check_result: bool = True, expected_result: int = 0) \
             -> Tuple[Optional[int], Union[Iterator[bytes], Any, Tuple[bytes, bytes]]]:
         return self._run(

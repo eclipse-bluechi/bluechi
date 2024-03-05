@@ -1,0 +1,7 @@
+[Unit]
+Description=Service For Integration Test
+
+[Service]
+Type=simple
+ExecStart=/bin/true
+RemainAfterExit=yes
