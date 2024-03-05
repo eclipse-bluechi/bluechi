@@ -1,6 +1,8 @@
 /* SPDX-License-Identifier: LGPL-2.1-or-later */
-#include "method-monitor.h"
+#include <stdio.h>
+
 #include "client.h"
+#include "method-monitor.h"
 
 #include "libbluechi/common/common.h"
 #include "libbluechi/common/list.h"
@@ -20,6 +22,7 @@ static int on_unit_new_signal(sd_bus_message *m, UNUSED void *userdata, UNUSED s
         }
 
         printf("[%s] %s\n\tUnit created (reason: %s)\n", node_name, unit_name, reason);
+        fflush(stdout);
 
         return 0;
 }
@@ -35,6 +38,7 @@ static int on_unit_removed_signal(sd_bus_message *m, UNUSED void *userdata, UNUS
         }
 
         printf("[%s] %s\n\tUnit removed (reason: %s)\n", node_name, unit_name, reason);
+        fflush(stdout);
 
         return 0;
 }
@@ -56,6 +60,7 @@ static int on_unit_state_changed_signal(sd_bus_message *m, UNUSED void *userdata
                reason,
                active_state,
                sub_state);
+        fflush(stdout);
 
         return 0;
 }
@@ -72,6 +77,7 @@ static int on_unit_properties_changed_signal(
         }
 
         printf("[%s] %s\n\tUnit properties changed (Interface: %s)\n", node_name, unit_name, interface_name);
+        fflush(stdout);
 
         r = sd_bus_message_enter_container(m, SD_BUS_TYPE_ARRAY, "{sv}");
         if (r < 0) {
