@@ -59,11 +59,6 @@ Controller *controller_new(void) {
         return controller;
 }
 
-Controller *controller_ref(Controller *controller) {
-        controller->ref_count++;
-        return controller;
-}
-
 void controller_unref(Controller *controller) {
         assert(controller->ref_count > 0);
 
