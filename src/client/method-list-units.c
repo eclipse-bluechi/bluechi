@@ -21,7 +21,6 @@ struct UnitList {
 };
 
 UnitList *new_unit_list();
-UnitList *unit_list_ref(UnitList *unit_list);
 void unit_list_unref(UnitList *unit_list);
 
 DEFINE_CLEANUP_FUNC(UnitList, unit_list_unref)
@@ -138,11 +137,6 @@ UnitList *new_unit_list() {
         LIST_HEAD_INIT(unit_list->units);
 
         return steal_pointer(&unit_list);
-}
-
-UnitList *unit_list_ref(UnitList *unit_list) {
-        unit_list->ref_count++;
-        return unit_list;
 }
 
 void unit_list_unref(UnitList *unit_list) {
