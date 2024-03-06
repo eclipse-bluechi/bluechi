@@ -42,7 +42,6 @@ struct Controller {
 };
 
 Controller *controller_new(void);
-Controller *controller_ref(Controller *controller);
 void controller_unref(Controller *controller);
 
 bool controller_set_port(Controller *controller, const char *port);
