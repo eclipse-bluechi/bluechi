@@ -11,6 +11,7 @@ def check_help_option(ctrl: BluechiControllerMachine, _: Dict[str, BluechiAgentM
     executables = [
         '/usr/libexec/bluechi-controller',
         '/usr/libexec/bluechi-agent',
+        '/usr/libexec/bluechi-proxy',
         '/usr/bin/bluechictl'
     ]
 
