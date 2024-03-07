@@ -2,6 +2,7 @@
 
 common_src = [
   'string_to_log_level_test',
+  'log_target_to_str_test',
   'bc_log_init_test',
 ]
 
