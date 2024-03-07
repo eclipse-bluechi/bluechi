@@ -19,10 +19,10 @@ const char *log_target_to_str(LogFn logfn) {
                 log_target = BC_LOG_TARGET_JOURNALD;
         }
         if (bc_log_to_stderr_full_with_location == logfn) {
-                log_target = BC_LOG_TARGET_STDERR;
+                log_target = BC_LOG_TARGET_STDERR_FULL;
         }
         if (bc_log_to_stderr_with_location == logfn) {
-                log_target = BC_LOG_TARGET_STDERR_FULL;
+                log_target = BC_LOG_TARGET_STDERR;
         }
 
         return log_target;
