@@ -1,0 +1,3 @@
+summary: Test if proxy service fails on requesting dependency service on non-existent
+    node
+id: 6cb0f785-92f3-4aab-9632-b9a0d8c1aa23
