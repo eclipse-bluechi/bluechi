@@ -1,0 +1,2 @@
+summary: Test that bluechictl monitor can receive UnitCreated and UnitRemoved signals
+id: 1becd1cf-6f07-4bbb-9b16-ec438bbb6c22
