@@ -14,13 +14,11 @@ function install_worker_deps(){
         python3-pytest \
         python3-pyyaml \
         -y
-    # Mitigate https://github.com/containers/podman-py/issues/350
-    dnf install python3-rich -y
 }
 
 function setup_worker_ssh(){
     dnf install openssh-server passwd -y
-    
+
     # root access is needed in order to access BlueChi's API
     echo "PasswordAuthentication yes" >> /etc/ssh/sshd_config
     echo "PermitRootLogin yes" >> /etc/ssh/sshd_config
@@ -91,8 +89,6 @@ function setup_container_test(){
     # Install required dependencies only when asked
     if [ "$INSTALL_DEPS" == "yes" ]; then
         install_worker_deps
-        # Mitigate https://github.com/containers/podman-py/issues/350
-        dnf install python3-rich -y
     fi
 
     BUILD_ARG=""

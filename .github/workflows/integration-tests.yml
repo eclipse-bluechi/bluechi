@@ -73,8 +73,6 @@ jobs:
       - name: Install unpackaged python libraries from PyPi
         run: |
           pip install "tmt[provision]==1.30" "tmt[report-junit]==1.30" podman pytest pyyaml paramiko
-          # Mitigate https://github.com/containers/podman-py/issues/350
-          pip install rich
 
       - name: Checkout sources
         uses: actions/checkout@v4
