@@ -441,22 +441,6 @@ static bool controller_setup_node_connection_handler(Controller *controller) {
 }
 
 /************************************************************************
- ****** org.eclipse.bluechi.Controller.Ping ******************
- ************************************************************************/
-
-/* This is a test method for now, it just returns what you passed */
-static int controller_method_ping(sd_bus_message *m, UNUSED void *userdata, UNUSED sd_bus_error *ret_error) {
-        const char *arg = NULL;
-
-        int r = sd_bus_message_read(m, "s", &arg);
-        if (r < 0) {
-                return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_INVALID_ARGS, "Invalid arguments");
-        }
-        return sd_bus_reply_method_return(m, "s", arg);
-}
-
-
-/************************************************************************
  ************** org.eclipse.bluechi.Controller.ListUnits *****
  ************************************************************************/
 
@@ -944,7 +928,6 @@ static int controller_property_get_log_target(
 
 static const sd_bus_vtable controller_vtable[] = {
         SD_BUS_VTABLE_START(0),
-        SD_BUS_METHOD("Ping", "s", "s", controller_method_ping, 0),
         SD_BUS_METHOD("ListUnits", "", NODE_AND_UNIT_INFO_STRUCT_ARRAY_TYPESTRING, controller_method_list_units, 0),
         SD_BUS_METHOD("ListNodes", "", "a(sos)", controller_method_list_nodes, 0),
         SD_BUS_METHOD("GetNode", "s", "o", controller_method_get_node, 0),
