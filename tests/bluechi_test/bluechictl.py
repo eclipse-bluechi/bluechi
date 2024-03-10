@@ -110,6 +110,15 @@ class BluechiCtl():
             expected_result
         )
 
+    def daemon_reload_node(self, node_name: str, check_result: bool = True, expected_result: int = 0) \
+            -> Tuple[Optional[int], Union[Iterator[bytes], Any, Tuple[bytes, bytes]]]:
+        return self._run(
+            f"Daemon Reload on node '{node_name}'",
+            f"daemon-reload {node_name}",
+            check_result,
+            expected_result
+        )
+
     def enable_unit(self, node_name: str, unit_name: str, check_result: bool = True, expected_result: int = 0) \
             -> Tuple[Optional[int], Union[Iterator[bytes], Any, Tuple[bytes, bytes]]]:
         return self._run(
