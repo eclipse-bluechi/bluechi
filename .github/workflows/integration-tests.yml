@@ -45,6 +45,13 @@ jobs:
     needs: rpmbuild
     runs-on: ubuntu-latest
     steps:
+      - name: Increase inotify values
+        # Required to bypass error "Failed to allocate directory watch: Too many open files"
+        run: |
+          sudo sysctl -w fs.inotify.max_queued_events=32768
+          sudo sysctl -w fs.inotify.max_user_instances=2048
+          sudo sysctl -w fs.inotify.max_user_watches=1048576
+
       - name: Install Python
         uses: actions/setup-python@v5
         with:
