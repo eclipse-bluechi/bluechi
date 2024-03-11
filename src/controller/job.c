@@ -144,7 +144,60 @@ static int job_property_get_state(
         return sd_bus_message_append(reply, "s", job_state_to_string(job->state));
 }
 
-static int job_method_cancel(UNUSED sd_bus_message *m, UNUSED void *userdata, UNUSED sd_bus_error *ret_error) {
-        /* TODO: Implement */
-        return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "Not implemented yet");
+
+static int job_cancel_callback(UNUSED AgentRequest *req, sd_bus_message *m, UNUSED sd_bus_error *ret_error) {
+        if (sd_bus_message_is_method_error(m, NULL)) {
+                bc_log_errorf("Cancelling job failed: %s", sd_bus_message_get_error(m)->message);
+                return 0;
+        }
+
+        bc_log_debug("Job canceled successfully");
+        return 0;
+}
+
+static int job_method_cancel(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error) {
+        Job *job = (Job *) userdata;
+
+        _cleanup_agent_request_ AgentRequest *req = NULL;
+        int r = node_create_request(
+                        &req,
+                        job->node,
+                        "JobCancel",
+                        job_cancel_callback,
+                        sd_bus_message_ref(m),
+                        (free_func_t) sd_bus_message_unref);
+        if (req == NULL) {
+                sd_bus_message_unref(m);
+                return sd_bus_reply_method_errorf(
+                                m,
+                                SD_BUS_ERROR_FAILED,
+                                "Failed to create an agent request to cancel job: %s",
+                                strerror(-r));
+        }
+
+        r = sd_bus_message_append(req->message, "u", job->id);
+        if (r < 0) {
+                return sd_bus_reply_method_errorf(
+                                m,
+                                SD_BUS_ERROR_FAILED,
+                                "Failed to append job ID to cancel message: %s",
+                                strerror(-r));
+        }
+
+        r = agent_request_start(req);
+        if (r < 0) {
+                return sd_bus_reply_method_errorf(
+                                m,
+                                SD_BUS_ERROR_FAILED,
+                                "Failed to call the method to cancel job '%d': %s",
+                                job->id,
+                                strerror(-r));
+        }
+
+        /* Cancel request submitted successfully, so directly reply here
+         * to avoid a race condition where the job canceling has been
+         * processed faster than the job_cancel_callback - which leads to
+         * an unknown method Cancel or interface org.eclipse.bluechi.Job reply
+         */
+        return sd_bus_reply_method_return(m, "");
 }
