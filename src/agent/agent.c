@@ -1569,11 +1569,10 @@ static int agent_method_disable_metrics(sd_bus_message *m, void *userdata, UNUSE
 }
 
 /*************************************************************************
- ************** org.eclipse.bluechi.Agent.SetNodeLogLevel  *
+ ************** org.eclipse.bluechi.Agent.SetNodeLogLevel  ***************
  *************************************************************************/
 
-static int agent_method_set_log_level(
-                UNUSED sd_bus_message *m, UNUSED void *userdata, UNUSED sd_bus_error *ret_error) {
+static int agent_method_set_log_level(sd_bus_message *m, UNUSED void *userdata, UNUSED sd_bus_error *ret_error) {
         const char *level = NULL;
         int r = sd_bus_message_read(m, "s", &level);
         if (r < 0) {
@@ -1588,6 +1587,75 @@ static int agent_method_set_log_level(
         }
         bc_log_set_level(loglevel);
         bc_log_infof("Log level changed to %s", level);
+        return sd_bus_reply_method_return(m, "");
+}
+
+
+/*******************************************************************
+ ************** org.eclipse.bluechi.Agent.JobCancel  ***************
+ *******************************************************************/
+
+static int job_cancel_callback(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error) {
+        _cleanup_systemd_request_ SystemdRequest *req = userdata;
+
+        if (sd_bus_message_is_method_error(m, NULL)) {
+                return sd_bus_reply_method_error(req->request_message, sd_bus_message_get_error(m));
+        }
+
+        _cleanup_sd_bus_message_ sd_bus_message *reply = NULL;
+        int r = sd_bus_message_new_method_return(req->request_message, &reply);
+        if (r < 0) {
+                return sd_bus_reply_method_errorf(
+                                req->request_message,
+                                SD_BUS_ERROR_FAILED,
+                                "Failed to create a reply message: %s",
+                                strerror(-r));
+        }
+
+        return sd_bus_message_send(reply);
+}
+
+static JobTracker *agent_find_jobtracker_by_bluechi_id(Agent *agent, uint32_t bc_job_id) {
+        JobTracker *track = NULL;
+        LIST_FOREACH(tracked_jobs, track, agent->tracked_jobs) {
+                AgentJobOp *op = (AgentJobOp *) track->userdata;
+                if (op->bc_job_id == bc_job_id) {
+                        return track;
+                }
+        }
+        return NULL;
+}
+
+static int agent_method_job_cancel(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error) {
+        uint32_t bc_job_id = 0;
+        int r = sd_bus_message_read(m, "u", &bc_job_id);
+        if (r < 0) {
+                bc_log_errorf("Failed to read job ID: %s", strerror(-r));
+                return sd_bus_reply_method_errorf(
+                                m, SD_BUS_ERROR_FAILED, "Failed to read job ID: %s", strerror(-r));
+        }
+
+        Agent *agent = (Agent *) userdata;
+        JobTracker *tracker = agent_find_jobtracker_by_bluechi_id(agent, bc_job_id);
+        if (tracker == NULL) {
+                return sd_bus_reply_method_errorf(
+                                m, SD_BUS_ERROR_FAILED, "No job with ID '%d' found", bc_job_id);
+        }
+
+        _cleanup_systemd_request_ SystemdRequest *req = agent_create_request_full(
+                        agent, m, tracker->job_object_path, SYSTEMD_JOB_IFACE, "Cancel");
+        if (req == NULL) {
+                return sd_bus_reply_method_errorf(
+                                m,
+                                SD_BUS_ERROR_FAILED,
+                                "Failed to create a systemd request for the cancelling job '%d'",
+                                bc_job_id);
+        }
+
+        if (!systemd_request_start(req, job_cancel_callback)) {
+                return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "Failed to start systemd request");
+        }
+
         return sd_bus_reply_method_return(m, "");
 }
 
@@ -1609,6 +1677,7 @@ static const sd_bus_vtable internal_agent_vtable[] = {
         SD_BUS_METHOD("EnableMetrics", "", "", agent_method_enable_metrics, 0),
         SD_BUS_METHOD("DisableMetrics", "", "", agent_method_disable_metrics, 0),
         SD_BUS_METHOD("SetLogLevel", "s", "", agent_method_set_log_level, 0),
+        SD_BUS_METHOD("JobCancel", "u", "", agent_method_job_cancel, 0),
         SD_BUS_SIGNAL_WITH_NAMES("JobDone", "us", SD_BUS_PARAM(id) SD_BUS_PARAM(result), 0),
         SD_BUS_SIGNAL_WITH_NAMES("JobStateChanged", "us", SD_BUS_PARAM(id) SD_BUS_PARAM(state), 0),
         SD_BUS_SIGNAL_WITH_NAMES(
@@ -1809,7 +1878,7 @@ static const sd_bus_vtable agent_vtable[] = {
         SD_BUS_VTABLE_START(0),
         SD_BUS_METHOD("CreateProxy", "sss", "", agent_method_create_proxy, 0),
         SD_BUS_METHOD("RemoveProxy", "sss", "", agent_method_remove_proxy, 0),
-
+        SD_BUS_METHOD("JobCancel", "u", "", agent_method_job_cancel, 0),
         SD_BUS_PROPERTY("Status", "s", agent_property_get_status, 0, SD_BUS_VTABLE_PROPERTY_EMITS_CHANGE),
         SD_BUS_PROPERTY("LogLevel", "s", agent_property_get_log_level, 0, SD_BUS_VTABLE_PROPERTY_EXPLICIT),
         SD_BUS_PROPERTY("LogTarget", "s", agent_property_get_log_target, 0, SD_BUS_VTABLE_PROPERTY_CONST),
@@ -1883,7 +1952,7 @@ static int agent_match_job_changed(sd_bus_message *m, void *userdata, UNUSED sd_
         }
 
         /* Only handle Job iface changes */
-        if (!streq(interface, "org.freedesktop.systemd1.Job")) {
+        if (!streq(interface, SYSTEMD_JOB_IFACE)) {
                 return 0;
         }
 

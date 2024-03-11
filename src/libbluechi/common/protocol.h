@@ -70,6 +70,7 @@
 #define SYSTEMD_OBJECT_PATH "/org/freedesktop/systemd1"
 #define SYSTEMD_MANAGER_IFACE "org.freedesktop.systemd1.Manager"
 #define SYSTEMD_UNIT_IFACE "org.freedesktop.systemd1.Unit"
+#define SYSTEMD_JOB_IFACE "org.freedesktop.systemd1.Job"
 
 /* Signal names */
 #define AGENT_HEARTBEAT_SIGNAL_NAME "Heartbeat"
