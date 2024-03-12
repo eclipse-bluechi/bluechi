@@ -1,6 +1,5 @@
 # SPDX-License-Identifier: LGPL-2.1-or-later
 
-import os
 from typing import Dict
 
 from bluechi_test.config import BluechiControllerConfig, BluechiAgentConfig
@@ -31,10 +30,9 @@ def exec(ctrl: BluechiControllerMachine, nodes: Dict[str, BluechiAgentMachine]):
     bar = nodes[node_bar_name]
 
     source_dir = "systemd"
-    target_dir = os.path.join("/", "etc", "systemd", "system")
 
-    foo.copy_systemd_service(requesting_service, source_dir, target_dir)
-    bar.copy_systemd_service(simple_service, source_dir, target_dir)
+    foo.copy_systemd_service(requesting_service, source_dir)
+    bar.copy_systemd_service(simple_service, source_dir)
 
     ctrl.bluechictl.start_unit(node_foo_name, requesting_service)
     verify_proxy_start_failed(foo, bar)

@@ -100,7 +100,8 @@ class BluechiMachine():
 
         return result, output, wait_result
 
-    def copy_systemd_service(self, service_file_name: str, source_dir: str, target_dir):
+    def copy_systemd_service(self, service_file_name: str, source_dir: str,
+                             target_dir: str = os.path.join("/", "etc", "systemd", "system")):
         source_path = os.path.join(source_dir, service_file_name)
         content = read_file(source_path)
 
