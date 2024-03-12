@@ -13,7 +13,7 @@ requesting_service = "requesting.service"
 def exec(ctrl: BluechiControllerMachine, nodes: Dict[str, BluechiAgentMachine]):
     foo = nodes[node_foo_name]
 
-    foo.copy_systemd_service(requesting_service, "systemd")
+    foo.copy_systemd_service(requesting_service)
     assert foo.wait_for_unit_state_to_be(requesting_service, "inactive")
 
     ctrl.bluechictl.start_unit(node_foo_name, requesting_service)

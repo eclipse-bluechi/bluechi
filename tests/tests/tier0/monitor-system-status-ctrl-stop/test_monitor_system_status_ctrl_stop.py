@@ -17,7 +17,7 @@ node_one = "node-1"
 def exec(ctrl: BluechiControllerMachine, nodes: Dict[str, BluechiAgentMachine]):
 
     ctrl.create_file("/tmp", "system-monitor.py", read_file("python/system-monitor.py"))
-    ctrl.copy_systemd_service("monitor.service", "systemd")
+    ctrl.copy_systemd_service("monitor.service")
 
     result, output = ctrl.systemctl.start_unit("monitor.service")
     if result != 0:

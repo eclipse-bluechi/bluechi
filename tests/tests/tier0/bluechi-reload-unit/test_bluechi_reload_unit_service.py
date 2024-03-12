@@ -14,8 +14,8 @@ NODE_FOO = "node-foo"
 def exec(ctrl: BluechiControllerMachine, nodes: Dict[str, BluechiAgentMachine]):
 
     foo = nodes[NODE_FOO]
-    foo.copy_systemd_service("service-for-reload.service", "systemd")
-    foo.copy_systemd_service("simple.service", "systemd")
+    foo.copy_systemd_service("service-for-reload.service")
+    foo.copy_systemd_service("simple.service")
     assert foo.wait_for_unit_state_to_be("simple.service", "inactive")
     assert foo.wait_for_unit_state_to_be("service-for-reload.service", "inactive")
 

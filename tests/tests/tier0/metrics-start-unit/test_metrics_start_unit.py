@@ -15,8 +15,7 @@ simple_service = "simple.service"
 def exec(ctrl: BluechiControllerMachine, nodes: Dict[str, BluechiAgentMachine]):
     foo = nodes[node_foo_name]
 
-    source_dir = "systemd"
-    foo.copy_systemd_service(simple_service, source_dir)
+    foo.copy_systemd_service(simple_service)
     assert foo.wait_for_unit_state_to_be(simple_service, "inactive")
 
     result, output = ctrl.run_python(os.path.join("python", "start_unit_job_metrics.py"))

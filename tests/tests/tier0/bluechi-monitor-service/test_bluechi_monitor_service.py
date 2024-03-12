@@ -12,7 +12,7 @@ service_simple = "simple.service"
 
 
 def exec(ctrl: BluechiControllerMachine, nodes: Dict[str, BluechiAgentMachine]):
-    nodes[node_name_foo].copy_systemd_service(service_simple, "systemd")
+    nodes[node_name_foo].copy_systemd_service(service_simple)
     assert nodes[node_name_foo].wait_for_unit_state_to_be(service_simple, "inactive")
 
     ctrl.bluechictl.start_unit(node_name_foo, service_simple)

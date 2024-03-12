@@ -21,9 +21,9 @@ def exec(ctrl: BluechiControllerMachine, nodes: Dict[str, BluechiAgentMachine]):
     foo2 = nodes[node_foo2_name]
     bar = nodes[node_bar_name]
 
-    foo1.copy_systemd_service(requesting_service, "systemd")
-    foo2.copy_systemd_service(requesting_service, "systemd")
-    bar.copy_systemd_service(simple_service, "systemd")
+    foo1.copy_systemd_service(requesting_service)
+    foo2.copy_systemd_service(requesting_service)
+    bar.copy_systemd_service(simple_service)
 
     assert foo1.wait_for_unit_state_to_be(requesting_service, "inactive")
     assert foo2.wait_for_unit_state_to_be(requesting_service, "inactive")
