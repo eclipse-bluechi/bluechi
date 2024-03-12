@@ -1,6 +1,5 @@
 # SPDX-License-Identifier: LGPL-2.1-or-later
 
-import os
 import logging
 import time
 from typing import Dict
@@ -18,7 +17,7 @@ node_one = "node-1"
 def exec(ctrl: BluechiControllerMachine, nodes: Dict[str, BluechiAgentMachine]):
 
     ctrl.create_file("/tmp", "system-monitor.py", read_file("python/system-monitor.py"))
-    ctrl.copy_systemd_service("monitor.service", "systemd", os.path.join("/", "etc", "systemd", "system"))
+    ctrl.copy_systemd_service("monitor.service", "systemd")
 
     result, output = ctrl.systemctl.start_unit("monitor.service")
     if result != 0:

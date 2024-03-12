@@ -1,6 +1,5 @@
 # SPDX-License-Identifier: LGPL-2.1-or-later
 import logging
-import os
 
 from typing import Dict
 from bluechi_test.test import BluechiTest
@@ -15,9 +14,8 @@ NODE_FOO = "node-foo"
 def exec(ctrl: BluechiControllerMachine, nodes: Dict[str, BluechiAgentMachine]):
 
     foo = nodes[NODE_FOO]
-    target_dir = os.path.join("/", "etc", "systemd", "system")
-    foo.copy_systemd_service("service-for-reload.service", "systemd", target_dir)
-    foo.copy_systemd_service("simple.service", "systemd", target_dir)
+    foo.copy_systemd_service("service-for-reload.service", "systemd")
+    foo.copy_systemd_service("simple.service", "systemd")
     assert foo.wait_for_unit_state_to_be("simple.service", "inactive")
     assert foo.wait_for_unit_state_to_be("service-for-reload.service", "inactive")
 

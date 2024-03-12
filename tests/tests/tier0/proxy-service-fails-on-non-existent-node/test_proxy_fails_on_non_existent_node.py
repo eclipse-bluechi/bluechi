@@ -1,6 +1,5 @@
 # SPDX-License-Identifier: LGPL-2.1-or-later
 
-import os
 from typing import Dict
 
 from bluechi_test.config import BluechiControllerConfig, BluechiAgentConfig
@@ -14,10 +13,7 @@ requesting_service = "requesting.service"
 def exec(ctrl: BluechiControllerMachine, nodes: Dict[str, BluechiAgentMachine]):
     foo = nodes[node_foo_name]
 
-    source_dir = os.path.join(".", "systemd")
-    target_dir = os.path.join("/", "etc", "systemd", "system")
-
-    foo.copy_systemd_service(requesting_service, source_dir, target_dir)
+    foo.copy_systemd_service(requesting_service, "systemd")
     assert foo.wait_for_unit_state_to_be(requesting_service, "inactive")
 
     ctrl.bluechictl.start_unit(node_foo_name, requesting_service)
