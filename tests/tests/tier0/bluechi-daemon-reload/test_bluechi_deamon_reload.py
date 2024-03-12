@@ -18,7 +18,7 @@ def exec(ctrl: BluechiControllerMachine, nodes: Dict[str, BluechiAgentMachine]):
     service_file = "simple.service"
     service_path = os.path.join("/", "etc", "systemd", "system", service_file)
 
-    node_foo.copy_systemd_service(service_file, "systemd")
+    node_foo.copy_systemd_service(service_file)
     ctrl.bluechictl.start_unit(NODE_FOO, service_file)
     assert node_foo.wait_for_unit_state_to_be(service_file, "failed")
 
