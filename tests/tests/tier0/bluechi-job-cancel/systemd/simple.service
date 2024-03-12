@@ -3,5 +3,6 @@ Description=Just sleeping
 
 [Service]
 Type=simple
+ExecStartPre=/bin/sleep 20
 ExecStart=/bin/true
 RemainAfterExit=yes
