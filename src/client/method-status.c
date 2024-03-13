@@ -298,6 +298,7 @@ struct NodeConnection {
         char *name;
         char *node_path;
         char *state;
+        char *ip;
         uint64_t last_seen;
 };
 
@@ -318,6 +319,7 @@ static Node *
                          const char *node_name,
                          const char *node_path,
                          const char *node_state,
+                         const char *ip,
                          uint64_t last_seen_timestamp) {
         Node *node = malloc0(sizeof(Node));
         if (node == NULL) {
@@ -332,6 +334,7 @@ static Node *
         node->connection->name = strdup(node_name);
         node->connection->node_path = strdup(node_path);
         node->connection->state = strdup(node_state);
+        node->connection->ip = strdup(ip);
         node->connection->last_seen = last_seen_timestamp;
         node->api_bus = api_bus;
         node->nodes = head;
@@ -370,6 +373,7 @@ static void node_unref(Node *node) {
                 free_and_null(node->connection->name);
                 free_and_null(node->connection->node_path);
                 free_and_null(node->connection->state);
+                free_and_null(node->connection->ip);
                 free_and_null(node->connection);
         }
 
@@ -407,16 +411,17 @@ static void print_nodes(Nodes *nodes, bool clear_screen) {
         }
 
         /* print monitor header */
-        printf("%-30.30s| %-10.10s| %-28.28s\n", "NODE", "STATE", "LAST SEEN");
-        printf("=========================================================================\n");
+        printf("%-30.30s| %-10.10s| %-15.15s| %-28.28s\n", "NODE", "STATE", "IP", "LAST SEEN");
+        printf("==========================================================================================\n");
 
         Node *curr = NULL;
         Node *next = NULL;
         LIST_FOREACH_SAFE(nodes, curr, next, nodes->nodes) {
                 _cleanup_free_ char *last_seen = node_connection_fmt_last_seen(curr->connection);
-                printf("%-30.30s| %-10.10s| %-28.28s\n",
+                printf("%-30.30s| %-10.10s| %-15.15s| %-28.28s\n",
                        curr->connection->name,
                        curr->connection->state,
+                       curr->connection->ip,
                        last_seen);
         }
 }
@@ -565,7 +570,7 @@ static int method_print_node_status(Client *client, char *node_name, bool do_wat
                 return -ENOMEM;
         }
 
-        r = sd_bus_message_enter_container(reply, SD_BUS_TYPE_ARRAY, "(sos)");
+        r = sd_bus_message_enter_container(reply, SD_BUS_TYPE_ARRAY, "(soss)");
         if (r < 0) {
                 fprintf(stderr, "Failed to open reply array: %s\n", strerror(-r));
                 return r;
@@ -574,9 +579,10 @@ static int method_print_node_status(Client *client, char *node_name, bool do_wat
                 const char *name = NULL;
                 const char *path = NULL;
                 const char *state = NULL;
+                const char *ip = NULL;
                 uint64_t last_seen_timestamp = 0;
 
-                r = sd_bus_message_read(reply, "(sos)", &name, &path, &state);
+                r = sd_bus_message_read(reply, "(soss)", &name, &path, &state, &ip);
                 if (r < 0) {
                         fprintf(stderr, "Failed to read node information: %s\n", strerror(-r));
                         return r;
@@ -597,7 +603,7 @@ static int method_print_node_status(Client *client, char *node_name, bool do_wat
                         }
                 }
 
-                Node *node = node_new(client->api_bus, nodes, name, path, state, last_seen_timestamp);
+                Node *node = node_new(client->api_bus, nodes, name, path, state, ip, last_seen_timestamp);
                 if (node == NULL) {
                         fprintf(stderr, "Failed to create Node, OOM");
                         return -ENOMEM;

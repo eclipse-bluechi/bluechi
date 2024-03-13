@@ -34,14 +34,15 @@
     <!-- 
       ListNodes:
       @nodes: A list of all nodes:
-        - The node name
-        - The object path of the node
-        - the current state of that node, either online or offline
+        - node name
+        - object path of the node
+        - current state of that node, either online or offline
+        - IP of the connected node 
       
       List all nodes managed by BlueChi regardless if they are offline or online.
     -->
     <method name="ListNodes">
-      <arg name="nodes" type="a(sos)" direction="out" />
+      <arg name="nodes" type="a(soss)" direction="out" />
     </method>
 
     <!-- 

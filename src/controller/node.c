@@ -1,4 +1,5 @@
 /* SPDX-License-Identifier: LGPL-2.1-or-later */
+#include "libbluechi/bus/bus.h"
 #include "libbluechi/bus/utils.h"
 #include "libbluechi/common/parse-util.h"
 #include "libbluechi/common/time-util.h"
@@ -44,6 +45,14 @@ static int node_property_get_status(
                 sd_bus_message *reply,
                 void *userdata,
                 sd_bus_error *ret_error);
+static int node_property_get_peer_ip(
+                sd_bus *bus,
+                const char *path,
+                const char *interface,
+                const char *property,
+                sd_bus_message *reply,
+                void *userdata,
+                sd_bus_error *ret_error);
 static int node_property_get_last_seen(
                 sd_bus *bus,
                 const char *path,
@@ -75,6 +84,7 @@ static const sd_bus_vtable node_vtable[] = {
         SD_BUS_METHOD("SetLogLevel", "s", "", node_method_set_log_level, 0),
         SD_BUS_PROPERTY("Name", "s", node_property_get_nodename, 0, SD_BUS_VTABLE_PROPERTY_CONST),
         SD_BUS_PROPERTY("Status", "s", node_property_get_status, 0, SD_BUS_VTABLE_PROPERTY_EMITS_CHANGE),
+        SD_BUS_PROPERTY("PeerIp", "s", node_property_get_peer_ip, 0, SD_BUS_VTABLE_PROPERTY_EXPLICIT),
         SD_BUS_PROPERTY("LastSeenTimestamp", "t", node_property_get_last_seen, 0, SD_BUS_VTABLE_PROPERTY_EXPLICIT),
         SD_BUS_VTABLE_END
 };
@@ -169,6 +179,7 @@ Node *node_new(Controller *controller, const char *name) {
                         return NULL;
                 }
         }
+        node->peer_ip = NULL;
 
         node->is_shutdown = false;
 
@@ -207,6 +218,7 @@ void node_unref(Node *node) {
 
         free_and_null(node->name);
         free_and_null(node->object_path);
+        free_and_null(node->peer_ip);
         free(node);
 }
 
@@ -634,6 +646,16 @@ bool node_set_agent_bus(Node *node, sd_bus *bus) {
         }
 
         node->agent_bus = sd_bus_ref(bus);
+        // If getting peer IP fails, only log and proceed as normal.
+        _cleanup_free_ char *peer_ip = NULL;
+        uint16_t peer_port = 0;
+        r = get_peer_address(node->agent_bus, false, &peer_ip, &peer_port);
+        if (r < 0) {
+                bc_log_errorf("Failed to get peer IP: %s", strerror(-r));
+        } else {
+                node->peer_ip = steal_pointer(&peer_ip);
+        }
+
         if (node->name == NULL) {
                 // We only connect to this on the unnamed nodes so register
                 // can be called. We can't reconnect it during migration.
@@ -829,6 +851,8 @@ void node_unset_agent_bus(Node *node) {
         sd_bus_unrefp(&node->agent_bus);
         node->agent_bus = NULL;
 
+        free_and_null(node->peer_ip);
+
         if (was_online) {
                 int r = sd_bus_emit_properties_changed(
                                 node->controller->api_bus, node->object_path, NODE_INTERFACE, "Status", NULL);
@@ -1002,7 +1026,6 @@ static int node_property_get_nodename(
                 void *userdata,
                 UNUSED sd_bus_error *ret_error) {
         Node *node = userdata;
-
         return sd_bus_message_append(reply, "s", node->name);
 }
 
@@ -1022,8 +1045,19 @@ static int node_property_get_status(
                 void *userdata,
                 UNUSED sd_bus_error *ret_error) {
         Node *node = userdata;
-
         return sd_bus_message_append(reply, "s", node_get_status(node));
+}
+
+static int node_property_get_peer_ip(
+                UNUSED sd_bus *bus,
+                UNUSED const char *path,
+                UNUSED const char *interface,
+                UNUSED const char *property,
+                sd_bus_message *reply,
+                void *userdata,
+                UNUSED sd_bus_error *ret_error) {
+        Node *node = userdata;
+        return sd_bus_message_append(reply, "s", node->peer_ip);
 }
 
 static int node_property_get_last_seen(
@@ -1035,7 +1069,6 @@ static int node_property_get_last_seen(
                 void *userdata,
                 UNUSED sd_bus_error *ret_error) {
         Node *node = userdata;
-
         return sd_bus_message_append(reply, "t", node->last_seen);
 }
 

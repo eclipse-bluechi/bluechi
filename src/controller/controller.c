@@ -650,12 +650,13 @@ static int controller_method_list_units(sd_bus_message *m, void *userdata, UNUSE
  ************************************************************************/
 
 static int controller_method_list_encode_node(sd_bus_message *reply, Node *node) {
-        int r = sd_bus_message_open_container(reply, SD_BUS_TYPE_STRUCT, "sos");
+        int r = sd_bus_message_open_container(reply, SD_BUS_TYPE_STRUCT, "soss");
         if (r < 0) {
                 return r;
         }
 
-        r = sd_bus_message_append(reply, "sos", node->name, node->object_path, node_get_status(node));
+        r = sd_bus_message_append(
+                        reply, "soss", node->name, node->object_path, node_get_status(node), node->peer_ip);
         if (r < 0) {
                 return r;
         }
@@ -676,7 +677,7 @@ static int controller_method_list_nodes(sd_bus_message *m, void *userdata, UNUSE
                                 strerror(-r));
         }
 
-        r = sd_bus_message_open_container(reply, SD_BUS_TYPE_ARRAY, "(sos)");
+        r = sd_bus_message_open_container(reply, SD_BUS_TYPE_ARRAY, "(soss)");
         if (r < 0) {
                 return sd_bus_reply_method_errorf(
                                 reply,
@@ -929,7 +930,7 @@ static int controller_property_get_log_target(
 static const sd_bus_vtable controller_vtable[] = {
         SD_BUS_VTABLE_START(0),
         SD_BUS_METHOD("ListUnits", "", NODE_AND_UNIT_INFO_STRUCT_ARRAY_TYPESTRING, controller_method_list_units, 0),
-        SD_BUS_METHOD("ListNodes", "", "a(sos)", controller_method_list_nodes, 0),
+        SD_BUS_METHOD("ListNodes", "", "a(soss)", controller_method_list_nodes, 0),
         SD_BUS_METHOD("GetNode", "s", "o", controller_method_get_node, 0),
         SD_BUS_METHOD("CreateMonitor", "", "o", controller_method_create_monitor, 0),
         SD_BUS_METHOD("SetLogLevel", "s", "", controller_method_set_log_level, 0),

@@ -12,7 +12,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         Duration::from_millis(5000),
     );
 
-    let (nodes,): (Vec<(String, dbus::Path, String)>,) =
+    let (nodes,): (Vec<(String, dbus::Path, String, String)>,) =
         bluechi.method_call("org.eclipse.bluechi.Controller", "ListNodes", ())?;
 
     for (name, _, status) in nodes {

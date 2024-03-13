@@ -288,3 +288,46 @@ sd_bus *user_bus_open(sd_event *event) {
 
         return steal_pointer(&bus);
 }
+
+
+int get_peer_address(sd_bus *bus, bool ipv6, char **ret_address, uint16_t *ret_port) {
+        int fd = sd_bus_get_fd(bus);
+        if (fd < 0) {
+                bc_log_errorf("Failed to file descriptor from bus: %s", strerror(-fd));
+                return fd;
+        }
+
+        if (ipv6) {
+                struct sockaddr_in6 addr = { 0 };
+                socklen_t len = sizeof(addr);
+                int r = getpeername(fd, (struct sockaddr *) &addr, &len);
+                if (r < 0) {
+                        bc_log_errorf("Failed to get peer ipv6 address: %s", strerror(errno));
+                        return -errno;
+                }
+                if (ret_address != NULL) {
+                        *ret_address = typesafe_inet_ntop6(&addr);
+                }
+                if (ret_port != NULL) {
+                        *ret_port = ntohs(addr.sin6_port);
+                }
+
+                return 0;
+        }
+
+        struct sockaddr_in addr = { 0 };
+        socklen_t len = sizeof(addr);
+        int r = getpeername(fd, (struct sockaddr *) &addr, &len);
+        if (r < 0) {
+                bc_log_errorf("Failed to get peer ipv4 address: %s", strerror(errno));
+                return -errno;
+        }
+        if (ret_address != NULL) {
+                *ret_address = typesafe_inet_ntop4(&addr);
+        }
+        if (ret_port != NULL) {
+                *ret_port = ntohs(addr.sin_port);
+        }
+
+        return 0;
+}
