@@ -4,10 +4,11 @@ import logging
 import time
 from typing import Dict, List
 
-from bluechi_test.util import read_file
-from bluechi_test.test import BluechiTest
-from bluechi_test.machine import BluechiControllerMachine, BluechiAgentMachine
 from bluechi_test.config import BluechiControllerConfig, BluechiAgentConfig
+from bluechi_test.machine import BluechiControllerMachine, BluechiAgentMachine
+from bluechi_test.service import Option, Section, Service
+from bluechi_test.test import BluechiTest
+from bluechi_test.util import read_file
 
 
 LOGGER = logging.getLogger(__name__)
@@ -64,11 +65,16 @@ def check_events(ctrl: BluechiControllerMachine, expected_events: List[str]):
 
 
 def exec(ctrl: BluechiControllerMachine, nodes: Dict[str, BluechiAgentMachine]):
+    service = Service("monitor.service")
+    service.set_option(Section.Service, Option.ExecStart, "python3 /tmp/system-monitor.py")
+    service.set_option(Section.Unit, Option.Description, "Monitor BlueChi system")
+    service.set_option(Section.Service, Option.Type, "simple")
+    service.set_option(Section.Install, Option.WantedBy, "multi-user.target")
 
     ctrl.create_file("/tmp", "system-monitor.py", read_file("python/system-monitor.py"))
-    ctrl.copy_systemd_service("monitor.service")
+    ctrl.install_systemd_service(service)
 
-    result, output = ctrl.systemctl.start_unit("monitor.service")
+    result, output = ctrl.systemctl.start_unit(service.name)
     if result != 0:
         raise Exception(f"Failed to start monitor service: {output}")
 

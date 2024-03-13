@@ -1,7 +1,0 @@
-[Unit]
-Description=Run a service for 15 seconds
-
-[Service]
-Type=simple
-ExecStart=/bin/true
-RemainAfterExit=yes

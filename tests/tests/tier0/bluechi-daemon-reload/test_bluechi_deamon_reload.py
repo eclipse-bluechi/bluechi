@@ -1,12 +1,13 @@
 # SPDX-License-Identifier: LGPL-2.1-or-later
 
-import os
 import logging
 
 from typing import Dict
-from bluechi_test.test import BluechiTest
-from bluechi_test.machine import BluechiControllerMachine, BluechiAgentMachine
+
 from bluechi_test.config import BluechiControllerConfig, BluechiAgentConfig
+from bluechi_test.machine import BluechiControllerMachine, BluechiAgentMachine
+from bluechi_test.service import Option, Section, SimpleRemainingService
+from bluechi_test.test import BluechiTest
 
 LOGGER = logging.getLogger(__name__)
 NODE_FOO = "node-foo"
@@ -15,17 +16,19 @@ NODE_FOO = "node-foo"
 def exec(ctrl: BluechiControllerMachine, nodes: Dict[str, BluechiAgentMachine]):
 
     node_foo = nodes[NODE_FOO]
-    service_file = "simple.service"
-    service_path = os.path.join("/", "etc", "systemd", "system", service_file)
 
-    node_foo.copy_systemd_service(service_file)
-    ctrl.bluechictl.start_unit(NODE_FOO, service_file)
-    assert node_foo.wait_for_unit_state_to_be(service_file, "failed")
+    # Create a service which won't start due to nonexistent executable
+    service = SimpleRemainingService()
+    service.set_option(Section.Service, Option.ExecStart, "/s")
 
-    node_foo.exec_run(f"sed -i '/ExecStart=/c\\ExecStart=/bin/true' {service_path}")
+    node_foo.install_systemd_service(service)
+    ctrl.bluechictl.start_unit(NODE_FOO, service.name)
+    assert node_foo.wait_for_unit_state_to_be(service.name, "failed")
+
+    node_foo.exec_run(f"sed -i '/ExecStart=/c\\ExecStart=/bin/true' /etc/systemd/system/{service.name}")
     ctrl.bluechictl.daemon_reload_node(NODE_FOO)
-    ctrl.bluechictl.start_unit(NODE_FOO, service_file)
-    assert node_foo.wait_for_unit_state_to_be(service_file, "active")
+    ctrl.bluechictl.start_unit(NODE_FOO, service.name)
+    assert node_foo.wait_for_unit_state_to_be(service.name, "active")
 
 
 def test_bluechi_deamon_reload(

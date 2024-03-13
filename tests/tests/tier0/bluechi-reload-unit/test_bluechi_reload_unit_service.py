@@ -1,31 +1,34 @@
 # SPDX-License-Identifier: LGPL-2.1-or-later
-import logging
-
 from typing import Dict
-from bluechi_test.test import BluechiTest
-from bluechi_test.machine import BluechiControllerMachine, BluechiAgentMachine
-from bluechi_test.config import BluechiControllerConfig, BluechiAgentConfig
 
-LOGGER = logging.getLogger(__name__)
+from bluechi_test.config import BluechiControllerConfig, BluechiAgentConfig
+from bluechi_test.machine import BluechiControllerMachine, BluechiAgentMachine
+from bluechi_test.service import Option, Section, SimpleRemainingService
+from bluechi_test.test import BluechiTest
 
 NODE_FOO = "node-foo"
 
 
 def exec(ctrl: BluechiControllerMachine, nodes: Dict[str, BluechiAgentMachine]):
 
+    simple_svc = SimpleRemainingService()
+
+    svc_for_reload = SimpleRemainingService("service-for-reload.service")
+    svc_for_reload.set_option(Section.Service, Option.ExecReload, f"systemctl start {simple_svc.name}")
+
     foo = nodes[NODE_FOO]
-    foo.copy_systemd_service("service-for-reload.service")
-    foo.copy_systemd_service("simple.service")
-    assert foo.wait_for_unit_state_to_be("simple.service", "inactive")
-    assert foo.wait_for_unit_state_to_be("service-for-reload.service", "inactive")
+    foo.install_systemd_service(svc_for_reload)
+    foo.install_systemd_service(simple_svc)
+    assert foo.wait_for_unit_state_to_be(svc_for_reload.name, "inactive")
+    assert foo.wait_for_unit_state_to_be(simple_svc.name, "inactive")
 
-    ctrl.bluechictl.start_unit(NODE_FOO, "service-for-reload.service")
-    assert foo.wait_for_unit_state_to_be("simple.service", "inactive")
-    assert foo.wait_for_unit_state_to_be("service-for-reload.service", "active")
+    ctrl.bluechictl.start_unit(NODE_FOO, svc_for_reload.name)
+    assert foo.wait_for_unit_state_to_be(svc_for_reload.name, "active")
+    assert foo.wait_for_unit_state_to_be(simple_svc.name, "inactive")
 
-    ctrl.bluechictl.reload_unit(NODE_FOO, "service-for-reload.service")
-    assert foo.wait_for_unit_state_to_be("simple.service", "active")
-    assert foo.wait_for_unit_state_to_be("service-for-reload.service", "active")
+    ctrl.bluechictl.reload_unit(NODE_FOO, svc_for_reload.name)
+    assert foo.wait_for_unit_state_to_be(svc_for_reload.name, "active")
+    assert foo.wait_for_unit_state_to_be(simple_svc.name, "active")
 
 
 def test_bluechi_reload_unit_service(

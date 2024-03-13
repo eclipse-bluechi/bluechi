@@ -6,38 +6,39 @@ from typing import Dict
 
 from bluechi_test.config import BluechiControllerConfig, BluechiAgentConfig
 from bluechi_test.machine import BluechiControllerMachine, BluechiAgentMachine
+from bluechi_test.service import SimpleRemainingService
 from bluechi_test.test import BluechiTest
 
 LOGGER = logging.getLogger(__name__)
 
 node_foo_name = "node-foo"
-simple_service = "simple.service"
 
 
 def exec(ctrl: BluechiControllerMachine, nodes: Dict[str, BluechiAgentMachine]):
     foo = nodes[node_foo_name]
+    service = SimpleRemainingService()
 
-    foo.copy_systemd_service(simple_service)
-    assert foo.wait_for_unit_state_to_be(simple_service, "inactive")
+    foo.install_systemd_service(service)
+    assert foo.wait_for_unit_state_to_be(service.name, "inactive")
 
     result, output = ctrl.run_python(os.path.join("python", "metrics_is_enabled.py"))
     if result == 0:
         raise Exception(f"Metrics not disabled: {output}")
-    assert foo.wait_for_unit_state_to_be(simple_service, "inactive")
+    assert foo.wait_for_unit_state_to_be(service.name, "inactive")
 
     ctrl.bluechictl.enable_metrics()
 
     result, output = ctrl.run_python(os.path.join("python", "metrics_is_enabled.py"))
     if result != 0:
         raise Exception(f"Metrics not enabled: {output}")
-    assert foo.wait_for_unit_state_to_be(simple_service, "inactive")
+    assert foo.wait_for_unit_state_to_be(service.name, "inactive")
 
     ctrl.bluechictl.disable_metrics()
 
     result, output = ctrl.run_python(os.path.join("python", "metrics_is_enabled.py"))
     if result == 0:
         raise Exception(f"Metrics not disabled: {output}")
-    assert foo.wait_for_unit_state_to_be(simple_service, "inactive")
+    assert foo.wait_for_unit_state_to_be(service.name, "inactive")
 
 
 def test_metrics_enable_and_disable(

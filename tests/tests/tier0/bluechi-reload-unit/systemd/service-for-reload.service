@@ -1,7 +1,0 @@
-[Unit]
-Description=A very simple service
-[Service]
-Type=simple
-ExecStart=/bin/true
-RemainAfterExit=yes
-ExecReload=systemctl start simple.service

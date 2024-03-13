@@ -3,19 +3,19 @@
 import os
 from typing import Dict
 
-from bluechi_test.test import BluechiTest
-from bluechi_test.machine import BluechiControllerMachine, BluechiAgentMachine
 from bluechi_test.config import BluechiControllerConfig, BluechiAgentConfig
+from bluechi_test.machine import BluechiControllerMachine, BluechiAgentMachine
+from bluechi_test.service import SimpleService
+from bluechi_test.test import BluechiTest
 
 
 node_name_foo = "node-foo"
-service_simple = "simple.service"
 
 
 def exec(ctrl: BluechiControllerMachine, nodes: Dict[str, BluechiAgentMachine]):
-
-    nodes[node_name_foo].copy_systemd_service(service_simple)
-    assert nodes[node_name_foo].wait_for_unit_state_to_be(service_simple, "inactive")
+    service = SimpleService()
+    nodes[node_name_foo].install_systemd_service(service)
+    assert nodes[node_name_foo].wait_for_unit_state_to_be(service.name, "inactive")
 
     # copy prepared python scripts into container
     # will be run by not_added_as_peer.py script to create two processes with different bus ids

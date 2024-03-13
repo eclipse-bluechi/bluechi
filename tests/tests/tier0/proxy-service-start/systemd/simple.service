@@ -1,7 +1,0 @@
-[Unit]
-Description=Just sleeping
-
-[Service]
-Type=simple
-ExecStart=/bin/true
-RemainAfterExit=yes
