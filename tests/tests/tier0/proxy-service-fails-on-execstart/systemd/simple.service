@@ -1,7 +1,0 @@
-[Unit]
-Description=Attempting to just sleep, but fail
-
-[Service]
-Type=simple
-ExecStart=/bin/false
-RemainAfterExit=yes

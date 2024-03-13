@@ -4,41 +4,28 @@ from typing import Dict
 
 from bluechi_test.config import BluechiControllerConfig, BluechiAgentConfig
 from bluechi_test.machine import BluechiControllerMachine, BluechiAgentMachine
+from bluechi_test.service import SleepingService
 from bluechi_test.test import BluechiTest
 
 
 node_foo_name = "node-foo"
-simple_service = "simple.service"
-
-
-def verify_service_start(foo: BluechiAgentMachine):
-    assert foo.wait_for_unit_state_to_be(simple_service, "active")
-
-
-def verify_service_freeze(foo: BluechiAgentMachine):
-    output = foo.systemctl.get_unit_freezer_state(simple_service)
-    assert output == 'frozen'
-
-
-def verify_service_thaw(foo: BluechiAgentMachine):
-    output = foo.systemctl.get_unit_freezer_state(simple_service)
-    assert output == 'running'
 
 
 def exec(ctrl: BluechiControllerMachine, nodes: Dict[str, BluechiAgentMachine]):
     foo = nodes[node_foo_name]
+    service = SleepingService()
 
-    foo.copy_systemd_service(simple_service)
-    assert foo.wait_for_unit_state_to_be(simple_service, "inactive")
+    foo.install_systemd_service(service)
+    assert foo.wait_for_unit_state_to_be(service.name, "inactive")
 
-    ctrl.bluechictl.start_unit(node_foo_name, simple_service)
-    verify_service_start(foo)
+    ctrl.bluechictl.start_unit(node_foo_name, service.name)
+    assert foo.wait_for_unit_state_to_be(service.name, "active")
 
-    ctrl.bluechictl.freeze_unit(node_foo_name, simple_service)
-    verify_service_freeze(foo)
+    ctrl.bluechictl.freeze_unit(node_foo_name, service.name)
+    assert 'frozen' == foo.systemctl.get_unit_freezer_state(service.name)
 
-    ctrl.bluechictl.thaw_unit(node_foo_name, simple_service)
-    verify_service_thaw(foo)
+    ctrl.bluechictl.thaw_unit(node_foo_name, service.name)
+    assert 'running' == foo.systemctl.get_unit_freezer_state(service.name)
 
 
 def test_service_freeze_and_thaw(

@@ -4,31 +4,32 @@ from typing import Dict
 
 from bluechi_test.config import BluechiControllerConfig, BluechiAgentConfig
 from bluechi_test.machine import BluechiControllerMachine, BluechiAgentMachine
+from bluechi_test.service import SimpleRemainingService
 from bluechi_test.test import BluechiTest
 
 
 node_foo_name = "node-foo"
-simple_service = "simple.service"
 
 
 def exec(ctrl: BluechiControllerMachine, nodes: Dict[str, BluechiAgentMachine]):
     foo = nodes[node_foo_name]
 
-    foo.copy_systemd_service(simple_service)
-    assert foo.wait_for_unit_state_to_be(simple_service, "inactive")
+    service = SimpleRemainingService()
+    foo.install_systemd_service(service)
+    assert foo.wait_for_unit_state_to_be(service.name, "inactive")
 
-    if not foo.systemctl.is_unit_disabled(simple_service, check_result=False):
-        raise Exception(f"Failed pre-check if unit {simple_service} is disabled")
+    if not foo.systemctl.is_unit_disabled(service.name, check_result=False):
+        raise Exception(f"Failed pre-check if unit {service.name} is disabled")
 
-    ctrl.bluechictl.enable_unit(node_foo_name, simple_service)
+    ctrl.bluechictl.enable_unit(node_foo_name, service.name)
 
-    if not foo.systemctl.is_unit_enabled(simple_service, check_result=False):
-        raise Exception(f"Unit {simple_service} expected to be enabled, but is not")
+    if not foo.systemctl.is_unit_enabled(service.name, check_result=False):
+        raise Exception(f"Unit {service.name} expected to be enabled, but is not")
 
-    ctrl.bluechictl.disable_unit(node_foo_name, simple_service)
+    ctrl.bluechictl.disable_unit(node_foo_name, service.name)
 
-    if not foo.systemctl.is_unit_disabled(simple_service, check_result=False):
-        raise Exception(f"Unit {simple_service} expected to be disabled, but is not")
+    if not foo.systemctl.is_unit_disabled(service.name, check_result=False):
+        raise Exception(f"Unit {service.name} expected to be disabled, but is not")
 
 
 def test_proxy_service_start(

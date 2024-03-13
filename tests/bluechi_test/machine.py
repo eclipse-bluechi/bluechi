@@ -7,10 +7,11 @@ import traceback
 
 from typing import Any, Iterator, Optional, Tuple, Union, List
 
+from bluechi_test.bluechictl import BluechiCtl
 from bluechi_test.client import Client
 from bluechi_test.config import BluechiAgentConfig, BluechiControllerConfig
+from bluechi_test.service import Service
 from bluechi_test.systemctl import SystemCtl
-from bluechi_test.bluechictl import BluechiCtl
 from bluechi_test.util import read_file, get_random_name
 
 LOGGER = logging.getLogger(__name__)
@@ -100,18 +101,15 @@ class BluechiMachine():
 
         return result, output, wait_result
 
-    def copy_systemd_service(self, service_file_name: str, source_dir: str = "systemd",
-                             target_dir: str = os.path.join("/", "etc", "systemd", "system")):
-        source_path = os.path.join(source_dir, service_file_name)
-        content = read_file(source_path)
-
-        LOGGER.debug(f"Copy local systemd service '{source_path}' to container path '{target_dir}'\
-             with content:\n{content}")
-        self.create_file(target_dir, service_file_name, content)
+    def install_systemd_service(self, service: Service,
+                                target_dir: str = os.path.join("/", "etc", "systemd", "system")):
+        LOGGER.debug(f"Installing systemd service '{service.name}' to container path '{target_dir}'"
+                     f"with content:\n{service}")
+        self.create_file(target_dir, service.name, str(service))
         self.systemctl.daemon_reload()
 
         # keep track of created service file to potentially stop it in later cleanup
-        self.systemctl.tracked_services.append(service_file_name)
+        self.systemctl.tracked_services.append(service.name)
 
     def copy_container_script(self, script_file_name: str):
         curr_dir = os.getcwd()

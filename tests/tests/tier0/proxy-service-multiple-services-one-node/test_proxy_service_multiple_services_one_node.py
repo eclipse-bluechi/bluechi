@@ -4,6 +4,7 @@ from typing import Dict
 
 from bluechi_test.config import BluechiControllerConfig, BluechiAgentConfig
 from bluechi_test.machine import BluechiControllerMachine, BluechiAgentMachine
+from bluechi_test.service import Option, Section, SimpleRemainingService
 from bluechi_test.test import BluechiTest
 from bluechi_test.util import assemble_bluechi_dep_service_name, assemble_bluechi_proxy_service_name
 
@@ -11,48 +12,55 @@ from bluechi_test.util import assemble_bluechi_dep_service_name, assemble_bluech
 node_foo_name = "node-foo"
 node_bar_name = "node-bar"
 
-requesting_the_first_service = "requesting-the-first.service"
-requesting_the_second_service = "requesting-the-second.service"
-simple_service = "simple.service"
-
 
 def exec(ctrl: BluechiControllerMachine, nodes: Dict[str, BluechiAgentMachine]):
     foo = nodes[node_foo_name]
     bar = nodes[node_bar_name]
 
-    foo.copy_systemd_service(requesting_the_first_service)
-    foo.copy_systemd_service(requesting_the_second_service)
-    bar.copy_systemd_service(simple_service)
+    simple_service = SimpleRemainingService()
+    simple_service.set_option(Section.Unit, Option.StopWhenUnneeded, "yes")
 
-    assert foo.wait_for_unit_state_to_be(requesting_the_first_service, "inactive")
-    assert foo.wait_for_unit_state_to_be(requesting_the_second_service, "inactive")
-    assert bar.wait_for_unit_state_to_be(simple_service, "inactive")
+    requesting_the_first_service = SimpleRemainingService("requesting-the-first.service")
+    requesting_the_first_service.set_option(Section.Unit, Option.After, "bluechi-proxy@node-bar_simple.service")
+    requesting_the_first_service.set_option(Section.Unit, Option.Wants, "bluechi-proxy@node-bar_simple.service")
 
-    bluechi_dep_service = assemble_bluechi_dep_service_name(simple_service)
-    bluechi_proxy_service = assemble_bluechi_proxy_service_name(node_bar_name, simple_service)
+    requesting_the_second_service = SimpleRemainingService("requesting-the-second.service")
+    requesting_the_second_service.set_option(Section.Unit, Option.After, "bluechi-proxy@node-bar_simple.service")
+    requesting_the_second_service.set_option(Section.Unit, Option.Wants, "bluechi-proxy@node-bar_simple.service")
 
-    ctrl.bluechictl.start_unit(node_foo_name, requesting_the_first_service)
-    assert bar.wait_for_unit_state_to_be(simple_service, "active")
+    foo.install_systemd_service(requesting_the_first_service)
+    foo.install_systemd_service(requesting_the_second_service)
+    bar.install_systemd_service(simple_service)
+
+    assert foo.wait_for_unit_state_to_be(requesting_the_first_service.name, "inactive")
+    assert foo.wait_for_unit_state_to_be(requesting_the_second_service.name, "inactive")
+    assert bar.wait_for_unit_state_to_be(simple_service.name, "inactive")
+
+    bluechi_dep_service = assemble_bluechi_dep_service_name(simple_service.name)
+    bluechi_proxy_service = assemble_bluechi_proxy_service_name(node_bar_name, simple_service.name)
+
+    ctrl.bluechictl.start_unit(node_foo_name, requesting_the_first_service.name)
+    assert bar.wait_for_unit_state_to_be(simple_service.name, "active")
     assert bar.wait_for_unit_state_to_be(bluechi_dep_service, "active")
-    assert foo.wait_for_unit_state_to_be(requesting_the_first_service, "active")
+    assert foo.wait_for_unit_state_to_be(requesting_the_first_service.name, "active")
     assert foo.wait_for_unit_state_to_be(bluechi_proxy_service, "active")
 
-    ctrl.bluechictl.start_unit(node_foo_name, requesting_the_second_service)
-    assert bar.wait_for_unit_state_to_be(simple_service, "active")
+    ctrl.bluechictl.start_unit(node_foo_name, requesting_the_second_service.name)
+    assert bar.wait_for_unit_state_to_be(simple_service.name, "active")
     assert bar.wait_for_unit_state_to_be(bluechi_dep_service, "active")
-    assert foo.wait_for_unit_state_to_be(requesting_the_second_service, "active")
+    assert foo.wait_for_unit_state_to_be(requesting_the_second_service.name, "active")
     assert foo.wait_for_unit_state_to_be(bluechi_proxy_service, "active")
 
-    ctrl.bluechictl.stop_unit(node_foo_name, requesting_the_first_service)
-    assert bar.wait_for_unit_state_to_be(simple_service, "active")
+    ctrl.bluechictl.stop_unit(node_foo_name, requesting_the_first_service.name)
+    assert bar.wait_for_unit_state_to_be(simple_service.name, "active")
     assert bar.wait_for_unit_state_to_be(bluechi_dep_service, "active")
-    assert foo.wait_for_unit_state_to_be(requesting_the_first_service, "inactive")
+    assert foo.wait_for_unit_state_to_be(requesting_the_first_service.name, "inactive")
     assert foo.wait_for_unit_state_to_be(bluechi_proxy_service, "active")
 
-    ctrl.bluechictl.stop_unit(node_foo_name, requesting_the_second_service)
-    assert bar.wait_for_unit_state_to_be(simple_service, "inactive")
+    ctrl.bluechictl.stop_unit(node_foo_name, requesting_the_second_service.name)
+    assert bar.wait_for_unit_state_to_be(simple_service.name, "inactive")
     assert bar.wait_for_unit_state_to_be(bluechi_dep_service, "inactive")
-    assert foo.wait_for_unit_state_to_be(requesting_the_second_service, "inactive")
+    assert foo.wait_for_unit_state_to_be(requesting_the_second_service.name, "inactive")
     assert foo.wait_for_unit_state_to_be(bluechi_proxy_service, "inactive")
 
 

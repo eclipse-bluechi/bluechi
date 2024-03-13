@@ -4,24 +4,27 @@ from typing import Dict
 
 from bluechi_test.config import BluechiControllerConfig, BluechiAgentConfig
 from bluechi_test.machine import BluechiControllerMachine, BluechiAgentMachine
+from bluechi_test.service import Option, Section, SimpleRemainingService
 from bluechi_test.test import BluechiTest
 
 node_foo_name = "node-foo"
-requesting_service = "requesting.service"
 
 
 def exec(ctrl: BluechiControllerMachine, nodes: Dict[str, BluechiAgentMachine]):
     foo = nodes[node_foo_name]
 
-    foo.copy_systemd_service(requesting_service)
-    assert foo.wait_for_unit_state_to_be(requesting_service, "inactive")
+    service = SimpleRemainingService("requesting.service")
+    service.set_option(Section.Unit, Option.After, "bluechi-proxy@node-bar_simple.service")
+    service.set_option(Section.Unit, Option.Wants, "bluechi-proxy@node-bar_simple.service")
+    foo.install_systemd_service(service)
+    assert foo.wait_for_unit_state_to_be(service.name, "inactive")
 
-    ctrl.bluechictl.start_unit(node_foo_name, requesting_service)
+    ctrl.bluechictl.start_unit(node_foo_name, service.name)
 
     # Proxy fails to start since node-bar is offline, but since
     # requesting.service defines the dependency via Wants= its still
     # active - only the template service of the proxy is in failed state
-    assert foo.wait_for_unit_state_to_be(requesting_service, "active")
+    assert foo.wait_for_unit_state_to_be(service.name, "active")
     assert foo.wait_for_unit_state_to_be("bluechi-proxy@node-bar_simple.service", "failed")
 
 

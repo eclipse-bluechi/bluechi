@@ -5,18 +5,19 @@ from typing import Dict
 
 from bluechi_test.config import BluechiControllerConfig, BluechiAgentConfig
 from bluechi_test.machine import BluechiControllerMachine, BluechiAgentMachine
+from bluechi_test.service import SimpleService
 from bluechi_test.test import BluechiTest
 
 
 node_foo_name = "node-foo"
-simple_service = "simple.service"
 
 
 def exec(ctrl: BluechiControllerMachine, nodes: Dict[str, BluechiAgentMachine]):
     foo = nodes[node_foo_name]
+    service = SimpleService()
 
-    foo.copy_systemd_service(simple_service)
-    assert foo.wait_for_unit_state_to_be(simple_service, "inactive")
+    foo.install_systemd_service(service)
+    assert foo.wait_for_unit_state_to_be(service.name, "inactive")
 
     result, output = ctrl.run_python(os.path.join("python", "start_unit_job_metrics.py"))
     if result != 0:

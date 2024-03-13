@@ -1,7 +1,0 @@
-[Unit]
-Wants=bluechi-proxy@node-bar_simple.service
-After=bluechi-proxy@node-bar_simple.service
-
-[Service]
-ExecStart=/bin/true
-RemainAfterExit=yes

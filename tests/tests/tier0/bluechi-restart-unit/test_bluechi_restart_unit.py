@@ -3,20 +3,21 @@
 import os
 from typing import Dict
 
-from bluechi_test.test import BluechiTest
-from bluechi_test.machine import BluechiControllerMachine, BluechiAgentMachine
 from bluechi_test.config import BluechiControllerConfig, BluechiAgentConfig
+from bluechi_test.machine import BluechiControllerMachine, BluechiAgentMachine
+from bluechi_test.service import SimpleRemainingService
+from bluechi_test.test import BluechiTest
 
 node_name_foo = "node-foo"
-service_simple = "simple.service"
 
 
 def exec(ctrl: BluechiControllerMachine, nodes: Dict[str, BluechiAgentMachine]):
-    nodes[node_name_foo].copy_systemd_service(service_simple)
-    assert nodes[node_name_foo].wait_for_unit_state_to_be(service_simple, "inactive")
+    service = SimpleRemainingService()
+    nodes[node_name_foo].install_systemd_service(service)
+    assert nodes[node_name_foo].wait_for_unit_state_to_be(service.name, "inactive")
 
-    ctrl.bluechictl.start_unit(node_name_foo, service_simple)
-    nodes[node_name_foo].wait_for_unit_state_to_be(service_simple, "active")
+    ctrl.bluechictl.start_unit(node_name_foo, service.name)
+    nodes[node_name_foo].wait_for_unit_state_to_be(service.name, "active")
 
     result, output = ctrl.run_python(os.path.join("python", "monitor.py"))
     if result != 0:
