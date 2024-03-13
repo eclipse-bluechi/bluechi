@@ -14,6 +14,8 @@ from bluechi_test.service import Service
 from bluechi_test.systemctl import SystemCtl
 from bluechi_test.util import read_file, get_random_name
 
+import bluechi_machine_lib as bml
+
 LOGGER = logging.getLogger(__name__)
 
 
@@ -121,6 +123,24 @@ class BluechiMachine():
         LOGGER.info(f"Copy container script '{source_path}' to container path '{curr_dir}'\
              with content:\n{content}")
         self.create_file(target_dir, script_file_name, content)
+
+    def copy_machine_lib(self):
+        LOGGER.info("Copying machine lib...")
+        source_dir = bml.__path__[0]
+        if not os.path.isdir(source_dir):
+            # This message is relevant for `finish` phase, where code coverage report is being created
+            LOGGER.info("bluechilib directory not found, proceeding")
+            return
+        ret, _ = self.exec_run("mkdir /tmp/bluechi_machine_lib")
+        if ret == 0:
+            # If the directory was successfully created, then fill it with files
+            # If not - it must already exist
+            for filename in os.listdir(source_dir):
+                source_path = os.path.join(source_dir, filename)
+                if os.path.isfile(source_path) and source_path.endswith(".py"):
+                    content = read_file(source_path)
+                    target_dir = os.path.join("/", "tmp", "bluechi_machine_lib")
+                    self.create_file(target_dir, filename, content)
 
     def restart_with_config_file(self, config_file_location, service):
         unit_dir = "/usr/lib/systemd/system"
@@ -250,3 +270,4 @@ class BluechiControllerMachine(BluechiMachine):
 
         # add confd file to container
         self.create_file(self.config.get_confd_dir(), self.config.file_name, self.config.serialize())
+        self.copy_machine_lib()
