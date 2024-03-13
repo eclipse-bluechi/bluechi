@@ -6,7 +6,7 @@ import dasbus.connection
 
 bus = dasbus.connection.SystemMessageBus()
 
-NodeInfo = namedtuple("NodeInfo", ["name", "object_path", "status"])
+NodeInfo = namedtuple("NodeInfo", ["name", "object_path", "status", "peer_ip"])
 
 controller = bus.get_proxy("org.eclipse.bluechi", "/org/eclipse/bluechi")
 nodes = controller.ListNodes()

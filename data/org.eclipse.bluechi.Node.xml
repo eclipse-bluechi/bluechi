@@ -232,6 +232,16 @@
     </property>
 
     <!-- 
+      PeerIp:
+
+      The current IP of the connected node.
+      The address might be set even though the node is still offline since a call to org.eclipse.bluechi.Controller.Register hasn't been made.
+    -->
+    <property name="PeerIp" type="s" access="read">
+      <annotation name="org.freedesktop.DBus.Property.EmitsChangedSignal" value="false" />
+    </property>
+
+    <!-- 
       LastSeenTimestamp:
 
       A timestamp indicating when the last connection test (e.g. via heartbeat) was successful.

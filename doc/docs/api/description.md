@@ -27,9 +27,9 @@ Note that some properties also come with change events, so you can easily track 
     Creates a new monitor object, which can be used to monitor the state of selected units on the nodes. The monitor
     object returned will automatically be closed if the calling peer disconnects from the bus.
 
-  * `ListNodes(out a(sos) nodes)`
+  * `ListNodes(out a(soss) nodes)`
 
-    Returns information (name, object_path and status) of all known nodes.
+    Returns information (name, object_path, status and peer IP) of all known nodes.
 
   * `GetNode(in s name, out o path)`
 
@@ -209,6 +209,12 @@ Object path: `/org/eclipse/bluechi/node/$name`
   * `Status` - `s`
 
     Status of the node, currently one of: `online`, `offline`. Emits changed when this changes.
+  
+  * `PeerIp` - `s`
+
+    IP of the node.
+    The address might be set even though the node is still offline since a call to
+    org.eclipse.bluechi.Controller.Register hasn't been made.
 
   * `LastSeenTimestamp` - `t`
 

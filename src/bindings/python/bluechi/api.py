@@ -50,7 +50,6 @@ DBUS_PROPERTIES_INTERFACE = "org.freedesktop.DBus.Properties"
 
 
 class ApiBase:
-
     def __init__(
         self,
         interface: str,
@@ -241,13 +240,14 @@ class Controller(ApiBase):
             name,
         )
 
-    def list_nodes(self) -> List[Tuple[str, ObjPath, str]]:
+    def list_nodes(self) -> List[Tuple[str, ObjPath, str, str]]:
         """
           ListNodes:
         @nodes: A list of all nodes:
-          - The node name
-          - The object path of the node
-          - the current state of that node, either online or offline
+          - node name
+          - object path of the node
+          - current state of that node, either online or offline
+          - IP of the connected node
 
         List all nodes managed by BlueChi regardless if they are offline or online.
         """
@@ -781,10 +781,9 @@ class Node(ApiBase):
             runtime,
         )
 
-    def enable_unit_files(self, files: List[str], runtime: bool, force: bool) -> Tuple[
-        bool,
-        List[Tuple[str, str, str]],
-    ]:
+    def enable_unit_files(
+        self, files: List[str], runtime: bool, force: bool
+    ) -> Tuple[bool, List[Tuple[str, str, str]],]:
         """
           EnableUnitFiles:
         @files: A list of units to enable
@@ -992,6 +991,16 @@ class Node(ApiBase):
         The name of the node.
         """
         return self.get_proxy().Name
+
+    @property
+    def peer_ip(self) -> str:
+        """
+          PeerIp:
+
+        The current IP of the connected node.
+        The address might be set even though the node is still offline since a call to org.eclipse.bluechi.Controller.Register hasn't been made.
+        """
+        return self.get_proxy().PeerIp
 
     @property
     def status(self) -> str:
