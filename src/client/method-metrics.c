@@ -53,6 +53,7 @@ static int match_start_unit_job_metrics_signal(
                unit,
                micros_to_millis(job_measured_time),
                micros_to_millis(unit_net_start_time));
+        fflush(stdout);
 
         return 0;
 }
@@ -74,6 +75,7 @@ static int match_agent_job_metrics_signal(sd_bus_message *m, UNUSED void *userda
                method,
                unit,
                micros_to_millis(systemd_job_time));
+        fflush(stdout);
         return 0;
 }
 
