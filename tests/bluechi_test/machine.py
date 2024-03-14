@@ -153,6 +153,18 @@ class BluechiMachine():
         self.systemctl.daemon_reload()
         self.systemctl.restart_unit(service_file)
 
+    def restart_with_modified_service_file(self, service, sed_cmds: list[str]):
+        unit_dir = "/usr/lib/systemd/system"
+        service_file = f"{service}.service"
+
+        self._track_changed_file(unit_dir, service_file)
+        [
+            self.client.exec_run(f"{cmd} {os.path.join(unit_dir, service_file)}")
+            for cmd in sed_cmds
+        ]
+        self.systemctl.daemon_reload()
+        self.systemctl.restart_unit(service_file)
+
     def wait_for_bluechi_agent(self):
         should_wait = True
         while should_wait:
