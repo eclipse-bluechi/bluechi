@@ -179,6 +179,7 @@ void remove_test_directory(
                 char *default_config_file,
                 char *custom_config_file,
                 char *custom_config_directory,
+                char *cli_option_config_file,
                 char *custom_configs[]) {
 
         if (default_config_file && access(default_config_file, R_OK) == 0) {
@@ -186,6 +187,9 @@ void remove_test_directory(
         }
         if (custom_config_file && access(custom_config_file, R_OK) == 0) {
                 unlink(custom_config_file);
+        }
+        if (cli_option_config_file && access(cli_option_config_file, R_OK) == 0) {
+                unlink(cli_option_config_file);
         }
         if (custom_configs[0] && access(custom_configs[0], R_OK) == 0) {
                 unlink(custom_configs[0]);
@@ -278,6 +282,7 @@ bool test_cfg_load_complete_configuration(cfg_test_param *test_case) {
                         default_config_file,
                         custom_config_file,
                         custom_config_directory,
+                        cli_option_config_file,
                         custom_configs);
 
         return result;
