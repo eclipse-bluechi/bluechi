@@ -28,7 +28,7 @@ def exec(ctrl: BluechiControllerMachine, nodes: Dict[str, BluechiAgentMachine]):
         os.path.join(config_file_location, "ctrl_port_8421.conf"), bluechi_controller_str)
     assert ctrl.wait_for_unit_state_to_be(bluechi_controller_str, "active")
 
-    # Check if port 8421 is listenning and 8420 is disconnected
+    # Check if port 8421 is listening and 8420 is disconnected
     _, output = ctrl.exec_run("lsof -i:8421")
     assert "bluechi-c" in str(output)
     _, output = ctrl.exec_run("lsof -i:8420")
