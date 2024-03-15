@@ -168,27 +168,27 @@ static int parse_unit_status_response_from_message(sd_bus_message *m, unit_info_
 static void print_info_header(size_t name_col_width) {
         size_t i = 0;
 
-        fprintf(stderr, "UNIT");
+        fprintf(stdout, "UNIT");
         for (i = PRINT_TAB_SIZE + name_col_width; i > PRINT_TAB_SIZE; i -= PRINT_TAB_SIZE) {
-                fprintf(stderr, "\t");
+                fprintf(stdout, "\t");
         }
 
-        fprintf(stderr, "| LOADED\t| ACTIVE\t| SUBSTATE\t| FREEZERSTATE\t| ENABLED\t|\n");
+        fprintf(stdout, "| LOADED\t| ACTIVE\t| SUBSTATE\t| FREEZERSTATE\t| ENABLED\t|\n");
         for (i = PRINT_TAB_SIZE + name_col_width; i > PRINT_TAB_SIZE; i -= PRINT_TAB_SIZE) {
-                fprintf(stderr, "--------");
+                fprintf(stdout, "--------");
         }
-        fprintf(stderr, "----------------");
-        fprintf(stderr, "----------------");
-        fprintf(stderr, "----------------");
-        fprintf(stderr, "----------------");
-        fprintf(stderr, "----------------\n");
+        fprintf(stdout, "----------------");
+        fprintf(stdout, "----------------");
+        fprintf(stdout, "----------------");
+        fprintf(stdout, "----------------");
+        fprintf(stdout, "----------------\n");
 }
 
 #define PRINT_AND_ALIGN(x)                                       \
         do {                                                     \
-                fprintf(stderr, "| %s\t", unit_info->x);         \
+                fprintf(stdout, "| %s\t", unit_info->x);         \
                 if (!unit_info->x || strlen(unit_info->x) < 6) { \
-                        fprintf(stderr, "\t");                   \
+                        fprintf(stdout, "\t");                   \
                 }                                                \
         } while (0)
 
@@ -201,11 +201,11 @@ static void print_unit_info(unit_info_t *unit_info, size_t name_col_width) {
                 return;
         }
 
-        fprintf(stderr, "%s", unit_info->id);
+        fprintf(stdout, "%s", unit_info->id);
         name_col_width -= unit_info->id ? strlen(unit_info->id) : 0;
         name_col_width += PRINT_TAB_SIZE;
         for (i = PRINT_TAB_SIZE + name_col_width; i > PRINT_TAB_SIZE; i -= PRINT_TAB_SIZE) {
-                fprintf(stderr, "\t");
+                fprintf(stdout, "\t");
         }
 
         PRINT_AND_ALIGN(load_state);
@@ -214,7 +214,7 @@ static void print_unit_info(unit_info_t *unit_info, size_t name_col_width) {
         PRINT_AND_ALIGN(freezer_state);
         PRINT_AND_ALIGN(unit_file_state);
 
-        fprintf(stderr, "|\n");
+        fprintf(stdout, "|\n");
 }
 
 static size_t get_max_name_len(char **units, size_t units_count) {
