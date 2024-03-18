@@ -148,12 +148,11 @@ execution result directory, for example:
 
 ### Code Style
 
-[autopep8](https://pypi.org/project/autopep8/) is used to enforce a unified code style. The applied rules are defined in
-the [.pep8](./.pep8) file. All source files can be formatted via:
+[flake8](https://pypi.org/project/flake8/) is used to enforce a unified code style. All source files formatting can be checked via:
 
 ```shell
 # navigate into bluechi/tests directory
-autopep8 ./
+flake8
 ```
 
 ### Changing log level
