@@ -14,7 +14,7 @@ class TestNodeIsConnected(unittest.TestCase):
 
         # verify that the last seen timestamp is updated with each heartbeat
         timestamp = n.last_seen_timestamp
-        time.sleep(2)
+        time.sleep(2.5)
         assert n.last_seen_timestamp > timestamp
 
 
