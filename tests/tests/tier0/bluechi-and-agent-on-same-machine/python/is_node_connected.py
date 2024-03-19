@@ -10,6 +10,7 @@ class TestNodeIsConnected(unittest.TestCase):
     def test_node_is_connected(self):
         n = Node("node-foo")
         assert n.status == "online"
+        assert n.name == "node-foo"
 
 
 if __name__ == "__main__":
