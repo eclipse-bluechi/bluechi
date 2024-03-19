@@ -13,7 +13,7 @@ def exec(ctrl: BluechiControllerMachine, nodes: Dict[str, BluechiAgentMachine]):
 
     simple_svc = SimpleRemainingService()
 
-    svc_for_reload = SimpleRemainingService("service-for-reload.service")
+    svc_for_reload = SimpleRemainingService(name="service-for-reload.service")
     svc_for_reload.set_option(Section.Service, Option.ExecReload, f"systemctl start {simple_svc.name}")
 
     foo = nodes[NODE_FOO]

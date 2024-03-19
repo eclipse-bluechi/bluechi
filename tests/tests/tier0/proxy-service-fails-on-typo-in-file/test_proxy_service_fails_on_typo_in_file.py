@@ -18,15 +18,15 @@ def exec(ctrl: BluechiControllerMachine, nodes: Dict[str, BluechiAgentMachine]):
     bar = nodes[node_bar_name]
 
     incorrect_section = "Sevice"  # codespell-ignore
-    simple_service = Service("simple.service")
+    simple_service = Service(name="simple.service")
     simple_service.set_option(Section.Unit, Option.Description, "A simple service")
     # Hack to create incorrect service file
-    simple_service.cp.remove_section(Section.Service)
-    simple_service.cp.add_section(incorrect_section)
-    simple_service.cp.set(incorrect_section, Option.Type.value, "simple")
-    simple_service.cp.set(incorrect_section, Option.ExecStart.value, "/bin/true")
+    simple_service._cfg_parser.remove_section(Section.Service)
+    simple_service._cfg_parser.add_section(incorrect_section)
+    simple_service._cfg_parser.set(incorrect_section, Option.Type.value, "simple")
+    simple_service._cfg_parser.set(incorrect_section, Option.ExecStart.value, "/bin/true")
 
-    requesting_service = SimpleRemainingService("requesting.service")
+    requesting_service = SimpleRemainingService(name="requesting.service")
     requesting_service.set_option(Section.Unit, Option.After, "bluechi-proxy@node-bar_simple.service")
     requesting_service.set_option(Section.Unit, Option.Wants, "bluechi-proxy@node-bar_simple.service")
 

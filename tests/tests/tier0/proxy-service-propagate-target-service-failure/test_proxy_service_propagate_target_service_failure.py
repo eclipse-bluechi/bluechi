@@ -3,10 +3,12 @@
 import logging
 
 from typing import Dict
-from bluechi_test.test import BluechiTest
-from bluechi_test.machine import BluechiControllerMachine, BluechiAgentMachine
+
 from bluechi_test.config import BluechiControllerConfig, BluechiAgentConfig
+from bluechi_test.machine import BluechiControllerMachine, BluechiAgentMachine
 from bluechi_test.service import Option, Section, SimpleRemainingService
+from bluechi_test.test import BluechiTest
+
 
 LOGGER = logging.getLogger(__name__)
 
@@ -19,22 +21,22 @@ def exec(_: BluechiControllerMachine, nodes: Dict[str, BluechiAgentMachine]):
     node_foo = nodes[NODE_FOO]
     node_bar = nodes[NODE_BAR]
 
-    service = SimpleRemainingService("target.service")
-    service.set_option(Section.Service, Option.ExecStart, "/bin/false")
+    tgt_svc = SimpleRemainingService(name="target.service")
+    tgt_svc.set_option(Section.Service, Option.ExecStart, "/bin/false")
 
-    node_bar.install_systemd_service(service)
+    node_bar.install_systemd_service(tgt_svc)
 
-    service = SimpleRemainingService("requesting.service")
-    service.set_option(Section.Unit, Option.BindsTo, "bluechi-proxy@node-bar_target.service")
-    service.set_option(Section.Unit, Option.After, "bluechi-proxy@node-bar_target.service")
-    service.set_option(Section.Service, Option.ExecStart, "/bin/true")
-    service.set_option(Section.Service, Option.RemainAfterExit, "yes")
+    req_svc = SimpleRemainingService(name="requesting.service")
+    req_svc.set_option(Section.Unit, Option.BindsTo, "bluechi-proxy@node-bar_target.service")
+    req_svc.set_option(Section.Unit, Option.After, "bluechi-proxy@node-bar_target.service")
+    req_svc.set_option(Section.Service, Option.ExecStart, "/bin/true")
+    req_svc.set_option(Section.Service, Option.RemainAfterExit, "yes")
 
-    node_foo.install_systemd_service(service)
+    node_foo.install_systemd_service(req_svc)
 
-    assert node_foo.systemctl.start_unit("requesting.service")
-    assert node_foo.wait_for_unit_state_to_be("requesting.service", "inactive")
-    assert node_bar.wait_for_unit_state_to_be("target.service", "failed")
+    assert node_foo.systemctl.start_unit(req_svc.name)
+    assert node_foo.wait_for_unit_state_to_be(req_svc.name, "inactive")
+    assert node_bar.wait_for_unit_state_to_be(tgt_svc.name, "failed")
 
 
 def test_proxy_service_propagate_target_service_failure(

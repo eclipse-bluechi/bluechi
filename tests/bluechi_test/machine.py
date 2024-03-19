@@ -103,11 +103,10 @@ class BluechiMachine():
 
         return result, output, wait_result
 
-    def install_systemd_service(self, service: Service,
-                                target_dir: str = os.path.join("/", "etc", "systemd", "system")):
-        LOGGER.debug(f"Installing systemd service '{service.name}' to container path '{target_dir}'"
-                     f"with content:\n{service}")
-        self.create_file(target_dir, service.name, str(service))
+    def install_systemd_service(self, service: Service):
+        LOGGER.debug(f"Installing systemd service '{service.name}' to container path '{service.directory}' "
+                     f"with content:\n{service.to_string()}")
+        self.create_file(service.directory, service.name, service.to_string())
         self.systemctl.daemon_reload()
 
         # keep track of created service file to potentially stop it in later cleanup

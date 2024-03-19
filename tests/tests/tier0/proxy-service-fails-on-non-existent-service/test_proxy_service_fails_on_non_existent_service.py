@@ -18,7 +18,7 @@ simple_service = "simple.service"
 def exec(ctrl: BluechiControllerMachine, nodes: Dict[str, BluechiAgentMachine]):
     foo = nodes[node_foo_name]
 
-    requesting_service = SimpleRemainingService("requesting.service")
+    requesting_service = SimpleRemainingService(name="requesting.service")
     requesting_service.set_option(Section.Unit, Option.After, "bluechi-proxy@node-bar_simple.service")
     requesting_service.set_option(Section.Unit, Option.Wants, "bluechi-proxy@node-bar_simple.service")
 

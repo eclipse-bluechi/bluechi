@@ -3,8 +3,16 @@
 import configparser
 import enum
 import io
+import pathlib
 
 from typing import Union
+
+
+# Default service installation directory
+SERVICE_DIRECTORY = "/etc/systemd/system"
+
+# Default service name (it should be changed in child classes)
+SERVICE_NAME = "empty.service"
 
 
 @enum.unique
@@ -39,38 +47,55 @@ class Option(enum.Enum):
 
 
 class Service():
-    """An empty service, which only contains predefined sections"""
-    def __init__(self, name: str = None) -> None:
-        self.cp = configparser.ConfigParser()
-        # Enable case sensitivity
-        self.cp.optionxform = lambda option: option
-        self.name = name
-        for section in Section:
-            self.cp.add_section(section.value)
+    """A base service class, which by default contains only predefined sections"""
+    def __init__(self,  directory: str = SERVICE_DIRECTORY, name: str = SERVICE_NAME) -> None:
+        if not name:
+            raise Exception(f"Service name is '{name}', but cannot be empty!")
+        if not directory:
+            raise Exception(f"Service directory is '{directory}', but cannot be empty!")
+        self._svc_path = pathlib.Path(directory, name)
 
-    def __str__(self) -> str:
-        with io.StringIO() as content:
-            self.cp.write(content, space_around_delimiters=False)
-            return content.getvalue()
+        self._cfg_parser = configparser.ConfigParser()
+        # Enable case sensitivity
+        self._cfg_parser.optionxform = lambda option: option
+
+        for section in Section:
+            self._cfg_parser.add_section(section.value)
+
+    @property
+    def path(self) -> pathlib.Path:
+        return self._svc_path
+
+    @property
+    def name(self) -> str:
+        return str(self._svc_path.name)
+
+    @property
+    def directory(self) -> str:
+        return str(self._svc_path.parent)
 
     def set_option(self, section: Section, name: Option, value: str) -> None:
-        self.cp.set(section.value, name.value, value)
+        self._cfg_parser.set(section.value, name.value, value)
 
     def get_option(self, section: Section, name: Option) -> Union[str, None]:
-        if self.cp.has_option(section.value, name.value):
-            return self.cp.get(section.value, name.value)
-
+        if self._cfg_parser.has_option(section.value, name.value):
+            return self._cfg_parser.get(section.value, name.value)
         return None
 
     def remove_option(self, section: Section, name: Option) -> None:
-        if self.cp.has_option(section.value, name.value):
-            self.cp.remove_option(section.value, name.value)
+        if self._cfg_parser.has_option(section.value, name.value):
+            self._cfg_parser.remove_option(section.value, name.value)
+
+    def to_string(self) -> str:
+        with io.StringIO() as content:
+            self._cfg_parser.write(content, space_around_delimiters=False)
+            return content.getvalue()
 
 
 class SimpleService(Service):
     """A simple service, which is using /bin/true command"""
-    def __init__(self, name: str = "simple.service") -> None:
-        super(SimpleService, self).__init__(name)
+    def __init__(self,  directory: str = SERVICE_DIRECTORY, name: str = "simple.service") -> None:
+        super(SimpleService, self).__init__(directory=directory, name=name)
 
         self.set_option(Section.Unit, Option.Description, "A simple service")
 
@@ -82,16 +107,16 @@ class SimpleService(Service):
 
 class SimpleRemainingService(SimpleService):
     """A simple service, which adds RemainAfterExit enabled to SimpleService"""
-    def __init__(self, name: str = "simple.service") -> None:
-        super(SimpleRemainingService, self).__init__(name)
+    def __init__(self, directory: str = SERVICE_DIRECTORY, name: str = "simple.service") -> None:
+        super(SimpleRemainingService, self).__init__(directory=directory, name=name)
 
         self.set_option(Section.Service, Option.RemainAfterExit, "yes")
 
 
 class SleepingService(Service):
     """A simple service, which is using /bin/sleep command"""
-    def __init__(self, name: str = "sleeping.service") -> None:
-        super(SleepingService, self).__init__(name)
+    def __init__(self, directory: str = SERVICE_DIRECTORY, name: str = "sleeping.service") -> None:
+        super(SleepingService, self).__init__(directory=directory, name=name)
 
         self.set_option(Section.Unit, Option.Description, "A sleeping service")
 

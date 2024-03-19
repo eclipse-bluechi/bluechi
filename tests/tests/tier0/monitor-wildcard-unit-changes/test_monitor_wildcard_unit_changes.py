@@ -16,7 +16,7 @@ node_name_bar = "node-bar"
 def exec(ctrl: BluechiControllerMachine, nodes: Dict[str, BluechiAgentMachine]):
     service1 = SimpleService()
 
-    service2 = SimpleService("also-simple.service")
+    service2 = SimpleService(name="also-simple.service")
 
     nodes[node_name_foo].install_systemd_service(service1)
     assert nodes[node_name_foo].wait_for_unit_state_to_be(service1.name, "inactive")
