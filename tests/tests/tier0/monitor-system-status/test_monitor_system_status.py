@@ -65,7 +65,7 @@ def check_events(ctrl: BluechiControllerMachine, expected_events: List[str]):
 
 
 def exec(ctrl: BluechiControllerMachine, nodes: Dict[str, BluechiAgentMachine]):
-    service = Service("monitor.service")
+    service = Service(name="monitor.service")
     service.set_option(Section.Service, Option.ExecStart, "python3 /tmp/system-monitor.py")
     service.set_option(Section.Unit, Option.Description, "Monitor BlueChi system")
     service.set_option(Section.Service, Option.Type, "simple")

@@ -22,7 +22,7 @@ def exec(ctrl: BluechiControllerMachine, nodes: Dict[str, BluechiAgentMachine]):
     simple_service = SimpleRemainingService()
     simple_service.set_option(Section.Unit, Option.StopWhenUnneeded, "yes")
 
-    requesting_service = SimpleRemainingService("requesting.service")
+    requesting_service = SimpleRemainingService(name="requesting.service")
     requesting_service.set_option(Section.Unit, Option.After, "bluechi-proxy@node-bar_simple.service")
     requesting_service.set_option(Section.Unit, Option.Wants, "bluechi-proxy@node-bar_simple.service")
 

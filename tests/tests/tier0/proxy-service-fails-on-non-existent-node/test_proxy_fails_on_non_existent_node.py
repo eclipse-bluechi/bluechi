@@ -13,7 +13,7 @@ node_foo_name = "node-foo"
 def exec(ctrl: BluechiControllerMachine, nodes: Dict[str, BluechiAgentMachine]):
     foo = nodes[node_foo_name]
 
-    service = SimpleRemainingService("requesting.service")
+    service = SimpleRemainingService(name="requesting.service")
     service.set_option(Section.Unit, Option.After, "bluechi-proxy@node-bar_simple.service")
     service.set_option(Section.Unit, Option.Wants, "bluechi-proxy@node-bar_simple.service")
     foo.install_systemd_service(service)
