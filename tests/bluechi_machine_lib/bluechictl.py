@@ -152,6 +152,9 @@ class BluechiCtl:
     def unit_stop(self, node, unit) -> Tuple[int, str, str]:
         return self.run(["stop", node, unit])
 
+    def unit_restart(self, node, unit) -> Tuple[int, str, str]:
+        return self.run(["restart", node, unit])
+
     def status_unit(self, node, unit) -> Tuple[int, str, str]:
         return self.run(["status", node, unit])
 
