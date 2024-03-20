@@ -5,9 +5,10 @@ import time
 
 from typing import Dict
 
-from bluechi_test.test import BluechiTest
-from bluechi_test.machine import BluechiControllerMachine, BluechiAgentMachine, BluechiMachine
 from bluechi_test.config import BluechiControllerConfig, BluechiAgentConfig
+from bluechi_test.machine import BluechiControllerMachine, BluechiAgentMachine, BluechiMachine
+from bluechi_test.service import Option, Section
+from bluechi_test.test import BluechiTest
 from bluechi_test.util import read_file, Timeout
 
 NODE_FOO = "node-foo"
@@ -28,8 +29,6 @@ def cmd_on_port(machine: BluechiMachine, port: int, expected_result: int = 0, ex
 def exec(ctrl: BluechiControllerMachine, nodes: Dict[str, BluechiAgentMachine]):
     node_foo = nodes[NODE_FOO]
     config_file_location = "/var/tmp"
-    bluechi_agent_str = "bluechi-agent"
-    bluechi_controller_str = "bluechi-controller"
 
     # Copy the script to get the process listening on a port
     ctrl.copy_container_script("cmd-on-port.sh")
@@ -42,9 +41,12 @@ def exec(ctrl: BluechiControllerMachine, nodes: Dict[str, BluechiAgentMachine]):
     content = read_file(os.path.join("config-files", "ctrl_port_8421.conf"))
     ctrl.create_file(config_file_location, "ctrl_port_8421.conf", content)
 
-    ctrl.restart_with_config_file(
-        os.path.join(config_file_location, "ctrl_port_8421.conf"), bluechi_controller_str)
-    assert ctrl.wait_for_unit_state_to_be(bluechi_controller_str, "active")
+    bc_controller = ctrl.load_systemd_service(directory="/usr/lib/systemd/system", name="bluechi-controller.service")
+    bc_controller.set_option(Section.Service, Option.ExecStart,
+                             bc_controller.get_option(Section.Service, Option.ExecStart) +
+                             " -c {}".format(os.path.join(config_file_location, "ctrl_port_8421.conf")))
+    ctrl.install_systemd_service(bc_controller, restart=True)
+    assert ctrl.wait_for_unit_state_to_be(bc_controller.name, "active")
 
     # Check if bluechi controller listens on port 8421 and not on port 8420
     cmd_on_port(machine=ctrl, port=NEW_PORT, expected_result=0, expected_command="bluechi-controller")
@@ -56,9 +58,12 @@ def exec(ctrl: BluechiControllerMachine, nodes: Dict[str, BluechiAgentMachine]):
     result, _ = ctrl.run_python(os.path.join("python", "is_node_connected.py"))
     assert result
 
-    node_foo.restart_with_config_file(
-        os.path.join(config_file_location, "agent_port_8421.conf"), bluechi_agent_str)
-    assert node_foo.wait_for_unit_state_to_be(bluechi_agent_str, "active")
+    bc_agent = node_foo.load_systemd_service(directory="/usr/lib/systemd/system", name="bluechi-agent.service")
+    bc_agent.set_option(Section.Service, Option.ExecStart,
+                        bc_agent.get_option(Section.Service, Option.ExecStart) +
+                        " -c {}".format(os.path.join(config_file_location, "agent_port_8421.conf")))
+    node_foo.install_systemd_service(bc_agent, restart=True)
+    assert node_foo.wait_for_unit_state_to_be(bc_agent.name, "active")
 
     # Check if bluechi-agent on node_foo is using port 8421
     cmd_on_port(machine=node_foo, port=NEW_PORT, expected_result=0, expected_command="bluechi-agent")

@@ -103,14 +103,31 @@ class BluechiMachine():
 
         return result, output, wait_result
 
-    def install_systemd_service(self, service: Service):
-        LOGGER.debug(f"Installing systemd service '{service.name}' to container path '{service.directory}' "
+    def install_systemd_service(self, service: Service, restart: bool = False):
+        self._track_changed_file(service.directory, service.name)
+
+        if restart:
+            self.systemctl.stop_unit(service.name)
+
+        LOGGER.debug(f"Installing systemd service '{service.name}' to container path '{service.directory}'"
                      f"with content:\n{service.to_string()}")
         self.create_file(service.directory, service.name, service.to_string())
         self.systemctl.daemon_reload()
 
+        if restart:
+            self.systemctl.start_unit(service.name)
+
         # keep track of created service file to potentially stop it in later cleanup
         self.systemctl.tracked_services.append(service.name)
+
+    def load_systemd_service(self, directory: str, name: str) -> Service:
+        service = Service(directory=directory, name=name)
+        result, output = self.exec_run(f"cat {str(service.path)}")
+        if result != 0:
+            raise Exception(f"Error loading systemd service '{service.path}'")
+
+        service.from_string(output)
+        return service
 
     def copy_container_script(self, script_file_name: str):
         curr_dir = os.getcwd()
@@ -140,29 +157,6 @@ class BluechiMachine():
                     content = read_file(source_path)
                     target_dir = os.path.join("/", "tmp", "bluechi_machine_lib")
                     self.create_file(target_dir, filename, content)
-
-    def restart_with_config_file(self, config_file_location, service):
-        unit_dir = "/usr/lib/systemd/system"
-        service_file = f"{service}.service"
-
-        self._track_changed_file(unit_dir, service_file)
-        self.client.exec_run(f"sed -i '/ExecStart=/c\\ExecStart=/usr/libexec/{service} -c "
-                             f"{config_file_location}' "
-                             f"{os.path.join(unit_dir, service_file)}")
-        self.systemctl.daemon_reload()
-        self.systemctl.restart_unit(service_file)
-
-    def restart_with_modified_service_file(self, service, sed_cmds: list[str]):
-        unit_dir = "/usr/lib/systemd/system"
-        service_file = f"{service}.service"
-
-        self._track_changed_file(unit_dir, service_file)
-        [
-            self.client.exec_run(f"{cmd} {os.path.join(unit_dir, service_file)}")
-            for cmd in sed_cmds
-        ]
-        self.systemctl.daemon_reload()
-        self.systemctl.restart_unit(service_file)
 
     def wait_for_bluechi_agent(self):
         should_wait = True
