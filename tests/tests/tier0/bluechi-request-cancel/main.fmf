@@ -1,0 +1,3 @@
+summary: Test if shutting down BlueChi also cancels all pending requests like start
+    units
+id: 69e0b0d8-df11-4d67-8b14-ab2e8fa187e0
