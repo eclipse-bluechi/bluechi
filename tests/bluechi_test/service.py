@@ -55,12 +55,15 @@ class Service():
             raise Exception(f"Service directory is '{directory}', but cannot be empty!")
         self._svc_path = pathlib.Path(directory, name)
 
-        self._cfg_parser = configparser.ConfigParser()
-        # Enable case sensitivity
-        self._cfg_parser.optionxform = lambda option: option
-
+        self._cfg_parser = self._init_parser()
         for section in Section:
             self._cfg_parser.add_section(section.value)
+
+    def _init_parser(self) -> configparser.ConfigParser:
+        cp = configparser.ConfigParser()
+        # Enable case sensitivity
+        cp.optionxform = lambda option: option
+        return cp
 
     @property
     def path(self) -> pathlib.Path:
@@ -90,6 +93,10 @@ class Service():
         with io.StringIO() as content:
             self._cfg_parser.write(content, space_around_delimiters=False)
             return content.getvalue()
+
+    def from_string(self, content: str) -> None:
+        self._cfg_parser = self._init_parser()
+        self._cfg_parser.read_string(content)
 
 
 class SimpleService(Service):

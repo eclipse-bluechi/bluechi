@@ -1,11 +1,13 @@
 # SPDX-License-Identifier: LGPL-2.1-or-later
 
-from typing import Dict
 import os
 
-from bluechi_test.test import BluechiTest
-from bluechi_test.machine import BluechiControllerMachine, BluechiAgentMachine
+from typing import Dict
+
 from bluechi_test.config import BluechiControllerConfig, BluechiAgentConfig
+from bluechi_test.machine import BluechiControllerMachine, BluechiAgentMachine
+from bluechi_test.service import Option, Section
+from bluechi_test.test import BluechiTest
 from bluechi_test.util import read_file
 
 NODE_FOO = "node-FOO"
@@ -14,7 +16,7 @@ NODE_FOO = "node-FOO"
 def exec(ctrl: BluechiControllerMachine, nodes: Dict[str, BluechiAgentMachine]):
     node_foo = nodes[NODE_FOO]
     config_file_location = "/tmp"
-    bluechi_agent_str = "bluechi-agent"
+    bluechi_agent_str = "bluechi-agent.service"
     invalid_conf_str = "Invalid-ControllerAddress.conf"
     invalid_controller_address = "Invalid-ControllerAddress.conf"
     service = "org.eclipse.bluechi"
@@ -28,8 +30,12 @@ def exec(ctrl: BluechiControllerMachine, nodes: Dict[str, BluechiAgentMachine]):
     content = read_file(os.path.join("config", invalid_conf_str))
     node_foo.create_file(config_file_location, invalid_conf_str, content)
 
-    node_foo.restart_with_config_file(os.path.join(config_file_location, invalid_controller_address), bluechi_agent_str)
-    assert node_foo.wait_for_unit_state_to_be(bluechi_agent_str, "active", delay=2)
+    bc_agent = node_foo.load_systemd_service(directory="/usr/lib/systemd/system", name="bluechi-agent.service")
+    bc_agent.set_option(Section.Service, Option.ExecStart,
+                        bc_agent.get_option(Section.Service, Option.ExecStart) +
+                        " -c {}".format(os.path.join(config_file_location, invalid_controller_address)))
+    node_foo.install_systemd_service(bc_agent, restart=True)
+    assert node_foo.wait_for_unit_state_to_be(bc_agent.name, "active", delay=2)
     assert 's "down"' == ctrl.exec_run(f"busctl get-property {service} {object} {interface} {property}")[1]
 
 
