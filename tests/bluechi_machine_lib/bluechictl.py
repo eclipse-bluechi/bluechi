@@ -119,23 +119,44 @@ class BackgroundRunner:
 
 
 class BluechiCtl:
-    def run(self, args: List) -> Tuple[str, str]:
+    def run(self, args: List) -> Tuple[int, str, str]:
         command = bluechictl_executable + args
-        process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        process = subprocess.Popen(
+                command,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE)
         print(f"Executing of command '{process.args}' started")
-        return process.communicate()
+        out, err = process.communicate()
 
-    def metrics_listen(self) -> Tuple[str, str]:
+        out = out.decode("utf-8")
+        err = err.decode("utf-8")
+
+        print(
+            f"Executing of command '{process.args}' finished with result '{process.returncode}', "
+            f"stdout '{out}', stderr '{err}'")
+
+        return process.returncode, out, err
+
+    def metrics_listen(self) -> Tuple[int, str, str]:
         return self.run(["metrics", "listen"])
 
-    def metrics_enable(self) -> Tuple[str, str]:
+    def metrics_enable(self) -> Tuple[int, str, str]:
         return self.run(["metrics", "enable"])
 
-    def metrics_disable(self) -> Tuple[str, str]:
+    def metrics_disable(self) -> Tuple[int, str, str]:
         return self.run(["metrics", "disable"])
 
-    def unit_start(self, node, unit) -> Tuple[str, str]:
+    def unit_start(self, node, unit) -> Tuple[int, str, str]:
         return self.run(["start", node, unit])
 
-    def unit_stop(self, node, unit) -> Tuple[str, str]:
+    def unit_stop(self, node, unit) -> Tuple[int, str, str]:
         return self.run(["stop", node, unit])
+
+    def status_unit(self, node, unit) -> Tuple[int, str, str]:
+        return self.run(["status", node, unit])
+
+    def status_node(self, node) -> Tuple[int, str, str]:
+        return self.run(["status", node])
+
+    def status(self) -> Tuple[int, str, str]:
+        return self.run(["status"])

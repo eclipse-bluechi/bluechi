@@ -20,6 +20,7 @@ def exec(ctrl: BluechiControllerMachine, nodes: Dict[str, BluechiAgentMachine]):
     assert node_foo.wait_for_unit_state_to_be(simple_service.name, "inactive")
 
     result, output = ctrl.run_python(os.path.join("python", "monitor.py"))
+    assert result == 0
 
 
 def test_bluechictl_monitor_unit_created_removed(
