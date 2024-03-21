@@ -17,6 +17,10 @@ def exec(ctrl: BluechiControllerMachine, nodes: Dict[str, BluechiAgentMachine]):
     bluechi_agent_str = "bluechi-agent"
     bluechi_controller_str = "bluechi-controller"
 
+    # Copy the script to get the process listening on a port
+    ctrl.copy_container_script("cmd-on-port.sh")
+    node_foo.copy_container_script("cmd-on-port.sh")
+
     # Copying relevant config files into the nodes container
     content = read_file(os.path.join("config-files", "agent_port_8421.conf"))
     node_foo.create_file(config_file_location, "agent_port_8421.conf", content)
@@ -29,9 +33,11 @@ def exec(ctrl: BluechiControllerMachine, nodes: Dict[str, BluechiAgentMachine]):
     assert ctrl.wait_for_unit_state_to_be(bluechi_controller_str, "active")
 
     # Check if port 8421 is listening and 8420 is disconnected
-    _, output = ctrl.exec_run("lsof -i:8421")
-    assert "bluechi-c" in str(output)
-    _, output = ctrl.exec_run("lsof -i:8420")
+    res, output = ctrl.exec_run("bash /var/cmd-on-port.sh 8421")
+    assert res == 0
+    assert "bluechi-controller" in str(output)
+    res, output = ctrl.exec_run("bash /var/cmd-on-port.sh 8420")
+    assert res != 0
     assert b'' == output
 
     # Check if node disconnected
@@ -43,8 +49,9 @@ def exec(ctrl: BluechiControllerMachine, nodes: Dict[str, BluechiAgentMachine]):
     assert node_foo.wait_for_unit_state_to_be(bluechi_agent_str, "active")
 
     # Check if node connected
-    _, output = node_foo.exec_run("lsof -i:8421")
-    assert "bluechi-a" in str(output)
+    res, output = node_foo.exec_run("bash /var/cmd-on-port.sh 8421")
+    assert res == 0
+    assert "bluechi-agent" in str(output)
 
     result, _ = ctrl.run_python(os.path.join("python", "is_node_connected.py"))
     assert not result
