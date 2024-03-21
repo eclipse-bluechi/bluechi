@@ -6,6 +6,7 @@ RUN dnf upgrade --refresh --nodocs -y && \
             lcov \
             lsof \
             policycoreutils-python-utils \
+            procps-ng \
             python3-dasbus \
             selinux-policy \
             systemd \
