@@ -23,6 +23,7 @@ class Option(enum.Enum):
     Description = "Description"
     StopWhenUnneeded = "StopWhenUnneeded"
     Wants = "Wants"
+    BindsTo = "BindsTo"
 
     # Available options for Service section can be found at
     # https://www.freedesktop.org/software/systemd/man/latest/systemd.service.html#Options

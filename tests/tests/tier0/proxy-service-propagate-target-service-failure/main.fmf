@@ -1,0 +1,2 @@
+summary: Test Propagating the failure of the requested service by adding requested service to node-bar and the requesting to node-foo.
+id: bb9d4394-bd53-4d36-b8ba-ee91697c4850
