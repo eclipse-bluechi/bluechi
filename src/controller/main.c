@@ -91,7 +91,7 @@ int main(int argc, char *argv[]) {
 
         bc_log_init(controller->config);
         _cleanup_free_ const char *dumped_cfg = cfg_dump(controller->config);
-        bc_log_debug_with_data("Final configuration used", "\n%s", dumped_cfg);
+        bc_log_debugf("Final configuration used:\n%s", dumped_cfg);
 
         if (!controller_apply_config(controller)) {
                 return EXIT_FAILURE;

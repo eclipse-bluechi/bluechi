@@ -139,7 +139,7 @@ int main(int argc, char *argv[]) {
 
         bc_log_init(agent->config);
         _cleanup_free_ const char *dumped_cfg = cfg_dump(agent->config);
-        bc_log_debug_with_data("Final configuration used", "\n%s", dumped_cfg);
+        bc_log_debugf("Final configuration used:\n%s", dumped_cfg);
 
         if (!agent_apply_config(agent)) {
                 return EXIT_FAILURE;
