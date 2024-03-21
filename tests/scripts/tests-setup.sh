@@ -42,6 +42,7 @@ function setup_worker(){
                 lcov \
                 lsof \
                 policycoreutils-python-utils \
+                procps-ng \
                 python3-dasbus \
                 selinux-policy \
                 systemd \
