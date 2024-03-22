@@ -50,6 +50,7 @@ DBUS_PROPERTIES_INTERFACE = "org.freedesktop.DBus.Properties"
 
 
 class ApiBase:
+
     def __init__(
         self,
         interface: str,
@@ -822,9 +823,10 @@ class Node(ApiBase):
             runtime,
         )
 
-    def enable_unit_files(
-        self, files: List[str], runtime: bool, force: bool
-    ) -> Tuple[bool, List[Tuple[str, str, str]],]:
+    def enable_unit_files(self, files: List[str], runtime: bool, force: bool) -> Tuple[
+        bool,
+        List[Tuple[str, str, str]],
+    ]:
         """
           EnableUnitFiles:
         @files: A list of units to enable
