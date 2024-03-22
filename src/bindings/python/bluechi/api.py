@@ -132,6 +132,47 @@ class Agent(ApiBase):
             unit,
         )
 
+    def switch_controller(self, dbus_address: str) -> None:
+        """
+          SwitchController:
+        @dbus_address: SD Bus address used to connect to the BlueChi controller
+
+        SwitchController() changes SD Bus address used to connect to the BlueChi controller and
+        triggers a reconnect to the BlueChi controller with the new address.
+        """
+        self.get_proxy().SwitchController(
+            dbus_address,
+        )
+
+    @property
+    def controller_address(self) -> str:
+        """
+          ControllerAddress:
+
+        SD Bus address used to connect to the BlueChi controller.
+        On any change, a signal is emitted on the org.freedesktop.DBus.Properties interface.
+        """
+        return self.get_proxy().ControllerAddress
+
+    def on_controller_address_changed(self, callback: Callable[[Variant], None]):
+        """
+          ControllerAddress:
+
+        SD Bus address used to connect to the BlueChi controller.
+        On any change, a signal is emitted on the org.freedesktop.DBus.Properties interface.
+        """
+
+        def on_properties_changed(
+            interface: str,
+            changed_props: Dict[str, Variant],
+            invalidated_props: Dict[str, Variant],
+        ) -> None:
+            value = changed_props.get("ControllerAddress")
+            if value is not None:
+                callback(value)
+
+        self.get_properties_proxy().PropertiesChanged.connect(on_properties_changed)
+
     @property
     def disconnect_timestamp(self) -> UInt64:
         """

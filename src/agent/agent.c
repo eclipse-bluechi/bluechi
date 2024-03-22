@@ -1809,6 +1809,43 @@ static int agent_method_remove_proxy(sd_bus_message *m, UNUSED void *userdata, U
 
 
 /*************************************************************************
+ **** org.eclipse.bluechi.Agent.SwitchController ******
+ *************************************************************************/
+
+static int agent_method_switch_controller(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error) {
+        Agent *agent = userdata;
+        const char *dbus_address = NULL;
+
+        int r = sd_bus_message_read(m, "s", &dbus_address);
+        if (r < 0) {
+                bc_log_errorf("Failed to read DbusAddress parameter: %s", strerror(-r));
+                return sd_bus_reply_method_errorf(
+                                m,
+                                SD_BUS_ERROR_FAILED,
+                                "Failed to read DbusAddress parameter: %s",
+                                strerror(-r));
+        }
+
+        if (!agent_set_controller_address(agent, dbus_address)) {
+                bc_log_error("Failed to set CONTROLLER ADDRESS");
+                return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "Failed to set CONTROLLER ADDRESS");
+        }
+
+        r = sd_bus_emit_properties_changed(
+                        agent->api_bus, BC_AGENT_OBJECT_PATH, AGENT_INTERFACE, "ControllerAddress", NULL);
+        if (r < 0) {
+                bc_log_errorf("Failed to emit controller address property changed: %s", strerror(-r));
+        }
+
+        bc_log_infof("CONTROLLER ADDRESS changed to %s", dbus_address);
+
+        agent_disconnected(NULL, userdata, NULL);
+
+        return sd_bus_reply_method_return(m, "");
+}
+
+
+/*************************************************************************
  **** org.eclipse.bluechi.Agent.Status ****************
  *************************************************************************/
 
@@ -1879,6 +1916,8 @@ static const sd_bus_vtable agent_vtable[] = {
         SD_BUS_METHOD("CreateProxy", "sss", "", agent_method_create_proxy, 0),
         SD_BUS_METHOD("RemoveProxy", "sss", "", agent_method_remove_proxy, 0),
         SD_BUS_METHOD("JobCancel", "u", "", agent_method_job_cancel, 0),
+        SD_BUS_METHOD("SwitchController", "s", "", agent_method_switch_controller, 0),
+
         SD_BUS_PROPERTY("Status", "s", agent_property_get_status, 0, SD_BUS_VTABLE_PROPERTY_EMITS_CHANGE),
         SD_BUS_PROPERTY("LogLevel", "s", agent_property_get_log_level, 0, SD_BUS_VTABLE_PROPERTY_EXPLICIT),
         SD_BUS_PROPERTY("LogTarget", "s", agent_property_get_log_target, 0, SD_BUS_VTABLE_PROPERTY_CONST),
@@ -1887,6 +1926,11 @@ static const sd_bus_vtable agent_vtable[] = {
                         agent_property_get_disconnect_timestamp,
                         0,
                         SD_BUS_VTABLE_PROPERTY_EXPLICIT),
+        SD_BUS_PROPERTY("ControllerAddress",
+                        "s",
+                        NULL,
+                        offsetof(Agent, orch_addr),
+                        SD_BUS_VTABLE_PROPERTY_EMITS_CHANGE),
         SD_BUS_VTABLE_END
 };
 
