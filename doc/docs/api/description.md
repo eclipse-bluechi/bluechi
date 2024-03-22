@@ -276,6 +276,10 @@ interface.
 
     When a proxy is not needed anymore it is being removed on the node and a `ProxyRemoved` is emitted to notify the controller.
 
+  * `SwitchController(in s controller_address)`
+
+    Set the new controller address for bluechi-agent node and trigger a reconnect to the controller with the new address.
+
 ### interface org.eclipse.bluechi.Metrics
 
 This interface provides signals for collecting metrics. It is created by calling `EnableMetrics` on the `org.eclipse.bluechi.Controller` interface and removed by calling `DisableMetrics`.
