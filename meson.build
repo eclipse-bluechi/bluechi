@@ -90,7 +90,9 @@ subdir('src/libbluechi')
 subdir('config')
 
 # selinux
-subdir('selinux')
+if get_option('with_selinux')
+  subdir('selinux')
+endif
 
 # build each binary
 subdir('src/controller')

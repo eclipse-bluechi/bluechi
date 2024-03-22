@@ -191,7 +191,7 @@ those settings can either be changed directly in the file or via
 
 ```bash
 # assuming an initial "meson setup builddir"
-meson configure -D<option-name>=<option-value>
+meson configure -D<option-name>=<option-value> builddir
 ```
 
 Current options include:
@@ -199,6 +199,7 @@ Current options include:
 - `with_analyzer`: This option enables the [gcc option for static analysis](https://gcc.gnu.org/onlinedocs/gcc-13.2.0/gcc/Static-Analyzer-Options.html)
 - `with_coverage`: This option ensures that BlueChi is built to collect coverage when running a BlueChi binary
 - `with_man_pages`: This option enables building man pages as a part of the project build
+- `with_selinux`: This option includes building the SELinux policy for BlueChi
 
 #### Bindings
 
