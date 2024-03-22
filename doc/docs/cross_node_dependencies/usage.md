@@ -1,4 +1,4 @@
-<!-- markdownlint-disable-file MD010 MD013 MD014 MD024 MD046 -->
+<!-- markdownlint-disable-file MD010 MD013 MD014 MD024 MD034 MD046 -->
 # Using Proxy Services
 
 This section describes different scenarios of cross-node dependencies between services, how to resolve them using BlueChi's proxy service feature and which systemd mechanisms to use for the desired behaviour. As a baseline, the term `source.service` will be used for the systemd service that depends on a remote service, which will be referred to as `target.service`.
