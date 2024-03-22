@@ -1,4 +1,4 @@
-<!-- markdownlint-disable-file MD010 MD013 MD014 MD024 MD033 MD046 -->
+<!-- markdownlint-disable-file MD010 MD013 MD014 MD024 MD033 MD034 MD046 -->
 # Proxy Services
 
 The `bluechi-agent` component also includes two systemd template services, `bluechi-proxy@.service` and `bluechi-dep@.service`, which are the core of the proxy service mechanism to resolve cross-node dependencies. Consider the following example:
