@@ -40,6 +40,17 @@
       <arg name="unit" type="s" direction="in" />
     </method>
 
+    <!--
+      SwitchController:
+      @dbus_address: SD Bus address used to connect to the BlueChi controller
+
+      SwitchController() changes SD Bus address used to connect to the BlueChi controller and
+      triggers a reconnect to the BlueChi controller with the new address.
+    -->
+    <method name="SwitchController">
+      <arg name="dbus_address" type="s" direction="in" />
+    </method>
+
 
     <!-- 
       Status:
@@ -79,6 +90,16 @@
     -->
     <property name="DisconnectTimestamp" type="t" access="read">
       <annotation name="org.freedesktop.DBus.Property.EmitsChangedSignal" value="false" />
+    </property>
+
+    <!--
+      ControllerAddress:
+
+      SD Bus address used to connect to the BlueChi controller.
+      On any change, a signal is emitted on the org.freedesktop.DBus.Properties interface.
+    -->
+    <property name="ControllerAddress" type="s" access="read">
+      <annotation name="org.freedesktop.DBus.Property.EmitsChangedSignal" value="true" />
     </property>
 
   </interface>
