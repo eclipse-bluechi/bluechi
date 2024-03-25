@@ -1,0 +1,4 @@
+summary: Test if bluechi-controller, bluechi-agent, bluechi-proxy and
+    bluechictl show help and return error when unsupported command line
+    option is provided
+id: e07fc44e-2bf8-4798-a24e-cba796c10e10
