@@ -15,7 +15,8 @@ def check_help_option(ctrl: BluechiControllerMachine, _: Dict[str, BluechiAgentM
     bc_ver_rel = ".".join(rpm_out.split(".")[:-1])
     executables = [
         '/usr/libexec/bluechi-controller',
-        '/usr/libexec/bluechi-agent'
+        '/usr/libexec/bluechi-agent',
+        '/usr/libexec/bluechi-proxy'
     ]
 
     for executable in executables:
