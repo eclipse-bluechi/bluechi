@@ -41,14 +41,17 @@ class BluechiMachine():
     def create_file(self, target_dir: str, file_name: str, content: str) -> None:
         target_file = os.path.join(target_dir, file_name)
         try:
+            _, output = self.client.exec_run(f"[ -f {target_file} ] && echo 'exists'")
+            if output == "exists":
+                self._track_changed_file(target_dir, file_name)
+            else:
+                self.created_files.append(os.path.join(target_dir, file_name))
+
             self.client.create_file(target_dir, file_name, content)
         except Exception as ex:
             LOGGER.error(f"Failed to create file '{target_file}': {ex}")
             traceback.print_exc()
             return
-
-        # keep track of create file for later cleanup
-        self.created_files.append(os.path.join(target_dir, file_name))
 
     def _track_changed_file(self, target_dir: str, file_name: str) -> None:
         target_file = os.path.join(target_dir, file_name)
@@ -104,8 +107,6 @@ class BluechiMachine():
         return result, output, wait_result
 
     def install_systemd_service(self, service: Service, restart: bool = False):
-        self._track_changed_file(service.directory, service.name)
-
         if restart:
             self.systemctl.stop_unit(service.name)
 
