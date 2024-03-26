@@ -9,7 +9,6 @@ from bluechi.api import Agent
 
 
 class TestAgentIsConnected(unittest.TestCase):
-
     def test_agent_is_connected(self):
         agent = Agent()
         assert agent.status == "online"

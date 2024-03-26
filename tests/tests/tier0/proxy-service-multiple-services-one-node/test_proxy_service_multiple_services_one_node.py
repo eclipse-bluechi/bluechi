@@ -22,13 +22,25 @@ def exec(ctrl: BluechiControllerMachine, nodes: Dict[str, BluechiAgentMachine]):
     simple_service = SimpleRemainingService()
     simple_service.set_option(Section.Unit, Option.StopWhenUnneeded, "yes")
 
-    requesting_the_first_service = SimpleRemainingService(name="requesting-the-first.service")
-    requesting_the_first_service.set_option(Section.Unit, Option.After, "bluechi-proxy@node-bar_simple.service")
-    requesting_the_first_service.set_option(Section.Unit, Option.Wants, "bluechi-proxy@node-bar_simple.service")
+    requesting_the_first_service = SimpleRemainingService(
+        name="requesting-the-first.service"
+    )
+    requesting_the_first_service.set_option(
+        Section.Unit, Option.After, "bluechi-proxy@node-bar_simple.service"
+    )
+    requesting_the_first_service.set_option(
+        Section.Unit, Option.Wants, "bluechi-proxy@node-bar_simple.service"
+    )
 
-    requesting_the_second_service = SimpleRemainingService(name="requesting-the-second.service")
-    requesting_the_second_service.set_option(Section.Unit, Option.After, "bluechi-proxy@node-bar_simple.service")
-    requesting_the_second_service.set_option(Section.Unit, Option.Wants, "bluechi-proxy@node-bar_simple.service")
+    requesting_the_second_service = SimpleRemainingService(
+        name="requesting-the-second.service"
+    )
+    requesting_the_second_service.set_option(
+        Section.Unit, Option.After, "bluechi-proxy@node-bar_simple.service"
+    )
+    requesting_the_second_service.set_option(
+        Section.Unit, Option.Wants, "bluechi-proxy@node-bar_simple.service"
+    )
 
     foo.install_systemd_service(requesting_the_first_service)
     foo.install_systemd_service(requesting_the_second_service)
@@ -39,7 +51,9 @@ def exec(ctrl: BluechiControllerMachine, nodes: Dict[str, BluechiAgentMachine]):
     assert bar.wait_for_unit_state_to_be(simple_service.name, "inactive")
 
     bluechi_dep_service = assemble_bluechi_dep_service_name(simple_service.name)
-    bluechi_proxy_service = assemble_bluechi_proxy_service_name(node_bar_name, simple_service.name)
+    bluechi_proxy_service = assemble_bluechi_proxy_service_name(
+        node_bar_name, simple_service.name
+    )
 
     ctrl.bluechictl.start_unit(node_foo_name, requesting_the_first_service.name)
     assert bar.wait_for_unit_state_to_be(simple_service.name, "active")
@@ -67,9 +81,10 @@ def exec(ctrl: BluechiControllerMachine, nodes: Dict[str, BluechiAgentMachine]):
 
 
 def test_proxy_service_multiple_services_one_node(
-        bluechi_test: BluechiTest,
-        bluechi_ctrl_default_config: BluechiControllerConfig,
-        bluechi_node_default_config: BluechiAgentConfig):
+    bluechi_test: BluechiTest,
+    bluechi_ctrl_default_config: BluechiControllerConfig,
+    bluechi_node_default_config: BluechiAgentConfig,
+):
 
     node_foo_cfg = bluechi_node_default_config.deep_copy()
     node_foo_cfg.node_name = node_foo_name

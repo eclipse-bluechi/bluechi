@@ -10,17 +10,23 @@ NODE_FOO = "node-foo"
 NODE_BAR = "node-bar"
 
 
-def start_with_invalid_port(ctrl: BluechiControllerMachine, nodes: Dict[str, BluechiAgentMachine]):
+def start_with_invalid_port(
+    ctrl: BluechiControllerMachine, nodes: Dict[str, BluechiAgentMachine]
+):
     node_foo_with_valid_port = nodes[NODE_FOO]
     assert node_foo_with_valid_port.wait_for_unit_state_to_be("bluechi-agent", "active")
 
     node_bar_with_invalid_port = nodes[NODE_BAR]
-    assert node_bar_with_invalid_port.wait_for_unit_state_to_be("bluechi-agent", "failed")
+    assert node_bar_with_invalid_port.wait_for_unit_state_to_be(
+        "bluechi-agent", "failed"
+    )
 
 
 def test_agent_invalid_port_configuration(
-        bluechi_test: BluechiTest,
-        bluechi_node_default_config: BluechiAgentConfig, bluechi_ctrl_default_config: BluechiControllerConfig):
+    bluechi_test: BluechiTest,
+    bluechi_node_default_config: BluechiAgentConfig,
+    bluechi_ctrl_default_config: BluechiControllerConfig,
+):
 
     node_foo_cfg = bluechi_node_default_config.deep_copy()
     node_foo_cfg.node_name = NODE_FOO

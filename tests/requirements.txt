@@ -1,7 +1,8 @@
-tmt >= 1.22
+black >= 22.8.0
+flake8 >= 6.0.0
 isort >= 5.13.0
 junit-xml >= 1.9
 pytest >= 7.3.1
 podman >= 4.5.0
-flake8 >= 6.0.0
 strato-skipper >= 2.0.2
+tmt >= 1.22

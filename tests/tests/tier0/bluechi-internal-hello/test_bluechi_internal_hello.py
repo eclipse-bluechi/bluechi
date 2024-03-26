@@ -20,7 +20,9 @@ def exec(ctrl: BluechiControllerMachine, nodes: Dict[str, BluechiAgentMachine]):
         raise Exception(output)
 
 
-def test_bluechi_internal_hello(bluechi_test: BluechiTest, bluechi_ctrl_default_config: BluechiControllerConfig):
+def test_bluechi_internal_hello(
+    bluechi_test: BluechiTest, bluechi_ctrl_default_config: BluechiControllerConfig
+):
 
     bluechi_ctrl_default_config.allowed_node_names = [NODE_FOO]
     bluechi_test.set_bluechi_controller_config(bluechi_ctrl_default_config)

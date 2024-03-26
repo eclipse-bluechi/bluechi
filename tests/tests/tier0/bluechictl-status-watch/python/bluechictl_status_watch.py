@@ -17,8 +17,7 @@ class TestBluechictlStatusWatch(unittest.TestCase):
     def setUp(self) -> None:
         node_status_offline = re.compile(r"^" + re.escape(node_foo_name) + ".*offline")
         node_status_online = re.compile(r"^" + re.escape(node_foo_name) + ".*online")
-        expected_patterns = {node_status_online,
-                             node_status_offline}
+        expected_patterns = {node_status_online, node_status_offline}
         args = ["status", "-w"]
         self.evaluator = SimpleEventEvaluator(expected_patterns)
         self.bgrunner = BackgroundRunner(args, self.evaluator)
@@ -34,7 +33,7 @@ class TestBluechictlStatusWatch(unittest.TestCase):
         #   therefore, the DBusError is silenced for now, but all other errors are still raised
         try:
             node = Node(node_foo_name)
-            node.stop_unit('bluechi-agent.service', 'replace')
+            node.stop_unit("bluechi-agent.service", "replace")
         except DBusError:
             pass
         self.bgrunner.stop()

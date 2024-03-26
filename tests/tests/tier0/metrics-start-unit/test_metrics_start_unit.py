@@ -18,15 +18,18 @@ def exec(ctrl: BluechiControllerMachine, nodes: Dict[str, BluechiAgentMachine]):
     foo.install_systemd_service(service)
     assert foo.wait_for_unit_state_to_be(service.name, "inactive")
 
-    result, output = ctrl.run_python(os.path.join("python", "start_unit_job_metrics.py"))
+    result, output = ctrl.run_python(
+        os.path.join("python", "start_unit_job_metrics.py")
+    )
     if result != 0:
         raise Exception(output)
 
 
 def test_metrics_start_unit(
-        bluechi_test: BluechiTest,
-        bluechi_ctrl_default_config: BluechiControllerConfig,
-        bluechi_node_default_config: BluechiAgentConfig):
+    bluechi_test: BluechiTest,
+    bluechi_ctrl_default_config: BluechiControllerConfig,
+    bluechi_node_default_config: BluechiAgentConfig,
+):
 
     node_foo_cfg = bluechi_node_default_config.deep_copy()
     node_foo_cfg.node_name = node_foo_name

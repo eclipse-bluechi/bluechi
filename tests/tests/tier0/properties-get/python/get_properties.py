@@ -6,7 +6,6 @@ from bluechi.api import Node
 
 
 class TestGetProperties(unittest.TestCase):
-
     def test_get_properties(self):
         node_foo = Node("node-foo")
         props = node_foo.get_unit_properties(

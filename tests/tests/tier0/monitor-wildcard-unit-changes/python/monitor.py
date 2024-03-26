@@ -20,7 +20,6 @@ service_also_simple = "also-simple.service"
 
 
 class CallCounter:
-
     def __init__(self) -> None:
         self.times_new_has_been_called = 0
         self.times_removed_has_been_called = 0
@@ -29,7 +28,6 @@ class CallCounter:
 
 
 class TestMonitorWildcardUnitChanges(unittest.TestCase):
-
     def setUp(self) -> None:
         self.call_counter = {
             node_name_foo: {service_simple: CallCounter()},
@@ -50,14 +48,21 @@ class TestMonitorWildcardUnitChanges(unittest.TestCase):
 
                 foo_simple = self.call_counter[node_name_foo][service_simple]
                 bar_also_simple = self.call_counter[node_name_bar][service_also_simple]
-                if foo_simple.times_removed_has_been_called > 0 and bar_also_simple.times_removed_has_been_called > 0:
+                if (
+                    foo_simple.times_removed_has_been_called > 0
+                    and bar_also_simple.times_removed_has_been_called > 0
+                ):
                     self.loop.quit()
 
-        def on_unit_state_changed(node: str, unit: str, active_state: str, sub_state: str, reason: str) -> None:
+        def on_unit_state_changed(
+            node: str, unit: str, active_state: str, sub_state: str, reason: str
+        ) -> None:
             if node in self.call_counter and unit in self.call_counter[node]:
                 self.call_counter[node][unit].times_state_change_has_been_called += 1
 
-        def on_unit_property_changed(node: str, unit: str, interface: str, props: Structure) -> None:
+        def on_unit_property_changed(
+            node: str, unit: str, interface: str, props: Structure
+        ) -> None:
             if node in self.call_counter and unit in self.call_counter[node]:
                 self.call_counter[node][unit].times_property_change_has_been_called += 1
 
@@ -71,7 +76,7 @@ class TestMonitorWildcardUnitChanges(unittest.TestCase):
         node_bar = Node(node_name_bar)
 
         # start subscription on all nodes and units
-        self.monitor.subscribe('*', '*')
+        self.monitor.subscribe("*", "*")
 
         assert node_foo.start_unit(service_simple, "replace") != ""
         assert node_bar.start_unit(service_also_simple, "replace") != ""

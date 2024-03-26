@@ -14,14 +14,17 @@ service_simple = "simple.service"
 
 
 class TestBluechictlMetrics(unittest.TestCase):
-
     def setUp(self) -> None:
         signal_agent_metrics_start_pat = re.compile(r"^.*Agent systemd StartUnit job.*")
         signal_agent_metrics_stop_pat = re.compile(r"^.*Agent systemd StopUnit job.*")
-        signal_controller_metrics_pat = re.compile(r"^.*BlueChi job gross measured time.*")
-        expected_patterns = {signal_agent_metrics_start_pat,
-                             signal_agent_metrics_stop_pat,
-                             signal_controller_metrics_pat}
+        signal_controller_metrics_pat = re.compile(
+            r"^.*BlueChi job gross measured time.*"
+        )
+        expected_patterns = {
+            signal_agent_metrics_start_pat,
+            signal_agent_metrics_stop_pat,
+            signal_controller_metrics_pat,
+        }
         args = ["metrics", "listen"]
         self.evaluator = SimpleEventEvaluator(expected_patterns)
         self.bgrunner = BackgroundRunner(args, self.evaluator)

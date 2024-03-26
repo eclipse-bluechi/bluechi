@@ -8,7 +8,6 @@ node = "node-foo"
 
 
 class TestListenerAddedAsPeer(unittest.TestCase):
-
     def test_call_internal_hello(self):
 
         port = ""
@@ -21,7 +20,7 @@ class TestListenerAddedAsPeer(unittest.TestCase):
         peer_proxy = peer_bus.get_proxy(
             service_name="org.eclipse.bluechi",
             object_path="/org/freedesktop/DBus",
-            interface_name="org.freedesktop.DBus"
+            interface_name="org.freedesktop.DBus",
         )
         resp = peer_proxy.Hello()
         assert resp == ":1.0"

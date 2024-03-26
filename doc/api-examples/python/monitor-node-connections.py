@@ -24,6 +24,7 @@ for n in nodes:
         ) -> None:
             con_status = changed_props["Status"].get_string()
             print(f"Node {node_name}: {con_status}")
+
         return on_connection_status_changed
 
     node.PropertiesChanged.connect(changed_wrapper(n[0]))

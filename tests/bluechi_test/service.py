@@ -44,9 +44,12 @@ class Option(enum.Enum):
     WantedBy = "WantedBy"
 
 
-class Service():
+class Service:
     """A base service class, which by default contains only predefined sections"""
-    def __init__(self,  directory: str = SERVICE_DIRECTORY, name: str = SERVICE_NAME) -> None:
+
+    def __init__(
+        self, directory: str = SERVICE_DIRECTORY, name: str = SERVICE_NAME
+    ) -> None:
         if not name:
             raise Exception(f"Service name is '{name}', but cannot be empty!")
         if not directory:
@@ -99,7 +102,10 @@ class Service():
 
 class SimpleService(Service):
     """A simple service, which is using /bin/true command"""
-    def __init__(self,  directory: str = SERVICE_DIRECTORY, name: str = "simple.service") -> None:
+
+    def __init__(
+        self, directory: str = SERVICE_DIRECTORY, name: str = "simple.service"
+    ) -> None:
         super(SimpleService, self).__init__(directory=directory, name=name)
 
         self.set_option(Section.Unit, Option.Description, "A simple service")
@@ -112,7 +118,10 @@ class SimpleService(Service):
 
 class SimpleRemainingService(SimpleService):
     """A simple service, which adds RemainAfterExit enabled to SimpleService"""
-    def __init__(self, directory: str = SERVICE_DIRECTORY, name: str = "simple.service") -> None:
+
+    def __init__(
+        self, directory: str = SERVICE_DIRECTORY, name: str = "simple.service"
+    ) -> None:
         super(SimpleRemainingService, self).__init__(directory=directory, name=name)
 
         self.set_option(Section.Service, Option.RemainAfterExit, "yes")
@@ -120,7 +129,10 @@ class SimpleRemainingService(SimpleService):
 
 class SleepingService(Service):
     """A simple service, which is using /bin/sleep command"""
-    def __init__(self, directory: str = SERVICE_DIRECTORY, name: str = "sleeping.service") -> None:
+
+    def __init__(
+        self, directory: str = SERVICE_DIRECTORY, name: str = "sleeping.service"
+    ) -> None:
         super(SleepingService, self).__init__(directory=directory, name=name)
 
         self.set_option(Section.Unit, Option.Description, "A sleeping service")

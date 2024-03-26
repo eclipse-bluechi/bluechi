@@ -10,7 +10,6 @@ from bluechi.api import Agent, Node
 
 
 class TestMonitorCtrlDown(unittest.TestCase):
-
     def setUp(self) -> None:
         super().setUp()
 
@@ -37,7 +36,7 @@ class TestMonitorCtrlDown(unittest.TestCase):
         #   therefore, the DBusError is silenced for now, but all other errors are still raised
         try:
             node = Node("node-foo")
-            node.stop_unit('bluechi-controller.service', 'replace')
+            node.stop_unit("bluechi-controller.service", "replace")
         except DBusError:
             pass
 

@@ -12,11 +12,13 @@ node_bar_name = "node-bar"
 
 
 def parse_bluechictl_output(output: str) -> Dict[str, Dict[str, Tuple[str, str]]]:
-    line_pat = re.compile(r"""\s*(?P<node_name>[\S]+)\s*\|
+    line_pat = re.compile(
+        r"""\s*(?P<node_name>[\S]+)\s*\|
                               \s*(?P<unit_name>[\S]+)\s*\|
                               \s*(?P<state>[\S]+)\s*\|
                               \s*(?P<sub_state>[\S]+)\s*""",
-                          re.VERBOSE)
+        re.VERBOSE,
+    )
     result = {}
     for line in output.splitlines():
         if line.startswith("NODE ") or line.startswith("===="):
@@ -25,7 +27,9 @@ def parse_bluechictl_output(output: str) -> Dict[str, Dict[str, Tuple[str, str]]
 
         match = line_pat.match(line)
         if not match:
-            raise Exception(f"Error parsing bluechictl list-units output, invalid line: '{line}'")
+            raise Exception(
+                f"Error parsing bluechictl list-units output, invalid line: '{line}'"
+            )
 
         node_units = result.get(match.group("node_name"))
         if not node_units:
@@ -33,38 +37,54 @@ def parse_bluechictl_output(output: str) -> Dict[str, Dict[str, Tuple[str, str]]
             result[match.group("node_name")] = node_units
 
         if match.group("unit_name") in node_units:
-            raise Exception(f"Error parsing bluechictl list-units output, unit already reported, line: '{line}'")
+            raise Exception(
+                f"Error parsing bluechictl list-units output, unit already reported, line: '{line}'"
+            )
 
-        node_units[match.group("unit_name")] = (match.group("state"), match.group("sub_state"))
+        node_units[match.group("unit_name")] = (
+            match.group("state"),
+            match.group("sub_state"),
+        )
 
     return result
 
 
 def verify_units(all_units: Dict[str, Tuple[str, str]], output: str, node_name: str):
-    esc_seq = re.compile(r'\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])')
-    line_pat = re.compile(r"""\s*(?P<unit_name>\S+)
+    esc_seq = re.compile(r"\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])")
+    line_pat = re.compile(
+        r"""\s*(?P<unit_name>\S+)
                               .*loaded
                               \s+(?P<state>\S+)
                               \s+(?P<sub_state>\S+)
                               \s+.*$
                           """,
-                          re.VERBOSE)
+        re.VERBOSE,
+    )
     for line in output.splitlines():
         # Some systemctl output contains ANSI sequences, which we need to remove before matching
-        line = esc_seq.sub('', line)
+        line = esc_seq.sub("", line)
 
         match = line_pat.match(line)
         if not match:
-            raise Exception(f"Error parsing systemctl list-units output, invalid line: '{line}'")
+            raise Exception(
+                f"Error parsing systemctl list-units output, invalid line: '{line}'"
+            )
 
         found = all_units.get(match.group("unit_name"))
-        if not found or match.group("state") != found[0] or match.group("sub_state") != found[1]:
-            raise Exception("Unit '{}' with state '{}' and substate '{}' reported by systemctl"
-                            " on node '{}', but not reported by bluechictl".format(
-                                match.group("unit_name"),
-                                match.group("state"),
-                                match.group("sub_state"),
-                                node_name))
+        if (
+            not found
+            or match.group("state") != found[0]
+            or match.group("sub_state") != found[1]
+        ):
+            raise Exception(
+                "Unit '{}' with state '{}' and substate '{}' reported by systemctl"
+                " on node '{}', but not reported by bluechictl".format(
+                    match.group("unit_name"),
+                    match.group("state"),
+                    match.group("sub_state"),
+                    node_name,
+                )
+            )
 
 
 def exec(ctrl: BluechiControllerMachine, nodes: Dict[str, BluechiAgentMachine]):
@@ -85,9 +105,10 @@ def exec(ctrl: BluechiControllerMachine, nodes: Dict[str, BluechiAgentMachine]):
 
 
 def test_bluechi_nodes_statuses(
-        bluechi_test: BluechiTest,
-        bluechi_ctrl_default_config: BluechiControllerConfig,
-        bluechi_node_default_config: BluechiAgentConfig):
+    bluechi_test: BluechiTest,
+    bluechi_ctrl_default_config: BluechiControllerConfig,
+    bluechi_node_default_config: BluechiAgentConfig,
+):
 
     node_foo_cfg = bluechi_node_default_config.deep_copy()
     node_foo_cfg.node_name = node_foo_name

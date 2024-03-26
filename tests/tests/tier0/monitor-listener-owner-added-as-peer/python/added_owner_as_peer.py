@@ -11,7 +11,6 @@ service = "simple.service"
 
 
 class TestListenerAddedIsOwner(unittest.TestCase):
-
     def test_listener_added_is_owner(self):
 
         mgr = Controller()

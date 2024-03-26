@@ -17,7 +17,7 @@ def exec(ctrl: BluechiControllerMachine, nodes: Dict[str, BluechiAgentMachine]):
         raise Exception(output)
 
     ctrl.systemctl.stop_unit("bluechi-controller")
-    ctrl.wait_for_unit_state_to_be('bluechi-controller', 'inactive')
+    ctrl.wait_for_unit_state_to_be("bluechi-controller", "inactive")
 
     # lets wait a bit so the agent has at least one failing reconnect attempt
     time.sleep(1)
@@ -34,9 +34,10 @@ def exec(ctrl: BluechiControllerMachine, nodes: Dict[str, BluechiAgentMachine]):
 
 
 def test_monitor_node_disconnect(
-        bluechi_test: BluechiTest,
-        bluechi_ctrl_default_config: BluechiControllerConfig,
-        bluechi_node_default_config: BluechiAgentConfig):
+    bluechi_test: BluechiTest,
+    bluechi_ctrl_default_config: BluechiControllerConfig,
+    bluechi_node_default_config: BluechiAgentConfig,
+):
 
     node_foo_config = bluechi_node_default_config.deep_copy()
     node_foo_config.node_name = node_name

@@ -14,8 +14,12 @@ def exec(ctrl: BluechiControllerMachine, nodes: Dict[str, BluechiAgentMachine]):
     foo = nodes[node_foo_name]
 
     service = SimpleRemainingService(name="requesting.service")
-    service.set_option(Section.Unit, Option.After, "bluechi-proxy@node-bar_simple.service")
-    service.set_option(Section.Unit, Option.Wants, "bluechi-proxy@node-bar_simple.service")
+    service.set_option(
+        Section.Unit, Option.After, "bluechi-proxy@node-bar_simple.service"
+    )
+    service.set_option(
+        Section.Unit, Option.Wants, "bluechi-proxy@node-bar_simple.service"
+    )
     foo.install_systemd_service(service)
     assert foo.wait_for_unit_state_to_be(service.name, "inactive")
 
@@ -25,13 +29,16 @@ def exec(ctrl: BluechiControllerMachine, nodes: Dict[str, BluechiAgentMachine]):
     # requesting.service defines the dependency via Wants= its still
     # active - only the template service of the proxy is in failed state
     assert foo.wait_for_unit_state_to_be(service.name, "active")
-    assert foo.wait_for_unit_state_to_be("bluechi-proxy@node-bar_simple.service", "failed")
+    assert foo.wait_for_unit_state_to_be(
+        "bluechi-proxy@node-bar_simple.service", "failed"
+    )
 
 
 def test_proxy_fails_on_non_existent_node(
-        bluechi_test: BluechiTest,
-        bluechi_ctrl_default_config: BluechiControllerConfig,
-        bluechi_node_default_config: BluechiAgentConfig):
+    bluechi_test: BluechiTest,
+    bluechi_ctrl_default_config: BluechiControllerConfig,
+    bluechi_node_default_config: BluechiAgentConfig,
+):
 
     node_foo_cfg = bluechi_node_default_config.deep_copy()
     node_foo_cfg.node_name = node_foo_name

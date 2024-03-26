@@ -7,7 +7,9 @@ from bluechi_test.machine import BluechiAgentMachine, BluechiControllerMachine
 from bluechi_test.test import BluechiTest
 
 
-def check_output(machine: BluechiControllerMachine, cmd: str, out_list: List[str]) -> bool:
+def check_output(
+    machine: BluechiControllerMachine, cmd: str, out_list: List[str]
+) -> bool:
     re, out = machine.exec_run(cmd)
 
     assert re != 0
@@ -15,12 +17,14 @@ def check_output(machine: BluechiControllerMachine, cmd: str, out_list: List[str
         assert item in out
 
 
-def check_help_option(ctrl: BluechiControllerMachine, _: Dict[str, BluechiAgentMachine]):
+def check_help_option(
+    ctrl: BluechiControllerMachine, _: Dict[str, BluechiAgentMachine]
+):
     executables = [
-        '/usr/libexec/bluechi-controller',
-        '/usr/libexec/bluechi-agent',
-        '/usr/libexec/bluechi-proxy',
-        '/usr/bin/bluechictl'
+        "/usr/libexec/bluechi-controller",
+        "/usr/libexec/bluechi-agent",
+        "/usr/libexec/bluechi-proxy",
+        "/usr/bin/bluechictl",
     ]
 
     for executable in executables:
@@ -28,7 +32,9 @@ def check_help_option(ctrl: BluechiControllerMachine, _: Dict[str, BluechiAgentM
         check_output(ctrl, f"{executable} --QWERTY", ["Usage", "unrecognized option"])
 
 
-def test_help_option_provided(bluechi_test: BluechiTest, bluechi_ctrl_default_config: BluechiControllerConfig):
+def test_help_option_provided(
+    bluechi_test: BluechiTest, bluechi_ctrl_default_config: BluechiControllerConfig
+):
     bluechi_test.set_bluechi_controller_config(bluechi_ctrl_default_config)
 
     bluechi_test.run(check_help_option)

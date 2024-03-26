@@ -129,6 +129,12 @@ jobs:
           isort doc tests --check --diff
           deactivate
 
+      - name: Run black
+        run: |
+          source /opt/bluechi-env/bin/activate
+          black doc --check --diff
+          black tests --check --diff
+          deactivate
 
 
   apispec:

@@ -7,12 +7,14 @@ from bluechi_test.machine import BluechiAgentMachine, BluechiControllerMachine
 from bluechi_test.test import BluechiTest
 
 
-def check_help_option(ctrl: BluechiControllerMachine, _: Dict[str, BluechiAgentMachine]):
+def check_help_option(
+    ctrl: BluechiControllerMachine, _: Dict[str, BluechiAgentMachine]
+):
     executables = [
-        '/usr/libexec/bluechi-controller',
-        '/usr/libexec/bluechi-agent',
-        '/usr/libexec/bluechi-proxy',
-        '/usr/bin/bluechictl'
+        "/usr/libexec/bluechi-controller",
+        "/usr/libexec/bluechi-agent",
+        "/usr/libexec/bluechi-proxy",
+        "/usr/bin/bluechictl",
     ]
 
     for executable in executables:
@@ -21,12 +23,14 @@ def check_help_option(ctrl: BluechiControllerMachine, _: Dict[str, BluechiAgentM
 
         assert s_re == 0
         assert l_re == 0
-        assert 'Usage' in s_out
-        assert 'Usage' in l_out
+        assert "Usage" in s_out
+        assert "Usage" in l_out
         assert s_out == l_out
 
 
-def test_help_option_provided(bluechi_test: BluechiTest, bluechi_ctrl_default_config: BluechiControllerConfig):
+def test_help_option_provided(
+    bluechi_test: BluechiTest, bluechi_ctrl_default_config: BluechiControllerConfig
+):
     bluechi_test.set_bluechi_controller_config(bluechi_ctrl_default_config)
 
     bluechi_test.run(check_help_option)

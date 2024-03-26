@@ -8,7 +8,6 @@ expected_logtarget = "stderr-full"
 
 
 class TestHasLogTarget(unittest.TestCase):
-
     def test_agent_has_logtarget(self):
         agent = Agent()
         assert agent.log_target == expected_logtarget

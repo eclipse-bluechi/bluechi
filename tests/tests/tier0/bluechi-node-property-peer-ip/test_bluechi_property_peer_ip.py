@@ -26,18 +26,23 @@ def exec(ctrl: BluechiControllerMachine, nodes: Dict[str, BluechiAgentMachine]):
 
     result, output = ctrl.run_python(os.path.join("python", "is_node_connected.py"))
     if result == 0:
-        raise Exception(f"Expected bluechi-agent {node_foo_name} to be offline, but was online")
+        raise Exception(
+            f"Expected bluechi-agent {node_foo_name} to be offline, but was online"
+        )
 
     # If node is disconnected, expect it to have no IP
     result, output = ctrl.run_python(os.path.join("python", "has_node_ip.py"))
     if result == 0:
-        raise Exception(f"Expected bluechi-agent {node_foo_name} to no IP when offline, but still has")
+        raise Exception(
+            f"Expected bluechi-agent {node_foo_name} to no IP when offline, but still has"
+        )
 
 
 def test_bluechi_node_status(
-        bluechi_test: BluechiTest,
-        bluechi_ctrl_default_config: BluechiControllerConfig,
-        bluechi_node_default_config: BluechiAgentConfig):
+    bluechi_test: BluechiTest,
+    bluechi_ctrl_default_config: BluechiControllerConfig,
+    bluechi_node_default_config: BluechiAgentConfig,
+):
 
     node_foo_cfg = bluechi_node_default_config.deep_copy()
     node_foo_cfg.node_name = node_foo_name

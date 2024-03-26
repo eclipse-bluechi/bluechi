@@ -15,8 +15,7 @@ from podman.domain.containers import Container
 LOGGER = logging.getLogger(__name__)
 
 
-class Client():
-
+class Client:
     def __init__(self) -> None:
         pass
 
@@ -26,14 +25,23 @@ class Client():
     def get_file(self, machine_path: str, local_path: str) -> None:
         raise Exception("Not implemented!")
 
-    def exec_run(self, command: (Union[str, list[str]]), raw_output: bool = False, tty: bool = True) -> \
-            Tuple[Optional[int], Union[Iterator[bytes], Any, Tuple[bytes, bytes]]]:
+    def exec_run(
+        self,
+        command: Union[str, list[str]],
+        raw_output: bool = False,
+        tty: bool = True,
+    ) -> Tuple[Optional[int], Union[Iterator[bytes], Any, Tuple[bytes, bytes]]]:
         raise Exception("Not implemented!")
 
 
 class ContainerClient(Client):
-
-    def __init__(self, podman_client: PodmanClient, image_id: str, name: str, ports: Dict[str, str]) -> None:
+    def __init__(
+        self,
+        podman_client: PodmanClient,
+        image_id: str,
+        name: str,
+        ports: Dict[str, str],
+    ) -> None:
         super().__init__()
 
         self.container: Container = podman_client.containers.run(
@@ -73,8 +81,12 @@ class ContainerClient(Client):
             with tarfile.open(fileobj=fd, mode="r") as tar:
                 tar.extractall(path=local_path)
 
-    def exec_run(self, command: (Union[str, list[str]]), raw_output: bool = False, tty: bool = True) -> \
-            Tuple[Optional[int], Union[Iterator[bytes], Any, Tuple[bytes, bytes]]]:
+    def exec_run(
+        self,
+        command: Union[str, list[str]],
+        raw_output: bool = False,
+        tty: bool = True,
+    ) -> Tuple[Optional[int], Union[Iterator[bytes], Any, Tuple[bytes, bytes]]]:
 
         result, output = self.container.exec_run(command, tty=tty)
 
@@ -82,19 +94,22 @@ class ContainerClient(Client):
             # When using tty is enabled, podman uses CRLF line ends, so we need to convert to LF
             output = output.replace(b"\r", b"").decode("utf-8").strip()
 
-        LOGGER.debug(f"Executed command '{command}' with result '{result}' and output '{output}'")
+        LOGGER.debug(
+            f"Executed command '{command}' with result '{result}' and output '{output}'"
+        )
         return result, output
 
 
 class SSHClient(Client):
-
-    def __init__(self,
-                 host: str,
-                 port: int = 22,
-                 user: Union[str, None] = None,
-                 password: Union[str, None] = None,
-                 pk_path: Union[str, None] = None,
-                 pk_passphrase: Union[str, None] = None) -> None:
+    def __init__(
+        self,
+        host: str,
+        port: int = 22,
+        user: Union[str, None] = None,
+        password: Union[str, None] = None,
+        pk_path: Union[str, None] = None,
+        pk_passphrase: Union[str, None] = None,
+    ) -> None:
 
         self.ssh = ParamikoSSH()
         self.ssh.set_missing_host_key_policy(AutoAddPolicy())
@@ -106,12 +121,14 @@ class SSHClient(Client):
         if password is not None:
             self.ssh.connect(hostname=host, port=port, username=user, password=password)
         elif pk_path is not None:
-            self.ssh.connect(hostname=host,
-                             port=port,
-                             username=user,
-                             pkey=RSAKey.from_private_key_file(pk_path),
-                             passphrase=pk_passphrase,
-                             look_for_keys=False)
+            self.ssh.connect(
+                hostname=host,
+                port=port,
+                username=user,
+                pkey=RSAKey.from_private_key_file(pk_path),
+                passphrase=pk_passphrase,
+                look_for_keys=False,
+            )
         else:
             raise Exception("Neither password nor private key provided!")
 
@@ -137,8 +154,12 @@ class SSHClient(Client):
             if ftp is not None:
                 ftp.close()
 
-    def exec_run(self, command: (Union[str, list[str]]), raw_output: bool = False, tty: bool = True) -> \
-            Tuple[Optional[int], Union[Iterator[bytes], Any, Tuple[bytes, bytes]]]:
+    def exec_run(
+        self,
+        command: Union[str, list[str]],
+        raw_output: bool = False,
+        tty: bool = True,
+    ) -> Tuple[Optional[int], Union[Iterator[bytes], Any, Tuple[bytes, bytes]]]:
 
         stdin, stdout, stderr = None, None, None
         try:
@@ -149,10 +170,12 @@ class SSHClient(Client):
             err = stderr.read()
 
             if not raw_output and output:
-                output = output.decode('utf-8').strip()
+                output = output.decode("utf-8").strip()
                 err = err.decode("utf8").strip()
 
-            LOGGER.debug(f"Executed command '{command}' with result '{result}' and output '{output}' and error '{err}'")
+            LOGGER.debug(
+                f"Executed command '{command}' with result '{result}' and output '{output}' and error '{err}'"
+            )
             return result, output
         finally:
             if stdin is not None:

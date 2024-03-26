@@ -25,8 +25,12 @@ def exec(_: BluechiControllerMachine, nodes: Dict[str, BluechiAgentMachine]):
     node_bar.install_systemd_service(tgt_svc)
 
     req_svc = SimpleRemainingService(name="requesting.service")
-    req_svc.set_option(Section.Unit, Option.BindsTo, "bluechi-proxy@node-bar_target.service")
-    req_svc.set_option(Section.Unit, Option.After, "bluechi-proxy@node-bar_target.service")
+    req_svc.set_option(
+        Section.Unit, Option.BindsTo, "bluechi-proxy@node-bar_target.service"
+    )
+    req_svc.set_option(
+        Section.Unit, Option.After, "bluechi-proxy@node-bar_target.service"
+    )
     req_svc.set_option(Section.Service, Option.ExecStart, "/bin/true")
     req_svc.set_option(Section.Service, Option.RemainAfterExit, "yes")
 
@@ -38,8 +42,10 @@ def exec(_: BluechiControllerMachine, nodes: Dict[str, BluechiAgentMachine]):
 
 
 def test_proxy_service_propagate_target_service_failure(
-        bluechi_test: BluechiTest,
-        bluechi_node_default_config: BluechiAgentConfig, bluechi_ctrl_default_config: BluechiControllerConfig):
+    bluechi_test: BluechiTest,
+    bluechi_node_default_config: BluechiAgentConfig,
+    bluechi_ctrl_default_config: BluechiControllerConfig,
+):
     node_foo_cfg = bluechi_node_default_config.deep_copy()
     node_foo_cfg.node_name = NODE_FOO
 

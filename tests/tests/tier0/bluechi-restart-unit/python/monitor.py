@@ -15,7 +15,6 @@ service_simple = "simple.service"
 
 
 class TestMonitorSpecificNodeAndUnit(unittest.TestCase):
-
     def setUp(self) -> None:
         self.loop = EventLoop()
         self.mgr = Controller()
@@ -25,11 +24,8 @@ class TestMonitorSpecificNodeAndUnit(unittest.TestCase):
 
     def run_command(self, args, shell=True, **kwargs):
         process = subprocess.Popen(
-                args,
-                shell=shell,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-                **kwargs)
+            args, shell=shell, stdout=subprocess.PIPE, stderr=subprocess.PIPE, **kwargs
+        )
         print(f"Executing of command '{process.args}' started")
         out, err = process.communicate()
 
@@ -38,7 +34,8 @@ class TestMonitorSpecificNodeAndUnit(unittest.TestCase):
 
         print(
             f"Executing of command '{process.args}' finished with result '{process.returncode}',"
-            " stdout '{out}', stderr '{err}'")
+            " stdout '{out}', stderr '{err}'"
+        )
 
         return process.returncode, out, err
 
@@ -47,8 +44,10 @@ class TestMonitorSpecificNodeAndUnit(unittest.TestCase):
 
     def timeout_guard(self):
         time.sleep(10)
-        print(f"Loop timeout - service '{service_simple}' on node '{node_name_foo}' "
-              f"was not successfully restarted on time")
+        print(
+            f"Loop timeout - service '{service_simple}' on node '{node_name_foo}' "
+            f"was not successfully restarted on time"
+        )
         self.loop.quit()
 
     def test_monitor_specific_node_and_unit(self):
@@ -56,9 +55,13 @@ class TestMonitorSpecificNodeAndUnit(unittest.TestCase):
         monitor_path = self.mgr.create_monitor()
         monitor = Monitor(monitor_path=monitor_path)
 
-        def on_unit_state_changed(node: str, unit: str, active_state: str, sub_state: str, reason: str) -> None:
-            print(f"Received state change for node '{node}', unit '{unit}', "
-                  f"active_state '{active_state}', sub_state '{sub_state}'")
+        def on_unit_state_changed(
+            node: str, unit: str, active_state: str, sub_state: str, reason: str
+        ) -> None:
+            print(
+                f"Received state change for node '{node}', unit '{unit}', "
+                f"active_state '{active_state}', sub_state '{sub_state}'"
+            )
             if active_state == "inactive" and self.active and not self.inactive:
                 # Active -> Inactive
                 print(f"Service '{unit}' on node '{node}' was stopped successfully")
@@ -82,7 +85,9 @@ class TestMonitorSpecificNodeAndUnit(unittest.TestCase):
         t.start()
         failsafe_thread.start()
 
-        res, _, _ = self.run_command(f"bluechictl restart {node_name_foo} {service_simple}")
+        res, _, _ = self.run_command(
+            f"bluechictl restart {node_name_foo} {service_simple}"
+        )
         assert res == 0
 
         t.join()

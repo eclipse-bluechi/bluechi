@@ -14,7 +14,9 @@ def exec(ctrl: BluechiControllerMachine, nodes: Dict[str, BluechiAgentMachine]):
     simple_svc = SimpleRemainingService()
 
     svc_for_reload = SimpleRemainingService(name="service-for-reload.service")
-    svc_for_reload.set_option(Section.Service, Option.ExecReload, f"systemctl start {simple_svc.name}")
+    svc_for_reload.set_option(
+        Section.Service, Option.ExecReload, f"systemctl start {simple_svc.name}"
+    )
 
     foo = nodes[NODE_FOO]
     foo.install_systemd_service(svc_for_reload)
@@ -32,8 +34,10 @@ def exec(ctrl: BluechiControllerMachine, nodes: Dict[str, BluechiAgentMachine]):
 
 
 def test_bluechi_reload_unit_service(
-        bluechi_test: BluechiTest,
-        bluechi_node_default_config: BluechiAgentConfig, bluechi_ctrl_default_config: BluechiControllerConfig):
+    bluechi_test: BluechiTest,
+    bluechi_node_default_config: BluechiAgentConfig,
+    bluechi_ctrl_default_config: BluechiControllerConfig,
+):
     node_foo_cfg = bluechi_node_default_config.deep_copy()
     node_foo_cfg.node_name = NODE_FOO
 

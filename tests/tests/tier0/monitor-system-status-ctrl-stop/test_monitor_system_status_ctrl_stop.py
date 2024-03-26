@@ -19,7 +19,9 @@ def exec(ctrl: BluechiControllerMachine, nodes: Dict[str, BluechiAgentMachine]):
     service = Service(name="monitor.service")
     service.set_option(Section.Unit, Option.Description, "Monitor BlueChi system")
     service.set_option(Section.Service, Option.Type, "simple")
-    service.set_option(Section.Service, Option.ExecStart, "python3 /tmp/system-monitor.py")
+    service.set_option(
+        Section.Service, Option.ExecStart, "python3 /tmp/system-monitor.py"
+    )
     service.set_option(Section.Install, Option.WantedBy, "multi-user.target")
 
     ctrl.create_file("/tmp", "system-monitor.py", read_file("python/system-monitor.py"))
@@ -44,7 +46,9 @@ def exec(ctrl: BluechiControllerMachine, nodes: Dict[str, BluechiAgentMachine]):
             raise Exception(f"Unexpected error while getting events file: {output}")
 
         events = output.split(",")
-        LOGGER.info(f"Got monitored events: '{events}', comparing with expected '{expected_events}'")
+        LOGGER.info(
+            f"Got monitored events: '{events}', comparing with expected '{expected_events}'"
+        )
 
         # output contains format like 'degraded,up,'
         # So -1 is used to take the additional element into account
@@ -55,9 +59,10 @@ def exec(ctrl: BluechiControllerMachine, nodes: Dict[str, BluechiAgentMachine]):
 
 
 def test_monitor_system_status(
-        bluechi_test: BluechiTest,
-        bluechi_ctrl_default_config: BluechiControllerConfig,
-        bluechi_node_default_config: BluechiAgentConfig):
+    bluechi_test: BluechiTest,
+    bluechi_ctrl_default_config: BluechiControllerConfig,
+    bluechi_node_default_config: BluechiAgentConfig,
+):
 
     node_one_config = bluechi_node_default_config.deep_copy()
     node_one_config.node_name = node_one

@@ -15,6 +15,7 @@ for node in Controller().list_nodes():
         def on_connection_status_changed(status: Variant):
             con_status = status.get_string()
             print(f"Node {node_name}: {con_status}")
+
         return on_connection_status_changed
 
     n.on_status_changed(changed_wrapper(n.name))
