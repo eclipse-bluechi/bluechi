@@ -513,14 +513,7 @@ static int node_match_job_done(UNUSED sd_bus_message *m, UNUSED void *userdata, 
         return 1;
 }
 
-static int node_match_heartbeat(UNUSED sd_bus_message *m, void *userdata, UNUSED sd_bus_error *error) {
-        Node *node = userdata;
-
-        int r = get_time_seconds(&node->last_seen);
-        if (r < 0) {
-                bc_log_errorf("Failed to get current time on heartbeat: %s", strerror(-r));
-                return 0;
-        }
+static int node_match_heartbeat(UNUSED sd_bus_message *m, UNUSED void *userdata, UNUSED sd_bus_error *error) {
         return 1;
 }
 
@@ -915,6 +908,12 @@ static int node_disconnected(UNUSED sd_bus_message *message, void *userdata, UNU
         void *item = NULL;
         size_t i = 0;
 
+        /* Record last seen timestamp for later retrieval */
+        int r = get_time_seconds(&node->last_seen);
+        if (r < 0) {
+                bc_log_errorf("Failed to get current time on disconnect: %s", strerror(-r));
+        }
+
         /* Send virtual unit remove and state change for any reported loaded units */
         while (hashmap_iter(node->unit_subscriptions, &i, &item)) {
                 UnitSubscriptions *usubs = item;
@@ -934,7 +933,6 @@ static int node_disconnected(UNUSED sd_bus_message *message, void *userdata, UNU
 
                 usubs->loaded = false;
 
-                int r = 0;
                 if (send_state_change) {
                         struct hashmap *unique_subs = node_compute_unique_monitor_subscriptions(
                                         node, usubs->unit);
@@ -1049,7 +1047,14 @@ static int node_property_get_last_seen(
                 void *userdata,
                 UNUSED sd_bus_error *ret_error) {
         Node *node = userdata;
-        return sd_bus_message_append(reply, "t", node->last_seen);
+        time_t last_seen = node->last_seen;
+        if (node_is_online(node)) {
+                int r = get_time_seconds(&last_seen);
+                if (r < 0) {
+                        bc_log_errorf("Failed to get current time: %s", strerror(-r));
+                }
+        }
+        return sd_bus_message_append(reply, "t", last_seen);
 }
 
 
