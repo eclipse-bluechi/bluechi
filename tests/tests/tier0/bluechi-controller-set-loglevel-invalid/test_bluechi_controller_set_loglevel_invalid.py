@@ -14,7 +14,8 @@ def exec(ctrl: BluechiControllerMachine, _: Dict[str, BluechiAgentMachine]):
 
 
 def test_bluechi_controller_set_loglevel_invalid(
-        bluechi_test: BluechiTest, bluechi_ctrl_default_config: BluechiControllerConfig):
+    bluechi_test: BluechiTest, bluechi_ctrl_default_config: BluechiControllerConfig
+):
 
     bluechi_test.set_bluechi_controller_config(bluechi_ctrl_default_config)
     bluechi_test.run(exec)

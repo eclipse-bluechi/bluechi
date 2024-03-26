@@ -21,16 +21,17 @@ def exec(ctrl: BluechiControllerMachine, nodes: Dict[str, BluechiAgentMachine]):
     assert foo.wait_for_unit_state_to_be(service.name, "active")
 
     ctrl.bluechictl.freeze_unit(node_foo_name, service.name)
-    assert 'frozen' == foo.systemctl.get_unit_freezer_state(service.name)
+    assert "frozen" == foo.systemctl.get_unit_freezer_state(service.name)
 
     ctrl.bluechictl.thaw_unit(node_foo_name, service.name)
-    assert 'running' == foo.systemctl.get_unit_freezer_state(service.name)
+    assert "running" == foo.systemctl.get_unit_freezer_state(service.name)
 
 
 def test_service_freeze_and_thaw(
-        bluechi_test: BluechiTest,
-        bluechi_ctrl_default_config: BluechiControllerConfig,
-        bluechi_node_default_config: BluechiAgentConfig):
+    bluechi_test: BluechiTest,
+    bluechi_ctrl_default_config: BluechiControllerConfig,
+    bluechi_node_default_config: BluechiAgentConfig,
+):
 
     node_foo_cfg = bluechi_node_default_config.deep_copy()
     node_foo_cfg.node_name = node_foo_name

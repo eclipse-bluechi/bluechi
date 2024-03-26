@@ -16,7 +16,9 @@ def verify_status_output(output: str, node: str, status: str):
         if node in line and status in line:
             valid = True
     if not valid:
-        raise Exception(f"Node '{node}' is not reported as '{status}', output: '{output}'")
+        raise Exception(
+            f"Node '{node}' is not reported as '{status}', output: '{output}'"
+        )
 
 
 def exec(ctrl: BluechiControllerMachine, nodes: Dict[str, BluechiAgentMachine]):
@@ -25,20 +27,21 @@ def exec(ctrl: BluechiControllerMachine, nodes: Dict[str, BluechiAgentMachine]):
     # Initially node foo should be online
     result, output = ctrl.bluechictl.get_node_status(node_foo_name)
     assert result == 0
-    verify_status_output(output, node_foo_name, 'online')
+    verify_status_output(output, node_foo_name, "online")
 
     # Stop node foo and retest status
     node_foo.systemctl.stop_unit("bluechi-agent")
 
     result, output = ctrl.bluechictl.get_node_status(node_foo_name)
     assert result == 0
-    verify_status_output(output, node_foo_name, 'offline')
+    verify_status_output(output, node_foo_name, "offline")
 
 
 def test_bluechi_node_status(
-        bluechi_test: BluechiTest,
-        bluechi_ctrl_default_config: BluechiControllerConfig,
-        bluechi_node_default_config: BluechiAgentConfig):
+    bluechi_test: BluechiTest,
+    bluechi_ctrl_default_config: BluechiControllerConfig,
+    bluechi_node_default_config: BluechiAgentConfig,
+):
 
     node_foo_cfg = bluechi_node_default_config.deep_copy()
     node_foo_cfg.node_name = node_foo_name

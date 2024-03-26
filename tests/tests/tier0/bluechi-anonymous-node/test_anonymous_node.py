@@ -18,15 +18,18 @@ def exec(ctrl: BluechiControllerMachine, nodes: Dict[str, BluechiAgentMachine]):
     assert node_foo.wait_for_unit_state_to_be("bluechi-agent", "active")
 
     # bluechi and bluechi-agent are running, check that agent is not connected
-    result, output = ctrl.run_python(os.path.join("python", "node_foo_not_connected.py"))
+    result, output = ctrl.run_python(
+        os.path.join("python", "node_foo_not_connected.py")
+    )
     if result != 0:
         raise Exception(output)
 
 
 def test_anonymous_node(
-        bluechi_test: BluechiTest,
-        bluechi_ctrl_default_config: BluechiControllerConfig,
-        bluechi_node_default_config: BluechiAgentConfig):
+    bluechi_test: BluechiTest,
+    bluechi_ctrl_default_config: BluechiControllerConfig,
+    bluechi_node_default_config: BluechiAgentConfig,
+):
 
     node_foo_config = bluechi_node_default_config.deep_copy()
     node_foo_config.node_name = node_foo_name

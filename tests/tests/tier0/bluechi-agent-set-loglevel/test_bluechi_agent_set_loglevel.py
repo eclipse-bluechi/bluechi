@@ -18,17 +18,23 @@ def exec(ctrl: BluechiControllerMachine, nodes: Dict[str, BluechiAgentMachine]):
     interface = "org.eclipse.bluechi.Agent"
 
     ctrl.bluechictl.set_log_level_on_node(NODE_FOO, LogLevel.INFO.value)
-    _, output = node_foo.exec_run(f"busctl  get-property {service} {object} {interface} LogLevel")
+    _, output = node_foo.exec_run(
+        f"busctl  get-property {service} {object} {interface} LogLevel"
+    )
     assert "INFO" in output
 
     ctrl.bluechictl.set_log_level_on_node(NODE_FOO, LogLevel.DEBUG.value)
-    _, output = node_foo.exec_run(f"busctl  get-property {service} {object} {interface} LogLevel")
+    _, output = node_foo.exec_run(
+        f"busctl  get-property {service} {object} {interface} LogLevel"
+    )
     assert "DEBUG" in output
 
 
 def test_bluechi_agent_set_log_level(
-        bluechi_test: BluechiTest,
-        bluechi_node_default_config: BluechiAgentConfig, bluechi_ctrl_default_config: BluechiControllerConfig):
+    bluechi_test: BluechiTest,
+    bluechi_node_default_config: BluechiAgentConfig,
+    bluechi_ctrl_default_config: BluechiControllerConfig,
+):
 
     node_foo_cfg = bluechi_node_default_config.deep_copy()
     node_foo_cfg.node_name = NODE_FOO

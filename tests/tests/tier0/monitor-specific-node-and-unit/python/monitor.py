@@ -12,7 +12,6 @@ service_simple = "simple.service"
 
 
 class TestMonitorSpecificNodeAndUnit(unittest.TestCase):
-
     def setUp(self) -> None:
         self.loop = EventLoop()
         self.mgr = Controller()
@@ -30,10 +29,14 @@ class TestMonitorSpecificNodeAndUnit(unittest.TestCase):
         def on_unit_new(node: str, unit: str, reason: str) -> None:
             self.times_new_called += 1
 
-        def on_unit_state_changed(node: str, unit: str, active_state: str, sub_state: str, reason: str) -> None:
+        def on_unit_state_changed(
+            node: str, unit: str, active_state: str, sub_state: str, reason: str
+        ) -> None:
             self.times_state_changed_called += 1
 
-        def on_unit_property_changed(node: str, unit: str, interface: str, props: Structure) -> None:
+        def on_unit_property_changed(
+            node: str, unit: str, interface: str, props: Structure
+        ) -> None:
             self.times_prop_changed_called += 1
 
         def on_unit_removed(node: str, unit: str, reason: str) -> None:

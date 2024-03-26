@@ -17,15 +17,15 @@ from bluechi_test.util import get_random_name, read_file
 LOGGER = logging.getLogger(__name__)
 
 
-class BluechiMachine():
+class BluechiMachine:
 
-    valgrind_log_directory = '/var/log/valgrind'
-    valgrind_log_path_controller = '/var/log/valgrind/bluechi-controller-valgrind.log'
-    valgrind_log_path_agent = '/var/log/valgrind/bluechi-agent-valgrind.log'
+    valgrind_log_directory = "/var/log/valgrind"
+    valgrind_log_path_controller = "/var/log/valgrind/bluechi-controller-valgrind.log"
+    valgrind_log_path_agent = "/var/log/valgrind/bluechi-agent-valgrind.log"
 
-    gcda_file_location = '/var/tmp/bluechi-coverage'
+    gcda_file_location = "/var/tmp/bluechi-coverage"
 
-    backup_file_suffix = '.backup'
+    backup_file_suffix = ".backup"
 
     def __init__(self, name: str, client: Client) -> None:
         self.name = name
@@ -72,16 +72,21 @@ class BluechiMachine():
     def get_file(self, machine_path: str, local_path: str) -> None:
         self.client.get_file(machine_path, local_path)
 
-    def exec_run(self, command: (Union[str, list[str]]), raw_output: bool = False, tty: bool = True) -> \
-            Tuple[Optional[int], Union[Iterator[bytes], Any, Tuple[bytes, bytes]]]:
+    def exec_run(
+        self,
+        command: Union[str, list[str]],
+        raw_output: bool = False,
+        tty: bool = True,
+    ) -> Tuple[Optional[int], Union[Iterator[bytes], Any, Tuple[bytes, bytes]]]:
         return self.client.exec_run(command, raw_output, tty)
 
     def wait_for_unit_state_to_be(
-            self,
-            unit_name: str,
-            expected_state: str,
-            timeout: float = 5.0,
-            delay: float = 0.5) -> bool:
+        self,
+        unit_name: str,
+        expected_state: str,
+        timeout: float = 5.0,
+        delay: float = 0.5,
+    ) -> bool:
 
         if self.systemctl.is_unit_in_state(unit_name, expected_state):
             return True
@@ -92,11 +97,16 @@ class BluechiMachine():
             if self.systemctl.is_unit_in_state(unit_name, expected_state):
                 return True
 
-        LOGGER.error(f"Timeout while waiting for '{unit_name}' to reach state '{expected_state}'.")
+        LOGGER.error(
+            f"Timeout while waiting for '{unit_name}' to reach state '{expected_state}'."
+        )
         return False
 
-    def systemctl_start_and_wait(self, service_name: str, sleep_after: float = 0.0) -> \
-            Tuple[Optional[int], Union[Iterator[bytes], Any, Tuple[bytes, bytes]], Optional[bool]]:
+    def systemctl_start_and_wait(
+        self, service_name: str, sleep_after: float = 0.0
+    ) -> Tuple[
+        Optional[int], Union[Iterator[bytes], Any, Tuple[bytes, bytes]], Optional[bool]
+    ]:
 
         result, output = self.systemctl.start_unit(service_name)
         wait_result = self.wait_for_unit_state_to_be(service_name, "active")
@@ -108,8 +118,10 @@ class BluechiMachine():
         if restart:
             self.systemctl.stop_unit(service.name)
 
-        LOGGER.debug(f"Installing systemd service '{service.name}' to container path '{service.directory}'"
-                     f"with content:\n{service.to_string()}")
+        LOGGER.debug(
+            f"Installing systemd service '{service.name}' to container path '{service.directory}'"
+            f"with content:\n{service.to_string()}"
+        )
         self.create_file(service.directory, service.name, service.to_string())
         self.systemctl.daemon_reload()
 
@@ -130,13 +142,23 @@ class BluechiMachine():
 
     def copy_container_script(self, script_file_name: str):
         curr_dir = os.getcwd()
-        source_path = os.path.join(curr_dir, "..", "..", "..", "bluechi_test", "container_scripts", script_file_name)
+        source_path = os.path.join(
+            curr_dir,
+            "..",
+            "..",
+            "..",
+            "bluechi_test",
+            "container_scripts",
+            script_file_name,
+        )
         content = read_file(source_path)
 
         target_dir = os.path.join("/", "var")
 
-        LOGGER.info(f"Copy container script '{source_path}' to container path '{curr_dir}'\
-             with content:\n{content}")
+        LOGGER.info(
+            f"Copy container script '{source_path}' to container path '{curr_dir}'\
+             with content:\n{content}"
+        )
         self.create_file(target_dir, script_file_name, content)
 
     def copy_machine_lib(self):
@@ -173,20 +195,25 @@ class BluechiMachine():
         agent_service = "bluechi-agent.service"
 
         self._track_changed_file(unit_dir, controller_service)
-        self.client.exec_run(f"sed -i '/ExecStart=/c\\ExecStart=/usr/bin/valgrind -s --leak-check=yes "
-                             f"--log-file={BluechiMachine.valgrind_log_path_controller} "
-                             f"/usr/libexec/bluechi-controller' {os.path.join(unit_dir, controller_service)}")
+        self.client.exec_run(
+            f"sed -i '/ExecStart=/c\\ExecStart=/usr/bin/valgrind -s --leak-check=yes "
+            f"--log-file={BluechiMachine.valgrind_log_path_controller} "
+            f"/usr/libexec/bluechi-controller' {os.path.join(unit_dir, controller_service)}"
+        )
 
         self._track_changed_file(unit_dir, agent_service)
-        self.client.exec_run(f"sed -i '/ExecStart=/c\\ExecStart=/usr/bin/valgrind -s --leak-check=yes "
-                             f"--log-file={BluechiMachine.valgrind_log_path_agent} /usr/libexec/bluechi-agent' "
-                             f"{os.path.join(unit_dir, agent_service)}")
+        self.client.exec_run(
+            f"sed -i '/ExecStart=/c\\ExecStart=/usr/bin/valgrind -s --leak-check=yes "
+            f"--log-file={BluechiMachine.valgrind_log_path_agent} /usr/libexec/bluechi-agent' "
+            f"{os.path.join(unit_dir, agent_service)}"
+        )
 
         self.client.exec_run(f"mkdir -p {BluechiMachine.valgrind_log_directory}")
         self.systemctl.daemon_reload()
 
-    def run_python(self, python_script_path: str) -> \
-            Tuple[Optional[int], Union[Iterator[bytes], Any, Tuple[bytes, bytes]]]:
+    def run_python(
+        self, python_script_path: str
+    ) -> Tuple[Optional[int], Union[Iterator[bytes], Any, Tuple[bytes, bytes]]]:
 
         target_file_dir = os.path.join("/", "tmp")
         target_file_name = get_random_name(10)
@@ -198,9 +225,11 @@ class BluechiMachine():
 
         target_file_path = os.path.join(target_file_dir, target_file_name)
         LOGGER.debug(f"Executing python script '{target_file_path}'")
-        result, output = self.client.exec_run(f'python3 {target_file_path}')
-        LOGGER.debug(f"Execute python script '{target_file_path}' finished with result '{result}' \
-            and output:\n{output}")
+        result, output = self.client.exec_run(f"python3 {target_file_path}")
+        LOGGER.debug(
+            f"Execute python script '{target_file_path}' finished with result '{result}' \
+            and output:\n{output}"
+        )
         try:
             os.remove(target_file_path)
         finally:
@@ -220,8 +249,7 @@ class BluechiMachine():
     def gather_journal_logs(self, data_dir: str) -> None:
         log_file = f"/tmp/journal-{self.name}.log"
 
-        self.client.exec_run(
-            f'bash -c "journalctl --no-pager > {log_file}"', tty=True)
+        self.client.exec_run(f'bash -c "journalctl --no-pager > {log_file}"', tty=True)
 
         # track created logfile for later cleanup
         self.created_files.append(log_file)
@@ -233,7 +261,8 @@ class BluechiMachine():
 
         LOGGER.info(f"Generating info file '{coverage_file}' started")
         result, output = self.client.exec_run(
-            f"/usr/share/bluechi-coverage/bin/gather-code-coverage.sh {coverage_file}")
+            f"/usr/share/bluechi-coverage/bin/gather-code-coverage.sh {coverage_file}"
+        )
         if result != 0:
             LOGGER.error(f"Failed to gather code coverage: {output}")
         LOGGER.info(f"Generating info file '{coverage_file}' finished")
@@ -253,19 +282,23 @@ class BluechiMachine():
 
 
 class BluechiAgentMachine(BluechiMachine):
-
-    def __init__(self, name: str, client: Client, agent_config: BluechiAgentConfig) -> None:
+    def __init__(
+        self, name: str, client: Client, agent_config: BluechiAgentConfig
+    ) -> None:
         super().__init__(name, client)
 
         self.config = agent_config
 
         # add confd file to container
-        self.create_file(self.config.get_confd_dir(), self.config.file_name, self.config.serialize())
+        self.create_file(
+            self.config.get_confd_dir(), self.config.file_name, self.config.serialize()
+        )
 
 
 class BluechiControllerMachine(BluechiMachine):
-
-    def __init__(self, name: str, client: Client, ctrl_config: BluechiControllerConfig) -> None:
+    def __init__(
+        self, name: str, client: Client, ctrl_config: BluechiControllerConfig
+    ) -> None:
         super().__init__(name, client)
 
         self.bluechictl = BluechiCtl(client)
@@ -273,5 +306,7 @@ class BluechiControllerMachine(BluechiMachine):
         self.config = ctrl_config
 
         # add confd file to container
-        self.create_file(self.config.get_confd_dir(), self.config.file_name, self.config.serialize())
+        self.create_file(
+            self.config.get_confd_dir(), self.config.file_name, self.config.serialize()
+        )
         self.copy_machine_lib()

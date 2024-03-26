@@ -28,9 +28,10 @@ def exec(ctrl: BluechiControllerMachine, nodes: Dict[str, BluechiAgentMachine]):
 
 
 def test_monitor_listener_added(
-        bluechi_test: BluechiTest,
-        bluechi_ctrl_default_config: BluechiControllerConfig,
-        bluechi_node_default_config: BluechiAgentConfig):
+    bluechi_test: BluechiTest,
+    bluechi_ctrl_default_config: BluechiControllerConfig,
+    bluechi_node_default_config: BluechiAgentConfig,
+):
 
     config_node_foo = bluechi_node_default_config.deep_copy()
     config_node_foo.node_name = node_name_foo

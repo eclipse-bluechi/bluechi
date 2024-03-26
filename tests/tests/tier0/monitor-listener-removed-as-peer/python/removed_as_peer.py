@@ -14,15 +14,20 @@ service = "simple.service"
 
 
 class TestListenerAddedAsPeer(unittest.TestCase):
-
     def test_listener_added_as_peer(self):
 
-        process_monitor_owner = Popen(["python3", "/var/create_monitor.py", node,
-                                      service], stdout=PIPE, universal_newlines=True)
+        process_monitor_owner = Popen(
+            ["python3", "/var/create_monitor.py", node, service],
+            stdout=PIPE,
+            universal_newlines=True,
+        )
         monitor_path = process_monitor_owner.stdout.readline().strip()
 
-        process_monitor_listener = Popen(["python3", "/var/listen.py", monitor_path],
-                                         stdout=PIPE, universal_newlines=True)
+        process_monitor_listener = Popen(
+            ["python3", "/var/listen.py", monitor_path],
+            stdout=PIPE,
+            universal_newlines=True,
+        )
         bus_id = process_monitor_listener.stdout.readline().strip()
 
         # add listener as peer so it receives signals from the monitor
@@ -75,7 +80,9 @@ class TestListenerAddedAsPeer(unittest.TestCase):
         if self.worker_queue is None:
             self.worker_queue = Queue()
         if self.worker is None:
-            self.worker = threading.Thread(target=enqueue_output, args=(out, self.worker_queue))
+            self.worker = threading.Thread(
+                target=enqueue_output, args=(out, self.worker_queue)
+            )
             self.worker.daemon = True
             self.worker.start()
 

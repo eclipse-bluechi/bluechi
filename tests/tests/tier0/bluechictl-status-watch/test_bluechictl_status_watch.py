@@ -13,14 +13,17 @@ node_foo_name = "node-foo"
 
 
 def exec(ctrl: BluechiControllerMachine, nodes: Dict[str, BluechiAgentMachine]):
-    result, output = ctrl.run_python(os.path.join("python", "bluechictl_status_watch.py"))
+    result, output = ctrl.run_python(
+        os.path.join("python", "bluechictl_status_watch.py")
+    )
     assert result == 0
 
 
 def test_bluechictl_status_watch(
-        bluechi_test: BluechiTest,
-        bluechi_ctrl_default_config: BluechiControllerConfig,
-        bluechi_node_default_config: BluechiAgentConfig):
+    bluechi_test: BluechiTest,
+    bluechi_ctrl_default_config: BluechiControllerConfig,
+    bluechi_node_default_config: BluechiAgentConfig,
+):
 
     node_foo_cfg = bluechi_node_default_config.deep_copy()
     node_foo_cfg.node_name = node_foo_name

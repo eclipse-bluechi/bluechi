@@ -12,7 +12,9 @@ NODE_WITH_NOT_VALID_VALUE = "node-with-not-valid-value"
 NODE_WITH_NUMBERS_ONLY_IN_LOGLEVEL = "node-numbers-only"
 
 
-def start_with_invalid_loglevel(ctrl: BluechiControllerMachine, nodes: Dict[str, BluechiAgentMachine]):
+def start_with_invalid_loglevel(
+    ctrl: BluechiControllerMachine, nodes: Dict[str, BluechiAgentMachine]
+):
 
     node_good = nodes[NODE_GOOD]
     assert node_good.wait_for_unit_state_to_be("bluechi-agent", "active")
@@ -21,15 +23,21 @@ def start_with_invalid_loglevel(ctrl: BluechiControllerMachine, nodes: Dict[str,
     assert node_with_log_loglevel.wait_for_unit_state_to_be("bluechi-agent", "failed")
 
     node_with_not_valid_value = nodes[NODE_WITH_NOT_VALID_VALUE]
-    assert node_with_not_valid_value.wait_for_unit_state_to_be("bluechi-agent", "active")
+    assert node_with_not_valid_value.wait_for_unit_state_to_be(
+        "bluechi-agent", "active"
+    )
 
     node_with_numbers_only_in_loglevel = nodes[NODE_WITH_NUMBERS_ONLY_IN_LOGLEVEL]
-    assert node_with_numbers_only_in_loglevel.wait_for_unit_state_to_be("bluechi-agent", "active")
+    assert node_with_numbers_only_in_loglevel.wait_for_unit_state_to_be(
+        "bluechi-agent", "active"
+    )
 
 
 def test_agent_invalid_configuration(
-        bluechi_test: BluechiTest,
-        bluechi_node_default_config: BluechiAgentConfig, bluechi_ctrl_default_config: BluechiControllerConfig):
+    bluechi_test: BluechiTest,
+    bluechi_node_default_config: BluechiAgentConfig,
+    bluechi_ctrl_default_config: BluechiControllerConfig,
+):
 
     node_good_cfg = bluechi_node_default_config.deep_copy()
     node_good_cfg.node_name = NODE_GOOD
@@ -51,7 +59,7 @@ def test_agent_invalid_configuration(
         NODE_GOOD,
         NODE_WITH_LONG_LOGLEVEL,
         NODE_WITH_NOT_VALID_VALUE,
-        NODE_WITH_NUMBERS_ONLY_IN_LOGLEVEL
+        NODE_WITH_NUMBERS_ONLY_IN_LOGLEVEL,
     ]
 
     bluechi_test.set_bluechi_controller_config(bluechi_ctrl_default_config)

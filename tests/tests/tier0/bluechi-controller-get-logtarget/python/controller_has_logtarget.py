@@ -8,7 +8,6 @@ expected_logtarget = "stderr-full"
 
 
 class TestHasLogTarget(unittest.TestCase):
-
     def test_controller_has_logtarget(self):
         controller = Controller()
         assert controller.log_target == expected_logtarget
