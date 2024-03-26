@@ -15,13 +15,17 @@ class MonitorSpecificNodeAndUnitEventEvaluator(EventEvaluator):
 
     def process_line(self, line: str) -> None:
         if not self.created and "Unit created (reason:" in line:
-            print(f"Received UnitCreated signal for service '{service_simple}' "
-                  f"on node '{node_name_foo}'")
+            print(
+                f"Received UnitCreated signal for service '{service_simple}' "
+                f"on node '{node_name_foo}'"
+            )
             self.created = True
 
         elif self.created and not self.removed and "Unit removed (reason:" in line:
-            print(f"Received UnitRemoved signal for service '{service_simple}' "
-                  f"on node '{node_name_foo}'")
+            print(
+                f"Received UnitRemoved signal for service '{service_simple}' "
+                f"on node '{node_name_foo}'"
+            )
             self.removed = True
 
     def processing_finished(self) -> bool:
@@ -31,7 +35,9 @@ class MonitorSpecificNodeAndUnitEventEvaluator(EventEvaluator):
 class TestMonitorSpecificNodeAndUnit(unittest.TestCase):
     def setUp(self) -> None:
         self.evaluator = MonitorSpecificNodeAndUnitEventEvaluator()
-        self.bgrunner = BackgroundRunner(["monitor", f"{node_name_foo}", f"{service_simple}"], self.evaluator)
+        self.bgrunner = BackgroundRunner(
+            ["monitor", f"{node_name_foo}", f"{service_simple}"], self.evaluator
+        )
         self.bluechictl = BluechiCtl()
 
     def test_monitor_specific_node_and_unit(self):

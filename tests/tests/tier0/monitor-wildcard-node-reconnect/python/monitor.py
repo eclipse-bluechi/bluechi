@@ -9,7 +9,6 @@ from bluechi.api import Controller, Monitor, Node
 
 
 class TestMonitorWildcardNodeReconnect(unittest.TestCase):
-
     def setUp(self) -> None:
         self.expected_nodes_unit_new = ["node-foo", "node-bar", "node-baz"]
         self.expected_nodes_unit_removed = ["node-foo"]
@@ -35,7 +34,7 @@ class TestMonitorWildcardNodeReconnect(unittest.TestCase):
     def test_monitor_wildcard_node_reconnect(self):
 
         # start subscription on all nodes and units
-        self.monitor.subscribe('*', '*')
+        self.monitor.subscribe("*", "*")
         # will stop when all virtual unit_new signals for all nodes are received
         self.loop.run()
 
@@ -49,7 +48,7 @@ class TestMonitorWildcardNodeReconnect(unittest.TestCase):
         node = Node(node_name_foo)
         # for an explanation for the try-except please see monitor-node-disconnect/monitor.py
         try:
-            node.restart_unit('bluechi-agent.service', 'replace')
+            node.restart_unit("bluechi-agent.service", "replace")
         except DBusError:
             pass
 

@@ -12,15 +12,20 @@ service = "simple.service"
 
 
 class TestListenerAddedMoreThanOnce(unittest.TestCase):
-
     def test_listener_added_more_than_once(self):
 
-        process_monitor_owner = Popen(["python3", "/var/create_monitor.py", node,
-                                      service], stdout=PIPE, universal_newlines=True)
+        process_monitor_owner = Popen(
+            ["python3", "/var/create_monitor.py", node, service],
+            stdout=PIPE,
+            universal_newlines=True,
+        )
         monitor_path = process_monitor_owner.stdout.readline().strip()
 
-        process_monitor_listener = Popen(["python3", "/var/listen.py", monitor_path],
-                                         stdout=PIPE, universal_newlines=True)
+        process_monitor_listener = Popen(
+            ["python3", "/var/listen.py", monitor_path],
+            stdout=PIPE,
+            universal_newlines=True,
+        )
         bus_id = process_monitor_listener.stdout.readline().strip()
 
         monitor = Monitor(monitor_path)

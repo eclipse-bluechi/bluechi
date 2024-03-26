@@ -12,9 +12,10 @@ service_simple = "simple.service"
 
 
 class TestStartAndCancel(unittest.TestCase):
-
     def _get_unit_state(self, node: Node, service: str) -> str:
-        prop = node.get_unit_property(service, "org.freedesktop.systemd1.Unit", "ActiveState")
+        prop = node.get_unit_property(
+            service, "org.freedesktop.systemd1.Unit", "ActiveState"
+        )
         return prop.get_string()
 
     def test_start_and_cancel(self):

@@ -30,16 +30,20 @@ def exec(ctrl: BluechiControllerMachine, nodes: Dict[str, BluechiAgentMachine]):
 
 
 def test_monitor_specific_node_and_unit(
-        bluechi_test: BluechiTest,
-        bluechi_ctrl_default_config: BluechiControllerConfig,
-        bluechi_node_default_config: BluechiAgentConfig):
+    bluechi_test: BluechiTest,
+    bluechi_ctrl_default_config: BluechiControllerConfig,
+    bluechi_node_default_config: BluechiAgentConfig,
+):
 
     node_foo_config = bluechi_node_default_config.deep_copy()
     node_bar_config = bluechi_node_default_config.deep_copy()
 
     node_foo_config.node_name = node_name_foo
     node_bar_config.node_name = node_name_bar
-    bluechi_ctrl_default_config.allowed_node_names = [node_foo_config.node_name, node_bar_config.node_name]
+    bluechi_ctrl_default_config.allowed_node_names = [
+        node_foo_config.node_name,
+        node_bar_config.node_name,
+    ]
 
     bluechi_test.set_bluechi_controller_config(bluechi_ctrl_default_config)
     bluechi_test.add_bluechi_agent_config(node_foo_config)

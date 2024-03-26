@@ -12,7 +12,9 @@ NODE_WITH_NOT_VALID_VALUE = "node-with-not-valid-value"
 NODE_WITH_NUMBERS_ONLY_IN_LOGISQUIET = "node-numbers-only"
 
 
-def start_with_invalid_logisquiet(ctrl: BluechiControllerMachine, nodes: Dict[str, BluechiAgentMachine]):
+def start_with_invalid_logisquiet(
+    ctrl: BluechiControllerMachine, nodes: Dict[str, BluechiAgentMachine]
+):
     node_good = nodes[NODE_GOOD]
     assert node_good.wait_for_unit_state_to_be("bluechi-agent", "active")
 
@@ -20,15 +22,21 @@ def start_with_invalid_logisquiet(ctrl: BluechiControllerMachine, nodes: Dict[st
     assert node_with_log_logisquiet.wait_for_unit_state_to_be("bluechi-agent", "failed")
 
     node_with_not_valid_value = nodes[NODE_WITH_NOT_VALID_VALUE]
-    assert node_with_not_valid_value.wait_for_unit_state_to_be("bluechi-agent", "active")
+    assert node_with_not_valid_value.wait_for_unit_state_to_be(
+        "bluechi-agent", "active"
+    )
 
     node_with_numbers_only_in_logisquiet = nodes[NODE_WITH_NUMBERS_ONLY_IN_LOGISQUIET]
-    assert node_with_numbers_only_in_logisquiet.wait_for_unit_state_to_be("bluechi-agent", "active")
+    assert node_with_numbers_only_in_logisquiet.wait_for_unit_state_to_be(
+        "bluechi-agent", "active"
+    )
 
 
 def test_agent_invalid_configuration(
-        bluechi_test: BluechiTest,
-        bluechi_node_default_config: BluechiAgentConfig, bluechi_ctrl_default_config: BluechiControllerConfig):
+    bluechi_test: BluechiTest,
+    bluechi_node_default_config: BluechiAgentConfig,
+    bluechi_ctrl_default_config: BluechiControllerConfig,
+):
 
     node_good_cfg = bluechi_node_default_config.deep_copy()
     node_good_cfg.node_name = NODE_GOOD
@@ -43,14 +51,16 @@ def test_agent_invalid_configuration(
     node_with_invalid_value_cfg.log_is_quiet = "NOT_TRUE_OR_FALSE_VALUE"
 
     node_with_numbersonly_in_logisquiet_cfg = bluechi_node_default_config.deep_copy()
-    node_with_numbersonly_in_logisquiet_cfg.node_name = NODE_WITH_NUMBERS_ONLY_IN_LOGISQUIET
+    node_with_numbersonly_in_logisquiet_cfg.node_name = (
+        NODE_WITH_NUMBERS_ONLY_IN_LOGISQUIET
+    )
     node_with_numbersonly_in_logisquiet_cfg.log_is_quiet = 10000000
 
     bluechi_ctrl_default_config.allowed_node_names = [
         NODE_GOOD,
         NODE_WITH_LONG_LOGISQUIET,
         NODE_WITH_NOT_VALID_VALUE,
-        NODE_WITH_NUMBERS_ONLY_IN_LOGISQUIET
+        NODE_WITH_NUMBERS_ONLY_IN_LOGISQUIET,
     ]
 
     bluechi_test.set_bluechi_controller_config(bluechi_ctrl_default_config)

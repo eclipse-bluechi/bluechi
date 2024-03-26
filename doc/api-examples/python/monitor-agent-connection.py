@@ -9,8 +9,11 @@ from dasbus.typing import Variant
 loop = EventLoop()
 bus = dasbus.connection.SystemMessageBus()
 
-agent_props_proxy = bus.get_proxy("org.eclipse.bluechi.Agent", "/org/eclipse/bluechi",
-                                  "org.freedesktop.DBus.Properties")
+agent_props_proxy = bus.get_proxy(
+    "org.eclipse.bluechi.Agent",
+    "/org/eclipse/bluechi",
+    "org.freedesktop.DBus.Properties",
+)
 
 
 def on_connection_status_changed(

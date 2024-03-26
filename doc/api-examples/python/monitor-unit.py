@@ -54,7 +54,9 @@ def unit_new(node, unit, reason):
 
 
 def unit_state_changed(node, unit, active_state, substate, reason):
-    print(f"Unit {unit} on node {node}, changed to state: {active_state} ({substate}), reason: {reason}")
+    print(
+        f"Unit {unit} on node {node}, changed to state: {active_state} ({substate}), reason: {reason}"
+    )
 
 
 def unit_removed(node, unit, reason):

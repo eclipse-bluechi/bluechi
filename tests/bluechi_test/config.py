@@ -3,7 +3,7 @@
 from typing import List
 
 
-class BluechiConfig():
+class BluechiConfig:
 
     # use a smaller max line length than possible
     # to prevent any accidental faults
@@ -24,14 +24,15 @@ class BluechiControllerConfig(BluechiConfig):
     confd_dir = "/etc/bluechi/controller.conf.d"
 
     def __init__(
-            self,
-            file_name: str,
-            name: str = "bluechi-controller",
-            port: str = "8420",
-            allowed_node_names: List[str] = [],
-            log_level: str = "DEBUG",
-            log_target: str = "journald",
-            log_is_quiet: bool = False) -> None:
+        self,
+        file_name: str,
+        name: str = "bluechi-controller",
+        port: str = "8420",
+        allowed_node_names: List[str] = [],
+        log_level: str = "DEBUG",
+        log_target: str = "journald",
+        log_is_quiet: bool = False,
+    ) -> None:
         super().__init__(file_name)
 
         self.name = name
@@ -73,16 +74,17 @@ class BluechiAgentConfig(BluechiConfig):
     confd_dir = "/etc/bluechi/agent.conf.d"
 
     def __init__(
-            self,
-            file_name: str,
-            node_name: str = "",
-            controller_host: str = "",
-            controller_port: str = "8420",
-            controller_address: str = "",
-            heartbeat_interval: str = "2000",
-            log_level: str = "DEBUG",
-            log_target: str = "journald",
-            log_is_quiet: bool = False) -> None:
+        self,
+        file_name: str,
+        node_name: str = "",
+        controller_host: str = "",
+        controller_port: str = "8420",
+        controller_address: str = "",
+        heartbeat_interval: str = "2000",
+        log_level: str = "DEBUG",
+        log_target: str = "journald",
+        log_is_quiet: bool = False,
+    ) -> None:
         super().__init__(file_name)
 
         self.node_name = node_name

@@ -25,8 +25,12 @@ def exec(ctrl: BluechiControllerMachine, nodes: Dict[str, BluechiAgentMachine]):
     simple_service.set_option(Section.Unit, Option.StopWhenUnneeded, "yes")
 
     requesting_service = SimpleRemainingService(name="requesting.service")
-    requesting_service.set_option(Section.Unit, Option.After, "bluechi-proxy@node-bar_simple.service")
-    requesting_service.set_option(Section.Unit, Option.Wants, "bluechi-proxy@node-bar_simple.service")
+    requesting_service.set_option(
+        Section.Unit, Option.After, "bluechi-proxy@node-bar_simple.service"
+    )
+    requesting_service.set_option(
+        Section.Unit, Option.Wants, "bluechi-proxy@node-bar_simple.service"
+    )
 
     foo1.install_systemd_service(requesting_service)
     foo2.install_systemd_service(requesting_service)
@@ -37,7 +41,9 @@ def exec(ctrl: BluechiControllerMachine, nodes: Dict[str, BluechiAgentMachine]):
     assert bar.wait_for_unit_state_to_be(simple_service.name, "inactive")
 
     bluechi_dep_service = assemble_bluechi_dep_service_name(simple_service.name)
-    bluechi_proxy_service = assemble_bluechi_proxy_service_name(node_bar_name, simple_service.name)
+    bluechi_proxy_service = assemble_bluechi_proxy_service_name(
+        node_bar_name, simple_service.name
+    )
 
     ctrl.bluechictl.start_unit(node_foo1_name, requesting_service.name)
     assert bar.wait_for_unit_state_to_be(simple_service.name, "active")
@@ -65,9 +71,10 @@ def exec(ctrl: BluechiControllerMachine, nodes: Dict[str, BluechiAgentMachine]):
 
 
 def test_proxy_service_multiple_services_multiple_nodes(
-        bluechi_test: BluechiTest,
-        bluechi_ctrl_default_config: BluechiControllerConfig,
-        bluechi_node_default_config: BluechiAgentConfig):
+    bluechi_test: BluechiTest,
+    bluechi_ctrl_default_config: BluechiControllerConfig,
+    bluechi_node_default_config: BluechiAgentConfig,
+):
 
     node_foo1_cfg = bluechi_node_default_config.deep_copy()
     node_foo1_cfg.node_name = node_foo1_name
@@ -78,7 +85,11 @@ def test_proxy_service_multiple_services_multiple_nodes(
     node_bar_cfg = bluechi_node_default_config.deep_copy()
     node_bar_cfg.node_name = node_bar_name
 
-    bluechi_ctrl_default_config.allowed_node_names = [node_foo1_name, node_foo2_name, node_bar_name]
+    bluechi_ctrl_default_config.allowed_node_names = [
+        node_foo1_name,
+        node_foo2_name,
+        node_bar_name,
+    ]
 
     bluechi_test.set_bluechi_controller_config(bluechi_ctrl_default_config)
     bluechi_test.add_bluechi_agent_config(node_foo1_cfg)

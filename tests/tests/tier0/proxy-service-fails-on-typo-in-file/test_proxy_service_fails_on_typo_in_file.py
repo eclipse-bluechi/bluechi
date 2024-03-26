@@ -26,13 +26,21 @@ def exec(ctrl: BluechiControllerMachine, nodes: Dict[str, BluechiAgentMachine]):
     simple_service._cfg_parser.remove_section(Section.Service)
     simple_service._cfg_parser.add_section(incorrect_section)
     simple_service._cfg_parser.set(incorrect_section, Option.Type.value, "simple")
-    simple_service._cfg_parser.set(incorrect_section, Option.ExecStart.value, "/bin/true")
+    simple_service._cfg_parser.set(
+        incorrect_section, Option.ExecStart.value, "/bin/true"
+    )
 
     requesting_service = SimpleRemainingService(name="requesting.service")
-    requesting_service.set_option(Section.Unit, Option.After, "bluechi-proxy@node-bar_simple.service")
-    requesting_service.set_option(Section.Unit, Option.Wants, "bluechi-proxy@node-bar_simple.service")
+    requesting_service.set_option(
+        Section.Unit, Option.After, "bluechi-proxy@node-bar_simple.service"
+    )
+    requesting_service.set_option(
+        Section.Unit, Option.Wants, "bluechi-proxy@node-bar_simple.service"
+    )
 
-    bluechi_proxy_service = assemble_bluechi_proxy_service_name(node_bar_name, simple_service.name)
+    bluechi_proxy_service = assemble_bluechi_proxy_service_name(
+        node_bar_name, simple_service.name
+    )
     bluechi_dep_service = assemble_bluechi_dep_service_name(simple_service.name)
 
     foo.install_systemd_service(requesting_service)
@@ -51,9 +59,10 @@ def exec(ctrl: BluechiControllerMachine, nodes: Dict[str, BluechiAgentMachine]):
 
 
 def test_proxy_service_fails_on_typo_in_file(
-        bluechi_test: BluechiTest,
-        bluechi_ctrl_default_config: BluechiControllerConfig,
-        bluechi_node_default_config: BluechiAgentConfig):
+    bluechi_test: BluechiTest,
+    bluechi_ctrl_default_config: BluechiControllerConfig,
+    bluechi_node_default_config: BluechiAgentConfig,
+):
 
     node_foo_cfg = bluechi_node_default_config.deep_copy()
     node_foo_cfg.node_name = node_foo_name
