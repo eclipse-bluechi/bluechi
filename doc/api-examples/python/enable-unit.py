@@ -3,7 +3,9 @@
 
 import sys
 from collections import namedtuple
+
 import dasbus.connection
+
 bus = dasbus.connection.SystemMessageBus()
 
 EnabledServiceInfo = namedtuple("EnabledServicesInfo", ["op_type", "symlink_file", "symlink_dest"])

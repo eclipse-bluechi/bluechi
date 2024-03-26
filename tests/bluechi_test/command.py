@@ -2,7 +2,6 @@
 
 import logging
 import subprocess
-
 from typing import Union
 
 LOGGER = logging.getLogger(__name__)

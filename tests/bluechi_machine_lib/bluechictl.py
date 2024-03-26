@@ -3,11 +3,10 @@
 import copy
 import signal
 import subprocess
+import tempfile
 import threading
 import time
-import tempfile
 from typing import List, Pattern, Set, Tuple
-
 
 bluechictl_executable = ["/usr/bin/bluechictl"]
 

@@ -1,13 +1,11 @@
 # SPDX-License-Identifier: LGPL-2.1-or-later
 
 import re
-
 from typing import Dict, Tuple
 
-from bluechi_test.config import BluechiControllerConfig, BluechiAgentConfig
-from bluechi_test.machine import BluechiControllerMachine, BluechiAgentMachine
+from bluechi_test.config import BluechiAgentConfig, BluechiControllerConfig
+from bluechi_test.machine import BluechiAgentMachine, BluechiControllerMachine
 from bluechi_test.test import BluechiTest
-
 
 node_foo_name = "node-foo"
 node_bar_name = "node-bar"

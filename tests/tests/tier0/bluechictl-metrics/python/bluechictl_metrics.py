@@ -3,7 +3,11 @@
 import re
 import unittest
 
-from bluechi_machine_lib.bluechictl import BackgroundRunner, BluechiCtl, SimpleEventEvaluator
+from bluechi_machine_lib.bluechictl import (
+    BackgroundRunner,
+    BluechiCtl,
+    SimpleEventEvaluator,
+)
 
 node_foo_name = "node-foo"
 service_simple = "simple.service"

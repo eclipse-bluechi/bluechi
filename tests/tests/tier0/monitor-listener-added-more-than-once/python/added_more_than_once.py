@@ -1,10 +1,11 @@
 # SPDX-License-Identifier: LGPL-2.1-or-later
 
 import unittest
-from subprocess import Popen, PIPE
+from subprocess import PIPE, Popen
+
+from dasbus.error import DBusError
 
 from bluechi.api import Monitor
-from dasbus.error import DBusError
 
 node = "node-foo"
 service = "simple.service"

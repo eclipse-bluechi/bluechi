@@ -120,8 +120,13 @@ jobs:
       - name: Run flake8
         run: |
           source /opt/bluechi-env/bin/activate
-          flake8 doc
-          flake8 tests
+          flake8 doc tests
+          deactivate
+
+      - name: Run isort
+        run: |
+          source /opt/bluechi-env/bin/activate
+          isort doc tests --check --diff
           deactivate
 
 

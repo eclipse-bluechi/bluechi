@@ -4,8 +4,8 @@ import logging
 import time
 from typing import Dict
 
-from bluechi_test.config import BluechiControllerConfig, BluechiAgentConfig
-from bluechi_test.machine import BluechiControllerMachine, BluechiAgentMachine
+from bluechi_test.config import BluechiAgentConfig, BluechiControllerConfig
+from bluechi_test.machine import BluechiAgentMachine, BluechiControllerMachine
 from bluechi_test.service import Option, Section, Service
 from bluechi_test.test import BluechiTest
 from bluechi_test.util import read_file

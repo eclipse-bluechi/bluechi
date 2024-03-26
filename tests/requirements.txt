@@ -1,4 +1,5 @@
 tmt >= 1.22
+isort >= 5.13.0
 junit-xml >= 1.9
 pytest >= 7.3.1
 podman >= 4.5.0

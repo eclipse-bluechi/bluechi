@@ -2,7 +2,9 @@
 # SPDX-License-Identifier: MIT-0
 
 from collections import namedtuple
+
 import dasbus.connection
+
 bus = dasbus.connection.SystemMessageBus()
 
 NodeUnitInfo = namedtuple("NodeUnitInfo", ["node", "name",

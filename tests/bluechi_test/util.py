@@ -3,9 +3,8 @@
 import logging
 import random
 import signal
-import string
 import socket
-
+import string
 from typing import Union
 
 LOGGER = logging.getLogger(__name__)

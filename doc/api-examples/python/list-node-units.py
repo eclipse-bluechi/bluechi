@@ -3,7 +3,9 @@
 
 import sys
 from collections import namedtuple
+
 import dasbus.connection
+
 bus = dasbus.connection.SystemMessageBus()
 
 UnitInfo = namedtuple("UnitInfo", ["name", "description",

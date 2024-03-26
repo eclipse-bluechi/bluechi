@@ -6,7 +6,7 @@ from dasbus.error import DBusError
 from dasbus.loop import EventLoop
 from dasbus.typing import Variant
 
-from bluechi.api import Node, Agent
+from bluechi.api import Agent, Node
 
 
 class TestMonitorCtrlDown(unittest.TestCase):

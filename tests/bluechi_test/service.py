@@ -4,9 +4,7 @@ import configparser
 import enum
 import io
 import pathlib
-
 from typing import Union
-
 
 # Default service installation directory
 SERVICE_DIRECTORY = "/etc/systemd/system"

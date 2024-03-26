@@ -5,11 +5,12 @@ import logging
 import os
 import pathlib
 import tarfile
+from typing import IO, Any, Dict, Iterator, Optional, Tuple, Union
 
-from paramiko import SSHClient as ParamikoSSH, AutoAddPolicy, RSAKey, SFTP
+from paramiko import SFTP, AutoAddPolicy, RSAKey
+from paramiko import SSHClient as ParamikoSSH
 from podman import PodmanClient
 from podman.domain.containers import Container
-from typing import Any, Dict, Iterator, Optional, Tuple, Union, IO
 
 LOGGER = logging.getLogger(__name__)
 

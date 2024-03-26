@@ -2,11 +2,10 @@
 
 from typing import Dict
 
+from bluechi_test.config import BluechiAgentConfig, BluechiControllerConfig
 from bluechi_test.fixtures import get_primary_ip
+from bluechi_test.machine import BluechiAgentMachine, BluechiControllerMachine
 from bluechi_test.test import BluechiTest
-from bluechi_test.machine import BluechiControllerMachine, BluechiAgentMachine
-from bluechi_test.config import BluechiControllerConfig, BluechiAgentConfig
-
 
 local_node_name = "local-foo"
 

@@ -1,9 +1,8 @@
 # SPDX-License-Identifier: LGPL-2.1-or-later
 
-import unittest
 import subprocess
 import time
-
+import unittest
 from threading import Thread
 
 from dasbus.loop import EventLoop

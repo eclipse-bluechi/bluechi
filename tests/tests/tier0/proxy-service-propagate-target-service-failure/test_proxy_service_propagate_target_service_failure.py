@@ -1,14 +1,12 @@
 # SPDX-License-Identifier: LGPL-2.1-or-later
 
 import logging
-
 from typing import Dict
 
-from bluechi_test.config import BluechiControllerConfig, BluechiAgentConfig
-from bluechi_test.machine import BluechiControllerMachine, BluechiAgentMachine
+from bluechi_test.config import BluechiAgentConfig, BluechiControllerConfig
+from bluechi_test.machine import BluechiAgentMachine, BluechiControllerMachine
 from bluechi_test.service import Option, Section, SimpleRemainingService
 from bluechi_test.test import BluechiTest
-
 
 LOGGER = logging.getLogger(__name__)
 
