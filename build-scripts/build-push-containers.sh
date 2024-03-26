@@ -20,6 +20,7 @@ function build(){
         buildah bud --tag "quay.io/bluechi/$IMAGE" \
             --manifest $IMAGE \
             --arch ${arch} \
+            --build-context root_dir=${SCRIPT_DIR}/.. \
             ${CONTAINER_FILE_DIR}/${IMAGE}
     done
 }
