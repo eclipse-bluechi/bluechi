@@ -2,15 +2,17 @@
 
 import os
 import time
-
 from typing import Dict
 
-from bluechi_test.config import BluechiControllerConfig, BluechiAgentConfig
-from bluechi_test.machine import BluechiControllerMachine, BluechiAgentMachine, BluechiMachine
-from bluechi_test.service import Section, Option
+from bluechi_test.config import BluechiAgentConfig, BluechiControllerConfig
+from bluechi_test.machine import (
+    BluechiAgentMachine,
+    BluechiControllerMachine,
+    BluechiMachine,
+)
+from bluechi_test.service import Option, Section
 from bluechi_test.test import BluechiTest
 from bluechi_test.util import Timeout
-
 
 NODE_FOO = "node-foo"
 

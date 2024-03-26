@@ -1,8 +1,10 @@
 # SPDX-License-Identifier: LGPL-2.1-or-later
 
 import sys
-from bluechi.api import Controller, Monitor
+
 from dasbus.loop import EventLoop
+
+from bluechi.api import Controller, Monitor
 
 if len(sys.argv) != 3:
     print("Usage: python create_monitor.py <node-to-watch> <service-to-watch>")

@@ -2,9 +2,10 @@
 # SPDX-License-Identifier: MIT-0
 
 import sys
-from dasbus.typing import get_native
-from dasbus.loop import EventLoop
+
 import dasbus.connection
+from dasbus.loop import EventLoop
+from dasbus.typing import get_native
 
 
 def print_dict_changes(old, new):

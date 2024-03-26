@@ -2,15 +2,14 @@
 
 import logging
 import os
+from typing import Any, Dict, List, Tuple, Union
+
 import pytest
 import yaml
-
-from podman import PodmanClient
-from typing import Union, List, Dict, Any, Tuple
-
-from bluechi_test.test import BluechiTest, BluechiContainerTest, BluechiSSHTest
-from bluechi_test.config import BluechiControllerConfig, BluechiAgentConfig
+from bluechi_test.config import BluechiAgentConfig, BluechiControllerConfig
+from bluechi_test.test import BluechiContainerTest, BluechiSSHTest, BluechiTest
 from bluechi_test.util import get_primary_ip
+from podman import PodmanClient
 
 
 def _get_env_value(env_var: str, default_value: str) -> str:

@@ -1,9 +1,8 @@
 # SPDX-License-Identifier: LGPL-2.1-or-later
 
 import logging
-
 from enum import Enum
-from typing import Tuple, Iterator, Any, Optional, Union, Dict, List
+from typing import Any, Dict, Iterator, List, Optional, Tuple, Union
 
 from bluechi_test.client import Client
 

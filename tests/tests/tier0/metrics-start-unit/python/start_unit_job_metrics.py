@@ -2,8 +2,9 @@
 
 import unittest
 
-from bluechi.api import Controller, Metrics, Node, UInt64
 from dasbus.loop import EventLoop
+
+from bluechi.api import Controller, Metrics, Node, UInt64
 
 
 class TestStartUnitJobMetrics(unittest.TestCase):

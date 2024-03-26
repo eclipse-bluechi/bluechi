@@ -1,9 +1,9 @@
 # SPDX-License-Identifier: MIT-0
 
-from bluechi.api import Controller, Node
 from dasbus.loop import EventLoop
 from dasbus.typing import Variant
 
+from bluechi.api import Controller, Node
 
 loop = EventLoop()
 

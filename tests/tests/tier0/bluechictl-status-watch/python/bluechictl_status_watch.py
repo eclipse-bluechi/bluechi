@@ -3,9 +3,10 @@
 import re
 import unittest
 
-from bluechi.api import Node
 from bluechi_machine_lib.bluechictl import BackgroundRunner, SimpleEventEvaluator
 from dasbus.error import DBusError
+
+from bluechi.api import Node
 
 node_foo_name = "node-foo"
 service_simple = "simple.service"

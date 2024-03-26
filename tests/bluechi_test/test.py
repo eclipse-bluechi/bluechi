@@ -6,15 +6,18 @@ import os
 import re
 import time
 import traceback
-
-from podman import PodmanClient
-from typing import List, Dict, Callable, Tuple
+from typing import Callable, Dict, List, Tuple
 
 from bluechi_test.client import ContainerClient, SSHClient
 from bluechi_test.command import Command
-from bluechi_test.config import BluechiControllerConfig, BluechiAgentConfig
-from bluechi_test.machine import BluechiMachine, BluechiAgentMachine, BluechiControllerMachine
-from bluechi_test.util import Timeout, TIMEOUT_SETUP, TIMEOUT_TEST, TIMEOUT_GATHER
+from bluechi_test.config import BluechiAgentConfig, BluechiControllerConfig
+from bluechi_test.machine import (
+    BluechiAgentMachine,
+    BluechiControllerMachine,
+    BluechiMachine,
+)
+from bluechi_test.util import TIMEOUT_GATHER, TIMEOUT_SETUP, TIMEOUT_TEST, Timeout
+from podman import PodmanClient
 
 LOGGER = logging.getLogger(__name__)
 

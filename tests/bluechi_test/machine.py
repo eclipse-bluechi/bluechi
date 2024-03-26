@@ -4,17 +4,15 @@ import logging
 import os
 import time
 import traceback
+from typing import Any, Iterator, List, Optional, Tuple, Union
 
-from typing import Any, Iterator, Optional, Tuple, Union, List
-
+import bluechi_machine_lib as bml
 from bluechi_test.bluechictl import BluechiCtl
 from bluechi_test.client import Client
 from bluechi_test.config import BluechiAgentConfig, BluechiControllerConfig
 from bluechi_test.service import Service
 from bluechi_test.systemctl import SystemCtl
-from bluechi_test.util import read_file, get_random_name
-
-import bluechi_machine_lib as bml
+from bluechi_test.util import get_random_name, read_file
 
 LOGGER = logging.getLogger(__name__)
 

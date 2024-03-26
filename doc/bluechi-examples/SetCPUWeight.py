@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: MIT-0
 
 from dasbus.typing import Variant
+
 from bluechi.api import Node
 
 Node("my-node-name").set_unit_properties(

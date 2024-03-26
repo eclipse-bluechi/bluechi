@@ -2,9 +2,10 @@
 
 import unittest
 
-from bluechi.api import Metrics, Node, UInt64
 from dasbus.error import DBusError
 from dasbus.loop import EventLoop
+
+from bluechi.api import Metrics, Node, UInt64
 
 
 class TestMetricsIsEnabled(unittest.TestCase):

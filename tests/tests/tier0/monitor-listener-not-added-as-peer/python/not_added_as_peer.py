@@ -1,11 +1,11 @@
 # SPDX-License-Identifier: LGPL-2.1-or-later
 
-import time
 import threading
+import time
 import unittest
+from queue import Empty, Queue
+from subprocess import PIPE, Popen
 from typing import List
-from queue import Queue, Empty
-from subprocess import Popen, PIPE
 
 from bluechi.api import Node
 

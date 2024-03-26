@@ -1,10 +1,10 @@
 # SPDX-License-Identifier: MIT-0
 
+from typing import Dict
+
 import dasbus.connection
 from dasbus.loop import EventLoop
 from dasbus.typing import Variant
-from typing import Dict
-
 
 loop = EventLoop()
 bus = dasbus.connection.SystemMessageBus()

@@ -2,9 +2,9 @@
 
 from typing import Dict, List
 
-from bluechi_test.test import BluechiTest
-from bluechi_test.machine import BluechiControllerMachine, BluechiAgentMachine
 from bluechi_test.config import BluechiControllerConfig
+from bluechi_test.machine import BluechiAgentMachine, BluechiControllerMachine
+from bluechi_test.test import BluechiTest
 
 
 def check_output(machine: BluechiControllerMachine, cmd: str, out_list: List[str]) -> bool:

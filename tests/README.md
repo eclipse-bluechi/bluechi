@@ -23,6 +23,8 @@ Then install the required packages:
 dnf install \
     createrepo_c \
     podman \
+    python3-isort \
+    python3-flake8 \
     python3-paramiko \
     python3-podman \
     python3-pytest \
@@ -148,11 +150,16 @@ execution result directory, for example:
 
 ### Code Style
 
-[flake8](https://pypi.org/project/flake8/) is used to enforce a unified code style. All source files formatting can be checked via:
+Several tools are used in the project to validate code style:
+
+- [flake8](https://pypi.org/project/flake8/) is used to enforce a unified code style.
+- [isort](https://pypi.org/project/isort/) is used to enforce import ordering
+
+All source files formatting can be checked via:
 
 ```shell
-# navigate into bluechi/tests directory
-flake8
+flake8 tests
+isort tests
 ```
 
 ### Changing log level

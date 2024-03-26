@@ -6,7 +6,6 @@ from dasbus.loop import EventLoop
 
 from bluechi.api import Controller, Monitor, Node
 
-
 node_name_foo = "node-foo"
 service_simple = "simple.service"
 

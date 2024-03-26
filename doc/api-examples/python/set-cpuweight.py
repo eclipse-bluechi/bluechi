@@ -2,8 +2,10 @@
 # SPDX-License-Identifier: MIT-0
 
 import sys
-from dasbus.typing import Variant
+
 import dasbus.connection
+from dasbus.typing import Variant
+
 bus = dasbus.connection.SystemMessageBus()
 
 if len(sys.argv) != 4:

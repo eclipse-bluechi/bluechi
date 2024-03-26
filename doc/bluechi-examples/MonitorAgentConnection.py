@@ -1,8 +1,9 @@
 # SPDX-License-Identifier: MIT-0
 
-from bluechi.api import Agent
 from dasbus.loop import EventLoop
 from dasbus.typing import Variant
+
+from bluechi.api import Agent
 
 
 def on_connection_status_changed(status: Variant):

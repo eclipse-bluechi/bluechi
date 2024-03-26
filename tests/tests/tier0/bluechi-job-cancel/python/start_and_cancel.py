@@ -5,7 +5,7 @@ import unittest
 
 from dasbus.error import DBusError
 
-from bluechi.api import Node, Job
+from bluechi.api import Job, Node
 
 node_name_foo = "node-foo"
 service_simple = "simple.service"
