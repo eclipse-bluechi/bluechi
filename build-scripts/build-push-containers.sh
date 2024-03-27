@@ -1,9 +1,13 @@
 #!/bin/bash -xe
 # SPDX-License-Identifier: LGPL-2.1-or-later
 
-SCRIPT_DIR=$( realpath "$0"  )
-SCRIPT_DIR=$(dirname "$SCRIPT_DIR")/
-CONTAINER_FILE_DIR=$SCRIPT_DIR"../tests/containers/"
+# The 1st parameter is the image name
+IMAGE="$1"
+
+# The 2nd parameter is optional and it specifies the container architecture. If omitted, all archs will be built.
+ARCHITECTURES="${2:-amd64 arm64}"
+SCRIPT_DIR=$(dirname "$(readlink -f "$0")")
+CONTAINER_FILE_DIR=$SCRIPT_DIR"/../tests/containers"
 
 function push(){
     buildah manifest push --all $IMAGE "docker://quay.io/bluechi/$IMAGE"
@@ -12,20 +16,18 @@ function push(){
 function build(){
     buildah manifest create $IMAGE
 
-    buildah bud --tag "quay.io/bluechi/$IMAGE" \
-        --manifest $IMAGE \
-        --arch amd64 ${CONTAINER_FILE_DIR}$IMAGE
-
-    buildah bud --tag "quay.io/bluechi/$IMAGE" \
-        --manifest $IMAGE \
-        --arch arm64 ${CONTAINER_FILE_DIR}$IMAGE
+    for arch in $ARCHITECTURES; do
+        buildah bud --tag "quay.io/bluechi/$IMAGE" \
+            --manifest $IMAGE \
+            --arch ${arch} \
+            ${CONTAINER_FILE_DIR}/${IMAGE}
+    done
 }
 
-[ -z $1 ] && echo "Requires image name. Either 'build-base' or 'integration-test-base'." && exit 1
+[ -z ${IMAGE} ] && echo "Requires image name. Either 'build-base' or 'integration-test-base'." && exit 1
 
-echo "Building containers and manifest for '$1'"
+echo "Building containers and manifest for '${IMAGE}'"
 echo ""
-IMAGE="$1"
 build
 if [ "${PUSH_MANIFEST}" == "yes" ]; then
     push
