@@ -1826,6 +1826,13 @@ static int agent_method_switch_controller(sd_bus_message *m, void *userdata, UNU
                                 strerror(-r));
         }
 
+        if (agent->orch_addr && streq(agent->orch_addr, dbus_address)) {
+                return sd_bus_reply_method_errorf(
+                                m,
+                                SD_BUS_ERROR_FAILED,
+                                "Failed to switch controller because already connected to the controller");
+        }
+
         if (!agent_set_controller_address(agent, dbus_address)) {
                 bc_log_error("Failed to set CONTROLLER ADDRESS");
                 return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "Failed to set CONTROLLER ADDRESS");
