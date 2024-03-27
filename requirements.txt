@@ -1,7 +1,6 @@
-# NOTE: build-base container image needs to be rebuilt after changing this file!
+# NOTE: containers/build-base image needs to be rebuilt after changing this file!
 
 # Try to keep linter package versions aligned with latest Fedora RPM versions
 black==24.1.1
 flake8==6.0.0
 isort==5.13.2
-

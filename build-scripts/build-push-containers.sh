@@ -7,21 +7,25 @@ IMAGE="$1"
 # The 2nd parameter is optional and it specifies the container architecture. If omitted, all archs will be built.
 ARCHITECTURES="${2:-amd64 arm64}"
 SCRIPT_DIR=$(dirname "$(readlink -f "$0")")
-CONTAINER_FILE_DIR=$SCRIPT_DIR"/../tests/containers"
+ROOT_DIR=$SCRIPT_DIR"/../"
+CONTAINER_FILE_DIR=$SCRIPT_DIR"/../containers"
 
 function push(){
     buildah manifest push --all $IMAGE "docker://quay.io/bluechi/$IMAGE"
 }
 
 function build(){
-    buildah manifest exists $IMAGE || buildah manifest create $IMAGE
+    # remove old image, ignore result
+    buildah manifest rm $IMAGE &> /dev/null || true
+
+    buildah manifest create $IMAGE
 
     for arch in $ARCHITECTURES; do
         buildah bud --tag "quay.io/bluechi/$IMAGE" \
             --manifest $IMAGE \
             --arch ${arch} \
-            --build-context root_dir=${SCRIPT_DIR}/.. \
-            ${CONTAINER_FILE_DIR}/${IMAGE}
+            -f ${CONTAINER_FILE_DIR}/${IMAGE} \
+            ${ROOT_DIR}
     done
 }
 

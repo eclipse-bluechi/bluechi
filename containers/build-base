@@ -34,7 +34,7 @@ RUN dnf install -y dnf-plugin-config-manager && \
     dnf -y clean all
 
 # Install python dependencies
-COPY --from=root_dir requirements.txt .
+COPY requirements.txt .
 RUN python3 -m venv /opt/bluechi-env && \
     . /opt/bluechi-env/bin/activate && \
     pip install -r requirements.txt && \

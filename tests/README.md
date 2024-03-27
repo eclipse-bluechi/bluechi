@@ -193,12 +193,7 @@ New id 'UUID' added to test '/tests/path_to_your_new_test'.
 The integration tests rely on containers as separate compute entities. These containers are used to simulate BlueChi's
 functional behavior on a single runner.
 
-The [containers](./containers/) directory contains two container files.
-
-The `integration-test-base` file describes the builder base image that is published to
-[https://quay.io/repository/bluechi/integration-test-base](https://quay.io/repository/bluechi/integration-test-base). It contains core dependencies such as systemd and devel packages.
-
-Both, `integration-test-local` as well as `integration-test-snapshot`, are based on the builder base image for the integration tests and contain compiled products and configurations for integration testing.
+Both, [integration-test-local](./containers/integration-test-local) as well as [integration-test-snapshot](./containers/integration-test-snapshot), are based on the [integration-base](../containers/integration-test-base) image which contains core dependencies such as systemd and devel packages. The base image is published to [https://quay.io/repository/bluechi/integration-test-base](https://quay.io/repository/bluechi/integration-test-base).
 
 ### Updating container images in registry
 
@@ -206,11 +201,11 @@ The base images can either be build and pushed locally or via a github workflow 
 
 #### Building and pushing via workflow
 
-The base images [build-base](./containers/build-base) and [integration-test-base](./containers/integration-test-base) can be built and pushed to quay by using the [Container Image Workflow](../.github/workflows/images.yml). It can be found and triggered here in the [Actions tab](https://github.com/eclipse-bluechi/bluechi/actions/workflows/images.yml) of the BlueChi repo.
+The base images [build-base](../containers/build-base) and [integration-test-base](../containers/integration-test-base) can be built and pushed to quay by using the [Container Image Workflow](../.github/workflows/images.yml). It can be found and triggered here in the [Actions tab](https://github.com/eclipse-bluechi/bluechi/actions/workflows/images.yml) of the BlueChi repo.
 
 #### Building and pushing locally
 
-The base images [build-base](./containers/build-base) and [integration-test-base](./containers/integration-test-base) are built for multiple architectures (arm64 and amd64) using the [build-containers.sh](../build-scripts/build-containers.sh) script. It'll build the images for the supported architectures as well as a manifest, which can then be pushed to the registry.
+The base images [build-base](../containers/build-base) and [integration-test-base](../containers/integration-test-base) are built for multiple architectures (arm64 and amd64) using the [build-containers.sh](../build-scripts/build-containers.sh) script. It'll build the images for the supported architectures as well as a manifest, which can then be pushed to the registry.
 
 Building for multiple architectures, the following packages are required:
 
