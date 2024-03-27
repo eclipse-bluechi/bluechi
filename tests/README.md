@@ -228,3 +228,9 @@ PUSH_MANIFEST=yes ./build-scripts/build-push-containers.sh build-base
 # Only build locally
 ./build-scripts/build-push-containers.sh build-base
 ```
+
+If you need to build only specific architecture for your local usage, you can specify it as the 2nd parameter:
+
+```shell
+./build-scripts/build-push-containers.sh build-base amd64
+```
