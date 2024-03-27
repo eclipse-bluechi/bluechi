@@ -223,7 +223,7 @@ meson configure -Dwith_analyzer=true builddir
 ```
 
 Since the result of the analysis is heavily dependent on the compiler version, flags, etc., its recommended to build
-and run tests for BlueChi also in the [build-base](./tests/containers/build-base):
+and run tests for BlueChi also in the [build-base](./containers/build-base):
 
 ```bash
 # navigate into the bluechi directory
