@@ -119,8 +119,10 @@ jobs:
 
       - name: Run flake8
         run: |
-          find doc/ -name '*.py' | xargs flake8
-          find tests/ -name '*.py' | xargs flake8
+          source /opt/bluechi-env/bin/activate
+          flake8 doc
+          flake8 tests
+          deactivate
 
 
 
