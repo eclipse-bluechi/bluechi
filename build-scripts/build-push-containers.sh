@@ -14,7 +14,7 @@ function push(){
 }
 
 function build(){
-    buildah manifest create $IMAGE
+    buildah manifest exists $IMAGE || buildah manifest create $IMAGE
 
     for arch in $ARCHITECTURES; do
         buildah bud --tag "quay.io/bluechi/$IMAGE" \
