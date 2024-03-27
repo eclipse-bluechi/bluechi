@@ -213,6 +213,7 @@ static void print_unit_info(unit_info_t *unit_info, size_t name_col_width) {
         PRINT_AND_ALIGN(sub_state);
         PRINT_AND_ALIGN(freezer_state);
         PRINT_AND_ALIGN(unit_file_state);
+        fflush(stdout);
 
         fprintf(stdout, "|\n");
 }
@@ -423,6 +424,7 @@ static void print_nodes(Nodes *nodes, bool clear_screen) {
                        curr->connection->state,
                        curr->connection->ip,
                        last_seen);
+                fflush(stdout);
         }
 }
 
