@@ -1,4 +1,0 @@
-FROM quay.io/bluechi/build-base:latest
-
-RUN dnf install --nodocs -y python3-devel && \
-    dnf -y clean all
