@@ -8,6 +8,13 @@
 %global coverage_flags -Dwith_coverage=true
 %endif
 
+# hirte migration is enabled by default, it can be disabled passing `--define "with_hirte_migration 0"` option to rpmbuild
+# needs to be kept till eol of fedora 39 
+%if 0%{!?with_hirte_migration:1}
+%global with_hirte_migration 1
+%endif
+
+
 Name:		bluechi
 Version:	@VERSION@
 Release:	@RELEASE@%{?dist}
@@ -32,7 +39,7 @@ BuildRequires: sed
 %endif
 
 %description
-BlueChi is a systemd service controller for multi-nodes environements with a
+BlueChi is a systemd service controller for multi-nodes environments with a
 predefined number of nodes and with a focus on highly regulated environment
 such as those requiring functional safety (for example in cars).
 
@@ -52,7 +59,7 @@ Obsoletes:	bluechi < 0.7.0
 Provides:	bluechi = %{version}-%{release}
 
 %description controller
-BlueChi is a systemd service controller for multi-nodes environements with a
+BlueChi is a systemd service controller for multi-nodes environments with a
 predefined number of nodes and with a focus on highly regulated environment
 such as those requiring functional safety (for example in cars).
 This package contains the controller service.
@@ -100,7 +107,7 @@ Obsoletes:	hirte-agent < 0.6.0
 Provides:	hirte-agent = %{version}-%{release}
 
 %description agent
-BlueChi is a systemd service controller for multi-nodes environements with a
+BlueChi is a systemd service controller for multi-nodes environments with a
 predefined number of nodes and with a focus on highly regulated environment
 such as those requiring functional safety (for example in cars).
 This package contains the node agent.
@@ -148,8 +155,10 @@ Requires:	selinux-policy >= %{_selinux_policy_version}
 %endif
 
 Requires(post):	policycoreutils
+%if %{with_hirte_migration}
 Requires(post):	policycoreutils-python-utils
 Requires(postun):	policycoreutils-python-utils
+%endif
 
 Obsoletes:	hirte-selinux < 0.6.0
 Provides:	hirte-selinux = %{version}-%{release}
@@ -165,28 +174,22 @@ SELinux policy associated with the bluechi and bluechi-agent daemons
 %{_mandir}/man8/bluechi*selinux.*
 
 %post selinux
+%if %{with_hirte_migration}
 # Remove hirte policy
 if [ $1 -eq 1 ]; then
    semanage port -N -d -p udp 842 2>/dev/null || true
    semanage port -N -d -p tcp 842 2>/dev/null || true
    semodule -N -X 200 -r hirte 2>/dev/null || true
 fi
+%endif
 %selinux_modules_install -s %{selinuxtype} %{_datadir}/selinux/packages/bluechi.pp.bz2
 restorecon -R %{_bindir}/bluechi* &> /dev/null || :
-semanage port -a -t bluechi_port_t -p udp 842 2>/dev/null || semanage port -m -t bluechi_port_t -p udp 842
-semanage port -a -t bluechi_port_t -p tcp 842 2>/dev/null || semanage port -m -t bluechi_port_t -p tcp 842
 
 %postun selinux
 if [ $1 -eq 0 ]; then
-   semanage port -d -p udp 842 2>/dev/null || true
-   semanage port -d -p tcp 842 2>/dev/null || true
    %selinux_modules_uninstall -s %{selinuxtype} bluechi
    restorecon -R %{_bindir}/bluechi* &> /dev/null || :
 fi
-
-%triggerpostun selinux -- hirte-selinux
-semanage port -a -t bluechi_port_t -p udp 842 2>/dev/null || semanage port -m -t bluechi_port_t -p udp 842
-semanage port -a -t bluechi_port_t -p tcp 842 2>/dev/null || semanage port -m -t bluechi_port_t -p tcp 842
 
 
 %package ctl
@@ -201,7 +204,7 @@ Obsoletes:	hirte-ctl < 0.6.0
 Provides:	hirte-ctl = %{version}-%{release}
 
 %description ctl
-BlueChi is a systemd service controller for multi-nodes environements with a
+BlueChi is a systemd service controller for multi-nodes environments with a
 predefined number of nodes and with a focus on highly regulated environment
 such as those requiring functional safety (for example in cars).
 This package contains the service controller command line tool.
