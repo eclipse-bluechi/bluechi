@@ -1,3 +1,4 @@
-build_container_image: bluechi-rpm-build
+build_container_image: quay.io/bluechi/build-base
+build_container_tag: latest
 make:
   makefile: Makefile.skipper
