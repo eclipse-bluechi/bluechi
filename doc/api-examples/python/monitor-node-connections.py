@@ -1,10 +1,10 @@
 # SPDX-License-Identifier: MIT-0
 
+from typing import Dict
+
 import dasbus.connection
 from dasbus.loop import EventLoop
 from dasbus.typing import Variant
-from typing import Dict
-
 
 loop = EventLoop()
 bus = dasbus.connection.SystemMessageBus()
@@ -24,6 +24,7 @@ for n in nodes:
         ) -> None:
             con_status = changed_props["Status"].get_string()
             print(f"Node {node_name}: {con_status}")
+
         return on_connection_status_changed
 
     node.PropertiesChanged.connect(changed_wrapper(n[0]))

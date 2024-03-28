@@ -6,7 +6,6 @@ from bluechi.api import Node
 
 
 class TestNodeHasPeerIP(unittest.TestCase):
-
     def test_node_has_peer_ip(self):
         n = Node("node-foo")
         assert n.peer_ip != ""

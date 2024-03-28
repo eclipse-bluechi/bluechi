@@ -1,11 +1,12 @@
 # SPDX-License-Identifier: LGPL-2.1-or-later
 
-from bluechi.api import Controller
+import signal
+import sys
+
 from dasbus.loop import EventLoop
 from dasbus.typing import Variant
 
-import sys
-import signal
+from bluechi.api import Controller
 
 
 def sig_handler(_signo, _stack_frame):

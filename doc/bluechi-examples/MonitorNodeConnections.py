@@ -1,9 +1,9 @@
 # SPDX-License-Identifier: MIT-0
 
-from bluechi.api import Controller, Node
 from dasbus.loop import EventLoop
 from dasbus.typing import Variant
 
+from bluechi.api import Controller, Node
 
 loop = EventLoop()
 
@@ -15,6 +15,7 @@ for node in Controller().list_nodes():
         def on_connection_status_changed(status: Variant):
             con_status = status.get_string()
             print(f"Node {node_name}: {con_status}")
+
         return on_connection_status_changed
 
     n.on_status_changed(changed_wrapper(n.name))

@@ -3,9 +3,9 @@
 import os
 from typing import Dict
 
+from bluechi_test.config import BluechiAgentConfig, BluechiControllerConfig
+from bluechi_test.machine import BluechiAgentMachine, BluechiControllerMachine
 from bluechi_test.test import BluechiTest
-from bluechi_test.machine import BluechiControllerMachine, BluechiAgentMachine
-from bluechi_test.config import BluechiControllerConfig, BluechiAgentConfig
 
 NODE_FOO = "node-foo"
 
@@ -15,14 +15,20 @@ expected_logtarget = "stderr-full"
 def exec(ctrl: BluechiControllerMachine, nodes: Dict[str, BluechiAgentMachine]):
     node_foo = nodes[NODE_FOO]
 
-    result, output = node_foo.run_python(os.path.join("python", "agent_has_logtarget.py"))
+    result, output = node_foo.run_python(
+        os.path.join("python", "agent_has_logtarget.py")
+    )
     if result != 0:
-        raise Exception(f"Agent did not have expected log target '{expected_logtarget}: {output}")
+        raise Exception(
+            f"Agent did not have expected log target '{expected_logtarget}: {output}"
+        )
 
 
 def test_bluechi_agent_get_logtarget(
-        bluechi_test: BluechiTest,
-        bluechi_node_default_config: BluechiAgentConfig, bluechi_ctrl_default_config: BluechiControllerConfig):
+    bluechi_test: BluechiTest,
+    bluechi_node_default_config: BluechiAgentConfig,
+    bluechi_ctrl_default_config: BluechiControllerConfig,
+):
 
     node_foo_cfg = bluechi_node_default_config.deep_copy()
     node_foo_cfg.node_name = NODE_FOO

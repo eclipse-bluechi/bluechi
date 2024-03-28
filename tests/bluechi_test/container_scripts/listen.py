@@ -1,8 +1,10 @@
 # SPDX-License-Identifier: LGPL-2.1-or-later
 
 import sys
-from bluechi.api import Monitor
+
 from dasbus.loop import EventLoop
+
+from bluechi.api import Monitor
 
 if len(sys.argv) != 2:
     sys.exit(1)

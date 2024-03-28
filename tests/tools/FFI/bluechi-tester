@@ -5,13 +5,12 @@ import argparse
 import signal
 import sys
 import time
+from typing import Any
 
-from dasbus.typing import Variant
 from dasbus.connection import AddressedMessageBus, InterfaceProxy, ObjectProxy
 from dasbus.error import DBusError
-
+from dasbus.typing import Variant
 from gi.repository import GLib
-from typing import Any
 
 OBJECT_PATH_BLUECHI = "/org/eclipse/bluechi/internal"
 OBJECT_PATH_AGENT = OBJECT_PATH_BLUECHI + "/agent"

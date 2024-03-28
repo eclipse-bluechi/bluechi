@@ -2,12 +2,12 @@
 
 import unittest
 
-from bluechi.api import Controller, Metrics, Node, UInt64
 from dasbus.loop import EventLoop
+
+from bluechi.api import Controller, Metrics, Node, UInt64
 
 
 class TestStartUnitJobMetrics(unittest.TestCase):
-
     def setUp(self) -> None:
         self.loop = EventLoop()
 
@@ -23,11 +23,13 @@ class TestStartUnitJobMetrics(unittest.TestCase):
         self.received_start_time = -1
 
     def test_start_unit_job_metrics(self):
-        def on_start_metrics(node_name: str,
-                             job_id: str,
-                             unit: str,
-                             job_time_micros: UInt64,
-                             start_time: UInt64) -> None:
+        def on_start_metrics(
+            node_name: str,
+            job_id: str,
+            unit: str,
+            job_time_micros: UInt64,
+            start_time: UInt64,
+        ) -> None:
             self.received_node_name = node_name
             self.received_job_id = job_id
             self.received_unit_name = unit

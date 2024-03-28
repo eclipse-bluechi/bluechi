@@ -12,15 +12,14 @@ from bluechi.api import Controller, Monitor
 
 
 class TestOpenClose(unittest.TestCase):
-
     def test_open_close(self):
         mgr = Controller()
         monitor_path = mgr.create_monitor()
         monitor = Monitor(monitor_path=monitor_path)
-        monitor.subscribe('not-important-node', 'not-important-unit')
+        monitor.subscribe("not-important-node", "not-important-unit")
         monitor.close()
         with self.assertRaises(DBusError):
-            monitor.subscribe('not-important-node-2', 'not-important-unit-2')
+            monitor.subscribe("not-important-node-2", "not-important-unit-2")
 
 
 if __name__ == "__main__":

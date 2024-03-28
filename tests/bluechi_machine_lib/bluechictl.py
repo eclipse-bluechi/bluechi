@@ -3,11 +3,10 @@
 import copy
 import signal
 import subprocess
+import tempfile
 import threading
 import time
-import tempfile
 from typing import List, Pattern, Set, Tuple
-
 
 bluechictl_executable = ["/usr/bin/bluechictl"]
 
@@ -19,20 +18,22 @@ class FileFollower:
         self.file_desc = None
 
     def __enter__(self):
-        self.file_desc = open(self.file_name, mode='r')
+        self.file_desc = open(self.file_name, mode="r")
         return self
 
     def __exit__(self, exception_type, exception_value, exception_traceback):
-        if (exception_type):
-            print(f"Exception raised: excpetion_type='{exception_type}', "
-                  f"exception_value='{exception_value}', exception_traceback: {exception_traceback}")
+        if exception_type:
+            print(
+                f"Exception raised: excpetion_type='{exception_type}', "
+                f"exception_value='{exception_value}', exception_traceback: {exception_traceback}"
+            )
         if self.file_desc:
             self.file_desc.close()
 
     def __iter__(self):
         while self.new_lines():
             self.seek()
-            line = self.file_desc.read().split('\n')[0]
+            line = self.file_desc.read().split("\n")[0]
             yield line
 
             self.pos += len(line) + 1
@@ -42,7 +43,7 @@ class FileFollower:
 
     def new_lines(self):
         self.seek()
-        return '\n' in self.file_desc.read()
+        return "\n" in self.file_desc.read()
 
 
 class EventEvaluator:
@@ -81,7 +82,9 @@ class BackgroundRunner:
         print("Starting process_events")
         with tempfile.NamedTemporaryFile() as out_file:
             try:
-                self.bluechictl_proc = subprocess.Popen(self.command, stdout=out_file, bufsize=1)
+                self.bluechictl_proc = subprocess.Popen(
+                    self.command, stdout=out_file, bufsize=1
+                )
 
                 with FileFollower(out_file.name) as bluechictl_out:
                     finished = False
@@ -90,7 +93,9 @@ class BackgroundRunner:
                             print(f"Evaluating line '{line}'")
                             self.evaluator.process_line(line)
                             if self.evaluator.processing_finished():
-                                print("BluechiCtl output evaluation successfully finished")
+                                print(
+                                    "BluechiCtl output evaluation successfully finished"
+                                )
                                 finished = True
                                 break
 
@@ -122,9 +127,8 @@ class BluechiCtl:
     def run(self, args: List) -> Tuple[int, str, str]:
         command = bluechictl_executable + args
         process = subprocess.Popen(
-                command,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE)
+            command, stdout=subprocess.PIPE, stderr=subprocess.PIPE
+        )
         print(f"Executing of command '{process.args}' started")
         out, err = process.communicate()
 
@@ -133,7 +137,8 @@ class BluechiCtl:
 
         print(
             f"Executing of command '{process.args}' finished with result '{process.returncode}', "
-            f"stdout '{out}', stderr '{err}'")
+            f"stdout '{out}', stderr '{err}'"
+        )
 
         return process.returncode, out, err
 

@@ -3,7 +3,7 @@
 import re
 import unittest
 
-from bluechi_machine_lib.bluechictl import EventEvaluator, BackgroundRunner, BluechiCtl
+from bluechi_machine_lib.bluechictl import BackgroundRunner, BluechiCtl, EventEvaluator
 
 node_name_foo = "node-foo"
 service_simple = "simple.service"
@@ -23,12 +23,16 @@ class MonitorSpecificNodeAndUnitStateEventEvaluator(EventEvaluator):
         active_state = match.group("active_state")
         if active_state == "inactive" and self.active and not self.inactive:
             # Active -> Inactive
-            print(f"Service '{service_simple}' on node '{node_name_foo}' was stopped successfully")
+            print(
+                f"Service '{service_simple}' on node '{node_name_foo}' was stopped successfully"
+            )
             self.active = False
             self.inactive = True
         elif active_state == "active" and self.inactive:
             # Inactive -> Active
-            print(f"Service '{service_simple}' on node '{node_name_foo}' was started successfully")
+            print(
+                f"Service '{service_simple}' on node '{node_name_foo}' was started successfully"
+            )
             self.active = True
 
     def processing_finished(self) -> bool:
@@ -36,11 +40,11 @@ class MonitorSpecificNodeAndUnitStateEventEvaluator(EventEvaluator):
 
 
 class TestMonitorSpecificNodeAndUnit(unittest.TestCase):
-
     def setUp(self) -> None:
         self.evaluator = MonitorSpecificNodeAndUnitStateEventEvaluator()
-        self.bgrunner = BackgroundRunner(["monitor", f"{node_name_foo}", f"{service_simple}"],
-                                         self.evaluator)
+        self.bgrunner = BackgroundRunner(
+            ["monitor", f"{node_name_foo}", f"{service_simple}"], self.evaluator
+        )
         self.bluechictl = BluechiCtl()
 
     def test_monitor_specific_node_and_unit(self):

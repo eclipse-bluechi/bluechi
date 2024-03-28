@@ -2,9 +2,9 @@
 
 from typing import Dict
 
-from bluechi_test.test import BluechiTest
-from bluechi_test.machine import BluechiControllerMachine, BluechiAgentMachine
 from bluechi_test.config import BluechiControllerConfig
+from bluechi_test.machine import BluechiAgentMachine, BluechiControllerMachine
+from bluechi_test.test import BluechiTest
 
 
 def exec(ctrl: BluechiControllerMachine, _: Dict[str, BluechiAgentMachine]):
@@ -38,7 +38,9 @@ def exec(ctrl: BluechiControllerMachine, _: Dict[str, BluechiAgentMachine]):
     assert ctrl.wait_for_unit_state_to_be("bluechi-controller", "active")
 
 
-def test_agent_invalid_port(bluechi_test: BluechiTest, bluechi_ctrl_default_config: BluechiControllerConfig):
+def test_agent_invalid_port(
+    bluechi_test: BluechiTest, bluechi_ctrl_default_config: BluechiControllerConfig
+):
 
     bluechi_test.set_bluechi_controller_config(bluechi_ctrl_default_config)
     bluechi_test.run(exec)

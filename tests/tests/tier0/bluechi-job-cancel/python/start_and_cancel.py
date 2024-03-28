@@ -5,16 +5,17 @@ import unittest
 
 from dasbus.error import DBusError
 
-from bluechi.api import Node, Job
+from bluechi.api import Job, Node
 
 node_name_foo = "node-foo"
 service_simple = "simple.service"
 
 
 class TestStartAndCancel(unittest.TestCase):
-
     def _get_unit_state(self, node: Node, service: str) -> str:
-        prop = node.get_unit_property(service, "org.freedesktop.systemd1.Unit", "ActiveState")
+        prop = node.get_unit_property(
+            service, "org.freedesktop.systemd1.Unit", "ActiveState"
+        )
         return prop.get_string()
 
     def test_start_and_cancel(self):

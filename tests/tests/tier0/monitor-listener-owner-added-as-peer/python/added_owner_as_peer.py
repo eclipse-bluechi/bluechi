@@ -2,15 +2,15 @@
 
 import unittest
 
-from bluechi.api import Controller, Monitor
 from dasbus.error import DBusError
+
+from bluechi.api import Controller, Monitor
 
 node = "node-foo"
 service = "simple.service"
 
 
 class TestListenerAddedIsOwner(unittest.TestCase):
-
     def test_listener_added_is_owner(self):
 
         mgr = Controller()

@@ -3,11 +3,10 @@
 import os
 from typing import Dict
 
-from bluechi_test.config import BluechiControllerConfig, BluechiAgentConfig
-from bluechi_test.machine import BluechiControllerMachine, BluechiAgentMachine
+from bluechi_test.config import BluechiAgentConfig, BluechiControllerConfig
+from bluechi_test.machine import BluechiAgentMachine, BluechiControllerMachine
 from bluechi_test.service import SimpleService
 from bluechi_test.test import BluechiTest
-
 
 node_name_foo = "node-foo"
 node_name_bar = "node-bar"
@@ -30,9 +29,10 @@ def exec(ctrl: BluechiControllerMachine, nodes: Dict[str, BluechiAgentMachine]):
 
 
 def test_monitor_wildcard_unit_changes(
-        bluechi_test: BluechiTest,
-        bluechi_ctrl_default_config: BluechiControllerConfig,
-        bluechi_node_default_config: BluechiAgentConfig):
+    bluechi_test: BluechiTest,
+    bluechi_ctrl_default_config: BluechiControllerConfig,
+    bluechi_node_default_config: BluechiAgentConfig,
+):
 
     config_node_foo = bluechi_node_default_config.deep_copy()
     config_node_bar = bluechi_node_default_config.deep_copy()

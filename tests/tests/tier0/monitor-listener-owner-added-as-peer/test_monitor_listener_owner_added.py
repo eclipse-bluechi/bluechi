@@ -3,10 +3,9 @@
 import os
 from typing import Dict
 
+from bluechi_test.config import BluechiAgentConfig, BluechiControllerConfig
+from bluechi_test.machine import BluechiAgentMachine, BluechiControllerMachine
 from bluechi_test.test import BluechiTest
-from bluechi_test.machine import BluechiControllerMachine, BluechiAgentMachine
-from bluechi_test.config import BluechiControllerConfig, BluechiAgentConfig
-
 
 node_name_foo = "node-foo"
 service_simple = "simple.service"
@@ -19,9 +18,10 @@ def exec(ctrl: BluechiControllerMachine, nodes: Dict[str, BluechiAgentMachine]):
 
 
 def test_monitor_listener_added_more_than_once(
-        bluechi_test: BluechiTest,
-        bluechi_ctrl_default_config: BluechiControllerConfig,
-        bluechi_node_default_config: BluechiAgentConfig):
+    bluechi_test: BluechiTest,
+    bluechi_ctrl_default_config: BluechiControllerConfig,
+    bluechi_node_default_config: BluechiAgentConfig,
+):
 
     config_node_foo = bluechi_node_default_config.deep_copy()
     config_node_foo.node_name = node_name_foo

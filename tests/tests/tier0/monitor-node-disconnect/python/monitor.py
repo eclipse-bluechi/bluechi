@@ -39,7 +39,7 @@ class TestNodeDisconnect(unittest.TestCase):
         #   the command will be executed anyway, resulting in the desired shutdown of the node
         #   therefore, the DBusError is silenced for now, but all other errors are still raised
         try:
-            node.stop_unit('bluechi-agent.service', 'replace')
+            node.stop_unit("bluechi-agent.service", "replace")
         except DBusError:
             pass
 

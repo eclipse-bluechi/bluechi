@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: MIT-0
 
 import sys
+
 from dasbus.connection import SystemMessageBus
 
 bus = SystemMessageBus()

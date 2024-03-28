@@ -3,9 +3,9 @@
 import os
 from typing import Dict
 
+from bluechi_test.config import BluechiAgentConfig, BluechiControllerConfig
+from bluechi_test.machine import BluechiAgentMachine, BluechiControllerMachine
 from bluechi_test.test import BluechiTest
-from bluechi_test.machine import BluechiControllerMachine, BluechiAgentMachine
-from bluechi_test.config import BluechiControllerConfig, BluechiAgentConfig
 
 node_foo_name = "node-foo"
 
@@ -20,7 +20,11 @@ def exec(ctrl: BluechiControllerMachine, nodes: Dict[str, BluechiAgentMachine]):
         controller_host="localhost",
         controller_port=ctrl.config.port,
     )
-    ctrl.create_file(node_foo_config.get_confd_dir(), node_foo_config.file_name, node_foo_config.serialize())
+    ctrl.create_file(
+        node_foo_config.get_confd_dir(),
+        node_foo_config.file_name,
+        node_foo_config.serialize(),
+    )
     result, _, wait_result = ctrl.systemctl_start_and_wait("bluechi-agent", 1)
     assert result == 0
     assert wait_result
@@ -32,8 +36,8 @@ def exec(ctrl: BluechiControllerMachine, nodes: Dict[str, BluechiAgentMachine]):
 
 
 def test_bluechi_and_agent_on_same_machine(
-        bluechi_test: BluechiTest,
-        bluechi_ctrl_default_config: BluechiControllerConfig):
+    bluechi_test: BluechiTest, bluechi_ctrl_default_config: BluechiControllerConfig
+):
 
     bluechi_ctrl_default_config.allowed_node_names = [node_foo_name]
 

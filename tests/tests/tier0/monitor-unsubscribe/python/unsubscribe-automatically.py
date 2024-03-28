@@ -6,13 +6,11 @@ from dasbus.loop import EventLoop
 
 from bluechi.api import Controller, Monitor, Node
 
-
 node_name_foo = "node-foo"
 service_simple = "simple.service"
 
 
 class TestUnsubscribe(unittest.TestCase):
-
     def setUp(self) -> None:
         self.loop = EventLoop()
         self.mgr = Controller()
@@ -28,7 +26,9 @@ class TestUnsubscribe(unittest.TestCase):
             try:
                 self.monitor.unsubscribe(self.sub_id)
             except Exception as ex:
-                self.unsubscribe_ex = Exception(f"Failed to unsubscribe '{self.sub_id}', got exception: {ex}")
+                self.unsubscribe_ex = Exception(
+                    f"Failed to unsubscribe '{self.sub_id}', got exception: {ex}"
+                )
             self.loop.quit()
 
         self.monitor.on_unit_removed(on_unit_removed)
