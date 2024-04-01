@@ -787,7 +787,7 @@ bool node_set_agent_bus(Node *node, sd_bus *bus) {
                         bc_log_errorf("Failed to emit status property changed: %s", strerror(-r));
                 }
 
-                sd_bus_match_signal(
+                r = sd_bus_match_signal(
                                 bus,
                                 NULL,
                                 NULL,
