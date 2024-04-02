@@ -1,4 +1,7 @@
 #!/usr/bin/python3
+#
+# Copyright Contributors to the Eclipse BlueChi project
+#
 # SPDX-License-Identifier: MIT-0
 
 from collections import namedtuple

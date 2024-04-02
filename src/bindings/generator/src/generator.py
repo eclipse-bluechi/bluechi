@@ -1,3 +1,6 @@
+#
+# Copyright Contributors to the Eclipse BlueChi project
+#
 # SPDX-License-Identifier: LGPL-2.1-or-later
 
 import sys
@@ -22,7 +25,7 @@ def read_api_files(dir: str) -> List[Interface]:
 
 
 def generate(template_dir: str, output_file_path: str, data: Dict[str, Any]):
-    """Generate typed python code based on the provided templates and data and writing it to the output file.  
+    """Generate typed python code based on the provided templates and data and writing it to the output file.
 
     Parameters:
     template_dir: The template directory containing the root template "api.tmpl" that will be used for rendering

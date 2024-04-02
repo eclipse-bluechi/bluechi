@@ -1,4 +1,7 @@
 #!/bin/bash -xe
+#
+# Copyright Contributors to the Eclipse BlueChi project
+#
 # SPDX-License-Identifier: LGPL-2.1-or-later
 
 # This script should be executed only from meson as a part of install flow!

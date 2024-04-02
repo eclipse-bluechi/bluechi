@@ -1,8 +1,12 @@
 <!DOCTYPE node PUBLIC "-//freedesktop//DTD D-BUS Object Introspection 1.0//EN" "http://www.freedesktop.org/standards/dbus/1.0/introspect.dtd">
-<!-- SPDX-License-Identifier: LGPL-2.1-or-later -->
+<!--
+  Copyright Contributors to the Eclipse BlueChi project
+
+  SPDX-License-Identifier: LGPL-2.1-or-later
+-->
 <node>
 
-  <!-- 
+  <!--
     org.eclipse.bluechi.Controller:
     @short_description: Public interface of BlueChi on the managing node providing methods and signals for all nodes.
 
@@ -10,7 +14,7 @@
   -->
   <interface name="org.eclipse.bluechi.Controller">
 
-    <!-- 
+    <!--
       ListUnits:
       @units: A list of all units on each node:
         - The node name
@@ -31,21 +35,21 @@
       <arg name="units" type="a(sssssssouso)" direction="out" />
     </method>
 
-    <!-- 
+    <!--
       ListNodes:
       @nodes: A list of all nodes:
         - node name
         - object path of the node
         - current state of that node, either online or offline
-        - IP of the connected node 
-      
+        - IP of the connected node
+
       List all nodes managed by BlueChi regardless if they are offline or online.
     -->
     <method name="ListNodes">
       <arg name="nodes" type="a(soss)" direction="out" />
     </method>
 
-    <!-- 
+    <!--
       GetNode:
       @name: Name of the node
       @path: The path of the requested node
@@ -57,7 +61,7 @@
       <arg name="path" type="o" direction="out" />
     </method>
 
-    <!-- 
+    <!--
       CreateMonitor:
       @monitor: The path of the created monitor.
 
@@ -67,23 +71,23 @@
       <arg name="monitor" type="o" direction="out" />
     </method>
 
-    <!-- 
+    <!--
       EnableMetrics:
 
       Enable collecting performance metrics.
     -->
     <method name="EnableMetrics" />
 
-    <!-- 
+    <!--
       DisableMetrics:
 
       Disable collecting performance metrics.
     -->
     <method name="DisableMetrics" />
 
-    <!-- 
+    <!--
       SetLogLevel:
-      @loglevel: The new loglevel to use. 
+      @loglevel: The new loglevel to use.
 
       Change the loglevel of the controller.
     -->
@@ -92,7 +96,7 @@
     </method>
 
 
-    <!-- 
+    <!--
       JobNew:
       @id: The id of the new job
       @job: The path of the job
@@ -104,7 +108,7 @@
       <arg name="job" type="o" />
     </signal>
 
-    <!-- 
+    <!--
       JobRemoved:
       @id: The id of the new job
       @job: The path of the job
@@ -143,7 +147,7 @@
       LogLevel:
 
       The LogLevel of the controller node that is currently used. Its value is one of:
-        INFO, DEBUG, ERROR and WARN 
+        INFO, DEBUG, ERROR and WARN
     -->
     <property name="LogLevel" type="s" access="read">
       <annotation name="org.freedesktop.DBus.Property.EmitsChangedSignal" value="false" />
