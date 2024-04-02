@@ -1,3 +1,5 @@
+// Copyright Contributors to the Eclipse BlueChi project
+//
 // SPDX-License-Identifier: MIT-0
 
 package main

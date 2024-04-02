@@ -52,6 +52,10 @@ jobs:
         run: |
           ./build-scripts/spdx-header-check.sh
 
+      - name: Check Copyright headers
+        run: |
+          ./build-scripts/copyright-header-check.sh
+
       - name: Running codespell checker
         run: |
           make check-codespell

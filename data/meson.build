@@ -1,3 +1,6 @@
+#
+# Copyright Contributors to the Eclipse BlueChi project
+#
 # SPDX-License-Identifier: LGPL-2.1-or-later
 
 # Installing the public DBus API
@@ -9,7 +12,7 @@ install_data(
         'org.eclipse.bluechi.Node.xml',
         'org.eclipse.bluechi.Agent.xml'
     ],
-    install_dir: join_paths(get_option('datadir'), 'dbus-1', 'interfaces'), 
+    install_dir: join_paths(get_option('datadir'), 'dbus-1', 'interfaces'),
 )
 
 # Installing the DBus permission configuration files

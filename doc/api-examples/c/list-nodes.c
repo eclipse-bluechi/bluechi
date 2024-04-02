@@ -1,5 +1,8 @@
-// SPDX-License-Identifier: MIT-0
-
+/*
+ * Copyright Contributors to the Eclipse BlueChi project
+ *
+ * SPDX-License-Identifier: MIT-0
+ */
 #include <stdbool.h>
 #include <systemd/sd-bus.h>
 

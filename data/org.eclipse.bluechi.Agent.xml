@@ -1,8 +1,12 @@
 <!DOCTYPE node PUBLIC "-//freedesktop//DTD D-BUS Object Introspection 1.0//EN" "http://www.freedesktop.org/standards/dbus/1.0/introspect.dtd">
-<!-- SPDX-License-Identifier: LGPL-2.1-or-later -->
+<!--
+  Copyright Contributors to the Eclipse BlueChi project
+
+  SPDX-License-Identifier: LGPL-2.1-or-later
+-->
 <node>
 
-  <!-- 
+  <!--
     org.eclipse.bluechi.Agent:
     @short_description: Public interface of BlueChi on the managed node providing methods and signals for the respective node.
 
@@ -10,7 +14,7 @@
   -->
   <interface name="org.eclipse.bluechi.Agent">
 
-    <!-- 
+    <!--
       CreateProxy:
       @local_service_name: The service name which requests the external dependency
       @node: The requested node to provide the service
@@ -25,7 +29,7 @@
       <arg name="unit" type="s" direction="in" />
     </method>
 
-    <!-- 
+    <!--
       RemoveProxy:
       @local_service_name: The service name which requests the external dependency
       @node: The requested node to provide the service
@@ -52,11 +56,11 @@
     </method>
 
 
-    <!-- 
+    <!--
       Status:
 
       The connection status of the agent with the BlueChi controller.
-      On any change, a signal is emitted on the org.freedesktop.DBus.Properties interface. 
+      On any change, a signal is emitted on the org.freedesktop.DBus.Properties interface.
     -->
     <property name="Status" type="s" access="read">
       <annotation name="org.freedesktop.DBus.Property.EmitsChangedSignal" value="true" />
@@ -66,7 +70,7 @@
       LogLevel:
 
       The LogLevel of the agent node that is currently used. Its value is one of:
-        INFO, DEBUG, ERROR and WARN 
+        INFO, DEBUG, ERROR and WARN
     -->
     <property name="LogLevel" type="s" access="read">
       <annotation name="org.freedesktop.DBus.Property.EmitsChangedSignal" value="false" />
@@ -82,7 +86,7 @@
       <annotation name="org.freedesktop.DBus.Property.EmitsChangedSignal" value="const" />
     </property>
 
-    <!-- 
+    <!--
       DisconnectTimestamp:
 
       A timestamp indicating when the agent lost connection to the BlueChi controller.

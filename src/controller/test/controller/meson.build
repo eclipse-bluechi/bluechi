@@ -1,3 +1,6 @@
+#
+# Copyright Contributors to the Eclipse BlueChi project
+#
 # SPDX-License-Identifier: LGPL-2.1-or-later
 
 controller_src = [
@@ -15,7 +18,7 @@ foreach src : orch_src
 endforeach
 
 foreach src : controller_src
-  exec_test = executable(src, 
+  exec_test = executable(src,
     controller_test_src + [src + '.c'],
     dependencies: [
         systemd_dep,

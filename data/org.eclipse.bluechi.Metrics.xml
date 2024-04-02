@@ -1,8 +1,12 @@
 <!DOCTYPE node PUBLIC "-//freedesktop//DTD D-BUS Object Introspection 1.0//EN" "http://www.freedesktop.org/standards/dbus/1.0/introspect.dtd">
-<!-- SPDX-License-Identifier: LGPL-2.1-or-later -->
+<!--
+  Copyright Contributors to the Eclipse BlueChi project
+
+  SPDX-License-Identifier: LGPL-2.1-or-later
+-->
 <node>
 
-  <!-- 
+  <!--
     org.eclipse.bluechi.Metrics:
     @short_description: Public interface of BlueChi on the managing node providing signals for performance metrics.
 
@@ -10,7 +14,7 @@
   -->
   <interface name="org.eclipse.bluechi.Metrics">
 
-    <!-- 
+    <!--
       StartUnitJobMetrics:
       @node_name: The node name this metrics has been collected for
       @job_id: The id of the job linked to the collected metrics
@@ -28,7 +32,7 @@
       <arg name="unit_start_prop_time_micros" type="t" />
     </signal>
 
-    <!-- 
+    <!--
       AgentJobMetrics:
       @node_name: The node name this metrics has been collected for
       @unit: The unit name this metrics has been collected for

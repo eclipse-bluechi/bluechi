@@ -1,3 +1,6 @@
+#
+# Copyright Contributors to the Eclipse BlueChi project
+#
 # SPDX-License-Identifier: LGPL-2.1-or-later
 
 agent_src = [
@@ -15,7 +18,7 @@ foreach src : node_src
 endforeach
 
 foreach src : agent_src
-  exec_test = executable(src, 
+  exec_test = executable(src,
     node_test_src + [src + '.c'],
     dependencies: [
         systemd_dep,

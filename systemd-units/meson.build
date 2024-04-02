@@ -1,3 +1,6 @@
+#
+# Copyright Contributors to the Eclipse BlueChi project
+#
 # SPDX-License-Identifier: LGPL-2.1-or-later
 
 systemd_unit_dir = join_paths(get_option('prefix'), 'lib', 'systemd', 'system')

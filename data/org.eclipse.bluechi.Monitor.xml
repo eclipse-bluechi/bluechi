@@ -1,8 +1,12 @@
 <!DOCTYPE node PUBLIC "-//freedesktop//DTD D-BUS Object Introspection 1.0//EN" "http://www.freedesktop.org/standards/dbus/1.0/introspect.dtd">
-<!-- SPDX-License-Identifier: LGPL-2.1-or-later -->
+<!--
+  Copyright Contributors to the Eclipse BlueChi project
+
+  SPDX-License-Identifier: LGPL-2.1-or-later
+-->
 <node>
 
-  <!-- 
+  <!--
     org.eclipse.bluechi.Monitor:
     @short_description: Public interface of BlueChi on the managing node providing monitoring functionality.
 
@@ -11,18 +15,18 @@
   -->
   <interface name="org.eclipse.bluechi.Monitor">
 
-    <!-- 
+    <!--
       Close:
 
       Close the monitor.
     -->
     <method name="Close" />
 
-    <!-- 
+    <!--
       Subscribe:
       @node: The name of the node to subscribe to
       @unit: The name of the unit to subscribe to
-      @id: The id of the created subscription. 
+      @id: The id of the created subscription.
 
       Subscribe to changes of a unit on a node. Both fields support a wildcard '*'. A wildcard in the node name will create the subscription for all nodes.
     If the unit name is a wildcard, then the subscription matches changes for all units on the node.
@@ -33,7 +37,7 @@
       <arg name="id" type="u" direction="out" />
     </method>
 
-    <!-- 
+    <!--
       Unsubscribe:
       @id: The id of the subscription to cancel
 
@@ -43,7 +47,7 @@
       <arg name="id" type="u" direction="in" />
     </method>
 
-    <!-- 
+    <!--
       SubscribeList:
       @node: The name of the node to subscribe to
       @units: A list of unit names to subscribe to
@@ -58,7 +62,7 @@
       <arg name="id" type="u" direction="out" />
     </method>
 
-    <!-- 
+    <!--
       AddPeer:
       @name: The name of the peer to add as listener to all monitor events. Needs to be unique name on the bus.
       @id: The id of the created peer
@@ -70,7 +74,7 @@
       <arg name="id" type="u" direction="out" />
     </method>
 
-    <!-- 
+    <!--
       RemovePeer:
       @id: The id of the peer to remove
       @reason: The reason for removing the peer
@@ -83,14 +87,14 @@
     </method>
 
 
-    <!-- 
+    <!--
       UnitPropertiesChanged:
       @node: The node name this signal originated from
       @unit: The unit for which the properties changed
       @interface: The originating interface
       @props: The changed properties as key-value pair with the name of the property as key
 
-      Whenever the properties change for any of the units that are currently subscribed to, this signal is emitted. 
+      Whenever the properties change for any of the units that are currently subscribed to, this signal is emitted.
     -->
     <signal name="UnitPropertiesChanged">
       <arg name="node" type="s" />
@@ -99,7 +103,7 @@
       <arg name="props" type="a{sv}" />
     </signal>
 
-    <!-- 
+    <!--
       UnitStateChanged:
       @node: The node name this signal originated from
       @unit: The unit for which the properties changed
@@ -117,7 +121,7 @@
       <arg name="reason" type="s" />
     </signal>
 
-    <!-- 
+    <!--
       UnitNew:
       @node: The node name this signal originated from
       @unit: The unit for which the properties changed
@@ -132,7 +136,7 @@
       <arg name="reason" type="s" />
     </signal>
 
-    <!-- 
+    <!--
       UnitRemoved:
       @node: The node name this signal originated from
       @unit: The unit for which the properties changed
@@ -147,7 +151,7 @@
       <arg name="reason" type="s" />
     </signal>
 
-    <!-- 
+    <!--
       PeerRemoved:
       @reason: The reason the peer got removed from the monitor.
 

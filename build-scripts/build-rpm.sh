@@ -1,4 +1,7 @@
 #!/bin/bash -xe
+#
+# Copyright Contributors to the Eclipse BlueChi project
+#
 # SPDX-License-Identifier: LGPL-2.1-or-later
 
 source $(dirname "$(readlink -f "$0")")/build-srpm.sh

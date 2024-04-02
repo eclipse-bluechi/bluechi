@@ -1,4 +1,8 @@
-/* SPDX-License-Identifier: LGPL-2.1-or-later */
+/*
+ * Copyright Contributors to the Eclipse BlueChi project
+ *
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ */
 #include "libbluechi/bus/bus.h"
 #include "libbluechi/bus/utils.h"
 #include "libbluechi/common/parse-util.h"

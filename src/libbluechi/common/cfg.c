@@ -1,5 +1,8 @@
-/* SPDX-License-Identifier: LGPL-2.1-or-later */
-
+/*
+ * Copyright Contributors to the Eclipse BlueChi project
+ *
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ */
 #include <asm-generic/errno-base.h>
 #include <assert.h>
 #include <dirent.h>

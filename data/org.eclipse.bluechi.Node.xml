@@ -1,8 +1,12 @@
 <!DOCTYPE node PUBLIC "-//freedesktop//DTD D-BUS Object Introspection 1.0//EN" "http://www.freedesktop.org/standards/dbus/1.0/introspect.dtd">
-<!-- SPDX-License-Identifier: LGPL-2.1-or-later -->
+<!--
+  Copyright Contributors to the Eclipse BlueChi project
+
+  SPDX-License-Identifier: LGPL-2.1-or-later
+-->
 <node>
 
-  <!-- 
+  <!--
     org.eclipse.bluechi.Node:
     @short_description: Public interface of BlueChi on the managing node providing methods, signals and  for a specific node.
 
@@ -10,9 +14,9 @@
   -->
   <interface name="org.eclipse.bluechi.Node">
 
-    <!-- 
+    <!--
       StartUnit:
-      @name: The name of the unit to start 
+      @name: The name of the unit to start
       @mode: The mode used to start the unit
       @job: The path for the job associated with the start operation
 
@@ -29,9 +33,9 @@
       <arg name="job" type="o" direction="out" />
     </method>
 
-    <!-- 
+    <!--
       StopUnit:
-      @name: The name of the unit to stop 
+      @name: The name of the unit to stop
       @mode: The mode used to stop the unit
       @job: The path for the job associated with the stop operation
 
@@ -43,7 +47,7 @@
       <arg name="job" type="o" direction="out" />
     </method>
 
-    <!-- 
+    <!--
       FreezeUnit:
       @name: The name of the unit to freeze
 
@@ -54,7 +58,7 @@
       <arg name="name" type="s" direction="in" />
     </method>
 
-    <!-- 
+    <!--
       ThawUnit:
       @name: The name of the unit to thaw
 
@@ -64,9 +68,9 @@
       <arg name="name" type="s" direction="in" />
     </method>
 
-    <!-- 
+    <!--
       ReloadUnit:
-      @name: The name of the unit to reload 
+      @name: The name of the unit to reload
       @mode: The mode used to reload the unit
       @job: The path for the job associated with the reload operation
 
@@ -78,9 +82,9 @@
       <arg name="job" type="o" direction="out" />
     </method>
 
-    <!-- 
+    <!--
       RestartUnit:
-      @name: The name of the unit to restart 
+      @name: The name of the unit to restart
       @mode: The mode used to restart the unit
       @job: The path for the job associated with the restart operation
 
@@ -92,7 +96,7 @@
       <arg name="job" type="o" direction="out" />
     </method>
 
-    <!-- 
+    <!--
       GetUnitProperties:
       @name: The name of unit
       @interface: The interface name
@@ -106,7 +110,7 @@
       <arg name="props" type="a{sv}" direction="out" />
     </method>
 
-    <!-- 
+    <!--
       GetUnitProperty:
       @name: The name of unit
       @interface: The interface name
@@ -122,7 +126,7 @@
       <arg name="value" type="v" direction="out" />
     </method>
 
-    <!-- 
+    <!--
       SetUnitProperties:
       @name: The name of the unit
       @runtime: Specify if the changes should persist after reboot or not
@@ -136,7 +140,7 @@
       <arg name="keyvalues" type="a(sv)" direction="in" />
     </method>
 
-    <!-- 
+    <!--
       EnableUnitFiles:
       @files: A list of units to enable
       @runtime: Specify if the changes should persist after reboot or not
@@ -146,7 +150,7 @@
         - type of change (one of: symlink, unlink)
         - file name of the symlink
         - destination of the symlink
-      
+
       EnableUnitFiles() may be used to enable one or more units in the system (by creating symlinks to them in /etc/ or /run/).
     -->
     <method name="EnableUnitFiles">
@@ -157,7 +161,7 @@
       <arg name="changes" type="a(sss)" direction="out" />
     </method>
 
-    <!-- 
+    <!--
       DisableUnitFiles:
       @files: A list of units to enable
       @runtime: Specify if the changes should persist after reboot or not
@@ -174,7 +178,7 @@
       <arg name="changes" type="a(sss)" direction="out" />
     </method>
 
-    <!-- 
+    <!--
       ListUnits:
       @units: A list of all units on the node:
         - The primary unit name as string
@@ -188,22 +192,22 @@
         - The job type as string
         - The job object path
 
-      List all loaded systemd units. 
+      List all loaded systemd units.
     -->
     <method name="ListUnits">
       <arg name="units" type="a(ssssssouso)" direction="out" />
     </method>
 
-    <!-- 
+    <!--
       Reload:
-      
-      Reload() may be invoked to reload all unit files. 
+
+      Reload() may be invoked to reload all unit files.
     -->
     <method name="Reload" />
 
-    <!-- 
+    <!--
       SetLogLevel:
-      @loglevel: The new loglevel to use. 
+      @loglevel: The new loglevel to use.
 
       Change the loglevel of the controller.
     -->
@@ -212,7 +216,7 @@
     </method>
 
 
-    <!-- 
+    <!--
       Name:
 
       The name of the node.
@@ -221,17 +225,17 @@
       <annotation name="org.freedesktop.DBus.Property.EmitsChangedSignal" value="const" />
     </property>
 
-    <!-- 
+    <!--
       Status:
 
       The connection status of the node with the BlueChi controller.
-      On any change, a signal is emitted on the org.freedesktop.DBus.Properties interface. 
+      On any change, a signal is emitted on the org.freedesktop.DBus.Properties interface.
     -->
     <property name="Status" type="s" access="read">
       <annotation name="org.freedesktop.DBus.Property.EmitsChangedSignal" value="true" />
     </property>
 
-    <!-- 
+    <!--
       PeerIp:
 
       The current IP of the connected node.
@@ -241,7 +245,7 @@
       <annotation name="org.freedesktop.DBus.Property.EmitsChangedSignal" value="false" />
     </property>
 
-    <!-- 
+    <!--
       LastSeenTimestamp:
 
       A timestamp indicating when the last connection test (e.g. via heartbeat) was successful.

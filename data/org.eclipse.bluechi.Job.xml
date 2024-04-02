@@ -1,8 +1,12 @@
 <!DOCTYPE node PUBLIC "-//freedesktop//DTD D-BUS Object Introspection 1.0//EN" "http://www.freedesktop.org/standards/dbus/1.0/introspect.dtd">
-<!-- SPDX-License-Identifier: LGPL-2.1-or-later -->
+<!--
+  Copyright Contributors to the Eclipse BlueChi project
+
+  SPDX-License-Identifier: LGPL-2.1-or-later
+-->
 <node>
 
-  <!-- 
+  <!--
     org.eclipse.bluechi.Job:
     @short_description: Public interface of BlueChi on the managing node for all job objects.
 
@@ -10,55 +14,55 @@
   -->
   <interface name="org.eclipse.bluechi.Job">
 
-    <!-- 
+    <!--
       Cancel:
-      
-      Cancels the job. 
-      It cancels the corresponding systemd job if it was already started. Otherwise it cancels the BlueChi job. 
+
+      Cancels the job.
+      It cancels the corresponding systemd job if it was already started. Otherwise it cancels the BlueChi job.
     -->
     <method name="Cancel" />
 
-    <!-- 
+    <!--
       Id:
 
-      An integer giving the id of the job. 
+      An integer giving the id of the job.
     -->
     <property name="Id" type="u" access="read">
       <annotation name="org.freedesktop.DBus.Property.EmitsChangedSignal" value="const" />
     </property>
 
-    <!-- 
+    <!--
       Node:
 
-      The name of the node the job is on. 
+      The name of the node the job is on.
     -->
     <property name="Node" type="s" access="read">
       <annotation name="org.freedesktop.DBus.Property.EmitsChangedSignal" value="const" />
     </property>
 
-    <!-- 
+    <!--
       Unit:
 
-      The name of the unit the job works on. 
+      The name of the unit the job works on.
     -->
     <property name="Unit" type="s" access="read">
       <annotation name="org.freedesktop.DBus.Property.EmitsChangedSignal" value="const" />
     </property>
 
-    <!-- 
+    <!--
       JobType:
 
-      Type of the job, either Start or Stop. 
+      Type of the job, either Start or Stop.
     -->
     <property name="JobType" type="s" access="read">
       <annotation name="org.freedesktop.DBus.Property.EmitsChangedSignal" value="const" />
     </property>
 
-    <!-- 
+    <!--
       State:
 
-      The current state of the job, one of: waiting (queued jobs) or running. 
-      On any change, a signal is emitted on the org.freedesktop.DBus.Properties interface. 
+      The current state of the job, one of: waiting (queued jobs) or running.
+      On any change, a signal is emitted on the org.freedesktop.DBus.Properties interface.
     -->
     <property name="State" type="s" access="read">
       <annotation name="org.freedesktop.DBus.Property.EmitsChangedSignal" value="true" />
