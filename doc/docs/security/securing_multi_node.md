@@ -6,7 +6,7 @@ not only between bluechi-agent and systemd, but also between bluechi-controller 
 
 The problem is that D-Bus mainly targets local inter-process communication on top of Unix sockets
 and therefore does not natively support encryption or authentication.
-One possible solution is to use SSH, however, SSH between nodes is too large of a tunnel.
+One possible solution is to use SSH. However, SSH between nodes is too large of a tunnel.
 
 ## The double proxy approach
 
