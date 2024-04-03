@@ -1,0 +1,2 @@
+summary: Test client watch option by running in the controller container "bluechictl status" of a spasific node in the agent container and watching the status change when the service is down and up
+id: bb9d4394-bd53-4d36-b8ba-ee91697c4810

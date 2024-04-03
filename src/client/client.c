@@ -116,8 +116,8 @@ int client_create_message_new_method_call(
         int r = 0;
         _cleanup_sd_bus_message_ sd_bus_message *outgoing_message = NULL;
 
-        free_and_null(client->object_path) r = assemble_object_path_string(
-                        NODE_OBJECT_PATH_PREFIX, node_name, &client->object_path);
+        free_and_null(client->object_path);
+        r = assemble_object_path_string(NODE_OBJECT_PATH_PREFIX, node_name, &client->object_path);
         if (r < 0) {
                 return r;
         }
