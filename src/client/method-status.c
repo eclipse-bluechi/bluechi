@@ -25,6 +25,21 @@ struct bus_properties_map {
         size_t offset;
 };
 
+typedef struct MethodStatusChange MethodStatusChange;
+
+struct MethodStatusChange {
+        Client *client;
+        char **units;
+        char *node_name;
+        size_t units_count;
+        size_t max_len;
+};
+
+void clear_screen() {
+        printf("\033[2J");
+        printf("\033[%d;%dH", 0, 0);
+}
+
 static const struct bus_properties_map property_map[] = {
         { "Id", offsetof(unit_info_t, id) },
         { "LoadState", offsetof(unit_info_t, load_state) },
@@ -205,7 +220,7 @@ static void print_unit_info(unit_info_t *unit_info, size_t name_col_width) {
                 return;
         }
 
-        fprintf(stdout, "%s", unit_info->id);
+        fprintf(stdout, "%s", unit_info->id ? unit_info->id : "");
         name_col_width -= unit_info->id ? strlen(unit_info->id) : 0;
         name_col_width += PRINT_TAB_SIZE;
         i = name_col_width;
@@ -277,10 +292,49 @@ static int get_status_unit_on(Client *client, char *node_name, char *unit_name, 
         return 0;
 }
 
-static int method_status_unit_on(Client *client, char *node_name, char **units, size_t units_count) {
+
+static int on_unit_status_changed(UNUSED sd_bus_message *m, UNUSED void *userdata, UNUSED sd_bus_error *error) {
+        MethodStatusChange *s = (MethodStatusChange *) userdata;
+
+        char **units = s->units;
+        char *node_name = s->node_name;
+        Client *client = s->client;
+        size_t units_count = s->units_count;
+        size_t max_len = s->max_len;
+
+        clear_screen();
+        print_info_header(max_len);
+        for (unsigned i = 0; i < units_count; i++) {
+                int r = get_status_unit_on(client, node_name, units[i], max_len);
+                if (r < 0) {
+                        fprintf(stderr,
+                                "Failed to get status of unit %s on node %s - %s",
+                                units[i],
+                                node_name,
+                                strerror(-r));
+                        return r;
+                }
+        }
+
+        return 1;
+}
+
+
+static int method_status_unit_on(
+                Client *client, char *node_name, char **units, size_t units_count, bool do_watch) {
         unsigned i = 0;
 
         size_t max_name_len = get_max_name_len(units, units_count);
+        _cleanup_free_ MethodStatusChange *s = malloc0(sizeof(MethodStatusChange));
+        if (s == NULL) {
+                fprintf(stderr, "Failed to malloc memory for MethodStatusChange");
+                return ENOMEM;
+        }
+        s->client = client;
+        s->max_len = max_name_len;
+        s->node_name = node_name;
+        s->units = units;
+        s->units_count = units_count;
 
         print_info_header(max_name_len);
         for (i = 0; i < units_count; i++) {
@@ -293,9 +347,72 @@ static int method_status_unit_on(Client *client, char *node_name, char **units, 
                                 strerror(-r));
                         return r;
                 }
+                if (do_watch) {
+                        _cleanup_sd_bus_error_ sd_bus_error error = SD_BUS_ERROR_NULL;
+                        _cleanup_sd_bus_message_ sd_bus_message *reply = NULL;
+                        char *monitor_path = NULL;
+                        int r = 0;
+
+                        r = sd_bus_call_method(
+                                        client->api_bus,
+                                        BC_INTERFACE_BASE_NAME,
+                                        BC_OBJECT_PATH,
+                                        CONTROLLER_INTERFACE,
+                                        "CreateMonitor",
+                                        &error,
+                                        &reply,
+                                        "");
+                        if (r < 0) {
+                                fprintf(stderr, "Failed to create monitor: %s\n", error.message);
+                                return r;
+                        }
+
+                        r = sd_bus_message_read(reply, "o", &monitor_path);
+                        if (r < 0) {
+                                fprintf(stderr,
+                                        "Failed to parse create monitor response message: %s\n",
+                                        strerror(-r));
+                                return r;
+                        }
+                        r = sd_bus_match_signal(
+                                        client->api_bus,
+                                        NULL,
+                                        BC_INTERFACE_BASE_NAME,
+                                        monitor_path,
+                                        MONITOR_INTERFACE,
+                                        "UnitStateChanged",
+                                        on_unit_status_changed,
+                                        s);
+                        if (r < 0) {
+                                fprintf(stderr,
+                                        "Failed to create callback for UnitStateChanged: %s\n",
+                                        strerror(-r));
+                                return r;
+                        }
+
+                        _cleanup_sd_bus_message_ sd_bus_message *m = NULL;
+                        r = sd_bus_message_new_method_call(
+                                        client->api_bus,
+                                        &m,
+                                        BC_INTERFACE_BASE_NAME,
+                                        monitor_path,
+                                        MONITOR_INTERFACE,
+                                        "Subscribe");
+                        if (r < 0) {
+                                fprintf(stderr, "Failed creating subscription call: %s\n", strerror(-r));
+                                return r;
+                        }
+                        sd_bus_message_append(m, "ss", node_name, units[i]);
+                        _cleanup_sd_bus_message_ sd_bus_message *subscription_reply = NULL;
+                        r = sd_bus_call(client->api_bus, m, BC_DEFAULT_DBUS_TIMEOUT, &error, &subscription_reply);
+                        if (r < 0) {
+                                fprintf(stderr, "Failed to subscribe to monitor: %s\n", error.message);
+                                return r;
+                        }
+                }
         }
 
-        return 0;
+        return do_watch ? client_start_event_loop(client) : 0;
 }
 
 /***************************************************************
@@ -660,6 +777,10 @@ int method_status(Command *command, void *userdata) {
                                 userdata, command->opargv[0], command_flag_exists(command, ARG_WATCH_SHORT));
         default:
                 return method_status_unit_on(
-                                userdata, command->opargv[0], &command->opargv[1], command->opargc - 1);
+                                userdata,
+                                command->opargv[0],
+                                &command->opargv[1],
+                                command->opargc - 1,
+                                command_flag_exists(command, ARG_WATCH_SHORT));
         }
 }
