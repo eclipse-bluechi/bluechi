@@ -6,10 +6,10 @@ policy_module(bluechi, 1.0.0)
 #
 
 # Allow bluechi_t to bind to any port instead of one labelled with bluechi_port_t.
-gen_tunable(bluechi_controller_port_bind_any, false)
+gen_tunable(bluechi_controller_port_bind_any, true)
 
 # Allow bluechi_agent_t to connect to any port instead of labelled ones.
-gen_tunable(bluechi_agent_port_connect_any, false)
+gen_tunable(bluechi_agent_port_connect_any, true)
 
 type bluechi_t alias hirte_t;
 type bluechi_exec_t  alias hirte_exec_t;

@@ -377,9 +377,9 @@ The package build process can be adjusted using following environment variables:
 - `SKIP_BUILDDEP`
   - To skip installation of build dependencies this option should contain `yes` value.
 - `WITH_PYTHON`
-  - To skip building python bluechi modules this option should contain `0`.
+  - To skip building python bluechi modules this option should contain `0`. Default: `1`.
 - `WITH_COVERAGE`
-  - To start collecting coverage this option should contain `1`.
+  - To start collecting coverage this option should contain `1`. Default: `0`.
 
 So for example following command will skip build dependencies installation and store create RPM packages into `output`
 subdirectory:
