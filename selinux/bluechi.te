@@ -5,6 +5,12 @@ policy_module(bluechi, 1.0.0)
 # Declarations
 #
 
+# Allow bluechi_t to bind to any port instead of one labelled with bluechi_port_t.
+gen_tunable(bluechi_controller_port_bind_any, false)
+
+# Allow bluechi_agent_t to connect to any port instead of labelled ones.
+gen_tunable(bluechi_agent_port_connect_any, false)
+
 type bluechi_t alias hirte_t;
 type bluechi_exec_t  alias hirte_exec_t;
 init_daemon_domain(bluechi_t, bluechi_exec_t)
@@ -16,8 +22,9 @@ init_daemon_domain(bluechi_agent_t, bluechi_agent_exec_t)
 type bluechi_port_t alias hirte_port_t;
 corenet_port(bluechi_port_t)
 
-permissive bluechi_t;
-permissive bluechi_agent_t;
+type bluechi_agent_port_t;
+corenet_port(bluechi_agent_port_t)
+
 
 ########################################
 #
@@ -32,10 +39,14 @@ files_read_etc_files(bluechi_t)
 
 miscfiles_read_localization(bluechi_t)
 
-allow bluechi_t port_type:tcp_socket name_bind;
 allow bluechi_t self:capability net_bind_service;
 allow bluechi_t self:tcp_socket create_stream_socket_perms;
 allow bluechi_t self:unix_dgram_socket create_socket_perms;
+tunable_policy(`bluechi_controller_port_bind_any',`
+	corenet_tcp_bind_all_ports(bluechi_t)
+',`
+	allow bluechi_t bluechi_port_t:tcp_socket name_bind;
+')
 
 corenet_tcp_bind_generic_node(bluechi_t)
 
@@ -69,7 +80,11 @@ logging_send_syslog_msg(bluechi_agent_t)
 logging_read_syslog_pid(bluechi_agent_t)
 
 allow bluechi_agent_t self:tcp_socket create_stream_socket_perms;
-allow bluechi_agent_t bluechi_port_t:tcp_socket name_connect;
+tunable_policy(`bluechi_agent_port_connect_any',`
+	corenet_tcp_connect_all_ports(bluechi_agent_t)
+',`
+	allow bluechi_agent_t bluechi_agent_port_t:tcp_socket name_connect;
+')
 
 dbus_acquire_svc_system_dbusd(bluechi_agent_t)
 dbus_system_bus_client(bluechi_agent_t)
