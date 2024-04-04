@@ -1,4 +1,4 @@
-# Contributing to Eclipse BlueChi
+# Contributing to Eclipse BlueChi&trade;
 
 Thank you for your interest in Eclipse BlueChi.
 

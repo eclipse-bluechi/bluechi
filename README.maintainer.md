@@ -1,4 +1,4 @@
-# BlueChi
+# Eclipse BlueChi&trade;
 
 ## Creating a new release
 

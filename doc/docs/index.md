@@ -1,8 +1,8 @@
-# BlueChi
+# Eclipse BlueChi&trade;
 
-## What is BlueChi?
+## What is Eclipse BlueChi?
 
-BlueChi (formerly known as hirte) is a deterministic multi-node service controller.
+Eclipse BlueChi (formerly known as hirte) is a deterministic multi-node service controller.
 
 BlueChi can manage the states of different services across multiple nodes with a
 focus on highly regulated industries, such as those requiring functional safety.
