@@ -1,5 +1,5 @@
 
-# BlueChi
+# Eclipse BlueChi&trade;
 
 - [Development](#development)
   - [Environment Setup](#environment-setup)

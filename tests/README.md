@@ -1,5 +1,5 @@
 <!-- markdownlint-disable-file MD013 -->
-# BlueChi integration test
+# Eclipse BlueChi&trade; integration tests
 
 ## Installation
 

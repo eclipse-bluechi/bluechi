@@ -1,4 +1,4 @@
-# BlueChi's documentation pages
+# Eclipse BlueChi&trade; documentation pages
 
 Here are stored the source for BlueChi's documentation.
 
