@@ -8,21 +8,22 @@
 
 from __future__ import annotations
 
-from typing import Callable, Tuple, Dict, List, Any
+from typing import Any, Callable, Dict, List, Tuple
+
 from dasbus.typing import (
     Bool,
-    Double,
-    Str,
-    Int,
     Byte,
+    Double,
+    Int,
     Int16,
-    UInt16,
     Int32,
-    UInt32,
     Int64,
-    UInt64,
     ObjPath,
+    Str,
     Structure,
+    UInt16,
+    UInt32,
+    UInt64,
 )
 
 # File has been renamed to UnixFD in following PR included in v1.7
@@ -32,14 +33,12 @@ try:
 except ImportError:
     from dasbus.typing import UnixFD
 
-from dasbus.client.proxy import InterfaceProxy, ObjectProxy
-from dasbus.connection import MessageBus, SystemMessageBus, SessionMessageBus
-
 import gi
+from dasbus.client.proxy import InterfaceProxy, ObjectProxy
+from dasbus.connection import MessageBus, SessionMessageBus, SystemMessageBus
 
 gi.require_version("GLib", "2.0")
 from gi.repository.GLib import Variant  # noqa: E402
-
 
 BC_DEFAULT_PORT = 842
 BC_DEFAULT_HOST = "127.0.0.1"
