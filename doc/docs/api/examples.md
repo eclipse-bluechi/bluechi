@@ -7,7 +7,7 @@ There are a number of bindings for the D-Bus protocol for a range of programming
 
 The following sections demonstrate how the D-Bus API of BlueChi can be interacted with using bindings from different programming languages by showing small snippets.
 
-!!! Note
+!!! note
 
     All snippets require to be run on the machine where BlueChi is running. The only exception is the example for [monitoring the connection status of the agent](#monitor-the-connection-on-the-managed-node), which has to be executed on the managed node where the BlueChi agent is running.
 
@@ -25,9 +25,9 @@ The following sections demonstrate how the D-Bus API of BlueChi can be interacte
 
     --8<-- "api-examples/rust/setup.md"
 
-!!! Note
+!!! note
 
-        Depending on the setup of BlueChi root privileges might be needed when running the samples.
+    Depending on the setup of BlueChi root privileges might be needed when running the samples.
 
 ## Getting information
 
