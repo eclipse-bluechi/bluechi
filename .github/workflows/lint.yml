@@ -158,6 +158,7 @@ jobs:
       - name: Install dependencies
         run: |
           python3 -m ensurepip --default-pip
+          python3 -m pip install -r requirements.txt
           python3 -m pip install -r src/bindings/generator/requirements.txt
           pip install wheel
           dnf install -y python3-gobject

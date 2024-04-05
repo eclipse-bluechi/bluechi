@@ -16,6 +16,7 @@ function python(){
     template_dir=$BINDINGS_DIR"/python/templates/"
     output_file_path=$BINDINGS_DIR"/python/bluechi/api.py"
     python3 "$generator" "$data_dir" "$template_dir" "$output_file_path"
+    isort "$output_file_path"
     black "$output_file_path"
 }
 
