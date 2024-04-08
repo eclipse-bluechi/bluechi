@@ -19,6 +19,8 @@ struct Controller {
 
         uint16_t port;
         char *api_bus_service_name;
+        long heartbeat_interval_msec;
+        long heartbeat_threshold_msec;
 
         sd_event *event;
         sd_event_source *node_connection_source;

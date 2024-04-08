@@ -7,6 +7,7 @@ network_src = [
   'get_log_timestamp',
   'get_time_seconds',
   'micros_to_millis_test',
+  'time_elapsed_millis',
 ]
 
 foreach src : network_src

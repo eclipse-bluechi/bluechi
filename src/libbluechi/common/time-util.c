@@ -10,9 +10,16 @@
 #include "libbluechi/common/common.h"
 #include "time-util.h"
 
+int get_time(struct timespec *now) {
+        if (clock_gettime(CLOCK_REALTIME, now) < 0) {
+                return -errno;
+        }
+        return 0;
+}
+
 uint64_t get_time_micros() {
         struct timespec now;
-        if (clock_gettime(CLOCK_REALTIME, &now) < 0) {
+        if (get_time(&now) < 0) {
                 return 0;
         }
         uint64_t now_micros = now.tv_sec * sec_to_microsec_multiplier +
@@ -26,7 +33,7 @@ int get_time_seconds(time_t *ret_time_seconds) {
         }
 
         struct timespec now;
-        int r = clock_gettime(CLOCK_REALTIME, &now);
+        int r = get_time(&now);
         if (r < 0) {
                 return r;
         }
@@ -44,8 +51,7 @@ double micros_to_millis(uint64_t time_micros) {
 
 char *get_formatted_log_timestamp() {
         struct timespec now;
-        int r = 0;
-        r = clock_gettime(CLOCK_REALTIME, &now);
+        int r = get_time(&now);
         if (r < 0) {
                 return NULL;
         }
@@ -73,4 +79,27 @@ char *get_formatted_log_timestamp_for_timespec(struct timespec time, bool is_gmt
                  offsetbuf);
 
         return timebuf_full;
+}
+
+bool time_lessp(struct timespec a, struct timespec b) {
+        return a.tv_sec < b.tv_sec ||
+                (a.tv_sec == b.tv_sec && a.tv_nsec < b.tv_nsec);
+}
+
+bool time_elapsed_millis(struct timespec start, uint64_t duration, struct timespec now) {
+        uint64_t secs = duration / 1000;
+        uint64_t nsecs = (duration % 1000) * nanos_in_millis;
+
+        /* This never wraps around, as tv_nsec is in [0, 1000000000) */
+        start.tv_nsec += nsecs;
+        secs += start.tv_nsec / nanos_in_second;
+        start.tv_nsec %= nanos_in_second;
+
+        if ((uint64_t) start.tv_sec < (uint64_t) now.tv_sec - secs) {
+		return false;
+	}
+	/* This doesn't overflow, due to the if check above */
+	start.tv_sec += secs;
+
+	return !time_lessp(start, now);
 }
