@@ -4,7 +4,7 @@ repo_url: https://github.com/eclipse-bluechi/bluechi
 repo_name: bluechi
 edit_uri: blob/main/doc/docs/
 
-copyright: © Red Hat
+copyright: Copyright Contributors to the Eclipse BlueChi project
 nav:
   - Home: index.md
   - Architecture: architecture.md
@@ -47,6 +47,16 @@ theme:
   features:
     - content.code.copy
     - navigation.indexes
+  custom_dir: overrides
+
+extra:
+  social:
+    - icon: fontawesome/regular/envelope
+      link: https://accounts.eclipse.org/mailing-list/bluechi-dev
+      name: Developer mailing list
+    - icon: fontawesome/brands/github
+      link: https://github.com/eclipse-bluechi/bluechi
+      name: GitHub
 
 extra_javascript:
   - assets/js/tab-sync.js
