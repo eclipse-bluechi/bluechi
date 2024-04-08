@@ -62,7 +62,7 @@ struct Node {
         LIST_HEAD(ProxyDependency, proxy_dependencies);
 
         struct hashmap *unit_subscriptions;
-        time_t last_seen;
+        struct timespec last_seen;
 
         bool is_shutdown;
 };
