@@ -188,12 +188,12 @@ static void print_info_header(size_t name_col_width) {
         fprintf(stdout, "----------------\n");
 }
 
-#define PRINT_AND_ALIGN(x)                                       \
-        do {                                                     \
-                fprintf(stdout, "| %s\t", unit_info->x);         \
-                if (!unit_info->x || strlen(unit_info->x) < 6) { \
-                        fprintf(stdout, "\t");                   \
-                }                                                \
+#define PRINT_AND_ALIGN(x)                                      \
+        do {                                                    \
+                fprintf(stdout, "| %s\t", unit_info->x);        \
+                if (unit_info->x && strlen(unit_info->x) < 6) { \
+                        fprintf(stdout, "\t");                  \
+                }                                               \
         } while (0)
 
 
@@ -208,9 +208,16 @@ static void print_unit_info(unit_info_t *unit_info, size_t name_col_width) {
         fprintf(stdout, "%s", unit_info->id);
         name_col_width -= unit_info->id ? strlen(unit_info->id) : 0;
         name_col_width += PRINT_TAB_SIZE;
-        for (i = PRINT_TAB_SIZE + name_col_width; i > PRINT_TAB_SIZE; i -= PRINT_TAB_SIZE) {
+        i = name_col_width;
+        while (i >= PRINT_TAB_SIZE) {
                 fprintf(stdout, "\t");
+                i -= PRINT_TAB_SIZE;
         }
+        while (i > PRINT_TAB_SIZE) {
+                fprintf(stdout, " ");
+                i--;
+        }
+
 
         PRINT_AND_ALIGN(load_state);
         PRINT_AND_ALIGN(active_state);
@@ -280,7 +287,7 @@ static int method_status_unit_on(Client *client, char *node_name, char **units, 
                 int r = get_status_unit_on(client, node_name, units[i], max_name_len);
                 if (r < 0) {
                         fprintf(stderr,
-                                "Failed to get status of unit %s on node %s - %s",
+                                "Failed to get status of unit %s on node %s - %s\n",
                                 units[i],
                                 node_name,
                                 strerror(-r));
@@ -651,10 +658,8 @@ int method_status(Command *command, void *userdata) {
         case 1:
                 return method_print_node_status(
                                 userdata, command->opargv[0], command_flag_exists(command, ARG_WATCH_SHORT));
-        case 2:
+        default:
                 return method_status_unit_on(
                                 userdata, command->opargv[0], &command->opargv[1], command->opargc - 1);
-        default:
-                return -EINVAL;
         }
 }
