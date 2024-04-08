@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+
+{% block footer %}
+  <!-- Add original footer content -->
+  {{ super() }}
+  <!-- Add custom footer -->
+  <footer class="md-footer">
+    <div class="md-footer-meta">
+        <div class="md-footer-meta__inner md-grid">
+            <div class="md-copyright">&nbsp;</div>
+            <div class="md-copyright">
+                <a href="https://eclipse.org/" target="_blank" rel="noopener">Eclipse Foundation</a>
+                &nbsp;|&nbsp;
+                <a href="https://eclipse.org/legal/privacy.php" target="_blank" rel="noopener">Privacy Policy</a>
+                &nbsp;|&nbsp;
+                <a href="https://eclipse.org/legal/termsofuse.php" target="_blank" rel="noopener">Terms of Use</a>
+                &nbsp;|&nbsp;
+                <a href="https://eclipse.org/legal/copyright.php" target="_blank" rel="noopener">Copyright Agent</a>
+                &nbsp;|&nbsp;
+                <a href="https://eclipse.org/legal/" target="_blank" rel="noopener">Legal</a>
+                &nbsp;|&nbsp;
+                <a href="https://github.com/eclipse-bluechi/bluechi?tab=LGPL-2.1-1-ov-file#readme" target="_blank" rel="noopener">License</a>
+                &nbsp;|&nbsp;
+                <a href="https://eclipse.org/security/" target="_blank" rel="noopener">Report a Vulnerability</a>
+            </div>
+            <div class="md-copyright">&nbsp;</div>
+        </div>
+    </div>
+  </footer>
+{% endblock %}
