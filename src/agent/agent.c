@@ -1842,12 +1842,6 @@ static int agent_method_switch_controller(sd_bus_message *m, void *userdata, UNU
                 return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "Failed to set CONTROLLER ADDRESS");
         }
 
-        r = sd_bus_emit_properties_changed(
-                        agent->api_bus, BC_AGENT_OBJECT_PATH, AGENT_INTERFACE, "ControllerAddress", NULL);
-        if (r < 0) {
-                bc_log_errorf("Failed to emit controller address property changed: %s", strerror(-r));
-        }
-
         bc_log_infof("CONTROLLER ADDRESS changed to %s", dbus_address);
 
         agent_disconnected(NULL, userdata, NULL);
@@ -2662,13 +2656,23 @@ static bool agent_connect(Agent *agent) {
 }
 
 static bool agent_reconnect(Agent *agent) {
+        _cleanup_free_ char *orch_addr = NULL;
+
         // resolve FQDN again in case the system changed
         // e.g. bluechi controller has been migrated to a different host
         if (agent->orch_addr != NULL) {
-                free_and_null(agent->orch_addr);
+                orch_addr = steal_pointer(&agent->orch_addr);
         }
         if (!ensure_orch_address(agent)) {
                 return false;
+        }
+
+        if (agent->orch_addr && orch_addr && !streq(agent->orch_addr, orch_addr)) {
+                int r = sd_bus_emit_properties_changed(
+                                agent->api_bus, BC_AGENT_OBJECT_PATH, AGENT_INTERFACE, "ControllerAddress", NULL);
+                if (r < 0) {
+                        bc_log_errorf("Failed to emit controller address property changed: %s", strerror(-r));
+                }
         }
 
         return agent_connect(agent);
