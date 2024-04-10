@@ -3,4 +3,4 @@ junit-xml >= 1.9
 pytest >= 7.3.1
 podman >= 4.5.0
 strato-skipper >= 2.0.2
-tmt >= 1.22
+tmt >= 1.32.1

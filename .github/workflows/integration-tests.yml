@@ -72,7 +72,7 @@ jobs:
 
       - name: Install unpackaged python libraries from PyPi
         run: |
-          pip install "tmt[provision]==1.30" "tmt[report-junit]==1.30" podman pytest pyyaml paramiko
+          pip install "tmt[provision]>=1.32.1" "tmt[report-junit]>=1.32.1" podman pytest pyyaml paramiko
 
       - name: Checkout sources
         uses: actions/checkout@v4
