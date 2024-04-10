@@ -41,6 +41,9 @@ nav:
     - Configuration:
       - bluechi-controller.conf(5): man/bluechi-controller-conf.md
       - bluechi-agent.conf(5): man/bluechi-agent-conf.md
+    - SELinux:
+      - bluechi-controller.selinux(8): man/bluechi-controller-selinux.md
+      - bluechi-agent.selinux(8): man/bluechi-agent-selinux.md
 
 theme:
   name: material

@@ -22,8 +22,13 @@ man5 = [
     'bluechi-agent.conf',
 ]
 
+man8 = [
+    'bluechi-controller.selinux',
+    'bluechi-agent.selinux'
+]
+
 if want_man
-  foreach pair : [[man1, '1'], [man5, '5']]
+  foreach pair : [[man1, '1'], [man5, '5'], [man8, '8']]
     pages = pair[0]
     section = pair[1]
 
