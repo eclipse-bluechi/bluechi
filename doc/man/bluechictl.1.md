@@ -10,7 +10,7 @@ bluechictl - Simple command line tool to interact with the public D-Bus API of b
 
 ## DESCRIPTION
 
-A simple command line tool that uses the public D-Bus API provided by `bluechi` to manage services on all connected `bluechi-agents` and retrieve information from them.
+A simple command line tool that uses the public D-Bus API provided by Eclipse BlueChi™ to manage services on all connected `bluechi-agents` and retrieve information from them.
 
 **bluechictl [OPTIONS]**
 
