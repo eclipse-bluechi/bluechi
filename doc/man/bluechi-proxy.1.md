@@ -10,7 +10,7 @@ bluechi-proxy - Proxy requesting services on other agents
 
 ## DESCRIPTION
 
-BlueChi is a service orchestrator tool intended for multi-node devices
+Eclipse BlueChi™ is a service orchestrator tool intended for multi-node devices
 (e.g.: edge devices) clusters with a predefined number of nodes and
 with a focus on highly regulated environment such as those requiring
 functional safety (for example in cars).

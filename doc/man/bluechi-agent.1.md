@@ -10,7 +10,7 @@ bluechi-agent - Agent managing services on the local machine
 
 ## DESCRIPTION
 
-BlueChi is a systemd service controller intended for multi-node environment with a predefined number of nodes and with a focus on highly regulated environment such as those requiring functional safety (for example in cars).
+Eclipse BlueChi™ is a systemd service controller intended for multi-node environment with a predefined number of nodes and with a focus on highly regulated environment such as those requiring functional safety (for example in cars).
 
 A `bluechi-agent` establishes a peer-to-peer connection to `bluechi` and exposes its API to manage systemd units on it.
 
