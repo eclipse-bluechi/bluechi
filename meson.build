@@ -42,6 +42,11 @@ if with_coverage
     '-fprofile-dir=' + join_paths(get_option('prefix'), get_option('localstatedir'), 'tmp', 'bluechi-coverage'),
     language : 'c')
   add_project_link_arguments('-lgcov', language : 'c')
+
+  # Compiler should not perform any optimization when code coverage is reported, but meson RPM support sets -O2
+  # into CFLAGS, so we need to override here
+  common_cflags += '-Og'
+
   # Coverage source code mapping files `*.gcno` are created as a part of the build for each `*.c` file, but it's
   # very hard to tell meson to install files, which are created as a side effect from the build, so it's easier
   # to use custom install script
