@@ -71,21 +71,23 @@ systemctl --user start podman.socket
 
 Integration tests are executed with [tmt framework](https://github.com/teemtee/tmt).
 
-To run integration tests please execute below command of the top level directory of this project:
+To run integration tests please execute below command in the [tests](./) directory:
 
 ```shell
-tmt run -v
+tmt run -v plan --name container
 ```
 
 This will use latest BlueChi packages from
 [bluechi-snapshot](https://copr.fedorainfracloud.org/coprs/g/centos-automotive-sig/bluechi-snapshot/) repository.
+
+**Note:** The integration tests can be run in two modes - container and multi-host. For local execution it is advised to select `container` mode (hence the `plan --name container`).
 
 ## Running integration tests with memory leak detection
 
 To run integration tests with `valgrind`, set `WITH_VALGRIND` environment variable as follows:
 
 ```shell
-tmt run -v -eWITH_VALGRIND=1
+tmt run -v -eWITH_VALGRIND=1 plan --name container
 ```
 
 If `valgrind` detects a memory leak in a test, the test will fail, and the logs will be found in the test `data` directory.
@@ -122,7 +124,7 @@ After that step integration tests can be executed using following command:
 
 ```shell
 cd ~/bluechi/tests
-tmt run -v -eCONTAINER_USED=integration-test-local
+tmt run -v -eCONTAINER_USED=integration-test-local plan --name container
 ```
 
 ## Creating code coverage report from integration tests execution
@@ -139,7 +141,7 @@ createrepo_c ~/bluechi/tests/bluechi-rpms
 When done, you need to run integration tests with code coverage report enabled:
 
 ```shell
-tmt run -v -eCONTAINER_USED=integration-test-local -eWITH_COVERAGE=1
+tmt run -v -eCONTAINER_USED=integration-test-local -eWITH_COVERAGE=1 plan --name container
 ```
 
 After the integration tests finishes, the code coverage html result can be found in `res` subdirectory inside the tmt
@@ -173,7 +175,7 @@ More detailed information can be displayed by setting log level to `DEBUG`:
 
 ```shell
 cd ~/bluechi/tests
-tmt run -v -eLOG_LEVEL=DEBUG
+tmt run -v -eLOG_LEVEL=DEBUG plan --name container
 ```
 
 ### Using python bindings in tests

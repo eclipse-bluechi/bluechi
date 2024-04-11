@@ -94,7 +94,11 @@ jobs:
       - name: Run integration tests
         run: |
           cd tests
-          tmt run -v -eCONTAINER_USED=integration-test-local -eWITH_COVERAGE=1 -eLOG_LEVEL=DEBUG
+          tmt run -v \
+            -eCONTAINER_USED=integration-test-local \
+            -eWITH_COVERAGE=1 \
+            -eLOG_LEVEL=DEBUG \
+            plan --name container
 
       - name: Show tmt log output in case of failure
         if: ${{ failure() }}
@@ -106,8 +110,8 @@ jobs:
       - name: Extract coverage results
         if: always()
         run: |
-          MERGE_FILE="/var/tmp/tmt/run-001/plans/tier0/report/default-0/merged.info"
-          COVERAGE_DIR="/var/tmp/tmt/run-001/plans/tier0/report/default-0/report/"
+          MERGE_FILE="/var/tmp/tmt/run-001/plans/container/report/default-0/merged.info"
+          COVERAGE_DIR="/var/tmp/tmt/run-001/plans/container/report/default-0/report/"
           if [ -d "$COVERAGE_DIR" ]; then
             cp -r $COVERAGE_DIR /var/tmp
             cp $MERGE_FILE /var/tmp
