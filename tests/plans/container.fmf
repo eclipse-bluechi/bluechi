@@ -1,4 +1,4 @@
-summary: Tier 0 - Basic functionality tests
+summary: Running Integration Tests with containers
 discover:
     how: fmf
     filter: tier:0

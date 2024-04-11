@@ -1,0 +1,62 @@
+name: Integration tests in multi-host mode
+
+on:
+  workflow_dispatch:
+    inputs:
+      composes:
+        description: Name of the OS image to use
+        required: true
+        type: choice
+        # based on:
+        # https://api.dev.testing-farm.io/v0.1/composes
+        options:
+        - Fedora-37
+        - Fedora-37-aarch64
+        - Fedora-38
+        - Fedora-38-aarch64
+        - Fedora-39
+        - Fedora-40
+        - Fedora-40-aarch64
+        - Fedora-latest
+        - Fedora-latest-aarch64
+        - Fedora-Rawhide
+        - Fedora-Rawhide-aarch64
+        - CentOS-7
+        - CentOS-7-aarch64
+        - CentOS-Stream-8
+        - CentOS-Stream-8-aarch64
+        - CentOS-Stream-9
+        - CentOS-Stream-9-aarch64
+        - CentOS-Stream-10
+
+jobs:
+
+  ghrelease:
+    name: Run Integration Tests on testing farm in multihost mode
+    runs-on: ubuntu-latest
+    container:
+      image: quay.io/bluechi/build-base:latest
+
+    steps:
+      - name: Checkout sources
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          submodules: 'true'
+
+      - name: Install testing farm CLI
+        run: |
+          python3 -m ensurepip --default-pip
+          python3 -m pip install --upgrade pip
+          python3 -m pip install tft-cli
+
+      - name: Start Integration Tests on testing farm
+        run: |
+          testing-farm version
+          TESTING_FARM_API_TOKEN=${{ secrets.TESTING_FARM_API_TOKEN }} testing-farm request \
+            --path tests \
+            --git-ref main \
+            --git-url https://github.com/eclipse-bluechi/bluechi.git \
+            --compose ${{ inputs.composes }} \
+            --plan multihost \
+            --pipeline-type tmt-multihost

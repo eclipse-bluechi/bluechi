@@ -1,0 +1,44 @@
+summary: Running Integration Tests with multiple hosts
+provision:
+    - name: test-executor
+      role: executor
+    - name: bluechi-controller
+      role: controller
+    - name: bluechi-agent-1
+      role: agent
+    - name: bluechi-agent-2
+      role: agent
+environment:
+    BLUECHI_CTRL_SVC_PORT: 8420
+    
+    INSTALL_EXECUTOR_DEPS: yes
+    INSTALL_WORKER_DEPS: yes
+
+    SETUP_SSH: yes
+    SSH_USER: root
+    SSH_PASSWORD: root
+
+    LOG_LEVEL: DEBUG
+    WITH_COVERAGE: 0
+    WITH_VALGRIND: 0
+discover:
+    how: fmf
+    filter: tag:multihost
+    where: executor
+prepare:
+    - name: Prepare executor setup
+      how: shell
+      script: |
+          ./scripts/tests-setup.sh setup_multihost_test setup_executor
+      where: executor
+    - name: Prepare worker setup
+      how: shell
+      script: |
+          ./scripts/tests-setup.sh setup_multihost_test setup_worker
+      where: 
+        - controller
+        - agent
+execute:
+    how: tmt
+report:
+    how: junit
