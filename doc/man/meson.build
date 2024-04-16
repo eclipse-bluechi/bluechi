@@ -23,8 +23,8 @@ man5 = [
 ]
 
 man8 = [
-    'bluechi-controller.selinux',
-    'bluechi-agent.selinux'
+    'bluechi-controller-selinux',
+    'bluechi-agent-selinux'
 ]
 
 if want_man
