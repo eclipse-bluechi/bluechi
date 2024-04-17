@@ -55,7 +55,7 @@ jobs:
           testing-farm version
           TESTING_FARM_API_TOKEN=${{ secrets.TESTING_FARM_API_TOKEN }} testing-farm request \
             --path tests \
-            --git-ref main \
+            --git-ref ${{ github.ref_name }} \
             --git-url https://github.com/eclipse-bluechi/bluechi.git \
             --compose ${{ inputs.composes }} \
             --plan multihost \
