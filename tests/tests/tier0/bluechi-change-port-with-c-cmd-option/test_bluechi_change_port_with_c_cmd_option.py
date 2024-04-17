@@ -42,7 +42,7 @@ def cmd_on_port(
 
 def exec(ctrl: BluechiControllerMachine, nodes: Dict[str, BluechiAgentMachine]):
     node_foo = nodes[NODE_FOO]
-    config_file_location = "/var/tmp"
+    config_file_location = "/etc"
 
     # Copy the script to get the process listening on a port
     ctrl.copy_container_script("cmd-on-port.sh")

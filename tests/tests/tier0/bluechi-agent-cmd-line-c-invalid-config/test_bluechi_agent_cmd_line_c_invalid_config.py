@@ -21,7 +21,7 @@ failed_status = "failed"
 
 def exec(ctrl: BluechiControllerMachine, nodes: Dict[str, BluechiAgentMachine]):
     node_foo = nodes[NODE_FOO]
-    config_file_location = "/tmp"
+    config_file_location = "/etc"
     invalid_conf_str = "invalid.conf"
 
     # Copying relevant config files into node container

@@ -19,7 +19,7 @@ failed_status = "failed"
 
 
 def exec(ctrl: BluechiControllerMachine, nodes: Dict[str, BluechiAgentMachine]):
-    config_file_location = "/var/tmp"
+    config_file_location = "/etc"
     invalid_conf_str = "config-files/invalid.conf"
 
     # Copying relevant config files into the container

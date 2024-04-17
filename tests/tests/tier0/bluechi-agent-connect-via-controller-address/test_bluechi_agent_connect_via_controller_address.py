@@ -17,7 +17,7 @@ NODE_FOO = "node-FOO"
 
 def exec(ctrl: BluechiControllerMachine, nodes: Dict[str, BluechiAgentMachine]):
     node_foo = nodes[NODE_FOO]
-    config_file_location = "/tmp"
+    config_file_location = "/etc"
     bluechi_agent_str = "bluechi-agent.service"
     invalid_conf_str = "Invalid-ControllerAddress.conf"
     invalid_controller_address = "Invalid-ControllerAddress.conf"

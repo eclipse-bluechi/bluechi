@@ -16,7 +16,7 @@ NODE_FOO = "node-foo"
 def exec(ctrl: BluechiControllerMachine, nodes: Dict[str, BluechiAgentMachine]):
 
     # pass port information to machine
-    ctrl.create_file(os.path.join("/", "tmp"), "port", ctrl.config.port)
+    ctrl.create_file(os.path.join("/", "etc"), "port", ctrl.config.port)
 
     result, output = ctrl.run_python(os.path.join("python", "call_internal_hello.py"))
     if result != 0:
