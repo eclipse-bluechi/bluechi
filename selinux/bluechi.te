@@ -25,6 +25,9 @@ corenet_port(bluechi_port_t)
 type bluechi_agent_port_t;
 corenet_port(bluechi_agent_port_t)
 
+permissive bluechi_t;
+permissive bluechi_agent_t;
+
 
 ########################################
 #
