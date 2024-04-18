@@ -110,7 +110,8 @@ function setup_container_test(){
         -t $BLUECHI_IMAGE_NAME \
         .
     if [[ $? -ne 0 ]]; then
-        exit 1
+        echo "podman build failed"
+        exit 123
     fi
 
     if [ "$(systemctl --user is-active podman.socket)" != "active" ]; then

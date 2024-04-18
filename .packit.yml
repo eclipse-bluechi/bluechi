@@ -53,7 +53,10 @@ jobs:
     targets:
       # Run integration tests on Fedora using CS9 containers, because running integrations tests on CS9 using CS9
       # containers is very flaky
-      - fedora-rawhide-x86_64
+      # 
+      # This can be set to fedora-rawhide as soon as the following issue gets resolved:
+      # https://github.com/containers/podman/issues/22422
+      - fedora-latest-stable-x86_64
 
   - job: tests
     trigger: pull_request
@@ -68,7 +71,10 @@ jobs:
     targets:
       # Run integration tests on Fedora using CS9 containers, because running integrations tests on CS9 using CS9
       # containers is very flaky
-      - fedora-rawhide-x86_64
+      # 
+      # This can be set to fedora-rawhide as soon as the following issue gets resolved:
+      # https://github.com/containers/podman/issues/22422
+      - fedora-latest-stable-x86_64
 
   - job: copr_build
     trigger: commit
