@@ -179,7 +179,10 @@ class SSHClient(Client):
             LOGGER.debug(
                 f"Executed command '{command}' with result '{result}' and output '{output}' and error '{err}'"
             )
-            return result, output
+
+            # concatenate stderr and stdout so exec_run of SSHClient
+            # outputs the same content as ContainerClient
+            return result, err + output
         finally:
             if stdin is not None:
                 stdin.close()
