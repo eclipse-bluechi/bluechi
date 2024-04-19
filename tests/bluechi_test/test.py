@@ -443,14 +443,14 @@ class BluechiSSHTest(BluechiTest):
             machine.systemctl.stop_unit(service, check_result=False)
             machine.systemctl.reset_failed_for_unit(service, check_result=False)
 
-        LOGGER.info("Removing created files...")
-        cmd_rm_created_files = "rm " + " ".join(machine.created_files)
-        machine.client.exec_run(cmd_rm_created_files)
-
         LOGGER.info("Restoring changed files...")
         for changed_file in machine.changed_files:
             backup_file = changed_file + BluechiMachine.backup_file_suffix
             machine.client.exec_run(f"mv {backup_file} {changed_file}")
+
+        LOGGER.info("Removing created files...")
+        cmd_rm_created_files = "rm " + " ".join(machine.created_files)
+        machine.client.exec_run(cmd_rm_created_files)
 
         # ensure changed systemd services are reloaded
         machine.systemctl.daemon_reload()
