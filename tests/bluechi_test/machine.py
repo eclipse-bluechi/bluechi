@@ -171,16 +171,20 @@ class BluechiMachine:
             # This message is relevant for `finish` phase, where code coverage report is being created
             LOGGER.info("bluechilib directory not found, proceeding")
             return
-        ret, _ = self.exec_run("mkdir /tmp/bluechi_machine_lib")
-        if ret == 0:
-            # If the directory was successfully created, then fill it with files
-            # If not - it must already exist
+
+        machine_lib_dir = "/tmp/bluechi_machine_lib"
+        _, output = self.client.exec_run(f"[ -d {machine_lib_dir} ] && echo 'exists'")
+        if output != "exists":
+            self.exec_run(f"mkdir {machine_lib_dir}")
             for filename in os.listdir(source_dir):
                 source_path = os.path.join(source_dir, filename)
                 if os.path.isfile(source_path) and source_path.endswith(".py"):
                     content = read_file(source_path)
-                    target_dir = os.path.join("/", "tmp", "bluechi_machine_lib")
-                    self.create_file(target_dir, filename, content)
+                    target_dir = os.path.join("/", "tmp", machine_lib_dir)
+
+                    # Use client directly to bypass the tracking mechanism
+                    # We don't want to clean up the bluechi_machine_lib files once created
+                    self.client.create_file(target_dir, filename, content)
 
     def wait_for_bluechi_agent(self):
         should_wait = True
