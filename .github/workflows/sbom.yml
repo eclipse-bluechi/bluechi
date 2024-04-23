@@ -1,0 +1,75 @@
+name: Software Bill of Materials
+
+on:
+  workflow_dispatch:
+
+jobs:
+  sbom:
+    runs-on: ubuntu-latest
+    container:
+      image: quay.io/bluechi/build-base:latest
+    env:
+      ARTIFACTS_DIR: /tmp/bluechi-artifacts
+
+    steps:
+      - name: Checkout sources
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          submodules: 'true'
+          ref: ${{ github.ref_name }}
+
+      - name: Mark source directory as safe
+        run: |
+          git config --global --add safe.directory $(pwd)
+
+      - name: Perform build
+        run: |
+          ./build-scripts/build-rpm.sh $ARTIFACTS_DIR
+
+      - name: Create DNF repository
+        run: |
+          createrepo_c $ARTIFACTS_DIR
+      
+      - name: Install RPMs and dependencies
+        run: |
+          dnf install python3-dasbus -y
+          dnf install --repo bluechi-rpms \
+            --repofrompath bluechi-rpms,file://$ARTIFACTS_DIR \
+            --nogpgcheck \
+            --nodocs \
+            bluechi-controller \
+            bluechi-agent \
+            bluechi-ctl \
+            bluechi-selinux \
+            python3-bluechi \
+            -y
+      
+      - name: Install SBOM4RPMs
+        run: | 
+          python3 -m ensurepip --default-pip
+          python3 -m pip install sbom4rpms
+      
+      - name: Run SBOM analysis
+        run: |
+          mkdir -p /tmp/sboms/
+          
+          sbom4rpms \
+            --rpm-dir=$ARTIFACTS_DIR \
+            --sbom-dir=/tmp/bluechi-sboms \
+            --git-dir=./ \
+            --sbom-format=spdx \
+            --collect-dependencies
+
+          sbom4rpms \
+            --rpm-dir=$ARTIFACTS_DIR \
+            --sbom-dir=/tmp/bluechi-sboms \
+            --sbom-format=cyclonedx
+      
+      - name: Upload SBOMs
+        uses: actions/upload-artifact@v4
+        with:
+          name: bluechi-sboms
+          path: /tmp/bluechi-sboms
+          
+
