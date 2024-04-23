@@ -66,3 +66,11 @@ Here is the example of the post release commit for version
 
 **WARNING:** There should not be merged any commits to the project between the release commit and the post release
 commit to make things clear.
+
+### Creating the Software Bill of Materials (SBOM)
+
+After the new release has been created, the [GitHub workflow for generating BlueChi's SBOMs](./.github/workflows/sbom.yml)
+can be started manually (by project collaborators) for the recent tag created. It uses [sbom4rpms](https://github.com/engelmi/sbom4rpm)
+and will build as well as analyze BlueChi's runtime dependencies declared in the RPM packages recursively. The
+generated SBOMs are being attached to the Action run.
+The .zip containing the SBOMs can be downloaded and attached to the assets of the respective BlueChi release.
