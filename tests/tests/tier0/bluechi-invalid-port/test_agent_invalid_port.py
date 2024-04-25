@@ -15,7 +15,6 @@ def exec(ctrl: BluechiControllerMachine, _: Dict[str, BluechiAgentMachine]):
     assert ctrl.wait_for_unit_state_to_be("bluechi-controller", "active")
 
     original_cfg = ctrl.config.deep_copy()
-    original_cfg.file_name = "zzz-ctrl.conf"
 
     # port contains an 'O' instead of a '0'
     new_cfg = original_cfg.deep_copy()
