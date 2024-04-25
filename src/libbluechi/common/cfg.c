@@ -232,10 +232,7 @@ int cfg_load_from_file(struct config *config, const char *config_file) {
 }
 
 int is_file_name_ending_with_conf(const struct dirent *entry) {
-        if (strstr(entry->d_name, ".conf") != NULL) {
-                return true;
-        }
-        return false;
+        return ends_with(entry->d_name, ".conf");
 }
 
 int cfg_load_from_dir(struct config *config, const char *custom_config_directory) {
