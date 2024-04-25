@@ -41,6 +41,8 @@ class Option(enum.Enum):
     ExecStartPre = "ExecStartPre"
     RemainAfterExit = "RemainAfterExit"
     Type = "Type"
+    User = "User"
+    Group = "Group"
 
     # Available options for Install section can be found at
     # https://www.freedesktop.org/software/systemd/man/latest/systemd.unit.html#%5BInstall%5D%20Section%20Options

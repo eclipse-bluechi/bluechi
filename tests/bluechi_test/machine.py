@@ -219,7 +219,7 @@ class BluechiMachine:
         self.systemctl.daemon_reload()
 
     def run_python(
-        self, python_script_path: str
+        self, python_script_path: str, as_user: str = None
     ) -> Tuple[Optional[int], Union[Iterator[bytes], Any, Tuple[bytes, bytes]]]:
 
         target_file_dir = os.path.join("/", "tmp")
@@ -231,8 +231,15 @@ class BluechiMachine:
         self.client.create_file(target_file_dir, target_file_name, content)
 
         target_file_path = os.path.join(target_file_dir, target_file_name)
-        LOGGER.debug(f"Executing python script '{target_file_path}'")
-        result, output = self.client.exec_run(f"python3 {target_file_path}")
+        cmd = f"python3 {target_file_path}"
+        if as_user:
+            cmd = f"runuser -l {as_user} -c '{cmd}'"
+        LOGGER.debug(
+            f"Executing python script '{target_file_path}'" + f" as user {as_user}"
+            if as_user
+            else ""
+        )
+        result, output = self.client.exec_run(cmd)
         LOGGER.debug(
             f"Execute python script '{target_file_path}' finished with result '{result}' \
             and output:\n{output}"
@@ -300,6 +307,7 @@ class BluechiAgentMachine(BluechiMachine):
         self.create_file(
             self.config.get_confd_dir(), self.config.file_name, self.config.serialize()
         )
+        self.copy_machine_lib()
 
 
 class BluechiControllerMachine(BluechiMachine):
