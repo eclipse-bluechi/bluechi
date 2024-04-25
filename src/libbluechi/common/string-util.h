@@ -80,3 +80,16 @@ static inline bool match_glob(const char *str, const char *glob) {
 static inline bool isempty(const char *a) {
         return !a || a[0] == '\0';
 }
+
+static inline bool ends_with(const char *str, const char *suffix) {
+        if (str == NULL || suffix == NULL) {
+                return false;
+        }
+
+        size_t str_length = strlen(str);
+        size_t suffix_length = strlen(suffix);
+        if (str_length < suffix_length) {
+                return false;
+        }
+        return strncmp(str + str_length - suffix_length, suffix, suffix_length) == 0;
+}
