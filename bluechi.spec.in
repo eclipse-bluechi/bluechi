@@ -289,6 +289,31 @@ build-scripts/generate-unit-tests-code-coverage.sh %{_vpath_builddir} %{buildroo
 
 
 %changelog
+* Mon Apr 29 2024 Michael Engel <mengel@redhat.com> - 0.8.0-1
+- Breaking change: Removed obsolete API method Ping
+- Fixed .conf suffix check for conf.d files
+- Fixed memory leak in bluechictl
+- Fixed memory leaks in bluechi-agent
+- Fixed bluechictl when fetching status of multiple services
+- Fixed segfault when calling set-loglevel API with invalid loglevel
+- Fix memory deallocation issue in node_method_set_log_level()
+- Cleanup controller when start fails to prevent memory leaks
+- Added watch option to bluechictl status
+- Changed output of bluechictl status from stderr to stdout
+- Implemented D-Bus API for cancelling a Job
+- Added IP to of registered nodes as D-Bus property and to the ListUnits API
+- Added D-Bus properties for LogLevel and LogTarget of bluechi-controller and bluechi-agent
+- Added D-Bus on bluechi-agent to switch the bluechi-controller
+- Refactored functions for loading the configuration
+- Improved the output of bluechictl list-units
+- Improved the formatted output of the dumped config of bluechi-controller and bluechi-agent on startup
+- bluechictl monitor flushes stdout for each iteration
+- Replaced the function for the D-Bus property of the node name by offsetof
+- Removed unused code bluechi-controller and libbluechi
+- BlueChi's SELinux policy has been extended by a tunable policy to dis-/allow any port
+- BlueChi's python bindings are now formatted and ordered via unified tooling
+- Updated the python bindings for BlueChi's D-Bus API
+
 * Wed Jan 17 2024 Michael Engel <mengel@redhat.com> - 0.7.0-1
 - Breaking change: Completed renaming of manager to controller in configuration, API, etc.
 - Breaking change: Removed D-Bus method Shutdown from controller and agent
