@@ -23,10 +23,16 @@ function long(){
 
 function release(){
     # Package release
-    if [ $IS_RELEASE == "0" ]; then
-        RELEASE="0.$(date +%04Y%02m%02d%02H%02M).git$(git rev-parse --short ${GITHUB_SHA:-HEAD})"
+    if [ -f "${RELEASE_FILE}" ]; then
+        # Read existing release from release file to keep the same release during the whole build
+        RELEASE="$(cat ${RELEASE_FILE})"
+    else
+        # Release file doesn't exist, populate it with a release
+        if [ $IS_RELEASE == "0" ]; then
+            RELEASE="0.$(date +%04Y%02m%02d%02H%02M).git$(git rev-parse --short ${GITHUB_SHA:-HEAD})"
+        fi
+        echo ${RELEASE} > ${RELEASE_FILE}
     fi
-    echo ${RELEASE} > ${RELEASE_FILE}
     echo $RELEASE
 }
 
