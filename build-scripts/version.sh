@@ -7,7 +7,7 @@
 # Current version of BlueChi
 VERSION=0.8.0
 # Specify if build is a official release or a snapshot build
-IS_RELEASE=false
+IS_RELEASE="0"
 # Used for official releases. Increment if necessary
 RELEASE="1"
 # Used to cache generated snapshot release for further usage
@@ -23,16 +23,10 @@ function long(){
 
 function release(){
     # Package release
-
-    if [ $IS_RELEASE = false ]; then
-        # Used for nightly builds
-        if [ -f "${RELEASE_FILE}" ]; then
-            RELEASE="$(cat ${RELEASE_FILE})"
-        else
-            RELEASE="0.$(date +%04Y%02m%02d%02H%02M).git$(git rev-parse --short ${GITHUB_SHA:-HEAD})"
-            echo ${RELEASE} > ${RELEASE_FILE}
-        fi
+    if [ $IS_RELEASE == "0" ]; then
+        RELEASE="0.$(date +%04Y%02m%02d%02H%02M).git$(git rev-parse --short ${GITHUB_SHA:-HEAD})"
     fi
+    echo ${RELEASE} > ${RELEASE_FILE}
     echo $RELEASE
 }
 
