@@ -1,3 +1,3 @@
 summary: Test if bluechi agent can handle different types of values for LogLevel in the configuration
 id: f3dda8c1-ceb7-446c-9d65-2aa8ca798099
-tag: []
+tag: [testing-farm-container]
