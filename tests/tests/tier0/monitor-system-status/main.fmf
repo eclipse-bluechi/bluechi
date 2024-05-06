@@ -1,4 +1,4 @@
 summary: Test if the system status changed signal is being emitted when nodes disconnect
     and reconnect
 id: 96615a39-229f-4083-8c7d-cb0c540ca598
-tag: []
+tag: [testing-farm-container]
