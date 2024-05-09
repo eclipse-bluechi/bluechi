@@ -16,7 +16,7 @@ interface = "org.eclipse.bluechi.Agent"
 class TestAgentStartAsUser(unittest.TestCase):
 
     def test_agent_start_as_user(self):
-        result, _, _ = run_command("systemctl --user start bluechi-agent")
+        result, output, _ = run_command("systemctl --user start bluechi-agent")
         assert result == 0
 
         with Timeout(5, "Timeout waiting for agent to connect to user bus"):
