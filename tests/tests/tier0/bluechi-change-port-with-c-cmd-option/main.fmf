@@ -1,3 +1,3 @@
-summary: "Test if bluechi agent/controller accepts changing port using a custom 
-configuration file passed by command line option -c."
-id: 5645dcdf-acaa-4a04-8c0d-d478c8a6f2a3
+summary: Test if bluechi agent/controller accepts changing port using a custom configuration
+    file passed by command line option -c.
+id: c7b861a7-5b2f-4627-b450-9b7c8b9552af
