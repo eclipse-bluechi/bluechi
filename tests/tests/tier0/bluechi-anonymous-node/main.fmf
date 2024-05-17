@@ -1,2 +1,2 @@
-summary: Test if a monitor can be created and closed successfully
+summary: Test if a node with name not in the allowed list is rejected and can not connect
 id: 254b1fa2-7c9f-481c-85ac-c6e42c0226c8
