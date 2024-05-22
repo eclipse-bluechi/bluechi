@@ -540,14 +540,14 @@ static void print_nodes(Nodes *nodes, bool clear_screen) {
         }
 
         /* print monitor header */
-        printf("%-30.30s| %-10.10s| %-15.15s| %-28.28s\n", "NODE", "STATE", "IP", "LAST SEEN");
+        printf("%-30.30s| %-10.10s| %-24.24s| %-28.28s\n", "NODE", "STATE", "IP", "LAST SEEN");
         printf("==========================================================================================\n");
 
         Node *curr = NULL;
         Node *next = NULL;
         LIST_FOREACH_SAFE(nodes, curr, next, nodes->nodes) {
                 _cleanup_free_ char *last_seen = node_connection_fmt_last_seen(curr->connection);
-                printf("%-30.30s| %-10.10s| %-15.15s| %-28.28s\n",
+                printf("%-30.30s| %-10.10s| %-24.24s| %-28.28s\n",
                        curr->connection->name,
                        curr->connection->state,
                        curr->connection->ip,
