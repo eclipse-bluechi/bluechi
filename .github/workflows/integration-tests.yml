@@ -147,8 +147,12 @@ jobs:
 
       - name: Report to Coveralls
         if: always()
-        uses: coverallsapp/github-action@v2
+        uses: coverallsapp/github-action@v2.3.0
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           file: '/var/tmp/coveralls.info'
           format: lcov
+          # Pin the version of the coverage reporter as suggested in
+          # https://github.com/coverallsapp/github-action/issues/205#issuecomment-2113945931
+          # TODO: Remove when the coverage reporter issue is resolved
+          coverage-reporter-version: v0.6.9
