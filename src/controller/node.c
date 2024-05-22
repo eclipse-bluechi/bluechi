@@ -645,7 +645,7 @@ bool node_set_agent_bus(Node *node, sd_bus *bus) {
         // If getting peer IP fails, only log and proceed as normal.
         _cleanup_free_ char *peer_ip = NULL;
         uint16_t peer_port = 0;
-        r = get_peer_address(node->agent_bus, false, &peer_ip, &peer_port);
+        r = get_peer_address(node->agent_bus, &peer_ip, &peer_port);
         if (r < 0) {
                 bc_log_errorf("Failed to get peer IP: %s", strerror(-r));
         } else {
