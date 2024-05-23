@@ -34,22 +34,8 @@ jobs:
   ghrelease:
     name: Run Integration Tests on testing farm in multihost mode
     runs-on: ubuntu-latest
-    container:
-      image: quay.io/bluechi/build-base:latest
 
     steps:
-      - name: Checkout sources
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-          submodules: 'true'
-
-      - name: Install testing farm CLI
-        run: |
-          python3 -m ensurepip --default-pip
-          python3 -m pip install --upgrade pip
-          python3 -m pip install tft-cli
-
       - name: Start Integration Tests on testing farm
         uses: sclorg/testing-farm-as-github-action@v2.2.0
         with:
