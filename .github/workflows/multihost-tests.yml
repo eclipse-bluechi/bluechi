@@ -59,4 +59,4 @@ jobs:
           tmt_path: tests
           tmt_plan_regex: multihost
           compose: ${{ inputs.composes }}
-          pipeline_settings: {"type": "tmt-multihost"}
+          pipeline_settings: '{"type": "tmt-multihost"}'
