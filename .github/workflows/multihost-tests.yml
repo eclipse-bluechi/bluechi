@@ -51,12 +51,12 @@ jobs:
           python3 -m pip install tft-cli
 
       - name: Start Integration Tests on testing farm
-        run: |
-          testing-farm version
-          TESTING_FARM_API_TOKEN=${{ secrets.TESTING_FARM_API_TOKEN }} testing-farm request \
-            --path tests \
-            --git-ref ${{ github.ref_name }} \
-            --git-url https://github.com/eclipse-bluechi/bluechi.git \
-            --compose ${{ inputs.composes }} \
-            --plan multihost \
-            --pipeline-type tmt-multihost
+        uses: sclorg/testing-farm-as-github-action@v2.2.0
+        with:
+          api_key: ${{ secrets.TESTING_FARM_API_TOKEN }}
+          git_url: https://github.com/eclipse-bluechi/bluechi.git
+          git_ref: ${{ github.ref_name }}
+          tmt_path: tests
+          tmt_plan_regex: multihost
+          compose: ${{ inputs.composes }}
+          pipeline_settings: {"type": "tmt-multihost"}
