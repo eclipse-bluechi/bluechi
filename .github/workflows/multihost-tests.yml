@@ -42,6 +42,7 @@ jobs:
           api_key: ${{ secrets.TESTING_FARM_API_TOKEN }}
           git_url: https://github.com/eclipse-bluechi/bluechi.git
           git_ref: ${{ github.ref_name }}
+          tf_scope: private
           tmt_path: tests
           tmt_plan_regex: multihost
           compose: ${{ inputs.composes }}
