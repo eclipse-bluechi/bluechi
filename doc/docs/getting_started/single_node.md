@@ -41,7 +41,7 @@ AllowedNodeNames=<hostname>
 
 $ cat /etc/bluechi/agent.conf.d/1.conf
 
-[bluechi-controller]
+[bluechi-agent]
 ControllerPort=2020
 ```
 
