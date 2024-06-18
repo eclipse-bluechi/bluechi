@@ -66,4 +66,4 @@ For more information, please see the [Eclipse Committer Handbook](https://www.ec
 If you need help, please join the following mailing lists:
 
 - [Eclipse BlueChi development](https://accounts.eclipse.org/mailing-list/bluechi-dev)
-- [CentOS Automotive SIG](https://lists.centos.org/mailman/listinfo/centos-automotive-sig/)
+- [CentOS Automotive SIG](https://lists.centos.org/postorius/lists/automotive-sig.lists.centos.org/)
