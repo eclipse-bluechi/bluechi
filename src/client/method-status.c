@@ -488,8 +488,8 @@ static char *node_connection_fmt_last_seen(NodeConnection *con) {
         }
 
         struct timespec t;
-        t.tv_sec = (time_t) con->last_seen;
-        t.tv_nsec = 0;
+        t.tv_sec = (time_t) con->last_seen / USEC_PER_SEC;
+        t.tv_nsec = (long) (con->last_seen % USEC_PER_SEC) * NSEC_PER_USEC;
         return get_formatted_log_timestamp_for_timespec(t, false);
 }
 

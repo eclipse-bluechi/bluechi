@@ -27,6 +27,14 @@ A comma separated list of unique bluechi-agent names. It's mandatory to set the 
 in the list can connect to `bluechi-controller'. These names are defined in the agent's configuration file under `NodeName`
 option (see `bluechi-agent.conf(5)`).
 
+#### **HeartbeatInterval** (long)
+
+The interval to periodically check node's connectivity based on heartbeat signals sent to bluechi, in milliseconds. A value of 0 disables it.
+
+#### **NodeHeartbeatThreshold** (long)
+
+The threshold in milliseconds to determine whether a node is disconnected. If the node's last heartbeat signal was received before this threshold, bluechi assumes that the node is down or the connection was cut off and performs a disconnect.
+
 #### **LogLevel** (string)
 
 The level used for logging. Supported values are:

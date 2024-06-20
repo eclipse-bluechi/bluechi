@@ -10,6 +10,7 @@
 /* Time constants */
 #define USEC_PER_SEC 1000000
 #define USEC_PER_MSEC 1000
+#define NSEC_PER_USEC 1000
 
 /* Configuration defaults */
 #define BC_DEFAULT_PORT "842"
@@ -26,6 +27,8 @@
 #define BC_DEFAULT_DBUS_TIMEOUT ((uint64_t) (USEC_PER_SEC * 30))
 /* Application-level heartbeat interval */
 #define AGENT_DEFAULT_HEARTBEAT_INTERVAL_MSEC "2000"
+#define CONTROLLER_DEFAULT_HEARTBEAT_INTERVAL_MSEC "0"
+#define CONTROLLER_DEFAULT_NODE_HEARTBEAT_THRESHOLD_MSEC "6000"
 
 
 /* BlueChi DBus service names */
