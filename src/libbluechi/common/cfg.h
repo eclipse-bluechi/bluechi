@@ -20,6 +20,7 @@
 #define CFG_NODE_NAME "NodeName"
 #define CFG_ALLOWED_NODE_NAMES "AllowedNodeNames"
 #define CFG_HEARTBEAT_INTERVAL "HeartbeatInterval"
+#define CFG_HEARTBEAT_THRESHOLD "NodeHeartbeatThreshold"
 #define CFG_IP_RECEIVE_ERRORS "IPReceiveErrors"
 #define CFG_TCP_KEEPALIVE_TIME "TCPKeepAliveTime"
 #define CFG_TCP_KEEPALIVE_INTERVAL "TCPKeepAliveInterval"

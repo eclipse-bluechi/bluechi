@@ -62,7 +62,7 @@ struct Node {
         LIST_HEAD(ProxyDependency, proxy_dependencies);
 
         struct hashmap *unit_subscriptions;
-        time_t last_seen;
+        uint64_t last_seen;
 
         bool is_shutdown;
 };
@@ -71,6 +71,7 @@ Node *node_new(Controller *controller, const char *name);
 Node *node_ref(Node *node);
 void node_unref(Node *node);
 void node_shutdown(Node *node);
+void node_disconnect(Node *node);
 
 const char *node_get_status(Node *node);
 

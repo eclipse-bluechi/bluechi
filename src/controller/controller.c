@@ -10,6 +10,7 @@
 #include "libbluechi/bus/utils.h"
 #include "libbluechi/common/cfg.h"
 #include "libbluechi/common/common.h"
+#include "libbluechi/common/event-util.h"
 #include "libbluechi/common/parse-util.h"
 #include "libbluechi/common/time-util.h"
 #include "libbluechi/log/log.h"
@@ -276,6 +277,28 @@ bool controller_set_port(Controller *controller, const char *port_s) {
         return true;
 }
 
+bool controller_set_heartbeat_interval(Controller *controller, const char *interval_msec) {
+        long interval = 0;
+
+        if (!parse_long(interval_msec, &interval)) {
+                bc_log_errorf("Invalid heartbeat interval format '%s'", interval_msec);
+                return false;
+        }
+        controller->heartbeat_interval_msec = interval;
+        return true;
+}
+
+bool controller_set_heartbeat_threshold(Controller *controller, const char *threshold_msec) {
+        long threshold = 0;
+
+        if (!parse_long(threshold_msec, &threshold)) {
+                bc_log_errorf("Invalid heartbeat threshold format '%s'", threshold_msec);
+                return false;
+        }
+        controller->heartbeat_threshold_msec = threshold;
+        return true;
+}
+
 bool controller_parse_config(Controller *controller, const char *configfile) {
         int result = 0;
 
@@ -327,6 +350,20 @@ bool controller_apply_config(Controller *controller) {
                         }
 
                         name = strtok_r(NULL, ",", &saveptr);
+                }
+        }
+
+        const char *interval_msec = cfg_get_value(controller->config, CFG_HEARTBEAT_INTERVAL);
+        if (interval_msec) {
+                if (!controller_set_heartbeat_interval(controller, interval_msec)) {
+                        return false;
+                }
+        }
+
+        const char *threshold_msec = cfg_get_value(controller->config, CFG_HEARTBEAT_THRESHOLD);
+        if (threshold_msec) {
+                if (!controller_set_heartbeat_threshold(controller, threshold_msec)) {
+                        return false;
                 }
         }
 
@@ -442,6 +479,86 @@ static bool controller_setup_node_connection_handler(Controller *controller) {
         controller->node_connection_source = steal_pointer(&event_source);
 
         return true;
+}
+
+static int controller_reset_heartbeat_timer(Controller *controller, sd_event_source **event_source);
+
+static int controller_heartbeat_timer_callback(
+                sd_event_source *event_source, UNUSED uint64_t usec, void *userdata) {
+        Controller *controller = (Controller *) userdata;
+        Node *node = NULL;
+        int r = 0;
+
+        LIST_FOREACH(nodes, node, controller->nodes) {
+                uint64_t diff = 0;
+                uint64_t now = 0;
+
+                if (!node_is_online(node)) {
+                        continue;
+                }
+
+                now = get_time_micros();
+                if (now == 0) {
+                        bc_log_error("Failed to get the time");
+                        continue;
+                }
+
+                if (now < node->last_seen) {
+                        bc_log_error("Clock skew detected");
+                        continue;
+                }
+
+                diff = now - node->last_seen;
+                if (diff > (uint64_t) controller->heartbeat_threshold_msec * USEC_PER_MSEC) {
+                        bc_log_infof("Did not receive heartbeat from node '%s' since '%d'ms. Disconnecting it...",
+                                     node->name,
+                                     controller->heartbeat_threshold_msec);
+                        node_disconnect(node);
+                }
+        }
+
+        r = controller_reset_heartbeat_timer(controller, &event_source);
+        if (r < 0) {
+                bc_log_errorf("Failed to reset controller heartbeat timer: %s", strerror(-r));
+                return r;
+        }
+
+        return 0;
+}
+
+static int controller_reset_heartbeat_timer(Controller *controller, sd_event_source **event_source) {
+        return event_reset_time_relative(
+                        controller->event,
+                        event_source,
+                        CLOCK_BOOTTIME,
+                        controller->heartbeat_interval_msec * USEC_PER_MSEC,
+                        0,
+                        controller_heartbeat_timer_callback,
+                        controller,
+                        0,
+                        "controller-heartbeat-timer-source",
+                        false);
+}
+
+static int controller_setup_heartbeat_timer(Controller *controller) {
+        _cleanup_(sd_event_source_unrefp) sd_event_source *event_source = NULL;
+        int r = 0;
+
+        assert(controller);
+
+        if (controller->heartbeat_interval_msec <= 0) {
+                bc_log_warnf("Heartbeat disabled since configured interval '%d' is <=0",
+                             controller->heartbeat_interval_msec);
+                return 0;
+        }
+
+        r = controller_reset_heartbeat_timer(controller, &event_source);
+        if (r < 0) {
+                bc_log_errorf("Failed to reset controller heartbeat timer: %s", strerror(-r));
+                return r;
+        }
+
+        return sd_event_source_set_floating(event_source, true);
 }
 
 /************************************************************************
@@ -1079,6 +1196,12 @@ bool controller_start(Controller *controller) {
         }
 
         if (!controller_setup_node_connection_handler(controller)) {
+                return false;
+        }
+
+        r = controller_setup_heartbeat_timer(controller);
+        if (r < 0) {
+                bc_log_errorf("Failed to set up controller heartbeat timer: %s", strerror(-r));
                 return false;
         }
 

@@ -187,7 +187,8 @@ static int agent_setup_heartbeat_timer(Agent *agent) {
         assert(agent);
 
         if (agent->heartbeat_interval_msec <= 0) {
-                bc_log_warnf("Heartbeat disabled since interval is '%d', ", agent->heartbeat_interval_msec);
+                bc_log_warnf("Heartbeat disabled since configured interval '%d' is <=0",
+                             agent->heartbeat_interval_msec);
                 return 0;
         }
 

@@ -520,11 +520,13 @@ static int node_match_job_done(UNUSED sd_bus_message *m, UNUSED void *userdata, 
 static int node_match_heartbeat(UNUSED sd_bus_message *m, void *userdata, UNUSED sd_bus_error *error) {
         Node *node = userdata;
 
-        int r = get_time_seconds(&node->last_seen);
-        if (r < 0) {
-                bc_log_errorf("Failed to get current time on heartbeat: %s", strerror(-r));
+        uint64_t now = get_time_micros();
+        if (now == 0) {
+                bc_log_error("Failed to get current time on heartbeat");
                 return 0;
         }
+
+        node->last_seen = now;
         return 1;
 }
 
@@ -887,6 +889,8 @@ static int node_method_register(sd_bus_message *m, void *userdata, UNUSED sd_bus
                                 m, SD_BUS_ERROR_ADDRESS_IN_USE, "The node is already connected");
         }
 
+        named_node->last_seen = get_time_micros();
+
         r = asprintf(&description, "node-%s", name);
         if (r >= 0) {
                 (void) sd_bus_set_description(node->agent_bus, description);
@@ -915,6 +919,13 @@ static int node_method_register(sd_bus_message *m, void *userdata, UNUSED sd_bus
 
 static int node_disconnected(UNUSED sd_bus_message *message, void *userdata, UNUSED sd_bus_error *error) {
         Node *node = userdata;
+
+        node_disconnect(node);
+
+        return 0;
+}
+
+void node_disconnect(Node *node) {
         Controller *controller = node->controller;
         void *item = NULL;
         size_t i = 0;
@@ -1009,8 +1020,6 @@ static int node_disconnected(UNUSED sd_bus_message *message, void *userdata, UNU
                 /* update number of online nodes and check the new system state */
                 controller_check_system_status(controller, controller->number_of_nodes_online--);
         }
-
-        return 0;
 }
 
 const char *node_get_status(Node *node) {

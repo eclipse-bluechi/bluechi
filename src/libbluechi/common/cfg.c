@@ -507,5 +507,18 @@ int cfg_controller_def_conf(struct config *config) {
                 return result;
         }
 
+        if ((result = cfg_set_value(
+                             config, CFG_HEARTBEAT_INTERVAL, CONTROLLER_DEFAULT_HEARTBEAT_INTERVAL_MSEC)) !=
+            0) {
+                return result;
+        }
+
+        if ((result = cfg_set_value(
+                             config,
+                             CFG_HEARTBEAT_THRESHOLD,
+                             CONTROLLER_DEFAULT_NODE_HEARTBEAT_THRESHOLD_MSEC)) != 0) {
+                return result;
+        }
+
         return 0;
 }
