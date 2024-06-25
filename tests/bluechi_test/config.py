@@ -32,6 +32,8 @@ class BluechiControllerConfig(BluechiConfig):
         name: str = "bluechi-controller",
         port: str = "8420",
         allowed_node_names: List[str] = [],
+        heartbeat_interval: str = "0",
+        node_heartbeat_threshold: str = "6000",
         log_level: str = "DEBUG",
         log_target: str = "journald",
         log_is_quiet: bool = False,
@@ -41,6 +43,8 @@ class BluechiControllerConfig(BluechiConfig):
         self.name = name
         self.port = port
         self.allowed_node_names = allowed_node_names
+        self.heartbeat_interval = heartbeat_interval
+        self.node_heartbeat_threshold = node_heartbeat_threshold
         self.log_level = log_level
         self.log_target = log_target
         self.log_is_quiet = log_is_quiet
@@ -53,6 +57,8 @@ class BluechiControllerConfig(BluechiConfig):
         return f"""[bluechi-controller]
 ControllerPort={self.port}
 AllowedNodeNames={allowed_node_names}
+HeartbeatInterval={self.heartbeat_interval}
+NodeHeartbeatThreshold={self.node_heartbeat_threshold}
 LogLevel={self.log_level}
 LogTarget={self.log_target}
 LogIsQuiet={self.log_is_quiet}
