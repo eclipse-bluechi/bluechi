@@ -49,6 +49,7 @@ def test_monitor_node_disconnect(
 ):
     node_foo_cfg = bluechi_node_default_config.deep_copy()
     node_foo_cfg.node_name = NODE_FOO
+    node_foo_cfg.log_level = "DEBUG"
 
     bluechi_test.add_bluechi_agent_config(node_foo_cfg)
 
