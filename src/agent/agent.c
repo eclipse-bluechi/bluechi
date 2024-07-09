@@ -793,6 +793,50 @@ static int agent_method_list_units(sd_bus_message *m, void *userdata, UNUSED sd_
 }
 
 /************************************************************************
+ ********** org.eclipse.bluechi.internal.Agent.ListUnitFiles ************
+ ************************************************************************/
+
+static int list_unit_files_callback(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error) {
+        _cleanup_systemd_request_ SystemdRequest *req = userdata;
+
+        if (sd_bus_message_is_method_error(m, NULL)) {
+                return sd_bus_reply_method_error(req->request_message, sd_bus_message_get_error(m));
+        }
+
+        _cleanup_sd_bus_message_ sd_bus_message *reply = NULL;
+
+        int r = sd_bus_message_new_method_return(req->request_message, &reply);
+        if (r < 0) {
+                return r;
+        }
+
+        r = sd_bus_message_copy(reply, m, true);
+        if (r < 0) {
+                return r;
+        }
+
+        return sd_bus_message_send(reply);
+}
+
+static int agent_method_list_unit_files(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error) {
+        Agent *agent = userdata;
+
+        _cleanup_systemd_request_ SystemdRequest *req = agent_create_request(agent, m, "ListUnitFiles");
+        if (req == NULL) {
+                return sd_bus_reply_method_errorf(
+                                m,
+                                SD_BUS_ERROR_FAILED,
+                                "Failed to create a systemd request for the ListUnitFiles method");
+        }
+
+        if (!systemd_request_start(req, list_unit_files_callback)) {
+                return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "Failed to start systemd request");
+        }
+
+        return 1;
+}
+
+/************************************************************************
  ******** org.eclipse.bluechi.internal.Agent.GetUnitProperties ************
  ************************************************************************/
 
@@ -1668,6 +1712,7 @@ static int agent_method_job_cancel(sd_bus_message *m, void *userdata, UNUSED sd_
 static const sd_bus_vtable internal_agent_vtable[] = {
         SD_BUS_VTABLE_START(0),
         SD_BUS_METHOD("ListUnits", "", UNIT_INFO_STRUCT_ARRAY_TYPESTRING, agent_method_list_units, 0),
+        SD_BUS_METHOD("ListUnitFiles", "", UNIT_FILE_INFO_STRUCT_ARRAY_TYPESTRING, agent_method_list_unit_files, 0),
         SD_BUS_METHOD("GetUnitProperties", "ss", "a{sv}", agent_method_get_unit_properties, 0),
         SD_BUS_METHOD("GetUnitProperty", "sss", "v", agent_method_get_unit_property, 0),
         SD_BUS_METHOD("SetUnitProperties", "sba(sv)", "", agent_method_set_unit_properties, 0),

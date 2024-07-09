@@ -199,6 +199,17 @@
     </method>
 
     <!--
+      ListUnitFiles:
+      @unitfiles: A list of all unit files on the node:
+        - The unit file path as string
+        - The enabled state (i.e. whether the unit is currently enabled or not)
+      List all systemd unit files.
+    -->
+    <method name="ListUnitFiles">
+      <arg name="unitfiles" type="a(ss)" direction="out" />
+    </method>
+
+    <!--
       Reload:
 
       Reload() may be invoked to reload all unit files.
