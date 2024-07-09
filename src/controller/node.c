@@ -26,6 +26,7 @@ static int node_run_unit_lifecycle_method(sd_bus_message *m, Node *node, const c
 static int node_method_register(sd_bus_message *m, void *userdata, sd_bus_error *ret_error);
 static int node_disconnected(sd_bus_message *message, void *userdata, sd_bus_error *error);
 static int node_method_list_units(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error);
+static int node_method_list_unit_files(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error);
 static int node_method_set_unit_properties(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error);
 static int node_method_start_unit(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error);
 static int node_method_stop_unit(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error);
@@ -65,6 +66,7 @@ static const sd_bus_vtable internal_controller_controller_vtable[] = {
 static const sd_bus_vtable node_vtable[] = {
         SD_BUS_VTABLE_START(0),
         SD_BUS_METHOD("ListUnits", "", UNIT_INFO_STRUCT_ARRAY_TYPESTRING, node_method_list_units, 0),
+        SD_BUS_METHOD("ListUnitFiles", "", UNIT_FILE_INFO_STRUCT_ARRAY_TYPESTRING, node_method_list_unit_files, 0),
         SD_BUS_METHOD("StartUnit", "ss", "o", node_method_start_unit, 0),
         SD_BUS_METHOD("StopUnit", "ss", "o", node_method_stop_unit, 0),
         SD_BUS_METHOD("FreezeUnit", "s", "", node_method_passthrough_to_agent, 0),
@@ -1184,6 +1186,25 @@ AgentRequest *node_request_list_units(
         return steal_pointer(&req);
 }
 
+AgentRequest *node_request_list_unit_files(
+                Node *node, agent_request_response_t cb, void *userdata, free_func_t free_userdata) {
+        if (!node_has_agent(node)) {
+                return NULL;
+        }
+
+        _cleanup_agent_request_ AgentRequest *req = NULL;
+        node_create_request(&req, node, "ListUnitFiles", cb, userdata, free_userdata);
+        if (req == NULL) {
+                return NULL;
+        }
+
+        if (agent_request_start(req) < 0) {
+                return NULL;
+        }
+
+        return steal_pointer(&req);
+}
+
 /*************************************************************************
  ********** org.eclipse.bluechi.Node.ListUnits **************************
  ************************************************************************/
@@ -1218,6 +1239,7 @@ static int method_list_units_callback(AgentRequest *req, sd_bus_message *m, UNUS
         return sd_bus_message_send(reply);
 }
 
+
 static int node_method_list_units(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error) {
         Node *node = userdata;
 
@@ -1235,6 +1257,59 @@ static int node_method_list_units(sd_bus_message *m, void *userdata, UNUSED sd_b
                 return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "List units not found");
         }
 
+        return 1;
+}
+
+/*************************************************************************
+ ********** org.eclipse.bluechi.Node.ListUnitFiles ***********************
+ ************************************************************************/
+
+static int method_list_unit_files_callback(AgentRequest *req, sd_bus_message *m, UNUSED sd_bus_error *ret_error) {
+        sd_bus_message *request_message = req->userdata;
+
+        if (sd_bus_message_is_method_error(m, NULL)) {
+                /* Forward error */
+                return sd_bus_reply_method_error(request_message, sd_bus_message_get_error(m));
+        }
+
+        _cleanup_sd_bus_message_ sd_bus_message *reply = NULL;
+        int r = sd_bus_message_new_method_return(request_message, &reply);
+        if (r < 0) {
+                return sd_bus_reply_method_errorf(
+                                request_message,
+                                SD_BUS_ERROR_FAILED,
+                                "Failed to create a reply message for ListUnitFiles request: %s",
+                                strerror(-r));
+        }
+
+        r = sd_bus_message_copy(reply, m, true);
+        if (r < 0) {
+                return sd_bus_reply_method_errorf(
+                                request_message,
+                                SD_BUS_ERROR_FAILED,
+                                "Failed to copy the bus message for ListUnitFiles request: %s",
+                                strerror(-r));
+        }
+
+        return sd_bus_message_send(reply);
+}
+
+static int node_method_list_unit_files(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error) {
+        Node *node = userdata;
+
+        if (node->is_shutdown) {
+                return sd_bus_reply_method_errorf(
+                                m, SD_BUS_ERROR_FAILED, "Request not allowed: node is in shutdown state");
+        }
+
+        _cleanup_agent_request_ AgentRequest *agent_req = node_request_list_unit_files(
+                        node,
+                        method_list_unit_files_callback,
+                        sd_bus_message_ref(m),
+                        (free_func_t) sd_bus_message_unref);
+        if (agent_req == NULL) {
+                return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "List unit files not found");
+        }
         return 1;
 }
 
