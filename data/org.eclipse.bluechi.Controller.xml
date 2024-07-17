@@ -36,6 +36,18 @@
     </method>
 
     <!--
+      ListUnitFiles:
+      @unitfiles: A list of all unit files on each node:
+        - The node name
+        - The unit file path as string
+        - The enabled state (i.e. whether the unit is currently enabled or not)
+      List all systemd unit files.
+    -->
+    <method name="ListUnitFiles">
+      <arg name="unitfiles" type="a(sss)" direction="out" />
+    </method>
+
+    <!--
       ListNodes:
       @nodes: A list of all nodes:
         - node name

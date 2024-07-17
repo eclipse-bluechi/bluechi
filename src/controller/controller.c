@@ -767,6 +767,202 @@ static int controller_method_list_units(sd_bus_message *m, void *userdata, UNUSE
 #pragma GCC diagnostic pop
 
 /************************************************************************
+ ***** org.eclipse.bluechi.Controller.ListUnitFiles **************
+ ************************************************************************/
+
+typedef struct ListUnitFilesRequest {
+        sd_bus_message *request_message;
+
+        int n_done;
+        int n_sub_req;
+        struct {
+                Node *node;
+                sd_bus_message *m;
+                AgentRequest *agent_req;
+        } sub_req[0];
+} ListUnitFilesRequest;
+
+static void list_unit_files_request_free(ListUnitFilesRequest *req) {
+        sd_bus_message_unref(req->request_message);
+
+        for (int i = 0; i < req->n_sub_req; i++) {
+                node_unrefp(&req->sub_req[i].node);
+                sd_bus_message_unrefp(&req->sub_req[i].m);
+                agent_request_unrefp(&req->sub_req[i].agent_req);
+        }
+
+        free(req);
+}
+
+static void list_unit_files_request_freep(ListUnitFilesRequest **reqp) {
+        if (reqp && *reqp) {
+                list_unit_files_request_free(*reqp);
+                *reqp = NULL;
+        }
+}
+
+#define _cleanup_list_unit_files_request_ _cleanup_(list_unit_files_request_freep)
+
+static int controller_method_list_unit_files_encode_reply(ListUnitFilesRequest *req, sd_bus_message *reply) {
+        int r = sd_bus_message_open_container(
+                        reply, SD_BUS_TYPE_ARRAY, NODE_AND_UNIT_FILE_INFO_STRUCT_TYPESTRING);
+        if (r < 0) {
+                return r;
+        }
+
+        for (int i = 0; i < req->n_sub_req; i++) {
+                const char *node_name = req->sub_req[i].node->name;
+                sd_bus_message *m = req->sub_req[i].m;
+                if (m == NULL) {
+                        continue;
+                }
+
+                const sd_bus_error *err = sd_bus_message_get_error(m);
+                if (err != NULL) {
+                        bc_log_errorf("Failed to list unit files for node '%s': %s", node_name, err->message);
+                        return -sd_bus_message_get_errno(m);
+                }
+
+                r = sd_bus_message_enter_container(m, SD_BUS_TYPE_ARRAY, UNIT_FILE_INFO_STRUCT_TYPESTRING);
+                if (r < 0) {
+                        return r;
+                }
+
+                while (sd_bus_message_at_end(m, false) == 0) {
+                        r = sd_bus_message_open_container(
+                                        reply, SD_BUS_TYPE_STRUCT, NODE_AND_UNIT_FILE_INFO_TYPESTRING);
+                        if (r < 0) {
+                                return r;
+                        }
+
+                        r = sd_bus_message_append(reply, "s", node_name);
+                        if (r < 0) {
+                                return r;
+                        }
+
+                        r = sd_bus_message_enter_container(m, SD_BUS_TYPE_STRUCT, UNIT_FILE_INFO_TYPESTRING);
+                        if (r < 0) {
+                                return r;
+                        }
+
+                        r = sd_bus_message_copy(reply, m, true);
+                        if (r < 0) {
+                                return r;
+                        }
+
+                        r = sd_bus_message_close_container(reply);
+                        if (r < 0) {
+                                return r;
+                        }
+
+                        r = sd_bus_message_exit_container(m);
+                        if (r < 0) {
+                                return r;
+                        }
+                }
+
+                r = sd_bus_message_exit_container(m);
+                if (r < 0) {
+                        return r;
+                }
+        }
+
+        r = sd_bus_message_close_container(reply);
+        if (r < 0) {
+                return r;
+        }
+
+        return 0;
+}
+
+static void controller_method_list_unit_files_done(ListUnitFilesRequest *req) {
+        UNUSED _cleanup_list_unit_files_request_ ListUnitFilesRequest *free_me = req;
+
+        _cleanup_sd_bus_message_ sd_bus_message *reply = NULL;
+        int r = sd_bus_message_new_method_return(req->request_message, &reply);
+        if (r < 0) {
+                sd_bus_reply_method_errorf(
+                                req->request_message,
+                                SD_BUS_ERROR_FAILED,
+                                "Failed to create a reply message: %s",
+                                strerror(-r));
+                return;
+        }
+        r = controller_method_list_unit_files_encode_reply(req, reply);
+        if (r < 0) {
+                sd_bus_reply_method_errorf(
+                                req->request_message,
+                                SD_BUS_ERROR_FAILED,
+                                "List unit files request to at least one node failed: %s",
+                                strerror(-r));
+                return;
+        }
+        r = sd_bus_message_send(reply);
+        if (r < 0) {
+                bc_log_errorf("Failed to send reply message: %s", strerror(-r));
+                return;
+        }
+}
+
+static void controller_method_list_unit_files_maybe_done(ListUnitFilesRequest *req) {
+        if (req->n_done == req->n_sub_req) {
+                controller_method_list_unit_files_done(req);
+        }
+}
+
+static int controller_list_unit_files_callback(
+                AgentRequest *agent_req, sd_bus_message *m, UNUSED sd_bus_error *ret_error) {
+        ListUnitFilesRequest *req = agent_req->userdata;
+        int i = 0;
+
+        for (i = 0; i < req->n_sub_req; i++) {
+                if (req->sub_req[i].agent_req == agent_req) {
+                        break;
+                }
+        }
+
+        assert(i != req->n_sub_req);
+
+        req->sub_req[i].m = sd_bus_message_ref(m);
+        req->n_done++;
+
+        controller_method_list_unit_files_maybe_done(req);
+
+        return 0;
+}
+
+static int controller_method_list_unit_files(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error) {
+        Controller *controller = userdata;
+        ListUnitFilesRequest *req = NULL;
+        Node *node = NULL;
+
+        req = malloc0_array(sizeof(*req), sizeof(req->sub_req[0]), controller->number_of_nodes);
+        if (req == NULL) {
+                return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_NO_MEMORY, "Out of memory");
+        }
+        req->request_message = sd_bus_message_ref(m);
+
+        int i = 0;
+        LIST_FOREACH(nodes, node, controller->nodes) {
+                _cleanup_agent_request_ AgentRequest *agent_req = node_request_list_unit_files(
+                                node, controller_list_unit_files_callback, req, NULL);
+                if (agent_req) {
+                        req->sub_req[i].agent_req = steal_pointer(&agent_req);
+                        req->sub_req[i].node = node_ref(node);
+                        req->n_sub_req++;
+                        i++;
+                }
+        }
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wanalyzer-malloc-leak"
+
+        controller_method_list_unit_files_maybe_done(req);
+
+        return 1;
+}
+#pragma GCC diagnostic pop
+
+/************************************************************************
  ***** org.eclipse.bluechi.Controller.ListNodes **************
  ************************************************************************/
 
@@ -1051,6 +1247,11 @@ static int controller_property_get_log_target(
 static const sd_bus_vtable controller_vtable[] = {
         SD_BUS_VTABLE_START(0),
         SD_BUS_METHOD("ListUnits", "", NODE_AND_UNIT_INFO_STRUCT_ARRAY_TYPESTRING, controller_method_list_units, 0),
+        SD_BUS_METHOD("ListUnitFiles",
+                      "",
+                      NODE_AND_UNIT_FILE_INFO_STRUCT_ARRAY_TYPESTRING,
+                      controller_method_list_unit_files,
+                      0),
         SD_BUS_METHOD("ListNodes", "", "a(soss)", controller_method_list_nodes, 0),
         SD_BUS_METHOD("GetNode", "s", "o", controller_method_get_node, 0),
         SD_BUS_METHOD("CreateMonitor", "", "o", controller_method_create_monitor, 0),
