@@ -12,6 +12,7 @@
 
 #include "client.h"
 #include "method-help.h"
+#include "method-list-unit-files.h"
 #include "method-list-units.h"
 #include "method-loglevel.h"
 #include "method-metrics.h"
@@ -33,23 +34,24 @@ int method_version(UNUSED Command *command, UNUSED void *userdata) {
 }
 
 const Method methods[] = {
-        {"help",           0, 0,       OPT_NONE,                                method_help,          usage_bluechi},
-        { "list-units",    0, 1,       OPT_FILTER,                              method_list_units,    usage_bluechi},
-        { "start",         2, 2,       OPT_NONE,                                method_start,         usage_bluechi},
-        { "stop",          2, 2,       OPT_NONE,                                method_stop,          usage_bluechi},
-        { "freeze",        2, 2,       OPT_NONE,                                method_freeze,        usage_bluechi},
-        { "thaw",          2, 2,       OPT_NONE,                                method_thaw,          usage_bluechi},
-        { "restart",       2, 2,       OPT_NONE,                                method_restart,       usage_bluechi},
-        { "reload",        2, 2,       OPT_NONE,                                method_reload,        usage_bluechi},
-        { "monitor",       0, 2,       OPT_NONE,                                method_monitor,       usage_bluechi},
-        { "metrics",       1, 1,       OPT_NONE,                                method_metrics,       usage_bluechi},
-        { "enable",        2, ARG_ANY, OPT_FORCE | OPT_RUNTIME | OPT_NO_RELOAD, method_enable,        usage_bluechi},
-        { "disable",       2, ARG_ANY, OPT_NO_RELOAD,                           method_disable,       usage_bluechi},
-        { "daemon-reload", 1, 1,       OPT_NONE,                                method_daemon_reload, usage_bluechi},
-        { "status",        0, ARG_ANY, OPT_WATCH,                               method_status,        usage_bluechi},
-        { "set-loglevel",  1, 2,       OPT_NONE,                                method_set_loglevel,  usage_bluechi},
-        { "version",       0, 0,       OPT_NONE,                                method_version,       usage_bluechi},
-        { NULL,            0, 0,       0,                                       NULL,                 NULL         }
+        {"help",             0, 0,       OPT_NONE,                                method_help,            usage_bluechi},
+        { "list-unit-files", 0, 1,       OPT_FILTER,                              method_list_unit_files, usage_bluechi},
+        { "list-units",      0, 1,       OPT_FILTER,                              method_list_units,      usage_bluechi},
+        { "start",           2, 2,       OPT_NONE,                                method_start,           usage_bluechi},
+        { "stop",            2, 2,       OPT_NONE,                                method_stop,            usage_bluechi},
+        { "freeze",          2, 2,       OPT_NONE,                                method_freeze,          usage_bluechi},
+        { "thaw",            2, 2,       OPT_NONE,                                method_thaw,            usage_bluechi},
+        { "restart",         2, 2,       OPT_NONE,                                method_restart,         usage_bluechi},
+        { "reload",          2, 2,       OPT_NONE,                                method_reload,          usage_bluechi},
+        { "monitor",         0, 2,       OPT_NONE,                                method_monitor,         usage_bluechi},
+        { "metrics",         1, 1,       OPT_NONE,                                method_metrics,         usage_bluechi},
+        { "enable",          2, ARG_ANY, OPT_FORCE | OPT_RUNTIME | OPT_NO_RELOAD, method_enable,          usage_bluechi},
+        { "disable",         2, ARG_ANY, OPT_NO_RELOAD,                           method_disable,         usage_bluechi},
+        { "daemon-reload",   1, 1,       OPT_NONE,                                method_daemon_reload,   usage_bluechi},
+        { "status",          0, ARG_ANY, OPT_WATCH,                               method_status,          usage_bluechi},
+        { "set-loglevel",    1, 2,       OPT_NONE,                                method_set_loglevel,    usage_bluechi},
+        { "version",         0, 0,       OPT_NONE,                                method_version,         usage_bluechi},
+        { NULL,              0, 0,       0,                                       NULL,                   NULL         }
 };
 
 const OptionType option_types[] = {

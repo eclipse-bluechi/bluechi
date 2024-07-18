@@ -10,6 +10,7 @@ client_src = [
   'client.c',
   'method-help.c',
   'method-loglevel.c',
+  'method-list-unit-files.c',
   'method-list-units.c',
   'method-metrics.c',
   'method-monitor.c',

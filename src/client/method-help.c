@@ -12,6 +12,8 @@ void usage_bluechi() {
         printf("Available command:\n");
         printf("  - help: shows this help message\n");
         printf("    usage: help\n");
+        printf("  - list-unit-files: returns the list of systemd service files installed on a specific or on all nodes\n");
+        printf("    usage: list-unit-files [nodename] [--filter=glob]\n");
         printf("  - list-units: returns the list of systemd services running on a specific or on all nodes\n");
         printf("    usage: list-units [nodename] [--filter=glob]\n");
         printf("  - start: starts a specific systemd service (or timer, or slice) on a specific node\n");

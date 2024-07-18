@@ -235,6 +235,78 @@ int bus_parse_unit_on_node_info(sd_bus_message *message, UnitInfo *u) {
         return r;
 }
 
+UnitFileInfo *new_unit_file() {
+        _cleanup_unit_file_ UnitFileInfo *unit_file = malloc0(sizeof(UnitFileInfo));
+        if (unit_file == NULL) {
+                return NULL;
+        }
+
+        unit_file->ref_count = 1;
+        LIST_INIT(unit_files, unit_file);
+
+        return steal_pointer(&unit_file);
+}
+
+UnitFileInfo *unit_file_ref(UnitFileInfo *unit_file) {
+        unit_file->ref_count++;
+        return unit_file;
+}
+
+void unit_file_unref(UnitFileInfo *unit_file) {
+        unit_file->ref_count--;
+        if (unit_file->ref_count != 0) {
+                return;
+        }
+
+        free_and_null(unit_file->node);
+        free_and_null(unit_file->unit_path);
+        free_and_null(unit_file->enablement_status);
+
+        free(unit_file);
+}
+
+int bus_parse_unit_file_info(sd_bus_message *m, UnitFileInfo *unit_file) {
+        int r = 0;
+        char *unit_path = NULL;
+        char *enablement_status = NULL;
+
+        assert(m);
+        assert(unit_file);
+
+        r = sd_bus_message_read(m, UNIT_FILE_INFO_STRUCT_TYPESTRING, &unit_path, &enablement_status);
+        if (r <= 0) {
+                return r;
+        }
+
+        unit_file->node = NULL;
+        unit_file->unit_path = strdup(unit_path);
+        unit_file->enablement_status = strdup(enablement_status);
+
+        return r;
+}
+
+int bus_parse_unit_file_on_node_info(sd_bus_message *m, UnitFileInfo *unit_file) {
+        int r = 0;
+        char *node = NULL;
+        char *unit_path = NULL;
+        char *enablement_status = NULL;
+
+        assert(m);
+        assert(unit_file);
+
+        r = sd_bus_message_read(
+                        m, NODE_AND_UNIT_FILE_INFO_STRUCT_TYPESTRING, &node, &unit_path, &enablement_status);
+        if (r <= 0) {
+                return r;
+        }
+
+        unit_file->node = strdup(node);
+        unit_file->unit_path = strdup(unit_path);
+        unit_file->enablement_status = strdup(enablement_status);
+
+        return r;
+}
+
 int assemble_object_path_string(const char *prefix, const char *name, char **res) {
         _cleanup_free_ char *escaped = bus_path_escape(name);
         if (escaped == NULL) {
