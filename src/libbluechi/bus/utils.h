@@ -53,3 +53,24 @@ int assemble_object_path_string(const char *prefix, const char *name, char **res
 
 DEFINE_CLEANUP_FUNC(UnitInfo, unit_unref)
 #define _cleanup_unit_ _cleanup_(unit_unrefp)
+
+typedef struct UnitFileInfo UnitFileInfo;
+struct UnitFileInfo {
+        int ref_count;
+
+        char *node;
+        char *unit_path;
+        char *enablement_status;
+
+        LIST_FIELDS(UnitFileInfo, unit_files);
+};
+
+UnitFileInfo *new_unit_file();
+UnitFileInfo *unit_file_ref(UnitFileInfo *unit_file);
+void unit_file_unref(UnitFileInfo *unit_file);
+
+int bus_parse_unit_file_info(sd_bus_message *m, UnitFileInfo *unit_file);
+int bus_parse_unit_file_on_node_info(sd_bus_message *m, UnitFileInfo *u);
+
+DEFINE_CLEANUP_FUNC(UnitFileInfo, unit_file_unref)
+#define _cleanup_unit_file_ _cleanup_(unit_file_unrefp)

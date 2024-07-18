@@ -7,3 +7,4 @@
 
 typedef struct Client Client;
 typedef struct UnitList UnitList;
+typedef struct UnitFileList UnitFileList;
