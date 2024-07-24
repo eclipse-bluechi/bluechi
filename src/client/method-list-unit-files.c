@@ -200,7 +200,7 @@ void print_unit_file_list_simple(UnitFileList *unit_file_list, const char *glob_
         printf("%s\n", sep_line);
 
         LIST_FOREACH(unit_files, unit_file, unit_file_list->unit_files) {
-                if (glob_filter == NULL /*|| match_glob(unit_file->)*/) {
+                if (glob_filter == NULL || match_glob(unit_file->unit_path, glob_filter)) {
                         printf(fmt_str, unit_file->node, unit_file->unit_path, unit_file->enablement_status);
                 }
         }

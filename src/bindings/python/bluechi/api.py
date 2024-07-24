@@ -297,6 +297,17 @@ class Controller(ApiBase):
         """
         return self.get_proxy().ListNodes()
 
+    def list_unit_files(self) -> List[Tuple[str, str, str]]:
+        """
+          ListUnitFiles:
+        @unitfiles: A list of all unit files on each node:
+          - The node name
+          - The unit file path as string
+          - The enabled state (i.e. whether the unit is currently enabled or not)
+        List all systemd unit files.
+        """
+        return self.get_proxy().ListUnitFiles()
+
     def list_units(
         self,
     ) -> List[Tuple[str, str, str, str, str, str, str, ObjPath, UInt32, str, ObjPath]]:
@@ -889,6 +900,16 @@ class Node(ApiBase):
             interface,
             property,
         )
+
+    def list_unit_files(self) -> List[Tuple[str, str]]:
+        """
+          ListUnitFiles:
+        @unitfiles: A list of all unit files on the node:
+          - The unit file path as string
+          - The enabled state (i.e. whether the unit is currently enabled or not)
+        List all systemd unit files.
+        """
+        return self.get_proxy().ListUnitFiles()
 
     def list_units(
         self,
