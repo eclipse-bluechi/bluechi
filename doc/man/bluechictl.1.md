@@ -56,6 +56,15 @@ Disable the list of systemd unit files for the `bluechi-agent`.
 **--no-reload**
     Don't reload daemon after disabling unit files
 
+### **bluechictl** *list-units-files* [*agent*]
+
+Fetches information about all systemd unit files on the bluechi-agents. If [bluechi-agent] is not specified, all agents are queried.
+
+**Options:**
+
+**--filter**
+    Use glob filter for the unit file path
+
 ### **bluechictl** *list-units* [*agent*]
 
 Fetches information about all systemd units on the bluechi-agents. If [bluechi-agent] is not specified, all agents are queried.
