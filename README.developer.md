@@ -1,4 +1,3 @@
-
 # Eclipse BlueChi&trade;
 
 - [Development](#development)
@@ -334,9 +333,9 @@ The newly built `bluechictl` can be used via:
 Files for documentation of this project are located in the [doc](./doc/) directory comprising:
 
 - [api examples](./doc/api-examples/): directory containing source files for different programming languages that use
-the D-Bus API of BlueChi, e.g. for starting a systemd unit
+  the D-Bus API of BlueChi, e.g. for starting a systemd unit
 - [man](./doc/man/): directory containing the markdown files for generating the man pages
-(see [Building MAN pages](#building-man-pages) for more information)
+  (see [Building MAN pages](#building-man-pages) for more information)
 - readthedocs files for building the documentation website of BlueChi (see [the README](./doc/README.md) for further information)
 - [diagrams.drawio](./doc/diagrams.drawio) file containing all diagrams used for BlueChi
 
@@ -353,7 +352,9 @@ After executing a `meson install` the MAN pages are located in the `man/man*` di
 
 ## Packaging
 
-BlueChi is packaged as an RPM. To build RPM packages following additional dependencies are required:
+### RPM
+
+In order to package BlueChi as an RPM the following dependencies are required:
 
 ```bash
 sudo dnf install \
@@ -387,3 +388,7 @@ subdirectory:
 ```bash
 SKIP_BUILDDEP=yes ARTIFACTS_DIR=${PWD}/output ./build-scripts/build-rpm.sh
 ```
+
+### DEB
+
+Creating the BlueChi `.deb` package is described in the [debian/README.md](./debian/README.md).

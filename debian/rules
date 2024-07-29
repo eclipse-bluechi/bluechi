@@ -1,0 +1,17 @@
+#!/usr/bin/make -f
+%:
+	dh $@
+
+execute_after_dh_clean:
+	rm -f build-scripts/RELEASE
+
+override_dh_auto_configure:
+	echo pdm-start
+	meson setup -Dprefix=/usr -Dwith_selinux=false builddir
+	echo pdm-end
+
+override_dh_install:
+	meson install -C builddir --dest=debian/bluechi-controller
+	meson install -C builddir --dest=debian/bluechi-agent
+	meson install -C builddir --dest=debian/bluechictl
+	dh_install

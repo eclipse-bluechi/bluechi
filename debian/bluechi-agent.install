@@ -1,0 +1,12 @@
+etc/bluechi/agent.conf.d/README.md
+usr/lib/systemd/system/bluechi-agent.service
+usr/lib/systemd/system/bluechi-dep@.service
+usr/lib/systemd/system/bluechi-proxy@.service
+usr/lib/systemd/user/bluechi-agent.service
+usr/lib/systemd/user/bluechi-dep@.service
+usr/lib/systemd/user/bluechi-proxy@.service
+usr/libexec/bluechi-agent
+usr/libexec/bluechi-proxy
+usr/share/bluechi-agent/config/agent.conf
+usr/share/dbus-1/interfaces/org.eclipse.bluechi.Agent.xml
+usr/share/dbus-1/system.d/org.eclipse.bluechi.Agent.conf
