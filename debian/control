@@ -1,0 +1,55 @@
+Source: bluechi
+Section: admin
+Priority: optional
+Maintainer: Milan Zamazal <pdm@debian.org>
+Standards-Version: 4.6.2
+Build-Depends: debhelper-compat (= 13), meson, cmake, libsystemd-dev, pkgconf, go-md2man, gcovr
+Homepage: https://github.com/eclipse-bluechi/bluechi
+
+Package: bluechi-controller
+Architecture: any
+Depends: ${misc:Depends}, ${shlibs:Depends}, systemd
+Suggests: bluechictl
+Description: systemd service controller for multi-node environments
+ Eclipse BlueChi is a systemd service controller intended for multi-node
+ environments with a predefined number of nodes and with a focus on
+ highly regulated ecosystems such as those requiring functional
+ safety (for example in cars).
+ .
+ BlueChi can also be used to control systemd services for containerized
+ applications using Podman and its ability to generate systemd service
+ configuration to run a container via quadlet.
+ .
+ This package contains the BlueChi controller, which controls the
+ services across BlueChi agents.
+
+Package: bluechi-agent
+Architecture: any
+Depends: ${misc:Depends}, ${shlibs:Depends}, systemd
+Description: systemd service controller for multi-node environments
+ Eclipse BlueChi is a systemd service controller intended for multi-node
+ environments with a predefined number of nodes and with a focus on
+ highly regulated ecosystems such as those requiring functional
+ safety (for example in cars).
+ .
+ BlueChi can also be used to control systemd services for containerized
+ applications using Podman and its ability to generate systemd service
+ configuration to run a container via quadlet.
+ .
+ This package contains the BlueChi agent, which manages services on the
+ local machine.
+
+Package: bluechictl
+Architecture: any
+Depends: ${misc:Depends}, ${shlibs:Depends}, systemd, bluechi-controller
+Description: systemd service controller for multi-node environments
+ Eclipse BlueChi is a systemd service controller intended for multi-node
+ environments with a predefined number of nodes and with a focus on
+ highly regulated ecosystems such as those requiring functional
+ safety (for example in cars).
+ .
+ BlueChi can also be used to control systemd services for containerized
+ applications using Podman and its ability to generate systemd service
+ configuration to run a container via quadlet.
+ .
+ This package contains bluechictl, the BlueChi command line utility.

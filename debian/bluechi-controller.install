@@ -1,0 +1,10 @@
+etc/bluechi/controller.conf.d/README.md
+usr/lib/systemd/system/bluechi-controller.service
+usr/lib/systemd/system/bluechi-controller.socket
+usr/libexec/bluechi-controller
+usr/share/bluechi/config/controller.conf
+usr/share/dbus-1/interfaces/org.eclipse.bluechi.Controller.xml
+usr/share/dbus-1/interfaces/org.eclipse.bluechi.Job.xml
+usr/share/dbus-1/interfaces/org.eclipse.bluechi.Monitor.xml
+usr/share/dbus-1/interfaces/org.eclipse.bluechi.Node.xml
+usr/share/dbus-1/system.d/org.eclipse.bluechi.conf
