@@ -157,3 +157,14 @@ class SystemCtl:
     ) -> Tuple[Optional[int], Union[Iterator[bytes], Any, Tuple[bytes, bytes]]]:
         command = "list-units --legend=false{}".format(" --all" if all_units else "")
         return self._do_operation(command, check_result, expected_result)
+
+    def list_unit_files(
+        self,
+        all_unit_files: bool = False,
+        check_result: bool = True,
+        expected_result: int = 0,
+    ) -> Tuple[Optional[int], Union[Iterator[bytes], Any, Tuple[bytes, bytes]]]:
+        command = "list-unit-files --legend=false{}".format(
+            " -all" if all_unit_files else ""
+        )
+        return self._do_operation(command, check_result, expected_result)

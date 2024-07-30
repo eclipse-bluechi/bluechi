@@ -55,6 +55,24 @@ class BluechiCtl:
             "Listing units on all nodes", "list-units", check_result, expected_result
         )
 
+    def list_unit_files(
+        self, node_name: str = None, check_result: bool = True, expected_result: int = 0
+    ) -> Tuple[Optional[int], Union[Iterator[bytes], Any, Tuple[bytes, bytes]]]:
+        if node_name:
+            return self._run(
+                f"Listing unit files on node {node_name}",
+                f"list-unit-files {node_name}",
+                check_result,
+                expected_result,
+            )
+
+        return self._run(
+            "Listing unit files on all nodes",
+            "list-unit-files",
+            check_result,
+            expected_result,
+        )
+
     def get_unit_status(
         self,
         node_name: str,

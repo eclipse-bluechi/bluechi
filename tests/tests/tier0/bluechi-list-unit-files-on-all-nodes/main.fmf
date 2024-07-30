@@ -1,0 +1,3 @@
+summary: Test if bluechi list-unit-files returns the same list of unit files from all
+    nodes which can be gathered by running systemctl on each node
+id: f3b40b8e-756b-4508-9d37-f21a1fac59ee
