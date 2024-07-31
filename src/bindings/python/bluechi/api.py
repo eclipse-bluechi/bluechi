@@ -187,6 +187,15 @@ class Agent(ApiBase):
         return self.get_proxy().DisconnectTimestamp
 
     @property
+    def last_seen_timestamp(self) -> UInt64:
+        """
+          LastSeenTimestamp:
+
+        A timestamp indicating when the last connection test (e.g. via heartbeat) was successful.
+        """
+        return self.get_proxy().LastSeenTimestamp
+
+    @property
     def log_level(self) -> str:
         """
           LogLevel:

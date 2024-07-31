@@ -41,6 +41,10 @@ The port on which `bluechi` is listening for connection request and the `bluechi
 
 The interval between two heartbeat signals sent to bluechi in milliseconds. If an agent is not connected, it will retry to connect on each heartbeat. Setting this options to values smaller or equal to 0 disables it. This option will overwrite the heartbeat interval defined in the configuration file.
 
+#### **ControllerHeartbeatThreshold** (long)
+
+The threshold in milliseconds to determine whether a bluechi agent is disconnected. If the controller's last heartbeat signal was received before this threshold, bluechi agent assumes that the controller is down or the connection was cut off and performs a disconnect.
+
 #### **LogLevel** (string)
 
 The level used for logging. Supported values are:

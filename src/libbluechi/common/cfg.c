@@ -480,6 +480,13 @@ int cfg_agent_def_conf(struct config *config) {
                 return result;
         }
 
+        if ((result = cfg_set_value(
+                             config,
+                             CFG_CONTROLLER_HEARTBEAT_THRESHOLD,
+                             AGENT_DEFAULT_CONTROLLER_HEARTBEAT_THRESHOLD_MSEC)) != 0) {
+                return result;
+        }
+
         if ((result = cfg_set_value(config, CFG_CONTROLLER_PORT, BC_DEFAULT_PORT)) != 0) {
                 return result;
         }
@@ -515,7 +522,7 @@ int cfg_controller_def_conf(struct config *config) {
 
         if ((result = cfg_set_value(
                              config,
-                             CFG_HEARTBEAT_THRESHOLD,
+                             CFG_NODE_HEARTBEAT_THRESHOLD,
                              CONTROLLER_DEFAULT_NODE_HEARTBEAT_THRESHOLD_MSEC)) != 0) {
                 return result;
         }
