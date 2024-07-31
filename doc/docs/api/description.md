@@ -314,6 +314,12 @@ Object path: `/org/eclipse/bluechi/internal`
     Before anything else can happen the node must call this method to register with the controller, giving its unique name.
     If this succeeds, then the controller will consider the node online and start forwarding operations to it.
 
+#### Signals
+
+  * `Heartbeat()`
+
+    This is a periodic signal from the controller to the agent.
+
 ### interface org.eclipse.bluechi.internal.Agent
 
 This is the main interface that the node implements and that is used by the controller to affect change on the node.

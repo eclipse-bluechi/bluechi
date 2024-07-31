@@ -59,7 +59,10 @@ static int node_property_get_last_seen(
                 sd_bus_error *ret_error);
 
 static const sd_bus_vtable internal_controller_controller_vtable[] = {
-        SD_BUS_VTABLE_START(0), SD_BUS_METHOD("Register", "s", "", node_method_register, 0), SD_BUS_VTABLE_END
+        SD_BUS_VTABLE_START(0),
+        SD_BUS_METHOD("Register", "s", "", node_method_register, 0),
+        SD_BUS_SIGNAL("Heartbeat", "", 0),
+        SD_BUS_VTABLE_END
 };
 
 static const sd_bus_vtable node_vtable[] = {
