@@ -135,11 +135,43 @@ static int agent_disconnected(UNUSED sd_bus_message *message, void *userdata, UN
 
 static int agent_reset_heartbeat_timer(Agent *agent, sd_event_source **event_source);
 
+static bool agent_check_controller_liveness(Agent *agent) {
+        uint64_t diff = 0;
+        uint64_t now = 0;
+
+        if (agent->controller_heartbeat_threshold_msec <= 0) {
+                /* checking liveness by heartbeat disabled since configured threshold is <=0 */
+                return true;
+        }
+
+        now = get_time_micros();
+        if (now == 0) {
+                bc_log_error("Failed to get the time");
+                return true;
+        }
+
+        if (now < agent->controller_last_seen) {
+                bc_log_error("Clock skew detected");
+                return true;
+        }
+
+        diff = now - agent->controller_last_seen;
+        if (diff > (uint64_t) agent->controller_heartbeat_threshold_msec * USEC_PER_MSEC) {
+                bc_log_infof("Did not receive heartbeat from controller since '%d'ms. Disconnecting it...",
+                             agent->controller_heartbeat_threshold_msec);
+                agent_disconnected(NULL, agent, NULL);
+                return false;
+        }
+
+        return true;
+}
+
 static int agent_heartbeat_timer_callback(sd_event_source *event_source, UNUSED uint64_t usec, void *userdata) {
         Agent *agent = (Agent *) userdata;
 
         int r = 0;
-        if (agent->connection_state == AGENT_CONNECTION_STATE_CONNECTED) {
+        if (agent->connection_state == AGENT_CONNECTION_STATE_CONNECTED &&
+            agent_check_controller_liveness(agent)) {
                 r = sd_bus_emit_signal(
                                 agent->peer_dbus,
                                 INTERNAL_AGENT_OBJECT_PATH,
@@ -415,6 +447,7 @@ Agent *agent_new(void) {
         agent->unit_infos = unit_infos;
         agent->connection_state = AGENT_CONNECTION_STATE_DISCONNECTED;
         agent->connection_retry_count = 0;
+        agent->controller_last_seen = 0;
         agent->wildcard_subscription_active = false;
         agent->metrics_enabled = false;
         agent->disconnect_timestamp = 0;
@@ -557,6 +590,16 @@ bool agent_set_heartbeat_interval(Agent *agent, const char *interval_msec) {
         return true;
 }
 
+bool agent_set_controller_heartbeat_threshold(Agent *agent, const char *threshold_msec) {
+        long threshold = 0;
+
+        if (!parse_long(threshold_msec, &threshold)) {
+                bc_log_errorf("Invalid heartbeat threshold format '%s'", threshold_msec);
+                return false;
+        }
+        agent->controller_heartbeat_threshold_msec = threshold;
+        return true;
+}
 
 void agent_set_systemd_user(Agent *agent, bool systemd_user) {
         agent->systemd_user = systemd_user;
@@ -624,6 +667,13 @@ bool agent_apply_config(Agent *agent) {
         value = cfg_get_value(agent->config, CFG_HEARTBEAT_INTERVAL);
         if (value) {
                 if (!agent_set_heartbeat_interval(agent, value)) {
+                        return false;
+                }
+        }
+
+        value = cfg_get_value(agent->config, CFG_CONTROLLER_HEARTBEAT_THRESHOLD);
+        if (value) {
+                if (!agent_set_controller_heartbeat_threshold(agent, value)) {
                         return false;
                 }
         }
@@ -1914,7 +1964,7 @@ static int agent_property_get_status(
 }
 
 /*************************************************************************
- **** org.eclipse.bluechi.Agent.LastSuccessfulHeartbeat ****************
+ **** org.eclipse.bluechi.Agent.DisconnectTimestamp ****************
  *************************************************************************/
 
 static int agent_property_get_disconnect_timestamp(
@@ -1976,6 +2026,11 @@ static const sd_bus_vtable agent_vtable[] = {
                         "t",
                         agent_property_get_disconnect_timestamp,
                         0,
+                        SD_BUS_VTABLE_PROPERTY_EXPLICIT),
+        SD_BUS_PROPERTY("LastSeenTimestamp",
+                        "t",
+                        NULL,
+                        offsetof(Agent, controller_last_seen),
                         SD_BUS_VTABLE_PROPERTY_EXPLICIT),
         SD_BUS_PROPERTY("ControllerAddress",
                         "s",
@@ -2249,6 +2304,19 @@ static int agent_match_job_removed(sd_bus_message *m, void *userdata, UNUSED sd_
         }
 
         return 0;
+}
+
+static int agent_match_heartbeat(UNUSED sd_bus_message *m, void *userdata, UNUSED sd_bus_error *error) {
+        Agent *agent = userdata;
+
+        uint64_t now = get_time_micros();
+        if (now == 0) {
+                bc_log_error("Failed to get current time on heartbeat");
+                return 0;
+        }
+
+        agent->controller_last_seen = now;
+        return 1;
 }
 
 static int debug_systemd_message_handler(
@@ -2661,12 +2729,27 @@ static bool agent_connect(Agent *agent) {
 
         agent->connection_state = AGENT_CONNECTION_STATE_CONNECTED;
         agent->connection_retry_count = 0;
+        agent->controller_last_seen = get_time_micros();
         agent->disconnect_timestamp = 0;
 
         r = sd_bus_emit_properties_changed(
                         agent->api_bus, BC_AGENT_OBJECT_PATH, AGENT_INTERFACE, "Status", NULL);
         if (r < 0) {
                 bc_log_errorf("Failed to emit status property changed: %s", strerror(-r));
+        }
+
+        r = sd_bus_match_signal(
+                        agent->peer_dbus,
+                        NULL,
+                        NULL,
+                        INTERNAL_CONTROLLER_OBJECT_PATH,
+                        INTERNAL_CONTROLLER_INTERFACE,
+                        CONTROLLER_HEARTBEAT_SIGNAL_NAME,
+                        agent_match_heartbeat,
+                        agent);
+        if (r < 0) {
+                bc_log_errorf("Failed to add heartbeat signal match: %s", strerror(-r));
+                return false;
         }
 
         r = sd_bus_match_signal_async(

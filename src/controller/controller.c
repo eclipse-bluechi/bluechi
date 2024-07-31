@@ -360,7 +360,7 @@ bool controller_apply_config(Controller *controller) {
                 }
         }
 
-        const char *threshold_msec = cfg_get_value(controller->config, CFG_HEARTBEAT_THRESHOLD);
+        const char *threshold_msec = cfg_get_value(controller->config, CFG_NODE_HEARTBEAT_THRESHOLD);
         if (threshold_msec) {
                 if (!controller_set_heartbeat_threshold(controller, threshold_msec)) {
                         return false;
@@ -483,37 +483,62 @@ static bool controller_setup_node_connection_handler(Controller *controller) {
 
 static int controller_reset_heartbeat_timer(Controller *controller, sd_event_source **event_source);
 
+static bool controller_check_node_liveness(Controller *controller, Node *node, uint64_t now) {
+        uint64_t diff = 0;
+
+        if (controller->heartbeat_threshold_msec <= 0) {
+                /* checking liveness of node by heartbeat disabled since configured threshold is <=0" */
+                return true;
+        }
+
+        if (now == 0) {
+                bc_log_error("Current time is wrong");
+                return true;
+        }
+
+        if (now < node->last_seen) {
+                bc_log_error("Clock skew detected");
+                return true;
+        }
+
+        diff = now - node->last_seen;
+        if (diff > (uint64_t) controller->heartbeat_threshold_msec * USEC_PER_MSEC) {
+                bc_log_infof("Did not receive heartbeat from node '%s' since '%d'ms. Disconnecting it...",
+                             node->name,
+                             controller->heartbeat_threshold_msec);
+                node_disconnect(node);
+                return false;
+        }
+
+        return true;
+}
+
 static int controller_heartbeat_timer_callback(
                 sd_event_source *event_source, UNUSED uint64_t usec, void *userdata) {
         Controller *controller = (Controller *) userdata;
         Node *node = NULL;
+        uint64_t now = get_time_micros();
         int r = 0;
 
         LIST_FOREACH(nodes, node, controller->nodes) {
-                uint64_t diff = 0;
-                uint64_t now = 0;
-
                 if (!node_is_online(node)) {
                         continue;
                 }
 
-                now = get_time_micros();
-                if (now == 0) {
-                        bc_log_error("Failed to get the time");
+                if (!controller_check_node_liveness(controller, node, now)) {
                         continue;
                 }
 
-                if (now < node->last_seen) {
-                        bc_log_error("Clock skew detected");
-                        continue;
-                }
-
-                diff = now - node->last_seen;
-                if (diff > (uint64_t) controller->heartbeat_threshold_msec * USEC_PER_MSEC) {
-                        bc_log_infof("Did not receive heartbeat from node '%s' since '%d'ms. Disconnecting it...",
-                                     node->name,
-                                     controller->heartbeat_threshold_msec);
-                        node_disconnect(node);
+                r = sd_bus_emit_signal(
+                                node->agent_bus,
+                                INTERNAL_CONTROLLER_OBJECT_PATH,
+                                INTERNAL_CONTROLLER_INTERFACE,
+                                "Heartbeat",
+                                "");
+                if (r < 0) {
+                        bc_log_errorf("Failed to emit heartbeat signal to node '%s': %s",
+                                      node->name,
+                                      strerror(-r));
                 }
         }
 

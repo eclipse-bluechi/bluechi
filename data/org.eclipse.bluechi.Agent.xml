@@ -97,6 +97,15 @@
     </property>
 
     <!--
+      LastSeenTimestamp:
+
+      A timestamp indicating when the last connection test (e.g. via heartbeat) was successful.
+    -->
+    <property name="LastSeenTimestamp" type="t" access="read">
+      <annotation name="org.freedesktop.DBus.Property.EmitsChangedSignal" value="false" />
+    </property>
+
+    <!--
       ControllerAddress:
 
       SD Bus address used to connect to the BlueChi controller.
