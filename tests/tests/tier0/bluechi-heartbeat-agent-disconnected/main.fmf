@@ -1,0 +1,3 @@
+summary: Test if the agent gets disconnected when did not receive heartbeat since
+    threshold from controller
+id: 9ea390ed-9ba9-4961-838b-ad44cbe9f0b1
