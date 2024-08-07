@@ -3,10 +3,12 @@ FROM ubuntu:22.04
 RUN apt update && \
     apt upgrade -y && \
     DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC apt install \
+        apt-utils \
         cmake \
         debhelper-compat \ 
         dpkg-dev \
         gcovr \
+        git \
         go-md2man \
         libsystemd-dev \
         meson \
