@@ -9,7 +9,7 @@ nav:
   - Home: index.md
   - Architecture: architecture.md
   - Getting Started:
-    - getting_started/index.md
+    - Installation: getting_started/installation.md
     - Single Node Setup: getting_started/single_node.md
     - Multi-Node Setup: getting_started/multi_node.md
     - Using bluechictl: getting_started/examples_bluechictl.md

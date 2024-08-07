@@ -22,6 +22,8 @@
 - [Documentation](#documentation)
   - [Building MAN Pages](#building-man-pages)
 - [Packaging](#packaging)
+  - [RPM](#rpm)
+  - [DEB](#deb)
 
 ## Development
 
