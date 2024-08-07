@@ -19,6 +19,7 @@ Inside the container create the tarball, move it to the parent directory and ren
 entry in [changelog](./changelog):
 
 ```bash
+cd /var/bluechi-build/bluechi
 ./build-scripts/create-archive.sh
 mv bluechi-<version>.tar.gz ../bluechi_<version>.orig.tar.gz
 ```
@@ -26,8 +27,14 @@ mv bluechi-<version>.tar.gz ../bluechi_<version>.orig.tar.gz
 In the BlueChi directory run:
 
 ```bash
+meson setup builddir
 dpkg-buildpackage -uc -us -rfakeroot
 ```
 
 This will produce the desired `.deb` packages in the parent directory `/var/bluechi-build`. Be sure to move them to
 the mounted `/var/bluechi-build/bluechi`.
+
+## PPA for BlueChi
+
+The built `.deb` packages for new Releases of BlueChi are hosted in a GitHub repository. How to use it and easily
+install BlueChi, please refer to the [bluechi-ppa README](https://github.com/eclipse-bluechi/bluechi-ppa/).
