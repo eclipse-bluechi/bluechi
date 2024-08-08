@@ -50,11 +50,12 @@ jobs:
     tf_extra_params:
       test:
         tmt:
-          test_filter: tag:testing-farm-container & tier:0
+          test_filter: tag:user-test-only & tier:0
     labels:
       - standard
     env:
       INSTALL_DEPS: "yes"
+      LOG_LEVEL: "DEBUG"
     targets:
       # Run integration tests on Fedora using CS9 containers, because running integrations tests on CS9 using CS9
       # containers is very flaky
