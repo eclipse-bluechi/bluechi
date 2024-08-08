@@ -60,9 +60,11 @@ struct Agent {
         int port;
         char *controller_address;
         long heartbeat_interval_msec;
+        long heartbeat_threshold_msec;
 
         AgentConnectionState connection_state;
         uint64_t connection_retry_count;
+        uint64_t connection_last_seen;
         time_t disconnect_timestamp;
 
         char *orch_addr;
