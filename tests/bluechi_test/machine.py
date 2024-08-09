@@ -42,8 +42,8 @@ class BluechiMachine:
     def create_file(self, target_dir: str, file_name: str, content: str) -> None:
         target_file = os.path.join(target_dir, file_name)
         try:
-            _, output = self.client.exec_run(f"[ -f {target_file} ] && echo 'exists'")
-            if output == "exists":
+            res, _ = self.client.exec_run(f"/usr/bin/test -f {target_file}")
+            if res == 0:
                 self._track_changed_file(target_dir, file_name)
             else:
                 self.created_files.append(os.path.join(target_dir, file_name))
@@ -173,8 +173,8 @@ class BluechiMachine:
             return
 
         machine_lib_dir = "/tmp/bluechi_machine_lib"
-        _, output = self.client.exec_run(f"[ -d {machine_lib_dir} ] && echo 'exists'")
-        if output != "exists":
+        res, _ = self.client.exec_run(f"/usr/bin/test -d {machine_lib_dir}")
+        if res != 0:
             self.exec_run(f"mkdir {machine_lib_dir}")
             for filename in os.listdir(source_dir):
                 source_path = os.path.join(source_dir, filename)
