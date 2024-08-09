@@ -1,4 +1,5 @@
 <!-- markdownlint-disable-file MD013 -->
+
 # Eclipse BlueChi&trade; integration tests
 
 ## Installation
@@ -203,17 +204,16 @@ New id 'UUID' added to test '/tests/path_to_your_new_test'.
 
 ### Checking for duplicate test IDs and summaries
 
-In addition to having a unique ID, the summaries of tests should be descriptive and unique as well. An automatic check will be performed by the CI. This check can also be invoked locally:
+In addition to having a unique ID, the summaries of tests should be descriptive and unique as well. The CI will perform appropriate linting. This can also be invoked locally:
 
 ```shell
 $ cd ~/bluechi/tests
-$ ./scripts/duplicate-check.py
-Duplicate ID '254b1fa2-7c9f-481c-85ac-c6e42c0226c8' detected for tests:
-        /tests/tier0/bluechi-anonymous-node
-        /tests/tier0/bluechi-controller-set-loglevel-invalid
-Duplicate summary detected for tests:
-        /tests/tier0/bluechi-agent-set-loglevel
-        /tests/tier0/bluechi-controller-set-loglevel
+
+# requires tmt >= 1.35
+$ tmt lint tests
+Lint checks on all
+fail G001 duplicate id "96aa0e17-5e23-4cc3-bc34-88368b8cc07b" in "/tests/tier0/bluechi-agent-connect-via-controller-address"
+fail G001 duplicate id "96aa0e17-5e23-4cc3-bc34-88368b8cc07b" in "/tests/tier0/bluechi-agent-get-logtarget"
 ```
 
 ## Usage of containers
