@@ -11,9 +11,9 @@
 
 
 static const OptionType option_types[] = {
-        {0,  "zero", 1 },
-        { 1, "one",  11},
-        { 0, NULL,   0 },
+        { 0, "zero", 1  },
+        { 1, "one",  11 },
+        { 0, NULL,   0  },
 };
 
 bool check_option_type(const OptionType *got, OptionType *expected) {

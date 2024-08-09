@@ -11,9 +11,9 @@
 
 
 static const OptionType option_types[] = {
-        {'f',  "force",  1 },
-        { 'r', "reload", 11},
-        { 0,   NULL,     0 },
+        { 'f', "force",  1  },
+        { 'r', "reload", 11 },
+        { 0,   NULL,     0  },
 };
 
 int main() {
