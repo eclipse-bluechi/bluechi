@@ -13,11 +13,11 @@
 #include "controller.h"
 
 const struct option options[] = {
-        {ARG_PORT,     required_argument, 0, ARG_PORT_SHORT   },
-        { ARG_CONFIG,  required_argument, 0, ARG_CONFIG_SHORT },
-        { ARG_HELP,    no_argument,       0, ARG_HELP_SHORT   },
-        { ARG_VERSION, no_argument,       0, ARG_VERSION_SHORT},
-        { NULL,        0,                 0, '\0'             }
+        { ARG_PORT,    required_argument, 0, ARG_PORT_SHORT    },
+        { ARG_CONFIG,  required_argument, 0, ARG_CONFIG_SHORT  },
+        { ARG_HELP,    no_argument,       0, ARG_HELP_SHORT    },
+        { ARG_VERSION, no_argument,       0, ARG_VERSION_SHORT },
+        { NULL,        0,                 0, '\0'              }
 };
 
 #define GETOPT_OPTSTRING ARG_PORT_SHORT_S ARG_HELP_SHORT_S ARG_CONFIG_SHORT_S ARG_VERSION_SHORT_S
