@@ -22,9 +22,9 @@ static void usage_dummy() {
 }
 
 static const Method methods[] = {
-        {"dummy-one",  0, 0, 0, method_dummy_one, usage_dummy},
-        { "dummy-two", 0, 0, 0, method_dummy_two, usage_dummy},
-        { NULL,        0, 0, 0, NULL,             NULL       }
+        { "dummy-one", 0, 0, 0, method_dummy_one, usage_dummy },
+        { "dummy-two", 0, 0, 0, method_dummy_two, usage_dummy },
+        { NULL,        0, 0, 0, NULL,             NULL        }
 };
 
 int main() {

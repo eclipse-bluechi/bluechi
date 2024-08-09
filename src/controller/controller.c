@@ -562,11 +562,18 @@ static int controller_setup_heartbeat_timer(Controller *controller) {
 }
 
 /************************************************************************
- ************** org.eclipse.bluechi.Controller.ListUnits *****
+ ***************** AgentFleetRequest ************************************
  ************************************************************************/
 
-typedef struct ListUnitsRequest {
+typedef struct AgentFleetRequest AgentFleetRequest;
+
+typedef int (*agent_fleet_request_encode_reply_t)(AgentFleetRequest *req, sd_bus_message *reply);
+typedef AgentRequest *(*agent_fleet_request_create_t)(
+                Node *node, agent_request_response_t cb, void *userdata, free_func_t free_userdata);
+
+typedef struct AgentFleetRequest {
         sd_bus_message *request_message;
+        agent_fleet_request_encode_reply_t encode;
 
         int n_done;
         int n_sub_req;
@@ -575,9 +582,9 @@ typedef struct ListUnitsRequest {
                 sd_bus_message *m;
                 AgentRequest *agent_req;
         } sub_req[0];
-} ListUnitsRequest;
+} AgentFleetRequest;
 
-static void list_unit_request_free(ListUnitsRequest *req) {
+static void agent_fleet_request_free(AgentFleetRequest *req) {
         sd_bus_message_unref(req->request_message);
 
         for (int i = 0; i < req->n_sub_req; i++) {
@@ -589,17 +596,119 @@ static void list_unit_request_free(ListUnitsRequest *req) {
         free(req);
 }
 
-static void list_unit_request_freep(ListUnitsRequest **reqp) {
+static void agent_fleet_request_freep(AgentFleetRequest **reqp) {
         if (reqp && *reqp) {
-                list_unit_request_free(*reqp);
+                agent_fleet_request_free(*reqp);
                 *reqp = NULL;
         }
 }
 
-#define _cleanup_list_unit_request_ _cleanup_(list_unit_request_freep)
+#define _cleanup_agent_fleet_request_ _cleanup_(agent_fleet_request_freep)
 
+static void agent_fleet_request_done(AgentFleetRequest *req) {
+        /* All sub_req-requests are done, collect results and free when done */
+        UNUSED _cleanup_agent_fleet_request_ AgentFleetRequest *free_me = req;
 
-static int controller_method_list_units_encode_reply(ListUnitsRequest *req, sd_bus_message *reply) {
+        _cleanup_sd_bus_message_ sd_bus_message *reply = NULL;
+        int r = sd_bus_message_new_method_return(req->request_message, &reply);
+        if (r < 0) {
+                sd_bus_reply_method_errorf(
+                                req->request_message,
+                                SD_BUS_ERROR_FAILED,
+                                "Failed to create a reply message: %s",
+                                strerror(-r));
+                return;
+        }
+
+        r = req->encode(req, reply);
+        if (r < 0) {
+                sd_bus_reply_method_errorf(
+                                req->request_message,
+                                SD_BUS_ERROR_FAILED,
+                                "Request to at least one node failed: %s",
+                                strerror(-r));
+                return;
+        }
+
+        r = sd_bus_message_send(reply);
+        if (r < 0) {
+                bc_log_errorf("Failed to send reply message: %s", strerror(-r));
+                return;
+        }
+}
+
+static void agent_fleet_request_maybe_done(AgentFleetRequest *req) {
+        if (req->n_done == req->n_sub_req) {
+                agent_fleet_request_done(req);
+        }
+}
+
+static int agent_fleet_request_callback(
+                AgentRequest *agent_req, sd_bus_message *m, UNUSED sd_bus_error *ret_error) {
+        AgentFleetRequest *req = agent_req->userdata;
+        int i = 0;
+
+        for (i = 0; i < req->n_sub_req; i++) {
+                if (req->sub_req[i].agent_req == agent_req) {
+                        break;
+                }
+        }
+
+        assert(i != req->n_sub_req); /* we should have found the sub_req request */
+
+        req->sub_req[i].m = sd_bus_message_ref(m);
+        req->n_done++;
+
+        agent_fleet_request_maybe_done(req);
+
+        return 0;
+}
+
+static int agent_fleet_request_start(
+                sd_bus_message *request_message,
+                Controller *controller,
+                agent_fleet_request_create_t create_request,
+                agent_fleet_request_encode_reply_t encode) {
+        AgentFleetRequest *req = NULL;
+
+        req = malloc0_array(sizeof(*req), sizeof(req->sub_req[0]), controller->number_of_nodes);
+        if (req == NULL) {
+                return sd_bus_reply_method_errorf(request_message, SD_BUS_ERROR_NO_MEMORY, "Out of memory");
+        }
+        req->request_message = sd_bus_message_ref(request_message);
+        req->encode = encode;
+
+        Node *node = NULL;
+        int i = 0;
+        LIST_FOREACH(nodes, node, controller->nodes) {
+                _cleanup_agent_request_ AgentRequest *agent_req = create_request(
+                                node, agent_fleet_request_callback, req, NULL);
+                if (agent_req) {
+                        req->sub_req[i].agent_req = steal_pointer(&agent_req);
+                        req->sub_req[i].node = node_ref(node);
+                        req->n_sub_req++;
+                        i++;
+                }
+        }
+
+// Disabling -Wanalyzer-malloc-leak temporarily due to false-positive
+//      Leak detected is based on the assumption that controller_method_list_units_maybe_done is only
+//      called once directly after iterating over the list - when the conditional to free req is false.
+//      However, it does not take into account that controller_list_units_callback calls it for each node.
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wanalyzer-malloc-leak"
+
+        agent_fleet_request_maybe_done(req);
+
+        return 1;
+}
+#pragma GCC diagnostic pop
+
+/************************************************************************
+ ************** org.eclipse.bluechi.Controller.ListUnits *****
+ ************************************************************************/
+
+static int controller_method_list_units_encode_reply(AgentFleetRequest *req, sd_bus_message *reply) {
         int r = sd_bus_message_open_container(reply, SD_BUS_TYPE_ARRAY, NODE_AND_UNIT_INFO_STRUCT_TYPESTRING);
         if (r < 0) {
                 return r;
@@ -669,141 +778,17 @@ static int controller_method_list_units_encode_reply(ListUnitsRequest *req, sd_b
         return 0;
 }
 
-
-static void controller_method_list_units_done(ListUnitsRequest *req) {
-        /* All sub_req-requests are done, collect results and free when done */
-        UNUSED _cleanup_list_unit_request_ ListUnitsRequest *free_me = req;
-
-        _cleanup_sd_bus_message_ sd_bus_message *reply = NULL;
-        int r = sd_bus_message_new_method_return(req->request_message, &reply);
-        if (r < 0) {
-                sd_bus_reply_method_errorf(
-                                req->request_message,
-                                SD_BUS_ERROR_FAILED,
-                                "Failed to create a reply message: %s",
-                                strerror(-r));
-                return;
-        }
-
-        r = controller_method_list_units_encode_reply(req, reply);
-        if (r < 0) {
-                sd_bus_reply_method_errorf(
-                                req->request_message,
-                                SD_BUS_ERROR_FAILED,
-                                "List units request to at least one node failed: %s",
-                                strerror(-r));
-                return;
-        }
-
-        r = sd_bus_message_send(reply);
-        if (r < 0) {
-                bc_log_errorf("Failed to send reply message: %s", strerror(-r));
-                return;
-        }
-}
-
-static void controller_method_list_units_maybe_done(ListUnitsRequest *req) {
-        if (req->n_done == req->n_sub_req) {
-                controller_method_list_units_done(req);
-        }
-}
-
-static int controller_list_units_callback(
-                AgentRequest *agent_req, sd_bus_message *m, UNUSED sd_bus_error *ret_error) {
-        ListUnitsRequest *req = agent_req->userdata;
-        int i = 0;
-
-        for (i = 0; i < req->n_sub_req; i++) {
-                if (req->sub_req[i].agent_req == agent_req) {
-                        break;
-                }
-        }
-
-        assert(i != req->n_sub_req); /* we should have found the sub_req request */
-
-        req->sub_req[i].m = sd_bus_message_ref(m);
-        req->n_done++;
-
-        controller_method_list_units_maybe_done(req);
-
-        return 0;
-}
-
-
 static int controller_method_list_units(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error) {
         Controller *controller = userdata;
-        ListUnitsRequest *req = NULL;
-        Node *node = NULL;
-
-        req = malloc0_array(sizeof(*req), sizeof(req->sub_req[0]), controller->number_of_nodes);
-        if (req == NULL) {
-                return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_NO_MEMORY, "Out of memory");
-        }
-        req->request_message = sd_bus_message_ref(m);
-
-        int i = 0;
-        LIST_FOREACH(nodes, node, controller->nodes) {
-                _cleanup_agent_request_ AgentRequest *agent_req = node_request_list_units(
-                                node, controller_list_units_callback, req, NULL);
-                if (agent_req) {
-                        req->sub_req[i].agent_req = steal_pointer(&agent_req);
-                        req->sub_req[i].node = node_ref(node);
-                        req->n_sub_req++;
-                        i++;
-                }
-        }
-
-// Disabling -Wanalyzer-malloc-leak temporarily due to false-positive
-//      Leak detected is based on the assumption that controller_method_list_units_maybe_done is only
-//      called once directly after iterating over the list - when the conditional to free req is false.
-//      However, it does not take into account that controller_list_units_callback calls it for each node.
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wanalyzer-malloc-leak"
-
-        controller_method_list_units_maybe_done(req);
-
-        return 1;
+        return agent_fleet_request_start(
+                        m, controller, node_request_list_units, controller_method_list_units_encode_reply);
 }
-#pragma GCC diagnostic pop
 
 /************************************************************************
  ***** org.eclipse.bluechi.Controller.ListUnitFiles **************
  ************************************************************************/
 
-typedef struct ListUnitFilesRequest {
-        sd_bus_message *request_message;
-
-        int n_done;
-        int n_sub_req;
-        struct {
-                Node *node;
-                sd_bus_message *m;
-                AgentRequest *agent_req;
-        } sub_req[0];
-} ListUnitFilesRequest;
-
-static void list_unit_files_request_free(ListUnitFilesRequest *req) {
-        sd_bus_message_unref(req->request_message);
-
-        for (int i = 0; i < req->n_sub_req; i++) {
-                node_unrefp(&req->sub_req[i].node);
-                sd_bus_message_unrefp(&req->sub_req[i].m);
-                agent_request_unrefp(&req->sub_req[i].agent_req);
-        }
-
-        free(req);
-}
-
-static void list_unit_files_request_freep(ListUnitFilesRequest **reqp) {
-        if (reqp && *reqp) {
-                list_unit_files_request_free(*reqp);
-                *reqp = NULL;
-        }
-}
-
-#define _cleanup_list_unit_files_request_ _cleanup_(list_unit_files_request_freep)
-
-static int controller_method_list_unit_files_encode_reply(ListUnitFilesRequest *req, sd_bus_message *reply) {
+static int controller_method_list_unit_files_encode_reply(AgentFleetRequest *req, sd_bus_message *reply) {
         int r = sd_bus_message_open_container(
                         reply, SD_BUS_TYPE_ARRAY, NODE_AND_UNIT_FILE_INFO_STRUCT_TYPESTRING);
         if (r < 0) {
@@ -875,92 +860,14 @@ static int controller_method_list_unit_files_encode_reply(ListUnitFilesRequest *
         return 0;
 }
 
-static void controller_method_list_unit_files_done(ListUnitFilesRequest *req) {
-        UNUSED _cleanup_list_unit_files_request_ ListUnitFilesRequest *free_me = req;
-
-        _cleanup_sd_bus_message_ sd_bus_message *reply = NULL;
-        int r = sd_bus_message_new_method_return(req->request_message, &reply);
-        if (r < 0) {
-                sd_bus_reply_method_errorf(
-                                req->request_message,
-                                SD_BUS_ERROR_FAILED,
-                                "Failed to create a reply message: %s",
-                                strerror(-r));
-                return;
-        }
-        r = controller_method_list_unit_files_encode_reply(req, reply);
-        if (r < 0) {
-                sd_bus_reply_method_errorf(
-                                req->request_message,
-                                SD_BUS_ERROR_FAILED,
-                                "List unit files request to at least one node failed: %s",
-                                strerror(-r));
-                return;
-        }
-        r = sd_bus_message_send(reply);
-        if (r < 0) {
-                bc_log_errorf("Failed to send reply message: %s", strerror(-r));
-                return;
-        }
-}
-
-static void controller_method_list_unit_files_maybe_done(ListUnitFilesRequest *req) {
-        if (req->n_done == req->n_sub_req) {
-                controller_method_list_unit_files_done(req);
-        }
-}
-
-static int controller_list_unit_files_callback(
-                AgentRequest *agent_req, sd_bus_message *m, UNUSED sd_bus_error *ret_error) {
-        ListUnitFilesRequest *req = agent_req->userdata;
-        int i = 0;
-
-        for (i = 0; i < req->n_sub_req; i++) {
-                if (req->sub_req[i].agent_req == agent_req) {
-                        break;
-                }
-        }
-
-        assert(i != req->n_sub_req);
-
-        req->sub_req[i].m = sd_bus_message_ref(m);
-        req->n_done++;
-
-        controller_method_list_unit_files_maybe_done(req);
-
-        return 0;
-}
-
 static int controller_method_list_unit_files(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error) {
         Controller *controller = userdata;
-        ListUnitFilesRequest *req = NULL;
-        Node *node = NULL;
-
-        req = malloc0_array(sizeof(*req), sizeof(req->sub_req[0]), controller->number_of_nodes);
-        if (req == NULL) {
-                return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_NO_MEMORY, "Out of memory");
-        }
-        req->request_message = sd_bus_message_ref(m);
-
-        int i = 0;
-        LIST_FOREACH(nodes, node, controller->nodes) {
-                _cleanup_agent_request_ AgentRequest *agent_req = node_request_list_unit_files(
-                                node, controller_list_unit_files_callback, req, NULL);
-                if (agent_req) {
-                        req->sub_req[i].agent_req = steal_pointer(&agent_req);
-                        req->sub_req[i].node = node_ref(node);
-                        req->n_sub_req++;
-                        i++;
-                }
-        }
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wanalyzer-malloc-leak"
-
-        controller_method_list_unit_files_maybe_done(req);
-
-        return 1;
+        return agent_fleet_request_start(
+                        m,
+                        controller,
+                        node_request_list_unit_files,
+                        controller_method_list_unit_files_encode_reply);
 }
-#pragma GCC diagnostic pop
 
 /************************************************************************
  ***** org.eclipse.bluechi.Controller.ListNodes **************

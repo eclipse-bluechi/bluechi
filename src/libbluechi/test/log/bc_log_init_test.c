@@ -23,39 +23,39 @@ typedef struct log_test_param {
 
 
 struct log_test_param test_data[] = {
-  // test valid log targets
-        {"journald",     "INFO",       "false",   bc_log_to_journald_with_location,    LOG_LEVEL_INFO,  false},
-        { "stderr",      "INFO",       "false",   bc_log_to_stderr_with_location,      LOG_LEVEL_INFO,  false},
-        { "stderr-full", "INFO",       "false",   bc_log_to_stderr_full_with_location, LOG_LEVEL_INFO,  false},
- // test valid log levels
-        { "journald",    "DEBUG",      "false",   bc_log_to_journald_with_location,    LOG_LEVEL_DEBUG, false},
-        { "journald",    "INFO",       "false",   bc_log_to_journald_with_location,    LOG_LEVEL_INFO,  false},
-        { "journald",    "ERROR",      "false",   bc_log_to_journald_with_location,    LOG_LEVEL_ERROR, false},
-        { "journald",    "WARN",       "false",   bc_log_to_journald_with_location,    LOG_LEVEL_WARN,  false},
- // test valid is quiet
-        { "journald",    "INFO",       "true",    bc_log_to_journald_with_location,    LOG_LEVEL_INFO,  true },
+        // test valid log targets
+        { "journald",    "INFO",       "false",   bc_log_to_journald_with_location,    LOG_LEVEL_INFO,  false },
+        { "stderr",      "INFO",       "false",   bc_log_to_stderr_with_location,      LOG_LEVEL_INFO,  false },
+        { "stderr-full", "INFO",       "false",   bc_log_to_stderr_full_with_location, LOG_LEVEL_INFO,  false },
+        // test valid log levels
+        { "journald",    "DEBUG",      "false",   bc_log_to_journald_with_location,    LOG_LEVEL_DEBUG, false },
+        { "journald",    "INFO",       "false",   bc_log_to_journald_with_location,    LOG_LEVEL_INFO,  false },
+        { "journald",    "ERROR",      "false",   bc_log_to_journald_with_location,    LOG_LEVEL_ERROR, false },
+        { "journald",    "WARN",       "false",   bc_log_to_journald_with_location,    LOG_LEVEL_WARN,  false },
+        // test valid is quiet
+        { "journald",    "INFO",       "true",    bc_log_to_journald_with_location,    LOG_LEVEL_INFO,  true  },
 
- // test invalid log targets: should result in a default log function
-        { NULL,          "INFO",       "false",   bc_log_to_journald_with_location,    LOG_LEVEL_INFO,  false},
-        { "",            "INFO",       "false",   bc_log_to_journald_with_location,    LOG_LEVEL_INFO,  false},
-        { "stderr-ful",  "INFO",       "false",   bc_log_to_journald_with_location,    LOG_LEVEL_INFO,  false},
+        // test invalid log targets: should result in a default log function
+        { NULL,          "INFO",       "false",   bc_log_to_journald_with_location,    LOG_LEVEL_INFO,  false },
+        { "",            "INFO",       "false",   bc_log_to_journald_with_location,    LOG_LEVEL_INFO,  false },
+        { "stderr-ful",  "INFO",       "false",   bc_log_to_journald_with_location,    LOG_LEVEL_INFO,  false },
 
- // test invalid log levels: should result in a default log function
-        { "journald",    NULL,         "false",   bc_log_to_journald_with_location,    LOG_LEVEL_INFO,  false},
-        { "journald",    "",           "false",   bc_log_to_journald_with_location,    LOG_LEVEL_INFO,  false},
-        { "journald",    "info",       "false",   bc_log_to_journald_with_location,    LOG_LEVEL_INFO,  false},
-        { "journald",    "just wrong", "false",   bc_log_to_journald_with_location,    LOG_LEVEL_INFO,  false},
+        // test invalid log levels: should result in a default log function
+        { "journald",    NULL,         "false",   bc_log_to_journald_with_location,    LOG_LEVEL_INFO,  false },
+        { "journald",    "",           "false",   bc_log_to_journald_with_location,    LOG_LEVEL_INFO,  false },
+        { "journald",    "info",       "false",   bc_log_to_journald_with_location,    LOG_LEVEL_INFO,  false },
+        { "journald",    "just wrong", "false",   bc_log_to_journald_with_location,    LOG_LEVEL_INFO,  false },
 
- // test is quiet: different string values interpreted as true
-        { "journald",    "INFO",       "true",    bc_log_to_journald_with_location,    LOG_LEVEL_INFO,  true },
-        { "journald",    "INFO",       "t",       bc_log_to_journald_with_location,    LOG_LEVEL_INFO,  true },
-        { "journald",    "INFO",       "yes",     bc_log_to_journald_with_location,    LOG_LEVEL_INFO,  true },
-        { "journald",    "INFO",       "y",       bc_log_to_journald_with_location,    LOG_LEVEL_INFO,  true },
-        { "journald",    "INFO",       "on",      bc_log_to_journald_with_location,    LOG_LEVEL_INFO,  true },
- // test is quiet: invalid values should result in false
-        { "journald",    "INFO",       "f",       bc_log_to_journald_with_location,    LOG_LEVEL_INFO,  false},
-        { "journald",    "INFO",       "false",   bc_log_to_journald_with_location,    LOG_LEVEL_INFO,  false},
-        { "journald",    "INFO",       "invalid", bc_log_to_journald_with_location,    LOG_LEVEL_INFO,  false},
+        // test is quiet: different string values interpreted as true
+        { "journald",    "INFO",       "true",    bc_log_to_journald_with_location,    LOG_LEVEL_INFO,  true  },
+        { "journald",    "INFO",       "t",       bc_log_to_journald_with_location,    LOG_LEVEL_INFO,  true  },
+        { "journald",    "INFO",       "yes",     bc_log_to_journald_with_location,    LOG_LEVEL_INFO,  true  },
+        { "journald",    "INFO",       "y",       bc_log_to_journald_with_location,    LOG_LEVEL_INFO,  true  },
+        { "journald",    "INFO",       "on",      bc_log_to_journald_with_location,    LOG_LEVEL_INFO,  true  },
+        // test is quiet: invalid values should result in false
+        { "journald",    "INFO",       "f",       bc_log_to_journald_with_location,    LOG_LEVEL_INFO,  false },
+        { "journald",    "INFO",       "false",   bc_log_to_journald_with_location,    LOG_LEVEL_INFO,  false },
+        { "journald",    "INFO",       "invalid", bc_log_to_journald_with_location,    LOG_LEVEL_INFO,  false },
 };
 
 

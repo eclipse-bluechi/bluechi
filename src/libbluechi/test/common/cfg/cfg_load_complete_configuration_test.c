@@ -39,38 +39,38 @@ typedef struct cfg_test_param {
 } cfg_test_param;
 
 struct cfg_test_param test_data[] = {
-  /* basic single config file tests */
-        {"no config files",
+        /* basic single config file tests */
+        { "no config files",
          { NULL, NULL, { NULL, NULL }, NULL },
-         0,       { { NULL, NULL }, { NULL, NULL }, { NULL, NULL } }             },
+         0,       { { NULL, NULL }, { NULL, NULL }, { NULL, NULL } }              },
         { "only default config file",
          { "NodeName = laptop\n", NULL, { NULL, NULL }, NULL },
-         0,       { { "NodeName", "laptop" }, { NULL, NULL }, { NULL, NULL } }   },
+         0,       { { "NodeName", "laptop" }, { NULL, NULL }, { NULL, NULL } }    },
         { "only custom config file",
          { NULL, "NodeName = laptop\n", { NULL, NULL }, NULL },
-         0,       { { "NodeName", "laptop" }, { NULL, NULL }, { NULL, NULL } }   },
+         0,       { { "NodeName", "laptop" }, { NULL, NULL }, { NULL, NULL } }    },
         { "only file in confd",
          { NULL, NULL, { "NodeName = laptop\n", NULL }, NULL },
-         0,       { { "NodeName", "laptop" }, { NULL, NULL }, { NULL, NULL } }   },
+         0,       { { "NodeName", "laptop" }, { NULL, NULL }, { NULL, NULL } }    },
         { "only file via CLI",
          { NULL, NULL, { NULL, NULL }, "NodeName = laptop\n" },
-         0,       { { "NodeName", "laptop" }, { NULL, NULL }, { NULL, NULL } }   },
+         0,       { { "NodeName", "laptop" }, { NULL, NULL }, { NULL, NULL } }    },
 
- /* testing of loading order and overwrite */
+        /* testing of loading order and overwrite */
         { "with custom config file",
          { "NodeName = laptop\n", "NodeName = pi\n", { NULL, NULL }, NULL },
-         0,       { { "NodeName", "pi" }, { NULL, NULL }, { NULL, NULL } }       },
+         0,       { { "NodeName", "pi" }, { NULL, NULL }, { NULL, NULL } }        },
         { "with config file in confd",
          { "NodeName = laptop\n", "NodeName = pi\n", { "NodeName = vm\n", NULL }, NULL },
-         0,       { { "NodeName", "vm" }, { NULL, NULL }, { NULL, NULL } }       },
+         0,       { { "NodeName", "vm" }, { NULL, NULL }, { NULL, NULL } }        },
         { "with config CLI option",
          { "NodeName = laptop\n", "NodeName = pi\n", { "NodeName = vm\n", NULL }, "NodeName = container\n" },
-         0,       { { "NodeName", "container" }, { NULL, NULL }, { NULL, NULL } }},
+         0,       { { "NodeName", "container" }, { NULL, NULL }, { NULL, NULL } } },
         { "with multiple config files in confd",
          { "NodeName = laptop\n", "NodeName = pi\n", { "NodeName = vm\n", "NodeName = container\n" }, NULL },
-         0,       { { "NodeName", "container" }, { NULL, NULL }, { NULL, NULL } }},
+         0,       { { "NodeName", "container" }, { NULL, NULL }, { NULL, NULL } } },
 
- /* testing of loading order, overwrite and merges */
+        /* testing of loading order, overwrite and merges */
         { "with multiple, duplicate keys",
          { "NodeName = laptop\nLogLevel=INFO\n",
             "NodeName = pi\n",
@@ -79,21 +79,21 @@ struct cfg_test_param test_data[] = {
          0,       { { "NodeName", "pi" },
             { "LogLevel", "DEBUG" },
             { "LogTarget", "journald" },
-            { "ControllerPort", "1337" } }                            },
+            { "ControllerPort", "1337" } }                             },
 
- /* testing invalid entries */
+        /* testing invalid entries */
         { "with invalid value in default config file",
          { "NodeName 0 laptop\n", "NodeName = pi\n", { "LogLevel=DEBUG\n", "LogTarget=stderr\n" }, NULL },
          -EINVAL,
-         { { NULL, NULL }, { NULL, NULL }, { NULL, NULL } }                      },
+         { { NULL, NULL }, { NULL, NULL }, { NULL, NULL } }                       },
         { "with invalid value in custom config file",
          { "NodeName = laptop\n", "NodeName 0 pi\n", { "LogLevel=DEBUG\n", "LogTarget=stderr\n" }, NULL },
          -EINVAL,
-         { { "NodeName", "laptop" }, { NULL, NULL }, { NULL, NULL } }            },
+         { { "NodeName", "laptop" }, { NULL, NULL }, { NULL, NULL } }             },
         { "with invalid value in one of the confd files",
          { "NodeName = laptop\n", "NodeName = pi\n", { "LogLevel=DEBUG\n", "LogTarget0stderr\n" }, NULL },
          -EINVAL,
-         { { "NodeName", "pi" }, { "LogLevel", "DEBUG" }, { NULL, NULL } }       },
+         { { "NodeName", "pi" }, { "LogLevel", "DEBUG" }, { NULL, NULL } }        },
 };
 
 void create_file(const char *file_path, const char *cfg_file_content) {
