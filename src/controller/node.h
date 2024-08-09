@@ -32,9 +32,7 @@ struct AgentRequest {
 
 AgentRequest *agent_request_ref(AgentRequest *req);
 void agent_request_unref(AgentRequest *req);
-
 int agent_request_start(AgentRequest *req);
-
 int agent_request_cancel(AgentRequest *r);
 
 struct Node {
