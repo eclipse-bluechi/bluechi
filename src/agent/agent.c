@@ -1384,7 +1384,7 @@ static int agent_method_subscribe(sd_bus_message *m, void *userdata, UNUSED sd_b
                 }
                 agent->wildcard_subscription_active = true;
 
-                AgentUnitInfo info = { NULL, (char *) unit, true, true, -1, NULL };
+                AgentUnitInfo info = { NULL, (char *) unit, true, true, _UNIT_ACTIVE_STATE_INVALID, NULL };
                 agent_emit_unit_new(agent, &info, "virtual");
 
                 return sd_bus_reply_method_return(m, "");

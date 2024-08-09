@@ -25,7 +25,9 @@ Checks: >
     -modernize-macro-to-enum,
     -llvm-else-after-return,
     -readability-else-after-return,
-    -misc-include-cleaner
+    -misc-include-cleaner,
+    -bugprone-multi-level-implicit-pointer-conversion,
+    -cppcoreguidelines-macro-to-enum
 
 CheckOptions:
     - key: readability-function-cognitive-complexity.Threshold
