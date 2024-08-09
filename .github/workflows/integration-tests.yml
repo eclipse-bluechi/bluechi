@@ -91,10 +91,10 @@ jobs:
           tmt test id --dry | grep "New id" && echo "Found integration tests with missing ID. Please generate Test-IDs." && exit 1
           cd ..
       
-      - name: Check for duplicate test IDs and summaries
+      - name: Lint tmt tests, plans and stories
         run: |
           cd tests
-          ./scripts/duplicate-check.py
+          tmt lint
           cd ..
 
       - name: Run integration tests
