@@ -3,108 +3,43 @@
 #
 # SPDX-License-Identifier: LGPL-2.1-or-later
 
-import re
-from typing import Dict, Tuple
+from typing import Dict
 
 from bluechi_test.config import BluechiAgentConfig, BluechiControllerConfig
 from bluechi_test.machine import BluechiAgentMachine, BluechiControllerMachine
+from bluechi_test.systemd_lists import (
+    RegexPattern,
+    SystemdUnit,
+    compare_lists,
+    parse_bluechictl_list_output,
+    parse_systemctl_list_output,
+)
 from bluechi_test.test import BluechiTest
 
 node_foo_name = "node-foo"
 node_bar_name = "node-bar"
 
 
-def parse_bluechictl_output(output: str) -> Dict[str, Dict[str, Tuple[str, str]]]:
-    line_pat = re.compile(
-        r"""\s*(?P<node_name>[\S]+)\s*\|
-                              \s*(?P<unit_name>[\S]+)\s*\|
-                              \s*(?P<state>[\S]+)\s*\|
-                              \s*(?P<sub_state>[\S]+)\s*""",
-        re.VERBOSE,
-    )
-    result = {}
-    for line in output.splitlines():
-        if line.startswith("NODE ") or line.startswith("===="):
-            # Ignore header lines
-            continue
-
-        match = line_pat.match(line)
-        if not match:
-            raise Exception(
-                f"Error parsing bluechictl list-units output, invalid line: '{line}'"
-            )
-
-        node_units = result.get(match.group("node_name"))
-        if not node_units:
-            node_units = {}
-            result[match.group("node_name")] = node_units
-
-        if match.group("unit_name") in node_units:
-            raise Exception(
-                f"Error parsing bluechictl list-units output, unit already reported, line: '{line}'"
-            )
-
-        node_units[match.group("unit_name")] = (
-            match.group("state"),
-            match.group("sub_state"),
-        )
-
-    return result
-
-
-def verify_units(all_units: Dict[str, Tuple[str, str]], output: str, node_name: str):
-    esc_seq = re.compile(r"\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])")
-    line_pat = re.compile(
-        r"""\s*(?P<unit_name>\S+)
-                              .*loaded
-                              \s+(?P<state>\S+)
-                              \s+(?P<sub_state>\S+)
-                              \s+.*$
-                          """,
-        re.VERBOSE,
-    )
-    for line in output.splitlines():
-        # Some systemctl output contains ANSI sequences, which we need to remove before matching
-        line = esc_seq.sub("", line)
-
-        match = line_pat.match(line)
-        if not match:
-            raise Exception(
-                f"Error parsing systemctl list-units output, invalid line: '{line}'"
-            )
-
-        found = all_units.get(match.group("unit_name"))
-        if (
-            not found
-            or match.group("state") != found[0]
-            or match.group("sub_state") != found[1]
-        ):
-            raise Exception(
-                "Unit '{}' with state '{}' and substate '{}' reported by systemctl"
-                " on node '{}', but not reported by bluechictl".format(
-                    match.group("unit_name"),
-                    match.group("state"),
-                    match.group("sub_state"),
-                    node_name,
-                )
-            )
-
-
 def exec(ctrl: BluechiControllerMachine, nodes: Dict[str, BluechiAgentMachine]):
-    node_foo = nodes[node_foo_name]
-    node_bar = nodes[node_bar_name]
-
     all_res, all_out = ctrl.bluechictl.list_units()
     assert all_res == 0
-    all_units = parse_bluechictl_output(all_out)
+    all_units = parse_bluechictl_list_output(
+        content=all_out,
+        line_pattern=RegexPattern.BLUECHITL_LIST_UNITS,
+        item_class=SystemdUnit,
+    )
 
-    foo_res, foo_out = node_foo.systemctl.list_units()
-    assert foo_res == 0
-    verify_units(all_units[node_foo_name], foo_out, node_foo_name)
-
-    bar_res, bar_out = node_bar.systemctl.list_units()
-    assert bar_res == 0
-    verify_units(all_units[node_bar_name], bar_out, node_bar_name)
+    for node_name in nodes:
+        node_res, node_out = nodes[node_name].systemctl.list_units()
+        assert node_res == 0
+        node_units = parse_systemctl_list_output(
+            content=node_out,
+            line_pattern=RegexPattern.SYSTEMCTL_LIST_UNITS,
+            item_class=SystemdUnit,
+        )
+        compare_lists(
+            bc_items=all_units[node_name], sc_items=node_units, node_name=node_name
+        )
 
 
 def test_bluechi_nodes_statuses(
