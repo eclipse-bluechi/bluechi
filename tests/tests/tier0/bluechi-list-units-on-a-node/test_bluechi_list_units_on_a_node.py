@@ -30,7 +30,7 @@ def exec(ctrl: BluechiControllerMachine, nodes: Dict[str, BluechiAgentMachine]):
         item_class=SystemdUnit,
     )
 
-    foo_res, foo_out = node_foo.systemctl.list_units()
+    foo_res, foo_out = node_foo.systemctl.list_units(all_units=True)
     assert foo_res == 0
     foo_units = parse_systemctl_list_output(
         content=foo_out,

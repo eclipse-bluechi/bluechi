@@ -183,3 +183,9 @@ def compare_lists(
                 f"Attribute values reported by bluechictl '{bc_item}' differs from attribute values"
                 f" reported by systemctl '{sc_item}' on node '{node_name}"
             )
+
+    for bc_item in bc_items.values():
+        if bc_item.key not in sc_items:
+            raise Exception(
+                f"Item '{bc_item}' is reported by bluechictl, but not by systemctl on node '{node_name}'"
+            )
