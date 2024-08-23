@@ -155,7 +155,9 @@ class SystemCtl:
         check_result: bool = True,
         expected_result: int = 0,
     ) -> Tuple[Optional[int], Union[Iterator[bytes], Any, Tuple[bytes, bytes]]]:
-        command = "list-units --legend=false{}".format(" --all" if all_units else "")
+        command = "list-units --legend=false --plain{}".format(
+            " --all" if all_units else ""
+        )
         return self._do_operation(command, check_result, expected_result)
 
     def list_unit_files(
