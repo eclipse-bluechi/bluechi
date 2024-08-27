@@ -9,6 +9,8 @@ from typing import AnyStr, Dict
 # Literals used during bluechictl/systemctl output parsing
 _ATTR_NODE_NAME = "node_name"
 _ATTR_UNIT_NAME = "unit_name"
+_ATTR_UNIT_FILE = "unit_file"
+_ATTR_PRESET = "preset"
 _ATTR_STATE = "state"
 _ATTR_SUB_STATE = "sub_state"
 _ATTR_LOADED = "loaded"
@@ -25,6 +27,14 @@ class RegexPattern:
         re.VERBOSE,
     )
 
+    # Pattern to parse bluechictl list-unit-files line
+    BLUECHICTL_LIST_UNIT_FILES = re.compile(
+        rf"""\s*(?P<{_ATTR_NODE_NAME}>[\S]+)\s*\|
+            \s*((?:[^/]*/)*)(?P<{_ATTR_UNIT_FILE}>[\S]+)\s*\|
+            \s*(?P<{_ATTR_STATE}>[\S]+)\s*""",
+        re.VERBOSE,
+    )
+
     # Pattern to parse systemctl list-units line
     SYSTEMCTL_LIST_UNITS = re.compile(
         rf"""\s*(?P<{_ATTR_UNIT_NAME}>\S+)
@@ -32,6 +42,14 @@ class RegexPattern:
             \s+(?P<{_ATTR_STATE}>\S+)
             \s+(?P<{_ATTR_SUB_STATE}>\S+)
             \s+(?P<{_ATTR_DESCRIPTION}>.*)$""",
+        re.VERBOSE,
+    )
+
+    # Pattern to parse systemctl list-unit-files line
+    SYSTEMCTL_LIST_UNIT_FILES = re.compile(
+        rf"""\s*(?P<{_ATTR_UNIT_FILE}>\S+)
+            \s+(?P<{_ATTR_STATE}>\S+)
+            \s+(?P<{_ATTR_PRESET}>\S+)""",
         re.VERBOSE,
     )
 
@@ -102,6 +120,41 @@ class SystemdUnit(SystemdListItem):
                 match.group(_ATTR_DESCRIPTION)
                 if _ATTR_DESCRIPTION in match.groupdict()
                 else ""
+            ),
+        )
+
+
+class SystemdUnitFile(SystemdListItem):
+    def __init__(
+        self,
+        file_name: str,
+        state: str = None,
+        preset: str = None,
+    ):
+        super().__init__(file_name)
+        self.state = state
+        self.preset = preset
+
+    def __str__(self):
+        return (
+            f"SystemdUnitFile("
+            f"file_name='{self.key}', "
+            f"state='{self.state}', "
+            f"preset='{self.preset}')"
+        )
+
+    def attributeEquals(self, other) -> bool:
+        if not isinstance(other, self.__class__):
+            return False
+        return self.state == other.state
+
+    @classmethod
+    def from_match(cls, match: re.Match):
+        return cls(
+            file_name=match.group(_ATTR_UNIT_FILE),
+            state=match.group(_ATTR_STATE),
+            preset=(
+                match.group(_ATTR_PRESET) if _ATTR_PRESET in match.groupdict() else ""
             ),
         )
 
