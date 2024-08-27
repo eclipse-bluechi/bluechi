@@ -44,6 +44,7 @@ nav:
     - SELinux:
       - bluechi-controller.selinux(8): man/bluechi-controller-selinux.md
       - bluechi-agent.selinux(8): man/bluechi-agent-selinux.md
+  - Additional Resources: resources.md
 
 theme:
   name: material
