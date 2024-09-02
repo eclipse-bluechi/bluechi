@@ -1799,6 +1799,8 @@ static const sd_bus_vtable internal_agent_vtable[] = {
         SD_BUS_METHOD("EnableUnitFiles", "asbb", "ba(sss)", agent_method_passthrough_to_systemd, 0),
         SD_BUS_METHOD("DisableUnitFiles", "asb", "a(sss)", agent_method_passthrough_to_systemd, 0),
         SD_BUS_METHOD("Reload", "", "", agent_method_passthrough_to_systemd, 0),
+        SD_BUS_METHOD("ResetFailed", "", "", agent_method_passthrough_to_systemd, 0),
+        SD_BUS_METHOD("ResetFailedUnit", "s", "", agent_method_passthrough_to_systemd, 0),
         SD_BUS_VTABLE_END
 };
 

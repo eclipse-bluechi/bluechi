@@ -156,6 +156,14 @@ Object path: `/org/eclipse/bluechi/node/$name`
     `ReloadUnit()`/`RestartUnit()` is similar to `StartUnit()` but can be used to reload/restart a unit instead. See
     equivalent systemd methods for details.
 
+  * `ResetFailed()`
+
+        Equivalent to systemd method `ResetFailed`. This method will reset the failed state of all units on the node.
+
+  * `ResetFailedUnit(in  s name)`
+
+    Equivalent to systemd method `ResetFailedUnit`. This method will reset the failed state for a specific unit on the node.
+
   * `EnableUnitFiles(in  as files, in  b runtime, in  b force, out b carries_install_info, out a(sss) changes);`
 
     `EnableUnitFiles()` may be used to enable one or more units in the system (by creating symlinks to them in /etc/ or /run/).

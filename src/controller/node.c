@@ -76,6 +76,8 @@ static const sd_bus_vtable node_vtable[] = {
         SD_BUS_METHOD("ThawUnit", "s", "", node_method_passthrough_to_agent, 0),
         SD_BUS_METHOD("RestartUnit", "ss", "o", node_method_restart_unit, 0),
         SD_BUS_METHOD("ReloadUnit", "ss", "o", node_method_reload_unit, 0),
+        SD_BUS_METHOD("ResetFailed", "", "", node_method_passthrough_to_agent, 0),
+        SD_BUS_METHOD("ResetFailedUnit", "s", "", node_method_passthrough_to_agent, 0),
         SD_BUS_METHOD("GetUnitProperties", "ss", "a{sv}", node_method_passthrough_to_agent, 0),
         SD_BUS_METHOD("GetUnitProperty", "sss", "v", node_method_passthrough_to_agent, 0),
         SD_BUS_METHOD("SetUnitProperties", "sba(sv)", "", node_method_set_unit_properties, 0),

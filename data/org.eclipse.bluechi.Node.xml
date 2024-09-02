@@ -226,6 +226,22 @@
       <arg name="level" type="s" direction="in" />
     </method>
 
+    <!--
+      ResetFailed:
+      Reset all the failed units on the node
+    -->
+    <method name="ResetFailed" />
+
+    <!--
+      ResetFailedUnit:
+      Reset the failed state of a specific unit on the node.
+      @name Name of the unit to reset the failed state for.
+      
+    -->
+    <method name="ResetFailedUnit">
+      <arg name="name" type="s" direction="in" />
+    </method>
+
 
     <!--
       Name:
