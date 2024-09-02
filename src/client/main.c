@@ -43,6 +43,7 @@ const Method methods[] = {
         { "thaw",            2, 2,       OPT_NONE,                                method_thaw,            usage_bluechi },
         { "restart",         2, 2,       OPT_NONE,                                method_restart,         usage_bluechi },
         { "reload",          2, 2,       OPT_NONE,                                method_reload,          usage_bluechi },
+        { "reset-failed",    0, ARG_ANY, OPT_NONE,                                method_reset_failed,    usage_bluechi },
         { "monitor",         0, 2,       OPT_NONE,                                method_monitor,         usage_bluechi },
         { "metrics",         1, 1,       OPT_NONE,                                method_metrics,         usage_bluechi },
         { "enable",          2, ARG_ANY, OPT_FORCE | OPT_RUNTIME | OPT_NO_RELOAD, method_enable,          usage_bluechi },

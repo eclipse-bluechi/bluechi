@@ -963,6 +963,23 @@ class Node(ApiBase):
             mode,
         )
 
+    def reset_failed(self) -> None:
+        """
+          ResetFailed:
+        Reset all the failed units on the node
+        """
+        self.get_proxy().ResetFailed()
+
+    def reset_failed_unit(self, name: str) -> None:
+        """
+          ResetFailedUnit:
+        Reset the failed state of a specific unit on the node.
+        @name Name of the unit to reset the failed state for.
+        """
+        self.get_proxy().ResetFailedUnit(
+            name,
+        )
+
     def restart_unit(self, name: str, mode: str) -> ObjPath:
         """
           RestartUnit:

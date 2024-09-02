@@ -1,0 +1,2 @@
+summary: Test resetting the failed state of all units on a node via D-Bus API call.
+id: baaf096a-ad2e-45c5-b2d5-530c0b5fdce0

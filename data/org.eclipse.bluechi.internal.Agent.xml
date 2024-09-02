@@ -81,6 +81,10 @@
     <method name="SetLogLevel">
       <arg name="level" type="s" direction="in" />
     </method>
+    <method name="ResetFailed" />
+    <method name="ResetFailedUnit">
+      <arg name="name" type="s" direction="in" />
+    </method>
 
     <signal name="JobDone">
       <arg name="id" type="u" />

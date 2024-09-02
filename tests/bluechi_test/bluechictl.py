@@ -134,6 +134,21 @@ class BluechiCtl:
             expected_result,
         )
 
+    def reset_failed(
+        self,
+        node_name: str = "",
+        units: List[str] = [],
+        check_result: bool = True,
+        expected_result: int = 0,
+    ) -> Tuple[Optional[int], Union[Iterator[bytes], Any, Tuple[bytes, bytes]]]:
+        cmd = f"reset-failed {node_name} {' '.join(units)}".strip()
+        return self._run(
+            f"ResetFailed on node {node_name} for units {units}",
+            cmd,
+            check_result,
+            expected_result,
+        )
+
     def stop_unit(
         self,
         node_name: str,

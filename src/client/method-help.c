@@ -28,6 +28,8 @@ void usage_bluechi() {
         printf("    usage: reload nodename unitname\n");
         printf("  - restart: restarts a specific systemd service (or timer, or slice) on a specific node\n");
         printf("    usage: restart nodename unitname\n");
+        printf("  - reset-failed: reset failed node on all node or all units on a specific node or specidec units on a node \n");
+        printf("    usage: reset-failed [nodename] [unit1, unit2 ...]\n");
         printf("  - enable: enables the specified systemd files on a specific node\n");
         printf("    usage: enable nodename unitfilename...\n");
         printf("  - disable: disables the specified systemd files on a specific node\n");
