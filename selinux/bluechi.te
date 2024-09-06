@@ -25,10 +25,6 @@ corenet_port(bluechi_port_t)
 type bluechi_agent_port_t;
 corenet_port(bluechi_agent_port_t)
 
-permissive bluechi_t;
-permissive bluechi_agent_t;
-
-
 ########################################
 #
 # bluechi local policy
@@ -70,6 +66,14 @@ allow haproxy_t bluechi_t:unix_stream_socket connectto;
 allow bluechi_agent_t self:fifo_file rw_fifo_file_perms;
 allow bluechi_agent_t self:unix_stream_socket create_stream_socket_perms;
 allow bluechi_agent_t self:unix_dgram_socket create_socket_perms;
+
+systemd_start_all_services(bluechi_agent_t)
+systemd_start_systemd_services(bluechi_agent_t)
+systemd_stop_systemd_services(bluechi_agent_t)
+systemd_status_systemd_services(bluechi_agent_t)
+systemd_reload_all_services(bluechi_agent_t)
+systemd_reload_systemd_services(bluechi_agent_t)
+init_reload_services(bluechi_agent_t)
 
 kernel_dgram_send(bluechi_agent_t)
 
