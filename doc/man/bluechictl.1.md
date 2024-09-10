@@ -113,3 +113,7 @@ bluechictl status -w
 ### **bluechictl** *status* [*agent*] [*unit1*,*...*]
 
 Fetches the status of the systemd units for the `bluechi-agent`.
+
+### **bluechictl** *reset-failed* [*agent*] [*unit1*,*...*]
+
+Performs a `reset-failed` on the chosen `bluechi-agent` for the selected units.
