@@ -885,9 +885,9 @@ class Node(ApiBase):
           GetUnitProperties:
         @name: The name of unit
         @interface: The interface name
-        @props: The  as key-value pair with the name of the property as key
+        @props: The properties as key-value pair with the name of the property as key
 
-        Returns the current  for a named unit on the node. The returned  are the same as you would get in the systemd  apis.
+        Returns the current for a named unit on the node. The returned are the same as you would get in the systemd apis.
         """
         return self.get_proxy().GetUnitProperties(
             name,
@@ -908,6 +908,23 @@ class Node(ApiBase):
             name,
             interface,
             property,
+        )
+
+    def kill_unit(self, name: str, who: str, signal: Int32) -> None:
+        """
+            KillUnit:
+          @name: The name of the unit to kill
+          @who: One of [main, control, all]
+          @signal: Unix signal number
+
+          Kills processes of a unit on a node.
+          If the who parameter is set to main, only the main process of a unit is killed. If control is used, then only the control process of the unit is
+        killed. And if all is used, all processes are killed.
+        """
+        self.get_proxy().KillUnit(
+            name,
+            who,
+            signal,
         )
 
     def list_unit_files(self) -> List[Tuple[str, str]]:
@@ -1014,7 +1031,7 @@ class Node(ApiBase):
         @runtime: Specify if the changes should persist after reboot or not
         @keyvalues: A list of the new values as key-value pair with the key being the name of the property
 
-        Set named . If runtime is true the property changes do not persist across reboots.
+        Set named properties. If runtime is true the property changes do not persist across reboots.
         """
         self.get_proxy().SetUnitProperties(
             name,

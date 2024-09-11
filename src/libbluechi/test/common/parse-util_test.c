@@ -62,6 +62,30 @@ bool test_parse_port(const char *input, bool expected_return, uint16_t expected_
         return true;
 }
 
+bool test_parse_linux_signal(const char *input, bool expected_return, uint32_t expected_result) {
+        _cleanup_free_ char *msg = NULL;
+
+        uint32_t res = 0;
+        bool ret = parse_linux_signal(input, &res);
+        if ((ret != expected_return) || (res != expected_result)) {
+                ret = asprintf(&msg,
+                               "FAILED: %s\n\tInput: '%s'\n\tExpected: Return=%d, Result=%d\n\tGot: Return=%d, Result=%d\n",
+                               __FUNCTION_NAME__,
+                               input,
+                               expected_return,
+                               expected_result,
+                               ret,
+                               res);
+        }
+
+        if (msg != NULL) {
+                fprintf(stderr, "%s", msg);
+                return false;
+        }
+        return true;
+}
+
+
 int main() {
         bool result = true;
 
@@ -84,6 +108,16 @@ int main() {
         result = result && test_parse_port("-2", false, 0);
         result = result && test_parse_port("65.536", false, 0);
 
+        result = result && test_parse_linux_signal(NULL, false, 0);
+        result = result && test_parse_linux_signal("", false, 0);
+        result = result && test_parse_linux_signal("foo", false, 0);
+        result = result && test_parse_linux_signal("0", false, 0);
+        result = result && test_parse_linux_signal("1", true, 1);
+        result = result && test_parse_linux_signal("15", true, 15);
+        result = result && test_parse_linux_signal("31", true, 31);
+        result = result && test_parse_linux_signal("32", false, 0);
+        result = result && test_parse_linux_signal("-2", false, 0);
+        result = result && test_parse_linux_signal("65.536", false, 0);
 
         if (!result) {
                 return EXIT_FAILURE;

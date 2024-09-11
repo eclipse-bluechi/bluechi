@@ -1,0 +1,2 @@
+summary: Test killing processes of (i.e. sending a signal to) a units on a node.
+id: 0051e95c-7bdf-4171-af91-d9e1fd16e90f

@@ -1778,6 +1778,14 @@ static const sd_bus_vtable internal_agent_vtable[] = {
         SD_BUS_METHOD("DisableMetrics", "", "", agent_method_disable_metrics, 0),
         SD_BUS_METHOD("SetLogLevel", "s", "", agent_method_set_log_level, 0),
         SD_BUS_METHOD("JobCancel", "u", "", agent_method_job_cancel, 0),
+        SD_BUS_METHOD("EnableUnitFiles", "asbb", "ba(sss)", agent_method_passthrough_to_systemd, 0),
+        SD_BUS_METHOD("DisableUnitFiles", "asb", "a(sss)", agent_method_passthrough_to_systemd, 0),
+        SD_BUS_METHOD("Reload", "", "", agent_method_passthrough_to_systemd, 0),
+        SD_BUS_METHOD("ResetFailed", "", "", agent_method_passthrough_to_systemd, 0),
+        SD_BUS_METHOD("ResetFailedUnit", "s", "", agent_method_passthrough_to_systemd, 0),
+        SD_BUS_METHOD("KillUnit", "ssi", "", agent_method_passthrough_to_systemd, 0),
+        SD_BUS_METHOD("StartDep", "s", "", agent_method_start_dep, 0),
+        SD_BUS_METHOD("StopDep", "s", "", agent_method_stop_dep, 0),
         SD_BUS_SIGNAL_WITH_NAMES("JobDone", "us", SD_BUS_PARAM(id) SD_BUS_PARAM(result), 0),
         SD_BUS_SIGNAL_WITH_NAMES("JobStateChanged", "us", SD_BUS_PARAM(id) SD_BUS_PARAM(state), 0),
         SD_BUS_SIGNAL_WITH_NAMES(
@@ -1794,13 +1802,6 @@ static const sd_bus_vtable internal_agent_vtable[] = {
                         0),
         SD_BUS_SIGNAL_WITH_NAMES("UnitRemoved", "s", SD_BUS_PARAM(unit), 0),
         SD_BUS_SIGNAL("Heartbeat", "", 0),
-        SD_BUS_METHOD("StartDep", "s", "", agent_method_start_dep, 0),
-        SD_BUS_METHOD("StopDep", "s", "", agent_method_stop_dep, 0),
-        SD_BUS_METHOD("EnableUnitFiles", "asbb", "ba(sss)", agent_method_passthrough_to_systemd, 0),
-        SD_BUS_METHOD("DisableUnitFiles", "asb", "a(sss)", agent_method_passthrough_to_systemd, 0),
-        SD_BUS_METHOD("Reload", "", "", agent_method_passthrough_to_systemd, 0),
-        SD_BUS_METHOD("ResetFailed", "", "", agent_method_passthrough_to_systemd, 0),
-        SD_BUS_METHOD("ResetFailedUnit", "s", "", agent_method_passthrough_to_systemd, 0),
         SD_BUS_VTABLE_END
 };
 
