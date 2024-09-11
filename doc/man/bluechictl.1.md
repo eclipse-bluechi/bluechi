@@ -30,6 +30,21 @@ Print current bluechictl version
 
 Performs one of the listed lifecycle operations on the given systemd unit for the `bluechi-agent`.
 
+### **bluechictl** [*kill*] [*agent*] [*unit*]
+
+Kills the processes of (i.e. sends a signal to) the specified unit on the chosen node. 
+
+**Options:**
+
+**--kill-whom**
+    Enum defining which processes of the unit are killed.
+    Needs to be one of [all, main, control]. Default: all
+
+**--signal**
+    The signal sent to kill the processes of the unit.
+    Default: 15 (SIGTERM)
+
+
 ### **bluechictl** [*enable*] [*agent*] [*unit1*,*...*]
 
 Enable the list of systemd unit files for the `bluechi-agent`.

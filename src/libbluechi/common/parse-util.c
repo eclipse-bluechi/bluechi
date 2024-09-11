@@ -44,3 +44,20 @@ bool parse_port(const char *in, uint16_t *ret) {
         *ret = (uint16_t) l;
         return true;
 }
+
+bool parse_linux_signal(const char *in, uint32_t *ret) {
+        if (in == NULL || strlen(in) == 0) {
+                return false;
+        }
+
+        bool r = false;
+        long l = 0;
+        r = parse_long(in, &l);
+
+        if (!r || l < MIN_SIGNAL_VALUE || l > MAX_SIGNAL_VALUE) {
+                return false;
+        }
+
+        *ret = (uint32_t) l;
+        return true;
+}

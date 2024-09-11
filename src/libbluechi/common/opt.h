@@ -54,6 +54,12 @@
 #define ARG_NO_RELOAD "no-reload"
 #define ARG_NO_RELOAD_SHORT 1002
 
+#define ARG_KILL_WHOM "kill-whom"
+#define ARG_KILL_WHOM_SHORT 1003
+
+#define ARG_SIGNAL "signal"
+#define ARG_SIGNAL_SHORT 1004
+
 #define ARG_WATCH "watch"
 #define ARG_WATCH_SHORT 'w'
 #define ARG_WATCH_SHORT_S "w"

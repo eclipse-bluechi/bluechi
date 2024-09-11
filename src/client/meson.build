@@ -15,7 +15,9 @@ client_src = [
   'method-metrics.c',
   'method-monitor.c',
   'method-unit-actions.c',
-  'method-status.c'
+  'method-status.c',
+  'method-kill.c',
+  'usage.c',
 ]
 
 executable(

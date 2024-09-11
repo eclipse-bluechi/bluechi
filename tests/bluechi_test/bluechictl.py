@@ -149,6 +149,28 @@ class BluechiCtl:
             expected_result,
         )
 
+    def kill_unit(
+        self,
+        node_name: str,
+        unit_name: str,
+        whom: str = "",
+        signal: str = "",
+        check_result: bool = True,
+        expected_result: int = 0,
+    ) -> Tuple[Optional[int], Union[Iterator[bytes], Any, Tuple[bytes, bytes]]]:
+        cmd = f"kill {node_name} {unit_name}"
+        if whom != "":
+            cmd = cmd + f" --kill-whom={whom}"
+        if signal != "":
+            cmd = cmd + f" --signal={signal}"
+
+        return self._run(
+            f"Killing unit {unit_name} on node {node_name} with whom='{whom}' and signal='{signal}'",
+            cmd,
+            check_result,
+            expected_result,
+        )
+
     def stop_unit(
         self,
         node_name: str,

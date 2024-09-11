@@ -181,6 +181,11 @@ Object path: `/org/eclipse/bluechi/node/$name`
     `DisableUnitFiles()` is similar to `EnableUnitFiles()` but
     disables the specified units by removing all symlinks to them in /etc/ and /run/
 
+  * `KillUnit(in s name, in s who, in i signal)`
+
+    Kills processes of a unit on a node.
+    If the who parameter is set to main, only the main process of a unit is killed. If control is used, then only the control process of the unit is killed. And if all is used, all processes are killed.
+
   * `GetUnitProperties(in s name, in s interface, out a{sv} props)`
 
     Returns the current properties for a named unit on the node. The returned properties are the same as you would
@@ -341,6 +346,12 @@ This is the main interface that the node implements and that is used by the cont
   * `ReloadUnit(in s name, in s mode, in u id)`
 
   * `RestartUnit(in s name, in s mode, in u id)`
+
+  * `ResetFailed()`
+
+  * `ResetFailedUnit(in  s name)`
+
+  * `KillUnit(in s name, in s who, in i signal)`
 
   * `GetUnitProperties(in name, out a{sv} props)`
 

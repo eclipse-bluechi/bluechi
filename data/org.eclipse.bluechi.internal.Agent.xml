@@ -32,6 +32,11 @@
       <arg name="mode" type="s" direction="in" />
       <arg name="jobid" type="u" direction="in" />
     </method>
+    <method name="KillUnit">
+      <arg name="name" type="s" direction="in" />
+      <arg name="who" type="s" direction="in" />
+      <arg name="signal" type="i" direction="in" />
+    </method>
     <method name="GetUnitProperties">
       <arg name="name" type="s" direction="in" />
       <arg name="interface" type="s" direction="in" />
