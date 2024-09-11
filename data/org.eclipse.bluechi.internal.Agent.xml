@@ -68,6 +68,9 @@
     <method name="ListUnits">
       <arg name="units" type="a(ssssssouso)" direction="out" />
     </method>
+    <method name="ListUnitFiles">
+      <arg name="units" type="a(ss)" direction="out" />
+    </method>
     <method name="Subscribe">
       <arg name="unit" type="s" direction="in" />
     </method>

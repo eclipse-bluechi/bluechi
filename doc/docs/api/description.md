@@ -21,6 +21,12 @@ Note that some properties also come with change events, so you can easily track 
     Returns an array with all currently loaded systemd units on all online nodes. This is equivalent to calling
     `Node.ListUnits()` on all the online nodes and adding the name of the node as the first element of each returned
     element struct.
+  
+  * `ListUnitFiles(out a(sss) unit_files)`
+
+    Returns an array with all systemd unit files on all online nodes. This is equivalent to calling
+    `Node.ListUnitFiles()` on all the online nodes and adding the name of the node as the first element of each returned
+    element struct.
 
   * `CreateMonitor(out o monitor)`
 
@@ -205,6 +211,11 @@ Object path: `/org/eclipse/bluechi/node/$name`
     Returns all the currently loaded systemd units on this node. The returned structure is the same as the one returned
     by the systemd `ListUnits()` call.
 
+  * `ListUnitFiles(out a(ss) unit_files)`
+
+    Returns all the systemd unit files on this node. The returned structure is the same as the one returned
+    by the systemd `ListUnitFiles()` call.
+
   * `Reload()`
 
     `Reload()` may be invoked to reload all unit files.
@@ -355,7 +366,9 @@ This is the main interface that the node implements and that is used by the cont
 
   * `GetUnitProperties(in name, out a{sv} props)`
 
-  * `ListUnits(out a(ssssssouso) units);`
+  * `ListUnits(out a(ssssssouso) units)`
+
+  * `ListUnitFiles(out a(ss) units)`
 
     These are all API mirrors of the respective method in `org.eclipse.bluechi.Node`, and all they do is forward the
     same operation to the local systemd instance. Similarly, any changes in the systemd job will be forwarded to signals
