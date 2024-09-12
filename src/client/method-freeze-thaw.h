@@ -7,13 +7,8 @@
 
 #include "libbluechi/cli/command.h"
 
-int method_start(Command *command, void *userdata);
-int method_stop(Command *command, void *userdata);
-int method_restart(Command *command, void *userdata);
-int method_reset_failed(Command *command, void *userdata);
-int method_reload(Command *command, void *userdata);
 int method_freeze(Command *command, void *userdata);
+void usage_method_freeze();
+
 int method_thaw(Command *command, void *userdata);
-int method_enable(Command *command, void *userdata);
-int method_disable(Command *command, void *userdata);
-int method_daemon_reload(Command *command, void *userdata);
+void usage_method_thaw();

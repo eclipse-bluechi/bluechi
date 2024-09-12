@@ -9,6 +9,7 @@
 
 #include "client.h"
 #include "method-list-unit-files.h"
+#include "usage.h"
 
 #include "libbluechi/common/math-util.h"
 #include "libbluechi/common/opt.h"
@@ -214,4 +215,15 @@ int method_list_unit_files(Command *command, void *userdata) {
         }
         return method_list_unit_files_on(
                         client->api_bus, command->opargv[0], print_unit_file_list_simple, filter_glob);
+}
+
+void usage_method_list_unit_files() {
+        usage_print_header();
+        usage_print_description("Get a list of installed systemd unit files");
+        usage_print_usage("bluechictl list-unit-files [nodename] [options]");
+        printf("  If [nodename] is not given, the systemd unit files of all nodes are queried.\n");
+        printf("\n");
+        printf("Available options:\n");
+        printf("  --%s \t shows this help message\n", ARG_HELP);
+        printf("  --%s \t filter the queried systemd unit files by name using a glob\n", ARG_FILTER);
 }

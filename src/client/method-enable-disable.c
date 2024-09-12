@@ -6,6 +6,7 @@
 #include "method-enable-disable.h"
 #include "client.h"
 #include "method-daemon-reload.h"
+#include "usage.h"
 
 #include "libbluechi/common/opt.h"
 
@@ -174,7 +175,7 @@ int method_enable(Command *command, void *userdata) {
         }
 
         if (!command_flag_exists(command, ARG_NO_RELOAD_SHORT)) {
-                r = method_daemon_reload_on(userdata, command->opargv[0]);
+                r = method_daemon_reload(command, userdata);
         }
 
         return r;
@@ -195,7 +196,7 @@ int method_disable(Command *command, void *userdata) {
                         strerror(-r));
         }
         if (!command_flag_exists(command, ARG_NO_RELOAD_SHORT)) {
-                r = method_daemon_reload_on(userdata, command->opargv[0]);
+                r = method_daemon_reload(command, userdata);
         }
 
         return r;

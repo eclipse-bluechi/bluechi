@@ -11,6 +11,9 @@
 #include "libbluechi/common/opt.h"
 
 #include "client.h"
+#include "method-daemon-reload.h"
+#include "method-enable-disable.h"
+#include "method-freeze-thaw.h"
 #include "method-help.h"
 #include "method-kill.h"
 #include "method-list-unit-files.h"
@@ -18,8 +21,9 @@
 #include "method-loglevel.h"
 #include "method-metrics.h"
 #include "method-monitor.h"
+#include "method-reset-failed.h"
 #include "method-status.h"
-#include "method-unit-actions.h"
+#include "method-unit-lifecycle.h"
 
 #define OPT_NONE 0u
 #define OPT_HELP 1u << 0u
@@ -37,26 +41,26 @@ int method_version(UNUSED Command *command, UNUSED void *userdata) {
 }
 
 const Method methods[] = {
-        { "help",            0, 0,       OPT_NONE,                                method_help,            usage_bluechi     },
-        { "list-unit-files", 0, 1,       OPT_FILTER,                              method_list_unit_files, usage_bluechi     },
-        { "list-units",      0, 1,       OPT_FILTER,                              method_list_units,      usage_bluechi     },
-        { "start",           2, 2,       OPT_NONE,                                method_start,           usage_bluechi     },
-        { "stop",            2, 2,       OPT_NONE,                                method_stop,            usage_bluechi     },
-        { "freeze",          2, 2,       OPT_NONE,                                method_freeze,          usage_bluechi     },
-        { "thaw",            2, 2,       OPT_NONE,                                method_thaw,            usage_bluechi     },
-        { "restart",         2, 2,       OPT_NONE,                                method_restart,         usage_bluechi     },
-        { "reload",          2, 2,       OPT_NONE,                                method_reload,          usage_bluechi     },
-        { "reset-failed",    0, ARG_ANY, OPT_NONE,                                method_reset_failed,    usage_bluechi     },
-        { "kill",            2, 2,       OPT_KILL_WHOM | OPT_SIGNAL,              method_kill,            usage_method_kill },
-        { "monitor",         0, 2,       OPT_NONE,                                method_monitor,         usage_bluechi     },
-        { "metrics",         1, 1,       OPT_NONE,                                method_metrics,         usage_bluechi     },
-        { "enable",          2, ARG_ANY, OPT_FORCE | OPT_RUNTIME | OPT_NO_RELOAD, method_enable,          usage_bluechi     },
-        { "disable",         2, ARG_ANY, OPT_NO_RELOAD,                           method_disable,         usage_bluechi     },
-        { "daemon-reload",   1, 1,       OPT_NONE,                                method_daemon_reload,   usage_bluechi     },
-        { "status",          0, ARG_ANY, OPT_WATCH,                               method_status,          usage_bluechi     },
-        { "set-loglevel",    1, 2,       OPT_NONE,                                method_set_loglevel,    usage_bluechi     },
-        { "version",         0, 0,       OPT_NONE,                                method_version,         usage_bluechi     },
-        { NULL,              0, 0,       0,                                       NULL,                   NULL              }
+        { "help",            0, 0,       OPT_NONE,                                method_help,            usage_bluechi                },
+        { "list-unit-files", 0, 1,       OPT_FILTER,                              method_list_unit_files, usage_method_list_unit_files },
+        { "list-units",      0, 1,       OPT_FILTER,                              method_list_units,      usage_method_list_units      },
+        { "start",           2, 2,       OPT_NONE,                                method_start,           usage_method_lifecycle       },
+        { "stop",            2, 2,       OPT_NONE,                                method_stop,            usage_method_lifecycle       },
+        { "freeze",          2, 2,       OPT_NONE,                                method_freeze,          usage_method_freeze          },
+        { "thaw",            2, 2,       OPT_NONE,                                method_thaw,            usage_method_thaw            },
+        { "restart",         2, 2,       OPT_NONE,                                method_restart,         usage_method_lifecycle       },
+        { "reload",          2, 2,       OPT_NONE,                                method_reload,          usage_method_lifecycle       },
+        { "reset-failed",    0, ARG_ANY, OPT_NONE,                                method_reset_failed,    usage_method_reset_failed    },
+        { "kill",            2, 2,       OPT_KILL_WHOM | OPT_SIGNAL,              method_kill,            usage_method_kill            },
+        { "monitor",         0, 2,       OPT_NONE,                                method_monitor,         usage_method_monitor         },
+        { "metrics",         1, 1,       OPT_NONE,                                method_metrics,         usage_method_metrics         },
+        { "enable",          2, ARG_ANY, OPT_FORCE | OPT_RUNTIME | OPT_NO_RELOAD, method_enable,          usage_method_enable          },
+        { "disable",         2, ARG_ANY, OPT_NO_RELOAD,                           method_disable,         usage_method_disable         },
+        { "daemon-reload",   1, 1,       OPT_NONE,                                method_daemon_reload,   usage_method_daemon_reload   },
+        { "status",          0, ARG_ANY, OPT_WATCH,                               method_status,          usage_method_status          },
+        { "set-loglevel",    1, 2,       OPT_NONE,                                method_set_loglevel,    usage_method_set_loglevel    },
+        { "version",         0, 0,       OPT_NONE,                                method_version,         usage_bluechi                },
+        { NULL,              0, 0,       0,                                       NULL,                   NULL                         }
 };
 
 const OptionType option_types[] = {

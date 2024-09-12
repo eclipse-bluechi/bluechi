@@ -8,3 +8,4 @@
 #include "libbluechi/cli/command.h"
 
 int method_set_loglevel(Command *command, void *userdata);
+void usage_method_set_loglevel();

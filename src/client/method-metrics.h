@@ -8,3 +8,4 @@
 #include "libbluechi/cli/command.h"
 
 int method_metrics(Command *command, void *userdata);
+void usage_method_metrics();
