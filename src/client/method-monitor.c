@@ -7,6 +7,7 @@
 
 #include "client.h"
 #include "method-monitor.h"
+#include "usage.h"
 
 #include "libbluechi/common/common.h"
 #include "libbluechi/common/list.h"
@@ -292,4 +293,18 @@ int method_monitor(Command *command, void *userdata) {
                 return -EINVAL;
         }
         return method_monitor_units_on_nodes(userdata, arg0, arg1);
+}
+
+void usage_method_monitor() {
+        usage_print_header();
+        usage_print_description("Monitor changes in the BlueChi managed system");
+        usage_print_usage("bluechictl monitor [nodename] [unitname]");
+        printf("  If [nodename] and [unitname] are not given, changes on all nodes for all units will be monitored.\n");
+        printf("  If a wildcard '*' is used for [nodename] and/or [unitname], all nodes and/or units are monitored.\n");
+        printf("\n");
+        printf("Examples:\n");
+        printf("  bluechictl monitor\n");
+        printf("  bluechictl monitor primary \\*\n");
+        printf("  bluechictl monitor \\* interesting.service\n");
+        printf("  bluechictl monitor primary interesting.service\n");
 }

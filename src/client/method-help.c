@@ -47,6 +47,8 @@ void usage_bluechi() {
         printf("    usage: status [nodename [unitname]] [-w/--watch]\n");
         printf("  - daemon-reload: reload systemd daemon on a specific node\n");
         printf("    usage: daemon-reload nodename\n");
+        printf("  - set-loglevel: change the log level of the bluechi-controller or a connected node\n");
+        printf("    usage: set-loglevel [nodename] [loglevel]\n");
 }
 
 int method_help(UNUSED Command *command, UNUSED void *userdata) {

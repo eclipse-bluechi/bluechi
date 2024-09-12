@@ -5,6 +5,7 @@
  */
 #include "method-daemon-reload.h"
 #include "client.h"
+#include "usage.h"
 
 #include "libbluechi/common/opt.h"
 

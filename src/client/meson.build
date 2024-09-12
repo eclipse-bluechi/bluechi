@@ -14,9 +14,13 @@ client_src = [
   'method-list-units.c',
   'method-metrics.c',
   'method-monitor.c',
-  'method-unit-actions.c',
+  'method-unit-lifecycle.c',
   'method-status.c',
   'method-kill.c',
+  'method-freeze-thaw.c',
+  'method-enable-disable.c',
+  'method-reset-failed.c',
+  'method-daemon-reload.c',
   'usage.c',
 ]
 

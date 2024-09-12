@@ -9,6 +9,7 @@
 
 #include "client.h"
 #include "method-list-units.h"
+#include "usage.h"
 
 #include "libbluechi/common/math-util.h"
 #include "libbluechi/common/opt.h"
@@ -213,4 +214,15 @@ int method_list_units(Command *command, void *userdata) {
                 return method_list_units_on_all(client->api_bus, print_unit_list_simple, filter_glob);
         }
         return method_list_units_on(client->api_bus, command->opargv[0], print_unit_list_simple, filter_glob);
+}
+
+void usage_method_list_units() {
+        usage_print_header();
+        usage_print_description("Get a list of loaded systemd units");
+        usage_print_usage("bluechictl list-units [nodename] [options]");
+        printf("  If [nodename] is not given, the systemd units of all nodes are queried.\n");
+        printf("\n");
+        printf("Available options:\n");
+        printf("  --%s \t shows this help message\n", ARG_HELP);
+        printf("  --%s \t filter the queried systemd units by name using a glob\n", ARG_FILTER);
 }

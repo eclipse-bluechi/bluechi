@@ -5,6 +5,7 @@
  */
 #include "method-metrics.h"
 #include "client.h"
+#include "usage.h"
 
 #include "libbluechi/common/string-util.h"
 #include "libbluechi/common/time-util.h"
@@ -154,4 +155,14 @@ int method_metrics(Command *command, void *userdata) {
                 fprintf(stderr, "Unknown metrics command: %s", command->opargv[0]);
                 return -EINVAL;
         }
+}
+
+void usage_method_metrics() {
+        usage_print_header();
+        usage_print_description("View metrics for start/stop systemd units via BlueChi");
+        usage_print_usage("bluechictl metrics [enable|disable|listen]");
+        printf("\n");
+        printf("Examples:\n");
+        printf("  bluechictl metrics enable\n");
+        printf("  bluechictl metrics listen\n");
 }
