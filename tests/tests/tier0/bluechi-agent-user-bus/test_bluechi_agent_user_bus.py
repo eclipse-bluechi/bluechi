@@ -42,7 +42,7 @@ def exec(ctrl: BluechiControllerMachine, nodes: Dict[str, BluechiAgentMachine]):
     assert result == 0
 
 
-def test_monitor_node_disconnect(
+def test_bluechi_agent_user_bus(
     bluechi_test: BluechiTest,
     bluechi_ctrl_default_config: BluechiControllerConfig,
     bluechi_node_default_config: BluechiAgentConfig,
