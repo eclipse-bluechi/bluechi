@@ -39,7 +39,13 @@ def exec(_: BluechiControllerMachine, nodes: Dict[str, BluechiAgentMachine]):
 
     node_foo.install_systemd_service(req_svc)
 
-    assert node_foo.systemctl.start_unit(req_svc.name)
+    result, output = node_foo.systemctl.start_unit(req_svc.name, check_result=False)
+
+    # Depending how fast the failure of target.service gets propagated, the
+    # job of the requesting service ends up being canceled.
+    # To account for this race condition, we check both cases.
+    if result != 0:
+        assert f"Job for {req_svc.name} canceled" in str(output)
     assert node_foo.wait_for_unit_state_to_be(req_svc.name, "inactive")
     assert node_bar.wait_for_unit_state_to_be(tgt_svc.name, "failed")
 
