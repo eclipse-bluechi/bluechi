@@ -240,9 +240,9 @@ static void print_unit_info(unit_info_t *unit_info, size_t name_col_width) {
         PRINT_AND_ALIGN(sub_state);
         PRINT_AND_ALIGN(freezer_state);
         PRINT_AND_ALIGN(unit_file_state);
-        fflush(stdout);
-
         fprintf(stdout, "|\n");
+
+        fflush(stdout);
 }
 
 static size_t get_max_name_len(char **units, size_t units_count) {
