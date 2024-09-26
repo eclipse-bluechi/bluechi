@@ -94,6 +94,18 @@ class SystemCtl:
             unit_name, "restart", check_result, expected_result
         )
 
+    def set_default_target(
+        self, target: str, check_result: bool = True, expected_result: int = 0
+    ) -> Tuple[Optional[int], Union[Iterator[bytes], Any, Tuple[bytes, bytes]]]:
+        command = f"set-default {target}"
+        return self._do_operation(command, check_result, expected_result)
+
+    def get_default_target(
+        self, check_result: bool = True, expected_result: int = 0
+    ) -> Tuple[Optional[int], Union[Iterator[bytes], Any, Tuple[bytes, bytes]]]:
+        command = "get-default"
+        return self._do_operation(command, check_result, expected_result)
+
     def reset_failed_for_unit(
         self, unit_name: str, check_result: bool = True, expected_result: int = 0
     ) -> Tuple[Optional[int], Union[Iterator[bytes], Any, Tuple[bytes, bytes]]]:

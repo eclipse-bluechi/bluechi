@@ -136,3 +136,11 @@ Fetches the status of the systemd units for the `bluechi-agent`.
 ### **bluechictl** *reset-failed* [*agent*] [*unit1*,*...*]
 
 Performs a `reset-failed` on the chosen `bluechi-agent` for the selected units.
+
+### **bluechictl** *get-default* [*agent*] 
+
+Fetches the default target on the chosen `bluechi-agent`.
+
+### **bluechictl** *set-default* [*agent*] [TARGET]
+
+Changes the default target to `TARGET` file on the chosen `bluechi-agent`.

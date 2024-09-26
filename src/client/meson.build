@@ -22,6 +22,7 @@ client_src = [
   'method-enable-disable.c',
   'method-reset-failed.c',
   'method-daemon-reload.c',
+  'method-default-target.c',
   'usage.c',
 ]
 
