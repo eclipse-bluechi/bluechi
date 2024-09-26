@@ -168,6 +168,35 @@ class BluechiCtl:
             expected_result,
         )
 
+    def get_default_target(
+        self,
+        node_name: str = "",
+        check_result: bool = True,
+        expected_result: int = 0,
+    ) -> Tuple[Optional[int], Union[Iterator[bytes], Any, Tuple[bytes, bytes]]]:
+        cmd = f"get-default {node_name}"
+        return self._run(
+            f"GetDefaultTarget of node {node_name}",
+            cmd,
+            check_result,
+            expected_result,
+        )
+
+    def set_default_target(
+        self,
+        node_name: str = "",
+        target: str = "",
+        check_result: bool = True,
+        expected_result: int = 0,
+    ) -> Tuple[Optional[int], Union[Iterator[bytes], Any, Tuple[bytes, bytes]]]:
+        cmd = f"set-default {node_name} {target} true"
+        return self._run(
+            f"SetDefaultTarget of node {node_name} ",
+            cmd,
+            check_result,
+            expected_result,
+        )
+
     def kill_unit(
         self,
         node_name: str,

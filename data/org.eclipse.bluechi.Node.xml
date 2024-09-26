@@ -271,6 +271,30 @@
     </method>
 
     <!--
+      GetDefaultTarget:
+      @defaulttarget the default target.
+
+      Get the default value of the system to boot into.
+    -->
+    <method name="GetDefaultTarget">
+      <arg name="defaulttarget" type="s" direction="out" />
+    </method>
+
+    <!--
+      SetDefaultTarget:
+      @defaulttarget the default target.
+      @force bollean value of force.
+      @out the result of the method.
+
+      Set the default value of the system to boot into.
+    -->
+    <method name="SetDefaultTarget">
+      <arg name="defaulttarget" type="s" direction="in" />
+      <arg name="force" type="b" direction="in" />
+      <arg name="out" type="a(sss)" direction="out" />  
+    </method>
+
+    <!--
       Name:
 
       The name of the node.

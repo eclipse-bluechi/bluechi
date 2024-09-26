@@ -880,6 +880,15 @@ class Node(ApiBase):
             name,
         )
 
+    def get_default_target(self) -> str:
+        """
+          GetDefaultTarget:
+        @defaulttarget the default target.
+
+        Get the default value of the system to boot into.
+        """
+        return self.get_proxy().GetDefaultTarget()
+
     def get_unit_file_state(self, file: str) -> str:
         """
           GetUnitFileState:
@@ -1021,6 +1030,22 @@ class Node(ApiBase):
         return self.get_proxy().RestartUnit(
             name,
             mode,
+        )
+
+    def set_default_target(
+        self, defaulttarget: str, force: bool
+    ) -> List[Tuple[str, str, str]]:
+        """
+          SetDefaultTarget:
+        @defaulttarget the default target.
+        @force bollean value of force.
+        @out the result of the method.
+
+        Set the default value of the system to boot into.
+        """
+        return self.get_proxy().SetDefaultTarget(
+            defaulttarget,
+            force,
         )
 
     def set_log_level(self, level: str) -> None:

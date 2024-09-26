@@ -97,6 +97,14 @@
     <method name="ResetFailedUnit">
       <arg name="name" type="s" direction="in" />
     </method>
+    <method name="GetDefaultTarget">
+      <arg name="defaulttarget" type="s" direction="out" /> 
+    </method>
+    <method name="SetDefaultTarget">
+      <arg name="defaulttarget" type="s" direction="in" />
+      <arg name="force" type="b" direction="in" />
+      <arg name="out" type="a(sss)" direction="out" />  
+    </method>
 
     <signal name="JobDone">
       <arg name="id" type="u" />

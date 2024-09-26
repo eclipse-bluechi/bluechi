@@ -49,6 +49,10 @@ void usage_bluechi() {
         printf("    usage: daemon-reload nodename\n");
         printf("  - set-loglevel: change the log level of the bluechi-controller or a connected node\n");
         printf("    usage: set-loglevel [nodename] [loglevel]\n");
+        printf("  - get-default: get a default target of connected node\n");
+        printf("    usage: get-default [nodename]\n");
+        printf("  - set-default: set a default target of connected node\n");
+        printf("    usage: set-default [nodename] [target]\n");
 }
 
 int method_help(UNUSED Command *command, UNUSED void *userdata) {

@@ -1758,7 +1758,6 @@ static int agent_method_job_cancel(sd_bus_message *m, void *userdata, UNUSED sd_
         return sd_bus_reply_method_return(m, "");
 }
 
-
 static const sd_bus_vtable internal_agent_vtable[] = {
         SD_BUS_VTABLE_START(0),
         SD_BUS_METHOD("ListUnits", "", UNIT_INFO_STRUCT_ARRAY_TYPESTRING, agent_method_list_units, 0),
@@ -1787,6 +1786,8 @@ static const sd_bus_vtable internal_agent_vtable[] = {
         SD_BUS_METHOD("KillUnit", "ssi", "", agent_method_passthrough_to_systemd, 0),
         SD_BUS_METHOD("StartDep", "s", "", agent_method_start_dep, 0),
         SD_BUS_METHOD("StopDep", "s", "", agent_method_stop_dep, 0),
+        SD_BUS_METHOD("GetDefaultTarget", "", "s", agent_method_passthrough_to_systemd, 0),
+        SD_BUS_METHOD("SetDefaultTarget", "sb", "a(sss)", agent_method_passthrough_to_systemd, 0),
         SD_BUS_SIGNAL_WITH_NAMES("JobDone", "us", SD_BUS_PARAM(id) SD_BUS_PARAM(result), 0),
         SD_BUS_SIGNAL_WITH_NAMES("JobStateChanged", "us", SD_BUS_PARAM(id) SD_BUS_PARAM(state), 0),
         SD_BUS_SIGNAL_WITH_NAMES(
