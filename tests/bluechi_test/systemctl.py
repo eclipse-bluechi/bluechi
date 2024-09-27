@@ -117,21 +117,42 @@ class SystemCtl:
         LOGGER.info(f"Got state '{latest_state}' for unit {unit_name}")
         return latest_state == expected_state
 
+    def enable_unit(
+        self, unit_name: str, check_result: bool = True, expected_result: int = 0
+    ) -> Tuple[Optional[int], Union[Iterator[bytes], Any, Tuple[bytes, bytes]]]:
+        self.tracked_services.append(unit_name)
+
+        return self._do_operation_on_unit(
+            unit_name, "enable", check_result, expected_result
+        )
+
+    def disable_unit(
+        self, unit_name: str, check_result: bool = True, expected_result: int = 0
+    ) -> Tuple[Optional[int], Union[Iterator[bytes], Any, Tuple[bytes, bytes]]]:
+        self.tracked_services.append(unit_name)
+
+        return self._do_operation_on_unit(
+            unit_name, "disable", check_result, expected_result
+        )
+
+    def is_enabled(
+        self, unit_name: str, check_result: bool = False, expected_result: int = 0
+    ) -> str:
+        return self._do_operation_on_unit(
+            unit_name, "is-enabled", check_result, expected_result
+        )
+
     def is_unit_enabled(
         self, unit_name: str, check_result: bool = True, expected_result: int = 0
     ) -> bool:
-        _, output = self._do_operation_on_unit(
-            unit_name, "is-enabled", check_result, expected_result
-        )
-        return output == "enabled"
+        _, out = self.is_enabled(unit_name=unit_name)
+        return "enabled" == out
 
     def is_unit_disabled(
         self, unit_name: str, check_result: bool = True, expected_result: int = 0
     ) -> bool:
-        _, output = self._do_operation_on_unit(
-            unit_name, "is-enabled", check_result, expected_result
-        )
-        return output == "disabled"
+        _, out = self.is_enabled(unit_name=unit_name)
+        return "disabled" == out
 
     def service_is_active(self, unit_name: str) -> bool:
         result, _ = self.client.exec_run(

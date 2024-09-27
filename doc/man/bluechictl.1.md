@@ -32,7 +32,7 @@ Performs one of the listed lifecycle operations on the given systemd unit for th
 
 ### **bluechictl** [*kill*] [*agent*] [*unit*]
 
-Kills the processes of (i.e. sends a signal to) the specified unit on the chosen node. 
+Kills the processes of (i.e. sends a signal to) the specified unit on the chosen node.
 
 **Options:**
 
@@ -79,6 +79,10 @@ Fetches information about all systemd unit files on the bluechi-agents. If [blue
 
 **--filter**
     Use glob filter for the unit file path
+
+### **bluechictl** *is-enabled* [*agent*] [*unit*]
+
+Fetches the current enablement status of the specific unit file on the specific `bluechi-agent`.
 
 ### **bluechictl** *list-units* [*agent*]
 

@@ -1,0 +1,3 @@
+summary: Test if bluechictl is-enabled returns the same enablement status of a specific
+    node as running systemctl is-enabled on the node for all unit files
+id: 387cdca2-fa98-4c35-8bd0-352572a7e206

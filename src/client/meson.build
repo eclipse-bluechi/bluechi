@@ -9,6 +9,7 @@ client_src = [
   'main.c',
   'client.c',
   'method-help.c',
+  'method-is-enabled.c',
   'method-loglevel.c',
   'method-list-unit-files.c',
   'method-list-units.c',

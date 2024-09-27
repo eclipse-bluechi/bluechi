@@ -72,6 +72,25 @@ class BluechiCtl:
             expected_result,
         )
 
+    def is_enabled(
+        self,
+        node_name: str,
+        unit_name: str,
+        check_result: bool = False,
+        expected_result: int = 0,
+    ) -> Tuple[Optional[int], Union[Iterator[bytes], Any, Tuple[bytes, bytes]]]:
+        # track started units to stop and reset failures on cleanup
+        if node_name not in self.tracked_services:
+            self.tracked_services[node_name] = []
+        self.tracked_services[node_name].append(unit_name)
+
+        return self._run(
+            f"Fetching enablement status of unit '{unit_name}' on node '{node_name}'",
+            f"is-enabled {node_name} {unit_name}",
+            check_result,
+            expected_result,
+        )
+
     def get_unit_status(
         self,
         node_name: str,

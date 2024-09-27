@@ -226,6 +226,18 @@
     </method>
 
     <!--
+      GetUnitFileState:
+      @file: The name of the unit file
+      @state: The current enablement status of the unit file
+
+      Get the current enablement status of specific unit file.
+    -->
+    <method name="GetUnitFileState">
+      <arg name="file" type="s" direction="in" />
+      <arg name="state" type="s" direction="out" />
+    </method>
+
+    <!--
       Reload:
 
       Reload() may be invoked to reload all unit files.

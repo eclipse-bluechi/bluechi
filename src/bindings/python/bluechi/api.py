@@ -880,6 +880,18 @@ class Node(ApiBase):
             name,
         )
 
+    def get_unit_file_state(self, file: str) -> str:
+        """
+          GetUnitFileState:
+        @file: The name of the unit file
+        @state: The current enablement status of the unit file
+
+        Get the current enablement status of specific unit file.
+        """
+        return self.get_proxy().GetUnitFileState(
+            file,
+        )
+
     def get_unit_properties(self, name: str, interface: str) -> Structure:
         """
           GetUnitProperties:
