@@ -71,6 +71,10 @@
     <method name="ListUnitFiles">
       <arg name="units" type="a(ss)" direction="out" />
     </method>
+    <method name="GetUnitFileState">
+      <arg name="file" type="s" direction="in" />
+      <arg name="state" type="s" direction="out" />
+    </method>
     <method name="Subscribe">
       <arg name="unit" type="s" direction="in" />
     </method>

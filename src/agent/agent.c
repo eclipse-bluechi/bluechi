@@ -1763,6 +1763,7 @@ static const sd_bus_vtable internal_agent_vtable[] = {
         SD_BUS_VTABLE_START(0),
         SD_BUS_METHOD("ListUnits", "", UNIT_INFO_STRUCT_ARRAY_TYPESTRING, agent_method_list_units, 0),
         SD_BUS_METHOD("ListUnitFiles", "", UNIT_FILE_INFO_STRUCT_ARRAY_TYPESTRING, agent_method_list_unit_files, 0),
+        SD_BUS_METHOD("GetUnitFileState", "s", "s", agent_method_passthrough_to_systemd, 0),
         SD_BUS_METHOD("GetUnitProperties", "ss", "a{sv}", agent_method_get_unit_properties, 0),
         SD_BUS_METHOD("GetUnitProperty", "sss", "v", agent_method_get_unit_property, 0),
         SD_BUS_METHOD("SetUnitProperties", "sba(sv)", "", agent_method_set_unit_properties, 0),

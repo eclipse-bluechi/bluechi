@@ -15,6 +15,7 @@
 #include "method-enable-disable.h"
 #include "method-freeze-thaw.h"
 #include "method-help.h"
+#include "method-is-enabled.h"
 #include "method-kill.h"
 #include "method-list-unit-files.h"
 #include "method-list-units.h"
@@ -43,6 +44,7 @@ int method_version(UNUSED Command *command, UNUSED void *userdata) {
 const Method methods[] = {
         { "help",            0, 0,       OPT_NONE,                                method_help,            usage_bluechi                },
         { "list-unit-files", 0, 1,       OPT_FILTER,                              method_list_unit_files, usage_method_list_unit_files },
+        { "is-enabled",      2, 2,       OPT_NONE,                                method_is_enabled,      usage_method_is_enabled      },
         { "list-units",      0, 1,       OPT_FILTER,                              method_list_units,      usage_method_list_units      },
         { "start",           2, 2,       OPT_NONE,                                method_start,           usage_method_lifecycle       },
         { "stop",            2, 2,       OPT_NONE,                                method_stop,            usage_method_lifecycle       },
