@@ -5,6 +5,7 @@
 
 import logging
 import random
+import re
 import signal
 import socket
 import string
@@ -47,6 +48,26 @@ def get_random_name(name_length: int) -> str:
     # choose from all lowercase letter
     letters = string.ascii_lowercase
     return "".join(random.choice(letters) for _ in range(name_length))
+
+
+_ANSI_SEQUENCE = re.compile(
+    r"""
+    \x1B  # ESC
+    (?:   # 7-bit C1 Fe (except CSI)
+        [@-Z\\-_]
+    |     # or [ for CSI, followed by a control sequence
+        \[
+        [0-?]*  # Parameter bytes
+        [ -/]*  # Intermediate bytes
+        [@-~]   # Final byte
+    )
+""",
+    re.VERBOSE,
+)
+
+
+def remove_control_chars(value: str) -> str:
+    return _ANSI_SEQUENCE.sub("", value)
 
 
 # timeout for setting up tests in s
