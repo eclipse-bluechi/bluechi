@@ -72,7 +72,7 @@ jobs:
 
       - name: Install unpackaged python libraries from PyPi
         run: |
-          pip install "tmt[provision]>=1.32.1" "tmt[report-junit]>=1.32.1" podman pytest pyyaml paramiko
+          pip install "tmt[provision]==1.36.1" "tmt[report-junit]==1.36.1" podman pytest pyyaml paramiko
 
       - name: Checkout sources
         uses: actions/checkout@v4
@@ -90,7 +90,7 @@ jobs:
           cd tests
           tmt test id --dry | grep "New id" && echo "Found integration tests with missing ID. Please generate Test-IDs." && exit 1
           cd ..
-      
+
       - name: Lint tmt tests, plans and stories
         run: |
           cd tests
