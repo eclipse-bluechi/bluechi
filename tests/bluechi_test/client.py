@@ -10,6 +10,7 @@ import pathlib
 import tarfile
 from typing import IO, Any, Dict, Iterator, Optional, Tuple, Union
 
+from bluechi_test import util
 from paramiko import SFTP, AutoAddPolicy, RSAKey
 from paramiko import SSHClient as ParamikoSSH
 from podman import PodmanClient
@@ -96,6 +97,10 @@ class ContainerClient(Client):
         if not raw_output and output:
             # When using tty is enabled, podman uses CRLF line ends, so we need to convert to LF
             output = output.replace(b"\r", b"").decode("utf-8").strip()
+
+            # some command return colored output using ANSI escape sequence, but this cause issues in tmt, so we need
+            # to remove them before logging
+            output = util.remove_control_chars(output)
 
         LOGGER.debug(
             f"Executed command '{command}' with result '{result}' and output '{output}'"
