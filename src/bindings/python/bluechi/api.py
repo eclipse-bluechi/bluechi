@@ -187,6 +187,16 @@ class Agent(ApiBase):
         return self.get_proxy().DisconnectTimestamp
 
     @property
+    def disconnect_timestamp_monotonic(self) -> UInt64:
+        """
+          DisconnectTimestampMonotonic:
+
+        A monotonic timestamp indicating when the agent lost connection to the BlueChi controller.
+        If the connection is active (agent is online), this value is 0.
+        """
+        return self.get_proxy().DisconnectTimestampMonotonic
+
+    @property
     def last_seen_timestamp(self) -> UInt64:
         """
           LastSeenTimestamp:
@@ -194,6 +204,15 @@ class Agent(ApiBase):
         A timestamp indicating when the last connection test (e.g. via heartbeat) was successful.
         """
         return self.get_proxy().LastSeenTimestamp
+
+    @property
+    def last_seen_timestamp_monotonic(self) -> UInt64:
+        """
+          LastSeenTimestampMonotonic:
+
+        A monotonic timestamp indicating when the last connection test (e.g. via heartbeat) was successful.
+        """
+        return self.get_proxy().LastSeenTimestampMonotonic
 
     @property
     def log_level(self) -> str:
@@ -1128,6 +1147,15 @@ class Node(ApiBase):
         A timestamp indicating when the last connection test (e.g. via heartbeat) was successful.
         """
         return self.get_proxy().LastSeenTimestamp
+
+    @property
+    def last_seen_timestamp_monotonic(self) -> UInt64:
+        """
+          LastSeenTimestampMonotonic:
+
+        A monotonic timestamp indicating when the last connection test (e.g. via heartbeat) was successful.
+        """
+        return self.get_proxy().LastSeenTimestampMonotonic
 
     @property
     def name(self) -> str:

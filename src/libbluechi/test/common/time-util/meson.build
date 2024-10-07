@@ -5,7 +5,6 @@
 
 network_src = [
   'get_log_timestamp',
-  'get_time_seconds',
   'micros_to_millis_test',
 ]
 

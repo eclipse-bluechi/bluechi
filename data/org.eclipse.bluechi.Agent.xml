@@ -97,11 +97,30 @@
     </property>
 
     <!--
+      DisconnectTimestampMonotonic:
+
+      A monotonic timestamp indicating when the agent lost connection to the BlueChi controller.
+      If the connection is active (agent is online), this value is 0.
+    -->
+    <property name="DisconnectTimestampMonotonic" type="t" access="read">
+      <annotation name="org.freedesktop.DBus.Property.EmitsChangedSignal" value="false" />
+    </property>
+
+    <!--
       LastSeenTimestamp:
 
       A timestamp indicating when the last connection test (e.g. via heartbeat) was successful.
     -->
     <property name="LastSeenTimestamp" type="t" access="read">
+      <annotation name="org.freedesktop.DBus.Property.EmitsChangedSignal" value="false" />
+    </property>
+
+    <!--
+      LastSeenTimestampMonotonic:
+
+      A monotonic timestamp indicating when the last connection test (e.g. via heartbeat) was successful.
+    -->
+    <property name="LastSeenTimestampMonotonic" type="t" access="read">
       <annotation name="org.freedesktop.DBus.Property.EmitsChangedSignal" value="false" />
     </property>
 

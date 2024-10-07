@@ -496,12 +496,12 @@ static bool controller_check_node_liveness(Controller *controller, Node *node, u
                 return true;
         }
 
-        if (now < node->last_seen) {
+        if (now < node->last_seen_monotonic) {
                 bc_log_error("Clock skew detected");
                 return true;
         }
 
-        diff = now - node->last_seen;
+        diff = now - node->last_seen_monotonic;
         if (diff > (uint64_t) controller->heartbeat_threshold_msec * USEC_PER_MSEC) {
                 bc_log_infof("Did not receive heartbeat from node '%s' since '%d'ms. Disconnecting it...",
                              node->name,
@@ -517,7 +517,7 @@ static int controller_heartbeat_timer_callback(
                 sd_event_source *event_source, UNUSED uint64_t usec, void *userdata) {
         Controller *controller = (Controller *) userdata;
         Node *node = NULL;
-        uint64_t now = get_time_micros();
+        uint64_t now = get_time_micros_monotonic();
         int r = 0;
 
         LIST_FOREACH(nodes, node, controller->nodes) {
