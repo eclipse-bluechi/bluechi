@@ -61,6 +61,7 @@ struct Node {
 
         struct hashmap *unit_subscriptions;
         uint64_t last_seen;
+        uint64_t last_seen_monotonic;
 
         bool is_shutdown;
 };

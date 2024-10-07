@@ -331,5 +331,14 @@
     <property name="LastSeenTimestamp" type="t" access="read">
       <annotation name="org.freedesktop.DBus.Property.EmitsChangedSignal" value="false" />
     </property>
+
+    <!--
+      LastSeenTimestampMonotonic:
+
+      A monotonic timestamp indicating when the last connection test (e.g. via heartbeat) was successful.
+    -->
+    <property name="LastSeenTimestampMonotonic" type="t" access="read">
+      <annotation name="org.freedesktop.DBus.Property.EmitsChangedSignal" value="false" />
+    </property>
   </interface>
 </node>

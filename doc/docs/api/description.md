@@ -244,6 +244,10 @@ Object path: `/org/eclipse/bluechi/node/$name`
 
     Timestamp of the last successfully received heartbeat of the node.
 
+  * `LastSeenTimestampMonotonic` - `t`
+
+    Monotonic Timestamp of the last successfully received heartbeat of the node.
+
 ### interface org.eclipse.bluechi.Job
 
 Each potentially long-running operation returns a job object, which can be used to monitor the status of the job as well

@@ -65,7 +65,9 @@ struct Agent {
         AgentConnectionState connection_state;
         uint64_t connection_retry_count;
         uint64_t controller_last_seen;
-        time_t disconnect_timestamp;
+        uint64_t controller_last_seen_monotonic;
+        uint64_t disconnect_timestamp;
+        uint64_t disconnect_timestamp_monotonic;
 
         char *orch_addr;
         char *api_bus_service_name;

@@ -50,14 +50,6 @@ static int node_property_get_peer_ip(
                 sd_bus_message *reply,
                 void *userdata,
                 sd_bus_error *ret_error);
-static int node_property_get_last_seen(
-                sd_bus *bus,
-                const char *path,
-                const char *interface,
-                const char *property,
-                sd_bus_message *reply,
-                void *userdata,
-                sd_bus_error *ret_error);
 
 static const sd_bus_vtable internal_controller_controller_vtable[] = {
         SD_BUS_VTABLE_START(0),
@@ -92,7 +84,12 @@ static const sd_bus_vtable node_vtable[] = {
         SD_BUS_PROPERTY("Name", "s", NULL, offsetof(Node, name), SD_BUS_VTABLE_PROPERTY_CONST),
         SD_BUS_PROPERTY("Status", "s", node_property_get_status, 0, SD_BUS_VTABLE_PROPERTY_EMITS_CHANGE),
         SD_BUS_PROPERTY("PeerIp", "s", node_property_get_peer_ip, 0, SD_BUS_VTABLE_PROPERTY_EXPLICIT),
-        SD_BUS_PROPERTY("LastSeenTimestamp", "t", node_property_get_last_seen, 0, SD_BUS_VTABLE_PROPERTY_EXPLICIT),
+        SD_BUS_PROPERTY("LastSeenTimestamp", "t", NULL, offsetof(Node, last_seen), SD_BUS_VTABLE_PROPERTY_EXPLICIT),
+        SD_BUS_PROPERTY("LastSeenTimestampMonotonic",
+                        "t",
+                        NULL,
+                        offsetof(Node, last_seen_monotonic),
+                        SD_BUS_VTABLE_PROPERTY_EXPLICIT),
         SD_BUS_VTABLE_END
 };
 
@@ -173,6 +170,7 @@ Node *node_new(Controller *controller, const char *name) {
         }
 
         node->last_seen = 0;
+        node->last_seen_monotonic = 0;
 
         node->name = NULL;
         if (name) {
@@ -530,14 +528,23 @@ static int node_match_job_done(UNUSED sd_bus_message *m, UNUSED void *userdata, 
 
 static int node_match_heartbeat(UNUSED sd_bus_message *m, void *userdata, UNUSED sd_bus_error *error) {
         Node *node = userdata;
+        uint64_t now = 0;
+        uint64_t now_monotonic = 0;
 
-        uint64_t now = get_time_micros();
+        now = get_time_micros();
         if (now == 0) {
                 bc_log_error("Failed to get current time on heartbeat");
                 return 0;
         }
 
+        now_monotonic = get_time_micros_monotonic();
+        if (now_monotonic == 0) {
+                bc_log_error("Failed to get current monotonic time on heartbeat");
+                return 0;
+        }
+
         node->last_seen = now;
+        node->last_seen_monotonic = now_monotonic;
         return 1;
 }
 
@@ -901,6 +908,7 @@ static int node_method_register(sd_bus_message *m, void *userdata, UNUSED sd_bus
         }
 
         named_node->last_seen = get_time_micros();
+        named_node->last_seen_monotonic = get_time_micros_monotonic();
 
         r = asprintf(&description, "node-%s", name);
         if (r >= 0) {
@@ -1063,19 +1071,6 @@ static int node_property_get_peer_ip(
         Node *node = userdata;
         return sd_bus_message_append(reply, "s", node->peer_ip);
 }
-
-static int node_property_get_last_seen(
-                UNUSED sd_bus *bus,
-                UNUSED const char *path,
-                UNUSED const char *interface,
-                UNUSED const char *property,
-                sd_bus_message *reply,
-                void *userdata,
-                UNUSED sd_bus_error *ret_error) {
-        Node *node = userdata;
-        return sd_bus_message_append(reply, "t", node->last_seen);
-}
-
 
 AgentRequest *agent_request_ref(AgentRequest *req) {
         req->ref_count++;
