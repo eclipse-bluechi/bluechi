@@ -5,7 +5,10 @@
 [Unit]
 Description=BlueChi Controller systemd service
 Documentation=man:bluechi-controller(1) man:bluechi-controller.conf(5)
-After=network.target
+DefaultDependencies=no
+Before=basic.target shutdown.target
+After=dbus.service
+Conflicts=shutdown.target
 
 [Service]
 Type=simple
