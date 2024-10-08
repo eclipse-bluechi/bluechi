@@ -532,13 +532,13 @@ static int node_match_heartbeat(UNUSED sd_bus_message *m, void *userdata, UNUSED
         uint64_t now_monotonic = 0;
 
         now = get_time_micros();
-        if (now == 0) {
+        if (now == USEC_INFINITY) {
                 bc_log_error("Failed to get current time on heartbeat");
                 return 0;
         }
 
         now_monotonic = get_time_micros_monotonic();
-        if (now_monotonic == 0) {
+        if (now_monotonic == USEC_INFINITY) {
                 bc_log_error("Failed to get current monotonic time on heartbeat");
                 return 0;
         }
