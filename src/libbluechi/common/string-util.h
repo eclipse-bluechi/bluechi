@@ -9,7 +9,10 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "protocol.h"
+/* Constants */
+#define SYMBOL_WILDCARD "*"
+#define SYMBOL_GLOB_ALL '*'
+#define SYMBOL_GLOB_ONE '?'
 
 #define streq(a, b) (strcmp((a), (b)) == 0)
 #define strneq(a, b, n) (strncmp((a), (b), (n)) == 0)

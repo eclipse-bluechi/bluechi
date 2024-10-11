@@ -10,6 +10,9 @@
 #include <stdlib.h>
 
 #define USEC_INFINITY UINT64_MAX
+#define USEC_PER_SEC 1000000
+#define USEC_PER_MSEC 1000
+#define NSEC_PER_USEC 1000
 
 static const uint64_t sec_to_microsec_multiplier = 1000000;
 static const double microsec_to_millisec_multiplier = 1e-3;

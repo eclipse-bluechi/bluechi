@@ -8,7 +8,6 @@
 #include <limits.h>
 #include <stdlib.h>
 
-#include "libbluechi/common/protocol.h"
 #include "libbluechi/common/time-util.h"
 
 int main() {
