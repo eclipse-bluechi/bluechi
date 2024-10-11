@@ -189,7 +189,7 @@ class BluechiCtl:
         check_result: bool = True,
         expected_result: int = 0,
     ) -> Tuple[Optional[int], Union[Iterator[bytes], Any, Tuple[bytes, bytes]]]:
-        cmd = f"set-default {node_name} {target} true"
+        cmd = f"set-default {node_name} {target}"
         return self._run(
             f"SetDefaultTarget of node {node_name} ",
             cmd,
