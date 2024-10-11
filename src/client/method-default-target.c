@@ -46,15 +46,10 @@ static int method_get_default_target_on(Client *client, char *node_name) {
 }
 
 
-static int method_set_default_target_on(Client *client, char *node_name, char *target, char *force) {
+static int method_set_default_target_on(Client *client, char *node_name, char *target, int force) {
         _cleanup_sd_bus_error_ sd_bus_error error = SD_BUS_ERROR_NULL;
         _cleanup_sd_bus_message_ sd_bus_message *message = NULL;
         int r = 0;
-        bool force_b = 1;
-        if (streq(force, "false")) {
-                force_b = 0;
-        }
-
 
         r = assemble_object_path_string(NODE_OBJECT_PATH_PREFIX, node_name, &client->object_path);
         if (r < 0) {
@@ -71,7 +66,7 @@ static int method_set_default_target_on(Client *client, char *node_name, char *t
                         &message,
                         "sb",
                         target,
-                        force_b);
+                        force);
         if (r < 0) {
                 fprintf(stderr, "Failed to issue method call: %s\n", error.message);
                 return r;
@@ -105,12 +100,18 @@ static int method_set_default_target_on(Client *client, char *node_name, char *t
 
 void usage_method_get_default_target() {
         usage_print_header();
-        usage_print_usage("bluechictl get-default [nodename]");
+        usage_print_usage("bluechictl get-default [nodename] [options]");
+        printf("\n");
+        printf("Available options:\n");
+        printf("  --%s \t shows this help message\n", ARG_HELP);
 }
 
 void usage_method_set_default_target() {
         usage_print_header();
-        usage_print_usage("bluechictl set-default [nodename] [target]");
+        usage_print_usage("bluechictl set-default [nodename] [target] [options]");
+        printf("\n");
+        printf("Available options:\n");
+        printf("  --%s \t shows this help message\n", ARG_HELP);
 }
 
 
@@ -118,10 +119,15 @@ int method_get_default_target(Command *command, void *userdata) {
         return method_get_default_target_on(userdata, command->opargv[0]);
 }
 
+static const char *glob_systemd_target = "*target";
+
 int method_set_default_target(Command *command, void *userdata) {
-        char *force = "true";
-        if (command->opargc == 3) {
-                force = command->opargv[2];
+        if (!match_glob(command->opargv[1], glob_systemd_target)) {
+                fprintf(stderr, "Error: Unit '%s' is not a target unit\n", command->opargv[1]);
+                return 1;
         }
-        return method_set_default_target_on(userdata, command->opargv[0], command->opargv[1], force);
+
+        // mimicking systemctl here and setting the force parameter to 1
+        // https://github.com/systemd/systemd/blob/7c52d5236a3bc85db1755de6a458934be095cd1c/src/systemctl/systemctl-set-default.c#L130
+        return method_set_default_target_on(userdata, command->opargv[0], command->opargv[1], 1);
 }

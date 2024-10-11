@@ -902,7 +902,7 @@ class Node(ApiBase):
     def get_default_target(self) -> str:
         """
           GetDefaultTarget:
-        @defaulttarget the default target.
+        @defaulttarget The default target.
 
         Get the default value of the system to boot into.
         """
@@ -1056,9 +1056,9 @@ class Node(ApiBase):
     ) -> List[Tuple[str, str, str]]:
         """
           SetDefaultTarget:
-        @defaulttarget the default target.
-        @force bollean value of force.
-        @out the result of the method.
+        @defaulttarget The default target.
+        @force Boolean value of force.
+        @out The result of the method.
 
         Set the default value of the system to boot into.
         """

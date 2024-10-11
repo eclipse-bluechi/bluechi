@@ -63,7 +63,7 @@ const Method methods[] = {
         { "status",          0, ARG_ANY, OPT_WATCH,                               method_status,             usage_method_status             },
         { "set-loglevel",    1, 2,       OPT_NONE,                                method_set_loglevel,       usage_method_set_loglevel       },
         { "get-default",     1, 1,       OPT_NONE,                                method_get_default_target, usage_method_get_default_target },
-        { "set-default",     2, 3,       OPT_NONE,                                method_set_default_target, usage_method_set_default_target },
+        { "set-default",     2, 2,       OPT_NONE,                                method_set_default_target, usage_method_set_default_target },
         { "version",         0, 0,       OPT_NONE,                                method_version,            usage_bluechi                   },
         { NULL,              0, 0,       0,                                       NULL,                      NULL                            }
 };
