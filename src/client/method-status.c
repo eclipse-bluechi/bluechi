@@ -586,6 +586,33 @@ static int fetch_last_seen_timestamp_property(
         return 0;
 }
 
+static int fetch_peer_ip_property(sd_bus *api_bus, const char *node_path, char **ret_peer_ip) {
+        _cleanup_sd_bus_error_ sd_bus_error prop_error = SD_BUS_ERROR_NULL;
+        _cleanup_sd_bus_message_ sd_bus_message *prop_reply = NULL;
+
+        int r = sd_bus_get_property(
+                        api_bus,
+                        BC_INTERFACE_BASE_NAME,
+                        node_path,
+                        NODE_INTERFACE,
+                        "PeerIp",
+                        &prop_error,
+                        &prop_reply,
+                        "s");
+        if (r < 0) {
+                return r;
+        }
+
+        const char *peer_ip = NULL;
+        r = sd_bus_message_read(prop_reply, "s", &peer_ip);
+        if (r < 0) {
+                return r;
+        }
+        copy_str(ret_peer_ip, peer_ip);
+
+        return 0;
+}
+
 static int parse_status_from_changed_properties(sd_bus_message *m, char **ret_connection_status) {
         if (ret_connection_status == NULL) {
                 fprintf(stderr, "NULL pointer to connection status not allowed");
@@ -663,6 +690,14 @@ static int on_node_connection_state_changed(sd_bus_message *m, void *userdata, U
         if (r < 0) {
                 fprintf(stderr,
                         "Failed to get last seen property of node %s: %s\n",
+                        node->connection->name,
+                        strerror(-r));
+                return r;
+        }
+        r = fetch_peer_ip_property(node->api_bus, node->connection->node_path, &node->connection->ip);
+        if (r < 0) {
+                fprintf(stderr,
+                        "Failed to get peer IP property of node %s: %s\n",
                         node->connection->name,
                         strerror(-r));
                 return r;
