@@ -110,6 +110,7 @@ char *agent_is_online(Agent *agent) {
 static int agent_stop_local_proxy_service(Agent *agent, ProxyService *proxy);
 static bool agent_connect(Agent *agent);
 static bool agent_reconnect(Agent *agent);
+static void agent_peer_bus_close(Agent *agent);
 
 static int agent_disconnected(UNUSED sd_bus_message *message, void *userdata, UNUSED sd_bus_error *error) {
         Agent *agent = (Agent *) userdata;
@@ -169,6 +170,17 @@ static int agent_heartbeat_timer_callback(sd_event_source *event_source, UNUSED 
         Agent *agent = (Agent *) userdata;
 
         int r = 0;
+        /* Being in CONNECTING state when the timer callback is executed implies that
+         * the agent hasn't received a reply from the controller yet. In this case,
+         * we drop the existing register call and the agent is set into RETRY state.*/
+        if (agent->connection_state == AGENT_CONNECTION_STATE_CONNECTING) {
+                bc_log_error("Agent connection attempt failed, retrying");
+                if (agent->register_call_slot != NULL) {
+                        sd_bus_slot_unrefp(&agent->register_call_slot);
+                        agent->register_call_slot = NULL;
+                }
+                agent->connection_state = AGENT_CONNECTION_STATE_RETRY;
+        }
         if (agent->connection_state == AGENT_CONNECTION_STATE_CONNECTED &&
             agent_check_controller_liveness(agent)) {
                 r = sd_bus_emit_signal(
@@ -532,6 +544,9 @@ void agent_unref(Agent *agent) {
                 sd_event_unrefp(&agent->event);
         }
 
+        if (agent->register_call_slot != NULL) {
+                sd_bus_slot_unrefp(&agent->register_call_slot);
+        }
         if (agent->metrics_slot != NULL) {
                 sd_bus_slot_unrefp(&agent->metrics_slot);
         }
@@ -2680,6 +2695,7 @@ void agent_stop(Agent *agent) {
 
         bc_log_debug("Stopping agent");
 
+        agent_peer_bus_close(agent);
         agent->connection_state = AGENT_CONNECTION_STATE_DISCONNECTED;
         int r = sd_bus_emit_properties_changed(
                         agent->api_bus, BC_AGENT_OBJECT_PATH, AGENT_INTERFACE, "Status", NULL);
@@ -2694,51 +2710,18 @@ void agent_stop(Agent *agent) {
         }
 }
 
-static bool agent_connect(Agent *agent) {
-        peer_bus_close(agent->peer_dbus);
+static bool agent_process_register_callback(sd_bus_message *m, Agent *agent) {
+        int r = 0;
 
-        bc_log_infof("Connecting to controller on %s", agent->assembled_controller_address);
-
-        agent->peer_dbus = peer_bus_open(
-                        agent->event, "peer-bus-to-controller", agent->assembled_controller_address);
-        if (agent->peer_dbus == NULL) {
-                bc_log_error("Failed to open peer dbus");
-                return false;
+        if (sd_bus_message_is_method_error(m, NULL)) {
+                bc_log_errorf("Registering as '%s' failed: %s",
+                              agent->name,
+                              sd_bus_message_get_error(m)->message);
+                return -EPERM;
         }
 
-        bus_socket_set_options(agent->peer_dbus, agent->peer_socket_options);
-
-        int r = sd_bus_add_object_vtable(
-                        agent->peer_dbus,
-                        NULL,
-                        INTERNAL_AGENT_OBJECT_PATH,
-                        INTERNAL_AGENT_INTERFACE,
-                        internal_agent_vtable,
-                        agent);
-        if (r < 0) {
-                bc_log_errorf("Failed to add agent vtable: %s", strerror(-r));
-                return false;
-        }
-
-        _cleanup_sd_bus_message_ sd_bus_message *bus_msg = NULL;
-        sd_bus_error error = SD_BUS_ERROR_NULL;
-        r = sd_bus_call_method(
-                        agent->peer_dbus,
-                        BC_DBUS_NAME,
-                        INTERNAL_CONTROLLER_OBJECT_PATH,
-                        INTERNAL_CONTROLLER_INTERFACE,
-                        "Register",
-                        &error,
-                        &bus_msg,
-                        "s",
-                        agent->name);
-        if (r < 0) {
-                bc_log_errorf("Registering as '%s' failed: %s", agent->name, error.message);
-                sd_bus_error_free(&error);
-                return false;
-        }
-
-        r = sd_bus_message_read(bus_msg, "");
+        bc_log_info("Register call response received");
+        r = sd_bus_message_read(m, "");
         if (r < 0) {
                 bc_log_errorf("Failed to parse response message: %s", strerror(-r));
                 return false;
@@ -2805,6 +2788,68 @@ static bool agent_connect(Agent *agent) {
         return true;
 }
 
+static int agent_register_callback(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error) {
+        Agent *agent = (Agent *) userdata;
+
+        if (agent->connection_state != AGENT_CONNECTION_STATE_CONNECTING) {
+                bc_log_error("Agent is not in CONNECTING state, dropping Register callback");
+                sd_bus_slot_unrefp(&agent->register_call_slot);
+                agent->register_call_slot = NULL;
+                return 0;
+        }
+
+        if (!agent_process_register_callback(m, agent)) {
+                agent->connection_state = AGENT_CONNECTION_STATE_RETRY;
+        }
+
+        return 0;
+}
+
+static bool agent_connect(Agent *agent) {
+        bc_log_infof("Connecting to controller on %s", agent->assembled_controller_address);
+        agent->connection_state = AGENT_CONNECTION_STATE_CONNECTING;
+
+        agent->peer_dbus = peer_bus_open(
+                        agent->event, "peer-bus-to-controller", agent->assembled_controller_address);
+        if (agent->peer_dbus == NULL) {
+                bc_log_error("Failed to open peer dbus");
+                return false;
+        }
+
+        bus_socket_set_options(agent->peer_dbus, agent->peer_socket_options);
+
+        int r = sd_bus_add_object_vtable(
+                        agent->peer_dbus,
+                        NULL,
+                        INTERNAL_AGENT_OBJECT_PATH,
+                        INTERNAL_AGENT_INTERFACE,
+                        internal_agent_vtable,
+                        agent);
+        if (r < 0) {
+                bc_log_errorf("Failed to add agent vtable: %s", strerror(-r));
+                return false;
+        }
+
+        _cleanup_sd_bus_message_ sd_bus_message *bus_msg = NULL;
+        r = sd_bus_call_method_async(
+                        agent->peer_dbus,
+                        &agent->register_call_slot,
+                        BC_DBUS_NAME,
+                        INTERNAL_CONTROLLER_OBJECT_PATH,
+                        INTERNAL_CONTROLLER_INTERFACE,
+                        "Register",
+                        agent_register_callback,
+                        agent,
+                        "s",
+                        agent->name);
+        if (r < 0) {
+                bc_log_errorf("Registering as '%s' failed: %s", agent->name, strerror(-r));
+                return false;
+        }
+
+        return true;
+}
+
 static bool agent_reconnect(Agent *agent) {
         _cleanup_free_ char *assembled_controller_address = NULL;
 
@@ -2827,7 +2872,17 @@ static bool agent_reconnect(Agent *agent) {
                 }
         }
 
+        agent_peer_bus_close(agent);
         return agent_connect(agent);
+}
+
+static void agent_peer_bus_close(Agent *agent) {
+        if (agent->register_call_slot != NULL) {
+                sd_bus_slot_unref(agent->register_call_slot);
+                agent->register_call_slot = NULL;
+        }
+        peer_bus_close(agent->peer_dbus);
+        agent->peer_dbus = NULL;
 }
 
 static int stop_proxy_callback(sd_bus_message *m, void *userdata, UNUSED sd_bus_error *ret_error) {
