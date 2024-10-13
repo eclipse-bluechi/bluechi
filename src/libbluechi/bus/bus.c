@@ -77,13 +77,14 @@ sd_bus *peer_bus_open(sd_event *event, const char *dbus_description, const char 
 
 int peer_bus_close(sd_bus *peer_dbus) {
         if (peer_dbus != NULL) {
+                bc_log_debug("Closing peer bus");
                 int r = sd_bus_detach_event(peer_dbus);
                 if (r < 0) {
                         bc_log_errorf("Failed to detach bus from event: %s", strerror(-r));
                         return r;
                 }
 
-                sd_bus_flush_close_unref(peer_dbus);
+                sd_bus_close_unref(peer_dbus);
         }
 
         return 0;
