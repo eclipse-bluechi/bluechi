@@ -98,6 +98,7 @@ jobs:
           cd ..
 
       - name: Run integration tests
+        id: run-tests
         run: |
           cd tests
           tmt run -v \
@@ -147,12 +148,13 @@ jobs:
           path: '/var/tmp/merged.info'
 
       - name: Prepare the coverage report for coveralls
-        if: always()
+        id: prepare-coveralls-report
+        if: steps.run-tests.outcome == 'success'
         run: |
           sed 's/\/var\/tmp\/bluechi-coverage\/src/src/' /var/tmp/merged.info > /var/tmp/coveralls.info
 
       - name: Report to Coveralls
-        if: always()
+        if: steps.prepare-coveralls-report.outcome == 'success'
         uses: coverallsapp/github-action@v2.3.0
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
