@@ -48,7 +48,8 @@ typedef struct JobTracker JobTracker;
 typedef enum {
         AGENT_CONNECTION_STATE_DISCONNECTED,
         AGENT_CONNECTION_STATE_CONNECTED,
-        AGENT_CONNECTION_STATE_RETRY
+        AGENT_CONNECTION_STATE_RETRY,
+        AGENT_CONNECTION_STATE_CONNECTING
 } AgentConnectionState;
 
 struct Agent {
@@ -82,6 +83,7 @@ struct Agent {
         sd_bus *systemd_dbus;
         sd_bus *peer_dbus;
 
+        sd_bus_slot *register_call_slot;
         sd_bus_slot *metrics_slot;
 
         LIST_HEAD(SystemdRequest, outstanding_requests);
