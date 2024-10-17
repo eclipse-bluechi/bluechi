@@ -107,6 +107,7 @@ subdir('src/controller')
 subdir('src/agent')
 subdir('src/client')
 subdir('src/proxy')
+subdir('src/is-online')
 
 # Subdirectory for the API description
 subdir('data')
