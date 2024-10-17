@@ -7,6 +7,7 @@ command_src = [
   'command_add_option_test',
   'command_flag_exists_test',
   'command_get_option_test',
+  'command_get_option_long_test',
   'get_option_type_test',
   'command_execute_test',
   'methods_get_method_test',

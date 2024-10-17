@@ -46,6 +46,7 @@ DEFINE_CLEANUP_FUNC(CommandOption, command_option_free)
 #define _cleanup_command_option_ _cleanup_(command_option_freep)
 
 char *command_get_option(Command *command, int key);
+int command_get_option_long(Command *command, int key, long *ret);
 bool command_flag_exists(Command *command, int key);
 int command_add_option(Command *command, int key, char *value, const OptionType *option_type);
 
