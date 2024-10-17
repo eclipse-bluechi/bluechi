@@ -5,6 +5,7 @@
  */
 #include "command.h"
 
+#include "libbluechi/common/parse-util.h"
 #include "libbluechi/common/string-util.h"
 
 Command *new_command() {
@@ -80,6 +81,16 @@ char *command_get_option(Command *command, int key) {
                 }
         }
         return NULL;
+}
+
+int command_get_option_long(Command *command, int key, long *ret) {
+        const char *opt = command_get_option(command, key);
+        long val = 0;
+        if (opt != NULL && !streq(opt, "") && !parse_long(opt, &val)) {
+                return -EINVAL;
+        }
+        *ret = val;
+        return 0;
 }
 
 bool command_flag_exists(Command *command, int key) {
