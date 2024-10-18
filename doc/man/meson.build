@@ -15,6 +15,7 @@ man1 = [
   'bluechi-agent',
   'bluechictl',
   'bluechi-proxy',
+  'bluechi-is-online',
 ]
 
 man5 = [
