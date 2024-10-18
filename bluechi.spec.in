@@ -40,6 +40,10 @@ predefined number of nodes and with a focus on highly regulated environment
 such as those requiring functional safety (for example in cars).
 
 
+##########################
+### bluechi-controller ###
+##########################
+
 %package	controller
 Summary:	BlueChi service controller
 Requires:	systemd
@@ -89,6 +93,10 @@ This package contains the controller service.
 %{_unitdir}/bluechi-controller.service
 %{_unitdir}/bluechi-controller.socket
 
+
+#####################
+### bluechi-agent ###
+#####################
 
 %package agent
 Summary:	BlueChi service controller agent
@@ -140,6 +148,10 @@ This package contains the node agent.
 %{_userunitdir}/bluechi-dep@.service
 
 
+#######################
+### bluechi-selinux ###
+#######################
+
 %package selinux
 Summary:	BlueChi SELinux policy
 BuildArch:	noarch
@@ -180,6 +192,10 @@ if [ $1 -eq 0 ]; then
 fi
 
 
+###################
+### bluechi-ctl ###
+###################
+
 %package ctl
 Summary:	BlueChi service controller command line tool
 Requires:	%{name} = %{version}-%{release}
@@ -203,6 +219,37 @@ This package contains the service controller command line tool.
 %{_bindir}/bluechictl
 %{_mandir}/man1/bluechictl.*
 
+
+#########################
+### bluechi-is-online ###
+#########################
+
+%package is-online
+Summary:	Command line tool to monitor the connection state of BlueChi's components
+Recommends:	bluechi-controller = %{version}-%{release}
+Recommends:	bluechi-agent = %{version}-%{release}
+
+%if 0%{?with_coverage}
+Requires:	bluechi-coverage = %{version}-%{release}
+%endif
+
+%description is-online
+BlueChi is a systemd service controller for multi-nodes environements with a
+predefined number of nodes and with a focus on highly regulated environment
+such as those requiring functional safety (for example in cars).
+This package contains a command line tool for checking and monitoring the
+connection state of BlueChi's core components.
+
+%files is-online
+%doc README.md
+%license LICENSE
+%{_bindir}/bluechi-is-online
+%{_mandir}/man1/bluechi-is-online.*
+
+
+#######################
+### python3-bluechi ###
+#######################
 
 %if %{with_python}
 %package -n python3-bluechi
@@ -228,6 +275,10 @@ API description and manually written code to simplify recurring tasks.
 %endif
 
 
+########################
+### bluechi-coverage ###
+########################
+
 %if 0%{?with_coverage}
 %package coverage
 Summary:	Code coverage files for BlueChi
@@ -242,6 +293,7 @@ will be used during integration tests when creating code coverage report.
 %{_datadir}/bluechi-coverage/*
 %dir %{_localstatedir}/tmp/bluechi-coverage/
 %endif
+
 
 
 %prep
