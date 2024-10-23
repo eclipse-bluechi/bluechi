@@ -7,6 +7,7 @@ test: |
     --log-cli-date-format="%Y-%m-%d %H:%M:%S%z" \
     --log-cli-format="%(asctime)s,%(msecs)03d %(levelname)-7s [%(name)s] %(message)s (%(module)s:%(lineno)d)"
 
+# Require the whole tree (no pruning)
 require:
   - type: file
     pattern:
