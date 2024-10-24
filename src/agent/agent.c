@@ -606,6 +606,74 @@ void agent_set_systemd_user(Agent *agent, bool systemd_user) {
         agent->systemd_user = systemd_user;
 }
 
+static bool ensure_orch_address(Agent *agent) {
+        int r = 0;
+
+        if (agent->orch_addr != NULL) {
+                return true;
+        }
+
+        if (agent->controller_address != NULL) {
+                return agent_set_orch_address(agent, agent->controller_address);
+        }
+
+        if (agent->host == NULL) {
+                bc_log_errorf("No controller host specified for agent '%s'", agent->name);
+                return false;
+        }
+
+        char *ip_address = agent->host;
+        bool host_is_ipv4 = is_ipv4(ip_address);
+        bool host_is_ipv6 = is_ipv6(ip_address);
+
+        _cleanup_free_ char *resolved_ip_address = NULL;
+        if (!host_is_ipv4 && !host_is_ipv6) {
+                int r = get_address(ip_address, &resolved_ip_address, getaddrinfo);
+                if (r < 0) {
+                        bc_log_errorf("Failed to get IP address from host '%s': %s", agent->host, strerror(-r));
+                        return false;
+                }
+                bc_log_infof("Translated '%s' to '%s'", ip_address, resolved_ip_address);
+                ip_address = resolved_ip_address;
+        }
+
+        if (host_is_ipv4 || is_ipv4(ip_address)) {
+                struct sockaddr_in host;
+                memset(&host, 0, sizeof(host));
+                host.sin_family = AF_INET;
+                host.sin_port = htons(agent->port);
+                r = inet_pton(AF_INET, ip_address, &host.sin_addr);
+                if (r < 1) {
+                        bc_log_errorf("INET4: Invalid host option '%s'", ip_address);
+                        return false;
+                }
+                _cleanup_free_ char *orch_addr = assemble_tcp_address(&host);
+                if (orch_addr == NULL) {
+                        return false;
+                }
+                agent_set_orch_address(agent, orch_addr);
+        } else if (host_is_ipv6 || is_ipv6(ip_address)) {
+                struct sockaddr_in6 host6;
+                memset(&host6, 0, sizeof(host6));
+                host6.sin6_family = AF_INET6;
+                host6.sin6_port = htons(agent->port);
+                r = inet_pton(AF_INET6, ip_address, &host6.sin6_addr);
+                if (r < 1) {
+                        bc_log_errorf("INET6: Invalid host option '%s'", ip_address);
+                        return false;
+                }
+                _cleanup_free_ char *orch_addr = assemble_tcp_address_v6(&host6);
+                if (orch_addr == NULL) {
+                        return false;
+                }
+                agent_set_orch_address(agent, orch_addr);
+        } else {
+                bc_log_errorf("Unknown protocol for '%s'", ip_address);
+        }
+
+        return agent->orch_addr != NULL;
+}
+
 bool agent_parse_config(Agent *agent, const char *configfile) {
         int result = 0;
 
@@ -1939,12 +2007,16 @@ static int agent_method_switch_controller(sd_bus_message *m, void *userdata, UNU
                                 "Failed to switch controller because already connected to the controller");
         }
 
-        if (!agent_set_controller_address(agent, dbus_address)) {
+        if (!agent_set_controller_address(agent, dbus_address) ||
+            !agent_set_orch_address(agent, dbus_address)) {
                 bc_log_error("Failed to set CONTROLLER ADDRESS");
                 return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "Failed to set CONTROLLER ADDRESS");
         }
-
-        bc_log_infof("CONTROLLER ADDRESS changed to %s", dbus_address);
+        r = sd_bus_emit_properties_changed(
+                        agent->api_bus, BC_AGENT_OBJECT_PATH, AGENT_INTERFACE, "ControllerAddress", NULL);
+        if (r < 0) {
+                bc_log_errorf("Failed to emit controller address property changed: %s", strerror(-r));
+        }
 
         agent_disconnected(NULL, userdata, NULL);
 
@@ -2405,74 +2477,6 @@ int agent_init_units(Agent *agent, sd_bus_message *m) {
         }
 
         return 0;
-}
-
-static bool ensure_orch_address(Agent *agent) {
-        int r = 0;
-
-        if (agent->orch_addr != NULL) {
-                return true;
-        }
-
-        if (agent->controller_address != NULL) {
-                return agent_set_orch_address(agent, agent->controller_address);
-        }
-
-        if (agent->host == NULL) {
-                bc_log_errorf("No controller host specified for agent '%s'", agent->name);
-                return false;
-        }
-
-        char *ip_address = agent->host;
-        bool host_is_ipv4 = is_ipv4(ip_address);
-        bool host_is_ipv6 = is_ipv6(ip_address);
-
-        _cleanup_free_ char *resolved_ip_address = NULL;
-        if (!host_is_ipv4 && !host_is_ipv6) {
-                int r = get_address(ip_address, &resolved_ip_address, getaddrinfo);
-                if (r < 0) {
-                        bc_log_errorf("Failed to get IP address from host '%s': %s", agent->host, strerror(-r));
-                        return false;
-                }
-                bc_log_infof("Translated '%s' to '%s'", ip_address, resolved_ip_address);
-                ip_address = resolved_ip_address;
-        }
-
-        if (host_is_ipv4 || is_ipv4(ip_address)) {
-                struct sockaddr_in host;
-                memset(&host, 0, sizeof(host));
-                host.sin_family = AF_INET;
-                host.sin_port = htons(agent->port);
-                r = inet_pton(AF_INET, ip_address, &host.sin_addr);
-                if (r < 1) {
-                        bc_log_errorf("INET4: Invalid host option '%s'", ip_address);
-                        return false;
-                }
-                _cleanup_free_ char *orch_addr = assemble_tcp_address(&host);
-                if (orch_addr == NULL) {
-                        return false;
-                }
-                agent_set_orch_address(agent, orch_addr);
-        } else if (host_is_ipv6 || is_ipv6(ip_address)) {
-                struct sockaddr_in6 host6;
-                memset(&host6, 0, sizeof(host6));
-                host6.sin6_family = AF_INET6;
-                host6.sin6_port = htons(agent->port);
-                r = inet_pton(AF_INET6, ip_address, &host6.sin6_addr);
-                if (r < 1) {
-                        bc_log_errorf("INET6: Invalid host option '%s'", ip_address);
-                        return false;
-                }
-                _cleanup_free_ char *orch_addr = assemble_tcp_address_v6(&host6);
-                if (orch_addr == NULL) {
-                        return false;
-                }
-                agent_set_orch_address(agent, orch_addr);
-        } else {
-                bc_log_errorf("Unknown protocol for '%s'", ip_address);
-        }
-
-        return agent->orch_addr != NULL;
 }
 
 bool agent_start(Agent *agent) {
