@@ -8,7 +8,7 @@
 [![Unit Tests](https://github.com/eclipse-bluechi/bluechi/actions/workflows/unit-tests.yml/badge.svg?branch=main)](https://github.com/eclipse-bluechi/bluechi/actions/workflows/unit-tests.yml)
 [![Coverage Status](https://coveralls.io/repos/github/eclipse-bluechi/bluechi/badge.svg?branch=main)](https://coveralls.io/github/eclipse-bluechi/bluechi?branch=main)
 
-Eclipse BlueChi&trade; (formerly know as hirte) is a systemd service controller intended for
+Eclipse BlueChi&trade; is a systemd service controller intended for
 multi-node environments with a predefined number of nodes and with a focus on
 highly regulated ecosystems such as those requiring functional safety.
 Potential use cases can be found in domains such as transportation, where
