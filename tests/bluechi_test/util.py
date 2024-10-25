@@ -70,14 +70,6 @@ def remove_control_chars(value: str) -> str:
     return _ANSI_SEQUENCE.sub("", value)
 
 
-# timeout for setting up tests in s
-TIMEOUT_SETUP = 20
-# timeout for running tests in s
-TIMEOUT_TEST = 45
-# timeout for collecting test results in s
-TIMEOUT_GATHER = 20
-
-
 class Timeout:
     def __init__(self, seconds=1, error_message="Timeout"):
         self.seconds = seconds

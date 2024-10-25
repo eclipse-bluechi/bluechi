@@ -69,6 +69,33 @@ def machines_ssh_password() -> str:
     return _get_env_value("SSH_PASSWORD", "")
 
 
+def _safely_parse_int(input: str, default: int) -> int:
+    if input.isdigit():
+        return int(input)
+    return default
+
+
+@pytest.fixture(scope="session")
+def timeout_test_setup() -> int:
+    """Returns the timeout for setting up the test setup"""
+
+    return _safely_parse_int(_get_env_value("TIMEOUT_TEST_SETUP", ""), 20)
+
+
+@pytest.fixture(scope="session")
+def timeout_test_run() -> int:
+    """Returns the timeout for executing the actual test"""
+
+    return _safely_parse_int(_get_env_value("TIMEOUT_TEST_RUN", ""), 45)
+
+
+@pytest.fixture(scope="session")
+def timeout_collecting_test_results() -> int:
+    """Returns the timeout for collecting all test results"""
+
+    return _safely_parse_int(_get_env_value("TIMEOUT_COLLECT_TEST_RESULTS", ""), 20)
+
+
 def _read_topology() -> Dict[str, Any]:
     """
     Returns the parsed YAML for the tmt guest topology:
@@ -216,6 +243,9 @@ def bluechi_test(
     additional_ports: dict,
     machines_ssh_user: str,
     machines_ssh_password: str,
+    timeout_test_setup: int,
+    timeout_test_run: int,
+    timeout_collecting_test_results: int,
 ) -> BluechiTest:
 
     if is_multihost_run:
@@ -227,6 +257,9 @@ def bluechi_test(
             tmt_test_data_dir,
             run_with_valgrind,
             run_with_coverage,
+            timeout_test_setup,
+            timeout_test_run,
+            timeout_collecting_test_results,
         )
 
     return BluechiContainerTest(
@@ -238,5 +271,8 @@ def bluechi_test(
         tmt_test_data_dir,
         run_with_valgrind,
         run_with_coverage,
+        timeout_test_setup,
+        timeout_test_run,
+        timeout_collecting_test_results,
         additional_ports,
     )

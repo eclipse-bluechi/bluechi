@@ -19,7 +19,7 @@ from bluechi_test.machine import (
     BluechiControllerMachine,
     BluechiMachine,
 )
-from bluechi_test.util import TIMEOUT_GATHER, TIMEOUT_SETUP, TIMEOUT_TEST, Timeout
+from bluechi_test.util import Timeout
 from podman import PodmanClient
 
 LOGGER = logging.getLogger(__name__)
@@ -32,12 +32,18 @@ class BluechiTest:
         tmt_test_data_dir: str,
         run_with_valgrind: bool,
         run_with_coverage: bool,
+        timeout_test_setup: int,
+        timeout_test_run: int,
+        timeout_collecting_test_results: int,
     ) -> None:
 
         self.tmt_test_serial_number = tmt_test_serial_number
         self.tmt_test_data_dir = tmt_test_data_dir
         self.run_with_valgrind = run_with_valgrind
         self.run_with_coverage = run_with_coverage
+        self.timeout_test_setup = timeout_test_setup
+        self.timeout_test_run = timeout_test_run
+        self.timeout_collecting_test_results = timeout_collecting_test_results
 
         self.bluechi_controller_config: BluechiControllerConfig = None
         self.bluechi_node_configs: List[BluechiAgentConfig] = []
@@ -149,15 +155,12 @@ class BluechiTest:
         exec: Callable[
             [BluechiControllerMachine, Dict[str, BluechiAgentMachine]], None
         ],
-        timeout_setup: int = TIMEOUT_SETUP,
-        timeout_test: int = TIMEOUT_TEST,
-        timeout_gather: int = TIMEOUT_GATHER,
     ):
         LOGGER.info("Test execution started")
 
         successful = False
         try:
-            with Timeout(timeout_setup, "Timeout setting up BlueChi system"):
+            with Timeout(self.timeout_test_setup, "Timeout setting up BlueChi system"):
                 successful, container = self.setup()
             ctrl_container, node_container = container
         except TimeoutError as ex:
@@ -171,7 +174,7 @@ class BluechiTest:
 
         test_result = None
         try:
-            with Timeout(timeout_test, "Timeout running test"):
+            with Timeout(self.timeout_test_run, "Timeout running test"):
                 exec(ctrl_container, node_container)
         except Exception as ex:
             test_result = ex
@@ -186,7 +189,10 @@ class BluechiTest:
             traceback.print_exc()
 
         try:
-            with Timeout(timeout_gather, "Timeout collecting test artifacts"):
+            with Timeout(
+                self.timeout_collecting_test_results,
+                "Timeout collecting test artifacts",
+            ):
                 self.gather_logs(ctrl_container, node_container)
                 if self.run_with_valgrind:
                     self.check_valgrind_logs()
@@ -215,6 +221,9 @@ class BluechiContainerTest(BluechiTest):
         tmt_test_data_dir: str,
         run_with_valgrind: bool,
         run_with_coverage: bool,
+        timeout_test_setup: int,
+        timeout_test_run: int,
+        timeout_collecting_test_results: int,
         additional_ports: Dict,
     ) -> None:
 
@@ -223,6 +232,9 @@ class BluechiContainerTest(BluechiTest):
             tmt_test_data_dir,
             run_with_valgrind,
             run_with_coverage,
+            timeout_test_setup,
+            timeout_test_run,
+            timeout_collecting_test_results,
         )
 
         self.podman_client = podman_client
@@ -324,6 +336,9 @@ class BluechiSSHTest(BluechiTest):
         tmt_test_data_dir: str,
         run_with_valgrind: bool,
         run_with_coverage: bool,
+        timeout_test_setup: int,
+        timeout_test_run: int,
+        timeout_collecting_test_results: int,
     ) -> None:
 
         super().__init__(
@@ -331,6 +346,9 @@ class BluechiSSHTest(BluechiTest):
             tmt_test_data_dir,
             run_with_valgrind,
             run_with_coverage,
+            timeout_test_setup,
+            timeout_test_run,
+            timeout_collecting_test_results,
         )
 
         self.available_hosts = available_hosts

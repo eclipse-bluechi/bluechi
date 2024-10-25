@@ -150,6 +150,19 @@ execution result directory, for example:
 
 `/var/tmp/tmt/run-001/plans/tier0/report/default-0/report`
 
+## Changing timeouts for integration tests
+
+In some cases it might be necessary to adjust the default timeouts that are used in different steps of an integration tests execution cycle. The currently available environment variables as well as their default values are:
+
+```shell
+# in seconds
+TIMEOUT_TEST_SETUP=20
+TIMEOUT_TEST_RUN=45
+TIMEOUT_COLLECT_TEST_RESULTS=20
+```
+
+These can be set either in the `environment` section of the tmt plan or using the `-e` option when running tmt, e.g. `-eTIMEOUT_TEST_SETUP=40`.
+
 ## Developing integration tests
 
 ### Code Style
