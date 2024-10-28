@@ -1,5 +1,4 @@
 ---
-
 upstream_project_url: https://github.com/eclipse-bluechi/bluechi
 issue_repository: https://github.com/eclipse-bluechi/bluechi
 specfile_path: bluechi.spec
@@ -54,11 +53,14 @@ jobs:
     labels:
       - standard
     env:
+      # Enable local provisioning as this is considered dangerous since tmt v1.38.0
+      # see https://github.com/teemtee/tmt/pull/3282
+      TMT_FEELING_SAFE: 1
       INSTALL_DEPS: "yes"
     targets:
       # Run integration tests on Fedora using CS9 containers, because running integrations tests on CS9 using CS9
       # containers is very flaky
-      # 
+      #
       # This can be set to fedora-rawhide as soon as the following issue gets resolved:
       # https://github.com/containers/podman/issues/22422
       - fedora-latest-stable-x86_64
@@ -68,13 +70,16 @@ jobs:
     labels:
       - valgrind
     env:
+      # Enable local provisioning as this is considered dangerous since tmt v1.38.0
+      # see https://github.com/teemtee/tmt/pull/3282
+      TMT_FEELING_SAFE: 1
       INSTALL_DEPS: "yes"
       WITH_VALGRIND: "1"
 
   - job: copr_build
     trigger: commit
     branch: main
-    owner: '@centos-automotive-sig'
+    owner: "@centos-automotive-sig"
     project: bluechi-snapshot
     notifications:
       failure_comment:
