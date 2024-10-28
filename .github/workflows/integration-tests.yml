@@ -97,11 +97,14 @@ jobs:
           tmt lint
           cd ..
 
+      # Enable local provisioning as this is considered dangerous since tmt v1.38.0
+      # see https://github.com/teemtee/tmt/pull/3282
       - name: Run integration tests
         id: run-tests
         run: |
           cd tests
-          tmt run -v \
+          tmt --feeling-safe \
+            run -v \
             -eCONTAINER_USED=integration-test-local \
             -eWITH_COVERAGE=1 \
             -eLOG_LEVEL=DEBUG \
