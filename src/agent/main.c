@@ -161,7 +161,7 @@ int main(int argc, char *argv[]) {
                 return EXIT_FAILURE;
         }
 
-        if (opt_address && !agent_set_orch_address(agent, opt_address)) {
+        if (opt_address && !agent_set_assembled_controller_address(agent, opt_address)) {
                 return EXIT_FAILURE;
         }
 

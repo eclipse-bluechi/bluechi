@@ -56,9 +56,13 @@ struct Agent {
 
         bool systemd_user;
         char *name;
+        char *api_bus_service_name;
+
         char *host;
         int port;
         char *controller_address;
+        char *assembled_controller_address;
+
         long heartbeat_interval_msec;
         long controller_heartbeat_threshold_msec;
 
@@ -69,11 +73,6 @@ struct Agent {
         uint64_t disconnect_timestamp;
         uint64_t disconnect_timestamp_monotonic;
 
-        char *orch_addr;
-        char *api_bus_service_name;
-
-        bool metrics_enabled;
-
         SocketOptions *peer_socket_options;
 
         sd_event *event;
@@ -82,6 +81,7 @@ struct Agent {
         sd_bus *systemd_dbus;
         sd_bus *peer_dbus;
 
+        bool metrics_enabled;
         sd_bus_slot *metrics_slot;
 
         LIST_HEAD(SystemdRequest, outstanding_requests);
@@ -110,7 +110,7 @@ void agent_unref(Agent *agent);
 
 bool agent_set_port(Agent *agent, const char *port);
 bool agent_set_host(Agent *agent, const char *host);
-bool agent_set_orch_address(Agent *agent, const char *address);
+bool agent_set_assembled_controller_address(Agent *agent, const char *address);
 bool agent_set_name(Agent *agent, const char *name);
 bool agent_set_heartbeat_interval(Agent *agent, const char *interval_msec);
 void agent_set_systemd_user(Agent *agent, bool systemd_user);

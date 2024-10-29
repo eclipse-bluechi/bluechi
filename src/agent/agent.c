@@ -523,7 +523,7 @@ void agent_unref(Agent *agent) {
 
         free_and_null(agent->name);
         free_and_null(agent->host);
-        free_and_null(agent->orch_addr);
+        free_and_null(agent->assembled_controller_address);
         free_and_null(agent->api_bus_service_name);
         free_and_null(agent->controller_address);
         free_and_null(agent->peer_socket_options);
@@ -568,8 +568,8 @@ bool agent_set_controller_address(Agent *agent, const char *address) {
         return copy_str(&agent->controller_address, address);
 }
 
-bool agent_set_orch_address(Agent *agent, const char *address) {
-        return copy_str(&agent->orch_addr, address);
+bool agent_set_assembled_controller_address(Agent *agent, const char *address) {
+        return copy_str(&agent->assembled_controller_address, address);
 }
 
 bool agent_set_host(Agent *agent, const char *host) {
@@ -1924,25 +1924,31 @@ static int agent_method_switch_controller(sd_bus_message *m, void *userdata, UNU
 
         int r = sd_bus_message_read(m, "s", &dbus_address);
         if (r < 0) {
-                bc_log_errorf("Failed to read DbusAddress parameter: %s", strerror(-r));
+                bc_log_errorf("Failed to read D-Bus address parameter: %s", strerror(-r));
                 return sd_bus_reply_method_errorf(
                                 m,
                                 SD_BUS_ERROR_FAILED,
-                                "Failed to read DbusAddress parameter: %s",
+                                "Failed to read D-Bus address parameter: %s",
                                 strerror(-r));
         }
 
-        if (agent->orch_addr && streq(agent->orch_addr, dbus_address)) {
+        if (agent->assembled_controller_address && streq(agent->assembled_controller_address, dbus_address)) {
                 return sd_bus_reply_method_errorf(
                                 m,
                                 SD_BUS_ERROR_FAILED,
                                 "Failed to switch controller because already connected to the controller");
         }
 
-        if (!agent_set_controller_address(agent, dbus_address) ||
-            !agent_set_orch_address(agent, dbus_address)) {
-                bc_log_error("Failed to set CONTROLLER ADDRESS");
-                return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "Failed to set CONTROLLER ADDRESS");
+        /* The assembled controller address is the field used for the ControllerAddress property.
+         * However, this field gets assembled in the reconnect based on the configuration of host + port
+         * or controller address.
+         * So in order to enable emitting the address changed signal be sent before the disconnect AND keep
+         * the new value, both fields need to be set with the new address.
+         */
+        if (!agent_set_assembled_controller_address(agent, dbus_address) ||
+            !agent_set_controller_address(agent, dbus_address)) {
+                bc_log_error("Failed to set controller address");
+                return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_FAILED, "Failed to set controller address");
         }
         r = sd_bus_emit_properties_changed(
                         agent->api_bus, BC_AGENT_OBJECT_PATH, AGENT_INTERFACE, "ControllerAddress", NULL);
@@ -2038,7 +2044,7 @@ static const sd_bus_vtable agent_vtable[] = {
         SD_BUS_PROPERTY("ControllerAddress",
                         "s",
                         NULL,
-                        offsetof(Agent, orch_addr),
+                        offsetof(Agent, assembled_controller_address),
                         SD_BUS_VTABLE_PROPERTY_EMITS_CHANGE),
         SD_BUS_VTABLE_END
 };
@@ -2411,15 +2417,15 @@ int agent_init_units(Agent *agent, sd_bus_message *m) {
         return 0;
 }
 
-static bool ensure_orch_address(Agent *agent) {
+static bool ensure_assembled_controller_address(Agent *agent) {
         int r = 0;
 
-        if (agent->orch_addr != NULL) {
+        if (agent->assembled_controller_address != NULL) {
                 return true;
         }
 
         if (agent->controller_address != NULL) {
-                return agent_set_orch_address(agent, agent->controller_address);
+                return agent_set_assembled_controller_address(agent, agent->controller_address);
         }
 
         if (agent->host == NULL) {
@@ -2452,11 +2458,11 @@ static bool ensure_orch_address(Agent *agent) {
                         bc_log_errorf("INET4: Invalid host option '%s'", ip_address);
                         return false;
                 }
-                _cleanup_free_ char *orch_addr = assemble_tcp_address(&host);
-                if (orch_addr == NULL) {
+                _cleanup_free_ char *assembled_controller_address = assemble_tcp_address(&host);
+                if (assembled_controller_address == NULL) {
                         return false;
                 }
-                agent_set_orch_address(agent, orch_addr);
+                agent_set_assembled_controller_address(agent, assembled_controller_address);
         } else if (host_is_ipv6 || is_ipv6(ip_address)) {
                 struct sockaddr_in6 host6;
                 memset(&host6, 0, sizeof(host6));
@@ -2467,16 +2473,16 @@ static bool ensure_orch_address(Agent *agent) {
                         bc_log_errorf("INET6: Invalid host option '%s'", ip_address);
                         return false;
                 }
-                _cleanup_free_ char *orch_addr = assemble_tcp_address_v6(&host6);
-                if (orch_addr == NULL) {
+                _cleanup_free_ char *assembled_controller_address = assemble_tcp_address_v6(&host6);
+                if (assembled_controller_address == NULL) {
                         return false;
                 }
-                agent_set_orch_address(agent, orch_addr);
+                agent_set_assembled_controller_address(agent, assembled_controller_address);
         } else {
                 bc_log_errorf("Unknown protocol for '%s'", ip_address);
         }
 
-        return agent->orch_addr != NULL;
+        return agent->assembled_controller_address != NULL;
 }
 
 bool agent_start(Agent *agent) {
@@ -2494,7 +2500,7 @@ bool agent_start(Agent *agent) {
                 return false;
         }
 
-        if (!ensure_orch_address(agent)) {
+        if (!ensure_assembled_controller_address(agent)) {
                 return false;
         }
 
@@ -2691,9 +2697,10 @@ void agent_stop(Agent *agent) {
 static bool agent_connect(Agent *agent) {
         peer_bus_close(agent->peer_dbus);
 
-        bc_log_infof("Connecting to controller on %s", agent->orch_addr);
+        bc_log_infof("Connecting to controller on %s", agent->assembled_controller_address);
 
-        agent->peer_dbus = peer_bus_open(agent->event, "peer-bus-to-controller", agent->orch_addr);
+        agent->peer_dbus = peer_bus_open(
+                        agent->event, "peer-bus-to-controller", agent->assembled_controller_address);
         if (agent->peer_dbus == NULL) {
                 bc_log_error("Failed to open peer dbus");
                 return false;
@@ -2799,18 +2806,20 @@ static bool agent_connect(Agent *agent) {
 }
 
 static bool agent_reconnect(Agent *agent) {
-        _cleanup_free_ char *orch_addr = NULL;
+        _cleanup_free_ char *assembled_controller_address = NULL;
 
         // resolve FQDN again in case the system changed
         // e.g. bluechi controller has been migrated to a different host
-        if (agent->orch_addr != NULL) {
-                orch_addr = steal_pointer(&agent->orch_addr);
+        if (agent->assembled_controller_address != NULL) {
+                assembled_controller_address = steal_pointer(&agent->assembled_controller_address);
         }
-        if (!ensure_orch_address(agent)) {
+        if (!ensure_assembled_controller_address(agent)) {
                 return false;
         }
 
-        if (agent->orch_addr && orch_addr && !streq(agent->orch_addr, orch_addr)) {
+        // If the controller address has changed, emit the respective signal
+        if (agent->assembled_controller_address && assembled_controller_address &&
+            !streq(agent->assembled_controller_address, assembled_controller_address)) {
                 int r = sd_bus_emit_properties_changed(
                                 agent->api_bus, BC_AGENT_OBJECT_PATH, AGENT_INTERFACE, "ControllerAddress", NULL);
                 if (r < 0) {
