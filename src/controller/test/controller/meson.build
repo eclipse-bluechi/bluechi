@@ -9,7 +9,7 @@ controller_src = [
 
 # setup controller test src files to include in compilation
 controller_test_src = []
-foreach src : orch_src
+foreach src : ctrl_src
     # skip main to avoid duplicate main function error
     if src == 'main.c'
         continue
