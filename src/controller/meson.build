@@ -3,9 +3,9 @@
 #
 # SPDX-License-Identifier: LGPL-2.1-or-later
 
-# orch build configuration
+# controller build configuration
 
-orch_src = [
+ctrl_src = [
     'controller.h',
     'controller.c',
     'node.h',
@@ -23,7 +23,7 @@ orch_src = [
 
 executable(
   'bluechi-controller',
-  orch_src,
+  ctrl_src,
   dependencies: [
     systemd_dep,
     inih_dep,
