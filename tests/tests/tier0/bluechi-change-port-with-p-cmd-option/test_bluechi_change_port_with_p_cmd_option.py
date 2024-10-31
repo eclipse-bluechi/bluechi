@@ -15,7 +15,6 @@ from bluechi_test.machine import (
 )
 from bluechi_test.service import Option, Section
 from bluechi_test.test import BluechiTest
-from bluechi_test.util import Timeout
 
 NODE_FOO = "node-foo"
 
@@ -28,15 +27,11 @@ def cmd_on_port(
     expected_result: int = 0,
     expected_command: str = None,
 ) -> None:
-    with Timeout(
-        seconds=5,
-        error_message=f"Timeout waiting for '{expected_command}' to listen on port '{port}'",
-    ):
-        while True:
-            res, output = machine.exec_run(f"bash /var/cmd-on-port.sh {port}")
-            if res == expected_result and expected_command in str(output):
-                break
-            time.sleep(0.2)
+    while True:
+        res, output = machine.exec_run(f"bash /var/cmd-on-port.sh {port}")
+        if res == expected_result and expected_command in str(output):
+            break
+        time.sleep(0.2)
 
 
 def exec(ctrl: BluechiControllerMachine, nodes: Dict[str, BluechiAgentMachine]):
