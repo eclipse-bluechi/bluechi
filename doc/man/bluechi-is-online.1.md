@@ -37,7 +37,7 @@ If the `Status` is `up`, exit code is 0. Otherwise 1.
 **Options:**
 
 **--wait**
-Initial time in milliseconds to wait till the expected system status is `up`.
+Initial time in milliseconds to wait until the expected system status is `up`.
 
 **--monitor**
 If set, `bluechi-is-online` continuously monitors the system state after the initial `up` check succeeded.
@@ -51,7 +51,7 @@ If the `Status` is `online`, exit code is 0. Otherwise 1.
 **Options:**
 
 **--wait**
-Initial time in milliseconds to wait till the expected node status is `online`.
+Initial time in milliseconds to wait until the expected node status is `online`.
 
 **--monitor**
 If set, `bluechi-is-online` continuously monitors the node state after the initial `online` check succeeded.
@@ -65,13 +65,13 @@ If the `Status` is `online`, exit code is 0. Otherwise 1.
 **Options:**
 
 **--wait**
-Initial time in milliseconds to wait till the expected agent status is `online`.
+Initial time in milliseconds to wait until the expected agent status is `online`.
 
 **--monitor**
 If set, `bluechi-is-online` continuously monitors the agent state after the initial `online` check succeeded.
 
 **--switch-timeout**
-Time to wait till the agent is expected to connect again on a call to the `SwitchController` API method. In milliseconds.
+Time to wait until the agent is expected to connect again on a call to the `SwitchController` API method. In milliseconds.
 
 ## Exit Codes
 
