@@ -1,5 +1,5 @@
 <!-- markdownlint-disable-file MD013 MD033 -->
-# Ansible
+# Ansible Collection
 
 The BlueChi project offers an [Ansible collection](https://galaxy.ansible.com/ui/repo/published/eclipse_bluechi/bluechi/docs/) for effortless provisioning of BlueChi on systems.
 

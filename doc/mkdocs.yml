@@ -9,41 +9,43 @@ nav:
   - Home: index.md
   - Architecture: architecture.md
   - Getting Started:
-    - Installation: getting_started/installation.md
-    - Single Node Setup: getting_started/single_node.md
-    - Multi-Node Setup: getting_started/multi_node.md
-    - Using bluechictl: getting_started/examples_bluechictl.md
-    - Cross-node dependencies: getting_started/cross_node_dependencies.md
+      - Installation: getting_started/installation.md
+      - Single Node Setup: getting_started/single_node.md
+      - Multi-Node Setup: getting_started/multi_node.md
+      - Using bluechictl: getting_started/examples_bluechictl.md
+      - Cross-node dependencies: getting_started/cross_node_dependencies.md
   - BlueChi's API:
-    - Description: api/description.md
-    - Using the D-Bus API: api/examples.md
-    - Generating clients: api/client_generation.md
+      - Description: api/description.md
+      - Using the D-Bus API: api/examples.md
+      - Generating clients: api/client_generation.md
   - Monitoring:
-    - monitoring/index.md
-    - Peer Listener: monitoring/peers.md
+      - monitoring/index.md
+      - Peer Listener: monitoring/peers.md
   - Cross-Node Dependencies:
-    - cross_node_dependencies/index.md
-    - Proxy Services: cross_node_dependencies/proxy_services.md
-    - Using Proxy Services: cross_node_dependencies/usage.md
-  - Ansible:
-    - ansible/index.md
+      - cross_node_dependencies/index.md
+      - Proxy Services: cross_node_dependencies/proxy_services.md
+      - Using Proxy Services: cross_node_dependencies/usage.md
   - Security:
-    - security/index.md
-    - Securing connection with mTLS: security/securing_multi_node.md
-    - SELinux: security/selinux.md
+      - security/index.md
+      - Securing connection with mTLS: security/securing_multi_node.md
+      - SELinux: security/selinux.md
+  - Tooling:
+      - Ansible: tools/ansible.md
+      - bluechi-is-online: tools/bluechi-is-online.md
   - Configuration: configuration.md
   - MAN Pages:
-    - Binaries:
-      - bluechi-controller(1): man/bluechi-controller.md
-      - bluechi-agent(1): man/bluechi-agent.md
-      - bluechi-proxy(1): man/bluechi-proxy.md
-      - bluechictl(1): man/bluechictl.md
-    - Configuration:
-      - bluechi-controller.conf(5): man/bluechi-controller-conf.md
-      - bluechi-agent.conf(5): man/bluechi-agent-conf.md
-    - SELinux:
-      - bluechi-controller.selinux(8): man/bluechi-controller-selinux.md
-      - bluechi-agent.selinux(8): man/bluechi-agent-selinux.md
+      - Binaries:
+          - bluechi-controller(1): man/bluechi-controller.md
+          - bluechi-agent(1): man/bluechi-agent.md
+          - bluechi-proxy(1): man/bluechi-proxy.md
+          - bluechictl(1): man/bluechictl.md
+          - bluechi-is-online(1): man/bluechi-is-online.md
+      - Configuration:
+          - bluechi-controller.conf(5): man/bluechi-controller-conf.md
+          - bluechi-agent.conf(5): man/bluechi-agent-conf.md
+      - SELinux:
+          - bluechi-controller.selinux(8): man/bluechi-controller-selinux.md
+          - bluechi-agent.selinux(8): man/bluechi-agent-selinux.md
   - Additional Resources: resources.md
 
 theme:
@@ -72,8 +74,8 @@ markdown_extensions:
   - smarty
   - admonition
   - pymdownx.snippets:
-     base_path: ["doc"]
-     check_paths: True
+      base_path: ["doc"]
+      check_paths: True
   - pymdownx.superfences:
   - pymdownx.tabbed:
       alternate_style: true
