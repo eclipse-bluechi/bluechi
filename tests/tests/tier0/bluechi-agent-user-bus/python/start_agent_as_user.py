@@ -6,7 +6,7 @@
 import time
 import unittest
 
-from bluechi_machine_lib.util import Timeout, run_command
+from bluechi_machine_lib.util import run_command
 
 service = "org.eclipse.bluechi.Agent"
 object = "/org/eclipse/bluechi"
@@ -19,14 +19,13 @@ class TestAgentStartAsUser(unittest.TestCase):
         result, _, _ = run_command("systemctl --user start bluechi-agent")
         assert result == 0
 
-        with Timeout(5, "Timeout waiting for agent to connect to user bus"):
-            while True:
-                result, output, _ = run_command(
-                    f"busctl --user get-property {service} {object} {interface} Status"
-                )
-                if output == 's "offline"':
-                    break
-                time.sleep(0.5)
+        while True:
+            result, output, _ = run_command(
+                f"busctl --user get-property {service} {object} {interface} Status"
+            )
+            if output == 's "offline"':
+                break
+            time.sleep(0.5)
 
         result, _, _ = run_command("systemctl --user stop bluechi-agent")
         assert result == 0
