@@ -36,7 +36,9 @@ def check_execs(
 def exec(ctrl: BluechiControllerMachine, nodes: Dict[str, BluechiAgentMachine]):
     node_foo = nodes[node_foo_name]
 
-    # Traversing over existing unit files is the easiest way to cover all existing enablement statuses
+    # Traversing over existing unit files is the easiest way to cover all existing enablement statuses, to improve
+    # performance each status is checked only once
+    checked_statuses = set()
     all_res, all_out = ctrl.bluechictl.list_unit_files(node_name=node_foo_name)
     assert all_res == 0
     all_unit_files = parse_bluechictl_list_output(
@@ -45,7 +47,9 @@ def exec(ctrl: BluechiControllerMachine, nodes: Dict[str, BluechiAgentMachine]):
         item_class=SystemdUnitFile,
     )
     for unit in all_unit_files[node_foo_name].values():
-        check_execs(ctrl=ctrl, node=node_foo, unit_name=unit.key)
+        if unit.state not in checked_statuses:
+            checked_statuses.add(unit.state)
+            check_execs(ctrl=ctrl, node=node_foo, unit_name=unit.key)
 
     # Error message from bluechictl is not completely the same as from systemctl for non-existent service
     check_execs(
