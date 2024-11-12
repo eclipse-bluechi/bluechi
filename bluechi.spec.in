@@ -341,6 +341,25 @@ build-scripts/generate-unit-tests-code-coverage.sh %{_vpath_builddir} %{buildroo
 
 
 %changelog
+* Tue Nov 12 2024 Michael Engel <mengel@redhat.com> - 0.9.0-1
+- BlueChi's SELinux policy has been refined and changed from permissive to enforced
+- New package: bluechi-is-online
+- Added a configurable heartbeat and threshold from bluechi-controller to bluechi-agent
+- Added a configurable threshold in bluechi-controller to actively disconnect an unresponsive bluechi-agent
+- Added monotonic timestamp properties to D-Bus API
+- Added GetUnitFileState method to D-Bus API and is-enabled command to bluechictl
+- Added KillUnit method to D-Bus API and kill command to bluechictl
+- Added ResetFailed and ResetFailedUnit to D-Bus API and respective commands to bluechictl
+- Added ListUnitFiles to D-Bus API and list-unit-files command to bluechictl
+- Added GetDefaultTarget and SetDefaultTarget to D-Bus API and respective commands to bluechictl
+- Added specific usage functions for commands to bluechictl 
+- Changed the register call of bluechi-agent to be asynchronous
+- Fixed the order of disconnect and controller address changed on calling SwitchController
+- Fixed updating the displayed peer IP when a node changes connection state in bluechictl
+- Fixed determining the peer IP address of the agent
+- Improved debug logging in bluechi-agent, bluechi-controller and bluechictl
+- Updated the python bindings for BlueChi's D-Bus API
+
 * Mon Apr 29 2024 Michael Engel <mengel@redhat.com> - 0.8.0-1
 - Breaking change: Removed obsolete API method Ping
 - Fixed .conf suffix check for conf.d files
