@@ -10,7 +10,7 @@ to [podman installation instructions](https://podman.io/getting-started/installa
 
 ### Installing packages using RPM
 
-First, enable required repositories on CentOS Stream 9:
+First, enable required repositories on CentOS Stream:
 
 ```shell
 sudo dnf install -y dnf-plugin-config-manager

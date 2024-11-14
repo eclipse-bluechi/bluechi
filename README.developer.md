@@ -33,7 +33,7 @@ In order to develop the project you need to install following dependencies.
 
 #### Prerequisites
 
-To build the project on CentOS Stream 9 you need to enable CodeReady Build repository:
+To build the project on CentOS Stream you need to enable CodeReady Build repository:
 
 ```bash
 sudo dnf install dnf-plugin-config-manager

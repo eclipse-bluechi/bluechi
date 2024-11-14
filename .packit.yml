@@ -89,10 +89,18 @@ jobs:
       - centos-stream-9-ppc64le
       - centos-stream-9-s390x
       - centos-stream-9-x86_64
+      - centos-stream-10-aarch64
+      - centos-stream-10-ppc64le
+      - centos-stream-10-s390x
+      - centos-stream-10-x86_64
       - epel-9-aarch64
       - epel-9-ppc64le
       - epel-9-s390x
       - epel-9-x86_64
+      - epel-10-aarch64
+      - epel-10-ppc64le
+      - epel-10-s390x
+      - epel-10-x86_64
       - fedora-all-aarch64
       - fedora-all-i386
       - fedora-all-ppc64le
