@@ -14,8 +14,10 @@ Following files need to be updated to create a new stable release commit:
 
 * In [build-scripts/version.sh](./build-scripts/version.sh) set `IS_RELEASE=true`. For the first release of that version
 `RELEASE=1` is used. This may be increased if additional package releases are needed.
-* A new `%changelog` section in [bluechi.spec.in](./bluechi.spec.in) should be added and it should contain information
-about the new package release
+* CentOS/Fedora: A new `%changelog` section in [bluechi.spec.in](./bluechi.spec.in) should be added and it should
+contain information about the new package release
+* Debian: A new changelong section in [debian/changelog](./debian/changelog) should be added. It can be as simple
+as "Upgrading to vx.x.x"
 
 Here is the example of the release commit for version
 [0.6.0](https://github.com/eclipse-bluechi/bluechi/pull/637).
