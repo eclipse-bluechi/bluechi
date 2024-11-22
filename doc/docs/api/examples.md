@@ -1,4 +1,5 @@
 <!-- markdownlint-disable-file MD013 -->
+
 # Using BlueChi's D-Bus API
 
 BlueChi provides [introspection data](https://dbus.freedesktop.org/doc/dbus-specification.html#introspection-format) for its public API. These XML files are located in the [data directory](https://github.com/eclipse-bluechi/bluechi/tree/main/data) of the BlueChi project and can be used either as reference when writing custom clients or as input to generate them (see [here](./client_generation.md)).
@@ -12,6 +13,10 @@ The following sections demonstrate how the D-Bus API of BlueChi can be interacte
     All snippets require to be run on the machine where BlueChi is running. The only exception is the example for [monitoring the connection status of the agent](#monitor-the-connection-on-the-managed-node), which has to be executed on the managed node where the BlueChi agent is running.
 
 ## Setup
+
+=== "C/C++"
+
+    --8<-- "api-examples/c/setup.md"
 
 === "Go"
 
@@ -33,6 +38,12 @@ The following sections demonstrate how the D-Bus API of BlueChi can be interacte
 
 ### List all nodes
 
+=== "C/C++"
+
+    ```c
+    --8<-- "api-examples/c/list-nodes.c"
+    ```
+
 === "Go"
 
     ```go
@@ -53,6 +64,12 @@ The following sections demonstrate how the D-Bus API of BlueChi can be interacte
 
 ### List all units on a node
 
+=== "C/C++"
+
+    ```c
+    --8<-- "api-examples/c/list-node-units.c"
+    ```
+
 === "Go"
 
     ```go
@@ -72,6 +89,12 @@ The following sections demonstrate how the D-Bus API of BlueChi can be interacte
     ```
 
 ### Get a unit property value
+
+=== "C/C++"
+
+    ```c
+    --8<-- "api-examples/c/get-cpuweight.c"
+    ```
 
 === "Go"
 
@@ -95,6 +118,12 @@ The following sections demonstrate how the D-Bus API of BlueChi can be interacte
 
 ### Start unit
 
+=== "C/C++"
+
+    ```c
+    --8<-- "api-examples/c/start-unit.c"
+    ```
+
 === "Go"
 
     ```go
@@ -115,6 +144,12 @@ The following sections demonstrate how the D-Bus API of BlueChi can be interacte
 
 ### Enable unit
 
+=== "C/C++"
+
+    ```c
+    --8<-- "api-examples/c/enable-unit.c"
+    ```
+
 === "Go"
 
     ```go
@@ -134,6 +169,12 @@ The following sections demonstrate how the D-Bus API of BlueChi can be interacte
     ```
 
 ### Set property of a unit
+
+=== "C/C++"
+
+    ```c
+    --8<-- "api-examples/c/set-cpuweight.c"
+    ```
 
 === "Go"
 
@@ -157,6 +198,12 @@ The following sections demonstrate how the D-Bus API of BlueChi can be interacte
 
 ### Monitor the connections of all nodes
 
+=== "C/C++"
+
+    ```c
+    --8<-- "api-examples/c/monitor-node-connections.c"
+    ```
+
 === "Go"
 
     ```go
@@ -176,6 +223,12 @@ The following sections demonstrate how the D-Bus API of BlueChi can be interacte
     ```
 
 ### Monitor the connection on the managed node
+
+=== "C"
+
+    ```c
+    --8<-- "api-examples/c/monitor-agent-connection.c"
+    ```
 
 === "Go"
 
@@ -197,6 +250,12 @@ The following sections demonstrate how the D-Bus API of BlueChi can be interacte
 
 ### Monitor unit changes
 
+=== "C/C++"
+
+    ```c
+    --8<-- "api-examples/c/monitor-unit.c"
+    ```
+
 === "Go"
 
     ```go
@@ -216,6 +275,12 @@ The following sections demonstrate how the D-Bus API of BlueChi can be interacte
     ```
 
 ### Monitor system status
+
+=== "C/C++"
+
+    ```c
+    --8<-- "api-examples/c/monitor-system-status.c"
+    ```
 
 === "Go"
 

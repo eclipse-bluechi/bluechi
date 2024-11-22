@@ -49,7 +49,7 @@ int main() {
                 const char *state = NULL;
                 const char *ip = NULL;
 
-                r = sd_bus_message_read(result, "(soss)", &name, &path, &ip);
+                r = sd_bus_message_read(result, "(soss)", &name, &path, &state, &ip);
                 if (r < 0) {
                         fprintf(stderr, "Failed to read node information: %s\n", strerror(-r));
                         sd_bus_unref(bus);
