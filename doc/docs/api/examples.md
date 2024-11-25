@@ -14,9 +14,13 @@ The following sections demonstrate how the D-Bus API of BlueChi can be interacte
 
 ## Setup
 
-=== "C/C++"
+=== "C/C++ (libsystemd)"
 
     --8<-- "api-examples/c/setup.md"
+
+=== "C++ (sdbus-c++)"
+
+    --8<-- "api-examples/cpp/setup.md"
 
 === "Go"
 
@@ -38,10 +42,16 @@ The following sections demonstrate how the D-Bus API of BlueChi can be interacte
 
 ### List all nodes
 
-=== "C/C++"
+=== "C/C++ (libsystemd)"
 
     ```c
     --8<-- "api-examples/c/list-nodes.c"
+    ```
+
+=== "C++ (sdbus-c++)"
+
+    ```cpp
+    --8<-- "api-examples/cpp/list-nodes.cpp"
     ```
 
 === "Go"
@@ -64,10 +74,16 @@ The following sections demonstrate how the D-Bus API of BlueChi can be interacte
 
 ### List all units on a node
 
-=== "C/C++"
+=== "C/C++ (libsystemd)"
 
     ```c
     --8<-- "api-examples/c/list-node-units.c"
+    ```
+
+=== "C++ (sdbus-c++)"
+
+    ```cpp
+    --8<-- "api-examples/cpp/list-node-units.cpp"
     ```
 
 === "Go"
@@ -90,10 +106,16 @@ The following sections demonstrate how the D-Bus API of BlueChi can be interacte
 
 ### Get a unit property value
 
-=== "C/C++"
+=== "C/C++ (libsystemd)"
 
     ```c
     --8<-- "api-examples/c/get-cpuweight.c"
+    ```
+
+=== "C++ (sdbus-c++)"
+
+    ```cpp
+    --8<-- "api-examples/cpp/get-cpuweight.cpp"
     ```
 
 === "Go"
@@ -118,10 +140,16 @@ The following sections demonstrate how the D-Bus API of BlueChi can be interacte
 
 ### Start unit
 
-=== "C/C++"
+=== "C/C++ (libsystemd)"
 
     ```c
     --8<-- "api-examples/c/start-unit.c"
+    ```
+
+=== "C++ (sdbus-c++)"
+
+    ```cpp
+    --8<-- "api-examples/cpp/start-unit.cpp"
     ```
 
 === "Go"
@@ -144,10 +172,16 @@ The following sections demonstrate how the D-Bus API of BlueChi can be interacte
 
 ### Enable unit
 
-=== "C/C++"
+=== "C/C++ (libsystemd)"
 
     ```c
     --8<-- "api-examples/c/enable-unit.c"
+    ```
+
+=== "C++ (sdbus-c++)"
+
+    ```cpp
+    --8<-- "api-examples/cpp/enable-unit.cpp"
     ```
 
 === "Go"
@@ -170,10 +204,16 @@ The following sections demonstrate how the D-Bus API of BlueChi can be interacte
 
 ### Set property of a unit
 
-=== "C/C++"
+=== "C/C++ (libsystemd)"
 
     ```c
     --8<-- "api-examples/c/set-cpuweight.c"
+    ```
+
+=== "C++ (sdbus-c++)"
+
+    ```cpp
+    --8<-- "api-examples/cpp/set-cpuweight.cpp"
     ```
 
 === "Go"
@@ -198,10 +238,16 @@ The following sections demonstrate how the D-Bus API of BlueChi can be interacte
 
 ### Monitor the connections of all nodes
 
-=== "C/C++"
+=== "C/C++ (libsystemd)"
 
     ```c
     --8<-- "api-examples/c/monitor-node-connections.c"
+    ```
+
+=== "C++ (sdbus-c++)"
+
+    ```cpp
+    --8<-- "api-examples/cpp/monitor-node-connections.cpp"
     ```
 
 === "Go"
@@ -230,6 +276,12 @@ The following sections demonstrate how the D-Bus API of BlueChi can be interacte
     --8<-- "api-examples/c/monitor-agent-connection.c"
     ```
 
+=== "C++ (sdbus-c++)"
+
+    ```cpp
+    --8<-- "api-examples/cpp/monitor-agent-connection.cpp"
+    ```
+
 === "Go"
 
     ```go
@@ -250,10 +302,16 @@ The following sections demonstrate how the D-Bus API of BlueChi can be interacte
 
 ### Monitor unit changes
 
-=== "C/C++"
+=== "C/C++ (libsystemd)"
 
     ```c
     --8<-- "api-examples/c/monitor-unit.c"
+    ```
+
+=== "C++ (sdbus-c++)"
+
+    ```cpp
+    --8<-- "api-examples/cpp/monitor-unit.cpp"
     ```
 
 === "Go"
@@ -276,10 +334,16 @@ The following sections demonstrate how the D-Bus API of BlueChi can be interacte
 
 ### Monitor system status
 
-=== "C/C++"
+=== "C/C++ (libsystemd)"
 
     ```c
     --8<-- "api-examples/c/monitor-system-status.c"
+    ```
+
+=== "C++ (sdbus-c++)"
+
+    ```cpp
+    --8<-- "api-examples/cpp/monitor-system-status.cpp"
     ```
 
 === "Go"

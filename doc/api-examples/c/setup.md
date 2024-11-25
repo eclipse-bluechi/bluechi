@@ -1,7 +1,8 @@
 <!-- markdownlint-disable-file MD013 MD036 MD041 -->
+
 **Setup sample project**
 
-The C/C++ snippets require at least a simple project setup. Create it via:
+The C/C++ snippets using [libsystemd](https://www.freedesktop.org/software/systemd/man/libsystemd.html) require at least a simple project setup. Create it via:
 
 ```bash
 # create project directory
