@@ -32,7 +32,7 @@ dnf install \
     python3-pytest \
     python3-pyyaml \
     tmt \
-    tmt-report-junit \
+    tmt+report-junit \
     -y
 ```
 
