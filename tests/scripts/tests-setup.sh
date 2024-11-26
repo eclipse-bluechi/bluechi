@@ -64,6 +64,7 @@ function setup_worker(){
         bluechi-agent \
         bluechi-agent-debuginfo \
         bluechi-ctl \
+        bluechi-is-online \
         bluechi-ctl-debuginfo \
         bluechi-selinux \
         python3-bluechi \
