@@ -10,6 +10,7 @@ import traceback
 from typing import Any, Iterator, List, Optional, Tuple, Union
 
 import bluechi_machine_lib as bml
+from bluechi_test.bluechi_is_online import BluechiIsOnline
 from bluechi_test.bluechictl import BluechiCtl
 from bluechi_test.client import Client
 from bluechi_test.config import BluechiAgentConfig, BluechiControllerConfig
@@ -35,6 +36,7 @@ class BluechiMachine:
         self.client = client
 
         self.systemctl = SystemCtl(client)
+        self.bluechi_is_online = BluechiIsOnline(client)
 
         self.created_files: List[str] = []
         self.changed_files: List[str] = []
