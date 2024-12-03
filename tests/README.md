@@ -8,9 +8,11 @@ The integration tests use the RESTful API of [podman](https://podman.io/getting-
 and the agents on multiple, containerized nodes. Therefore, a working installation of podman is required. Please refer
 to [podman installation instructions](https://podman.io/getting-started/installation).
 
-### Installing packages using RPM
+**_NOTE:_** Integration tests can be run on Python 3.9 and newer, but we want to have Python 3.9 compatibility to support CentOS Stream 9, so please don't use features from newer Python versions.
 
-First, enable required repositories on CentOS Stream:
+### Installing packages using RPM (Fedora / CentOS Stream)
+
+When setting up CentOS Stream, please enable Code Ready Build and EPEL repositories:
 
 ```shell
 sudo dnf install -y dnf-plugin-config-manager
@@ -36,11 +38,10 @@ dnf install \
     -y
 ```
 
-**_NOTE:_** Integration tests code should be compatible with Python 3.9, please don't use features from newer versions.
+### Installing packages using pip (other operating systems)
 
-### Installing packages using pip
-
-All required python packages are listed in the [requirements.txt](./requirements.txt) and can be installed using `pip`:
+Please install Python 3.9 environment and pip using standard methods on your operating system.
+All additional required dependencies are listed in the [requirements.txt](./requirements.txt) and can be installed using `pip`:
 
 ```shell
 pip install -U -r requirements.txt
@@ -59,7 +60,27 @@ pip install -U -r requirements.txt
 deactivate
 ```
 
-## Configure podman socket access for users
+## Podman configuration
+
+### Fix issue with pasta network provider
+
+On Fedora 40 and newer podman 5 is installed and it uses new networking provider called pasta, but unfortunately it has some issue which prevents network connection between containers (more info in [Connectivity problem with Podman containers](https://discussion.fedoraproject.org/t/connectivity-problem-with-podman-containers/125664/32)).
+To bypass this issue it's required to switch to previous networking provider called slirp4netns using following steps:
+
+1. Install slirp4netns provider
+
+   ```shell
+   dnf install -y slirp4netns
+   ```
+
+2. Configure podman to use slirp4netns provider when executed under your username by creating `~/.config/containers/containers.conf` with following content:
+
+   ```ini
+   [Network]
+   default_rootless_network_cmd = "slirp4netns"
+   ```
+
+### Configure podman socket access for users
 
 Testing infrastructure uses socket access to podman, so it needs to be enabled:
 
@@ -75,7 +96,7 @@ Integration tests are executed with [tmt framework](https://github.com/teemtee/t
 To run integration tests please execute below command in the [tests](./) directory:
 
 ```shell
-tmt run -v plan --name container
+tmt --feeling-safe run -v plan --name container
 ```
 
 This will use latest BlueChi packages from
@@ -88,7 +109,7 @@ This will use latest BlueChi packages from
 To run integration tests with `valgrind`, set `WITH_VALGRIND` environment variable as follows:
 
 ```shell
-tmt run -v -eWITH_VALGRIND=1 plan --name container
+tmt --feeling-safe run -v -eWITH_VALGRIND=1 plan --name container
 ```
 
 If `valgrind` detects a memory leak in a test, the test will fail, and the logs will be found in the test `data` directory.
@@ -125,7 +146,7 @@ After that step integration tests can be executed using following command:
 
 ```shell
 cd ~/bluechi/tests
-tmt run -v -eCONTAINER_USED=integration-test-local plan --name container
+tmt --feeling-safe run -v -eCONTAINER_USED=integration-test-local plan --name container
 ```
 
 ## Creating code coverage report from integration tests execution
@@ -142,7 +163,7 @@ createrepo_c ~/bluechi/tests/bluechi-rpms
 When done, you need to run integration tests with code coverage report enabled:
 
 ```shell
-tmt run -v -eCONTAINER_USED=integration-test-local -eWITH_COVERAGE=1 plan --name container
+tmt --feeling-safe run -v -eCONTAINER_USED=integration-test-local -eWITH_COVERAGE=1 plan --name container
 ```
 
 After the integration tests finishes, the code coverage html result can be found in `res` subdirectory inside the tmt
@@ -189,7 +210,7 @@ More detailed information can be displayed by setting log level to `DEBUG`:
 
 ```shell
 cd ~/bluechi/tests
-tmt run -v -eLOG_LEVEL=DEBUG plan --name container
+tmt --feeling-safe run -v -eLOG_LEVEL=DEBUG plan --name container
 ```
 
 ### Using python bindings in tests

@@ -1,8 +1,8 @@
 # Eclipse BlueChi&trade;
 
 - [Development](#development)
-  - [Environment Setup](#environment-setup)
-    - [Prerequisites](#prerequisites)
+  - [Environment Setup (Fedora / CentOS Stream)](#environment-setup)
+    - [Prerequisites (CentOS Stream only)](#prerequisites)
     - [Dependencies Installation](#dependencies-installation)
   - [Busctl](#busctl)
   - [Code Style](#code-style)
@@ -27,13 +27,13 @@
 
 ## Development
 
-### Environment Setup
+### Environment Setup (Fedora / CentOS Stream) {#environment-setup}
 
-In order to develop the project you need to install following dependencies.
+In order to develop the project on Fedora or CentOS Stream you need to install following dependencies.
 
-#### Prerequisites
+#### Prerequisites (CentOS Stream only) {#prerequisites}
 
-To build the project on CentOS Stream you need to enable CodeReady Build repository:
+To build the project on CentOS Stream you need to enable CodeReady Build and EPEL repositories:
 
 ```bash
 sudo dnf install dnf-plugin-config-manager
