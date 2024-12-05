@@ -1,5 +1,7 @@
 # IDE
 .vscode/
+.idea/
+inspectionProfiles/
 
 # Build
 tags
