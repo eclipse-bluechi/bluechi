@@ -34,3 +34,12 @@ class BluechiIsOnline:
             0,
         )
         return result == 0
+
+    def node_is_online(self, node_name: str) -> bool:
+        result, output = self.run(
+            "Checking controller status.",
+            f"node {node_name}",
+            False,
+            0,
+        )
+        return result == 0
