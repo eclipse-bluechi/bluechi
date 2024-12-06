@@ -1,0 +1,3 @@
+summary: Test that the systemd socket unit for bluechi-controller will start the service
+    and it listens on the Unix Domain Socket passed to it as well as on TCP
+id: 62705aa9-a422-4280-9d93-bfa03ea749a4

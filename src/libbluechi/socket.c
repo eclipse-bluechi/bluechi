@@ -49,7 +49,7 @@ int create_tcp_socket(uint16_t port) {
         return steal_fd(&fd);
 }
 
-int accept_tcp_connection_request(int fd) {
+int accept_connection_request(int fd) {
         int nfd = accept4(fd, NULL, NULL, SOCK_NONBLOCK | SOCK_CLOEXEC);
         if (nfd < 0) {
                 if (errno == EAGAIN || errno == EINTR || errno == EWOULDBLOCK) {

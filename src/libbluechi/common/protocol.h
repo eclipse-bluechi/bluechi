@@ -10,6 +10,10 @@
 #include "time-util.h"
 
 /* Configuration defaults */
+
+/* Enable using remote control for BlueChi via TCP */
+#define CONTROLLER_DEFAULT_USE_TCP "true"
+/* Default TCP connection information */
 #define BC_DEFAULT_PORT "842"
 #define BC_DEFAULT_HOST "127.0.0.1"
 /* Number of seconds idle before sending keepalive packets. Value is set to socket option TCP_KEEPIDLE. */
