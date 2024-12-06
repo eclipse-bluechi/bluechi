@@ -54,6 +54,8 @@ Controller *controller_new(void) {
                 controller->number_of_nodes = 0;
                 controller->number_of_nodes_online = 0;
                 controller->peer_socket_options = steal_pointer(&socket_opts);
+                controller->node_connection_tcp_socket_source = NULL;
+                controller->node_connection_systemd_socket_source = NULL;
                 LIST_HEAD_INIT(controller->nodes);
                 LIST_HEAD_INIT(controller->anonymous_nodes);
                 LIST_HEAD_INIT(controller->jobs);
@@ -91,7 +93,12 @@ void controller_unref(Controller *controller) {
         free_and_null(controller->api_bus_service_name);
         free_and_null(controller->peer_socket_options);
 
-        sd_event_source_unrefp(&controller->node_connection_source);
+        if (controller->node_connection_tcp_socket_source != NULL) {
+                sd_event_source_unrefp(&controller->node_connection_tcp_socket_source);
+        }
+        if (controller->node_connection_systemd_socket_source != NULL) {
+                sd_event_source_unrefp(&controller->node_connection_systemd_socket_source);
+        }
 
         sd_bus_slot_unrefp(&controller->name_owner_changed_slot);
         sd_bus_slot_unrefp(&controller->filter_slot);
@@ -266,6 +273,11 @@ Node *controller_add_node(Controller *controller, const char *name) {
         return steal_pointer(&node);
 }
 
+bool controller_set_use_tcp(Controller *controller, bool use_tcp) {
+        controller->use_tcp = use_tcp;
+        return true;
+}
+
 bool controller_set_port(Controller *controller, const char *port_s) {
         uint16_t port = 0;
 
@@ -327,6 +339,12 @@ bool controller_parse_config(Controller *controller, const char *configfile) {
 }
 
 bool controller_apply_config(Controller *controller) {
+        if (!controller_set_use_tcp(
+                            controller, cfg_get_bool_value(controller->config, CFG_CONTROLLER_USE_TCP))) {
+                bc_log_error("Failed to set USE TCP");
+                return false;
+        }
+
         const char *port = NULL;
         port = cfg_get_value(controller->config, CFG_CONTROLLER_PORT);
         if (port) {
@@ -403,9 +421,9 @@ static int controller_accept_node_connection(
                 UNUSED sd_event_source *source, int fd, UNUSED uint32_t revents, void *userdata) {
         Controller *controller = userdata;
         Node *node = NULL;
-        _cleanup_fd_ int nfd = accept_tcp_connection_request(fd);
+        _cleanup_fd_ int nfd = accept_connection_request(fd);
         if (nfd < 0) {
-                bc_log_errorf("Failed to accept TCP connection request: %s", strerror(-nfd));
+                bc_log_errorf("Failed to accept connection request: %s", strerror(-nfd));
                 return -1;
         }
 
@@ -431,53 +449,106 @@ static int controller_accept_node_connection(
         return 0;
 }
 
-static bool controller_setup_node_connection_handler(Controller *controller) {
+static bool controller_setup_systemd_socket_connection_handler(Controller *controller) {
         int r = 0;
-        int accept_fd = -1;
-        _cleanup_fd_ int tcp_fd = -1;
         _cleanup_sd_event_source_ sd_event_source *event_source = NULL;
 
         int n = sd_listen_fds(0);
-        if (n > 1) {
-                bc_log_errorf("Received too many file descriptors - %d", n);
-                return false;
+        if (n < 1) {
+                bc_log_debug("No socket unit file descriptor has been passed");
+                return true;
         }
-
-        if (n == 1) {
-                accept_fd = SD_LISTEN_FDS_START;
-        } else {
-                tcp_fd = create_tcp_socket(controller->port);
-                if (tcp_fd < 0) {
-                        bc_log_errorf("Failed to create TCP socket: %s", strerror(errno));
-                        return false;
-                }
-                accept_fd = tcp_fd;
+        if (n > 1) {
+                bc_log_errorf("Received too many file descriptors from socket unit - %d", n);
+                return false;
         }
 
         r = sd_event_add_io(
                         controller->event,
                         &event_source,
-                        accept_fd,
+                        SD_LISTEN_FDS_START,
                         EPOLLIN,
                         controller_accept_node_connection,
                         controller);
         if (r < 0) {
-                bc_log_errorf("Failed to add io event: %s", strerror(-r));
+                bc_log_errorf("Failed to add io event source for systemd socket unit: %s", strerror(-r));
                 return false;
         }
         r = sd_event_source_set_io_fd_own(event_source, true);
         if (r < 0) {
-                bc_log_errorf("Failed to set io fd own: %s", strerror(-r));
+                bc_log_errorf("Failed to set io fd own for systemd socket unit: %s", strerror(-r));
                 return false;
         }
 
+        (void) sd_event_source_set_description(event_source, "node-accept-systemd-socket");
+        controller->node_connection_systemd_socket_source = steal_pointer(&event_source);
+
+        bc_log_info("Waiting for connection requests on configured socket unit...");
+        return true;
+}
+
+static bool controller_setup_tcp_connection_handler(Controller *controller) {
+        int r = 0;
+        _cleanup_fd_ int tcp_fd = -1;
+        _cleanup_sd_event_source_ sd_event_source *event_source = NULL;
+
+        tcp_fd = create_tcp_socket(controller->port);
+        if (tcp_fd < 0) {
+                /*
+                 * Check if the address is already in use and if the systemd file descriptor already uses it.
+                 * In case both conditions are true, only log an error and proceed as successful since a
+                 * proper TCP socket incl. handler has already been set up.
+                 */
+                if (tcp_fd == -EADDRINUSE && controller->node_connection_systemd_socket_source != NULL &&
+                    sd_is_socket_inet(SD_LISTEN_FDS_START, AF_UNSPEC, SOCK_STREAM, 1, controller->port) > 0) {
+                        bc_log_warnf("TCP socket for port %d already setup with systemd socket unit",
+                                     controller->port);
+                        return true;
+                }
+
+                bc_log_errorf("Failed to create TCP socket: %s", strerror(-tcp_fd));
+                return false;
+        }
+
+        r = sd_event_add_io(
+                        controller->event,
+                        &event_source,
+                        tcp_fd,
+                        EPOLLIN,
+                        controller_accept_node_connection,
+                        controller);
+        if (r < 0) {
+                bc_log_errorf("Failed to add io event for tcp socket: %s", strerror(-r));
+                return false;
+        }
+        r = sd_event_source_set_io_fd_own(event_source, true);
+        if (r < 0) {
+                bc_log_errorf("Failed to set io fd own for tcp socket: %s", strerror(-r));
+                return false;
+        }
         // sd_event_set_io_fd_own takes care of closing accept_fd
         steal_fd(&tcp_fd);
 
-        (void) sd_event_source_set_description(event_source, "node-accept-socket");
+        (void) sd_event_source_set_description(event_source, "node-accept-tcp-socket");
+        controller->node_connection_tcp_socket_source = steal_pointer(&event_source);
 
-        controller->node_connection_source = steal_pointer(&event_source);
+        bc_log_infof("Waiting for connection requests on port %d...", controller->port);
+        return true;
+}
 
+static bool controller_setup_node_connection_handler(Controller *controller) {
+        if (!controller_setup_systemd_socket_connection_handler(controller)) {
+                return false;
+        }
+        if (controller->use_tcp && !controller_setup_tcp_connection_handler(controller)) {
+                return false;
+        }
+
+        if (controller->node_connection_systemd_socket_source == NULL &&
+            controller->node_connection_tcp_socket_source == NULL) {
+                bc_log_error("No connection request handler configured");
+                return false;
+        }
         return true;
 }
 

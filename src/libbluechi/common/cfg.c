@@ -506,6 +506,10 @@ int cfg_controller_def_conf(struct config *config) {
                 return result;
         }
 
+        if ((result = cfg_set_value(config, CFG_CONTROLLER_USE_TCP, CONTROLLER_DEFAULT_USE_TCP)) != 0) {
+                return result;
+        }
+
         if ((result = cfg_set_value(config, CFG_CONTROLLER_PORT, BC_DEFAULT_PORT)) != 0) {
                 return result;
         }

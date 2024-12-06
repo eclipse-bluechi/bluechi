@@ -65,10 +65,21 @@ bool check_str(const char *func_name, const char *field_name, const char *expect
 bool check_controller(
                 const char *func_name,
                 Controller *controller,
+                bool expected_use_tcp,
                 uint16_t expected_port,
                 const char **expected_node_names,
                 uint16_t expected_node_number) {
+
         bool result = true;
+
+        if (expected_use_tcp != controller->use_tcp) {
+                print_controller_field_error(
+                                func_name,
+                                "use_tcp",
+                                bool_to_str(expected_use_tcp),
+                                bool_to_str(controller->use_tcp));
+                result = false;
+        }
 
         if (expected_port != controller->port) {
                 _cleanup_free_ char *actual = NULL;
@@ -131,7 +142,7 @@ bool test_controller_apply_config_none() {
                 return false;
         }
 
-        return check_controller(__func__, controller, 0, NULL, 0);
+        return check_controller(__func__, controller, false, 0, NULL, 0);
 }
 
 
@@ -143,6 +154,7 @@ bool test_controller_apply_config_valid_all() {
                 return false;
         }
 
+        cfg_set_value(controller->config, CFG_CONTROLLER_USE_TCP, "true");
         cfg_set_value(controller->config, CFG_CONTROLLER_PORT, "1337");
         cfg_set_value(controller->config, CFG_ALLOWED_NODE_NAMES, "foo,bar,another");
         cfg_set_value(controller->config, CFG_TCP_KEEPALIVE_TIME, "10000");
@@ -157,7 +169,7 @@ bool test_controller_apply_config_valid_all() {
         }
 
         const char *expected_nodes[3] = { "foo", "bar", "another" };
-        return check_controller(__func__, controller, 1337, expected_nodes, 3);
+        return check_controller(__func__, controller, true, 1337, expected_nodes, 3);
 }
 
 bool test_controller_apply_config_invalid_port() {

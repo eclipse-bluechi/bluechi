@@ -17,6 +17,13 @@ The bluechi-controller configuration file is using the
 
 All fields to bootstrap the bluechi controller are contained in the **bluechi-controller** section. The following keys are understood by `bluechi-controller`.
 
+#### **UseTCP** (string)
+
+If this flag is set to `true`, it enables the connection handler for agents to connect
+remotely via TCP/IP to the controller. If disabled, all other TCP options such as the
+ControllerPort or TCPKeepAliveTime are not used. 
+Default: true.
+
 #### **ControllerPort** (uint16_t)
 
 The port the bluechi-controller listens on to establish connections with the `bluechi-agent`. By default port `842` is used.
@@ -24,7 +31,7 @@ The port the bluechi-controller listens on to establish connections with the `bl
 #### **AllowedNodeNames** (string)
 
 A comma separated list of unique bluechi-agent names. It's mandatory to set the option, only nodes with names mentioned
-in the list can connect to `bluechi-controller'. These names are defined in the agent's configuration file under `NodeName`
+in the list can connect to `bluechi-controller`. These names are defined in the agent's configuration file under `NodeName`
 option (see `bluechi-agent.conf(5)`).
 
 #### **HeartbeatInterval** (long)

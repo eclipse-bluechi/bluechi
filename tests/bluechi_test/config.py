@@ -37,6 +37,7 @@ class BluechiControllerConfig(BluechiConfig):
         log_level: str = "DEBUG",
         log_target: str = "journald",
         log_is_quiet: bool = False,
+        use_tcp: bool = True,
     ) -> None:
         super().__init__(file_name)
 
@@ -48,6 +49,7 @@ class BluechiControllerConfig(BluechiConfig):
         self.log_level = log_level
         self.log_target = log_target
         self.log_is_quiet = log_is_quiet
+        self.use_tcp = use_tcp
 
     def serialize(self) -> str:
         # use one line for each node name so the max line length
@@ -62,6 +64,7 @@ NodeHeartbeatThreshold={self.node_heartbeat_threshold}
 LogLevel={self.log_level}
 LogTarget={self.log_target}
 LogIsQuiet={self.log_is_quiet}
+UseTCP={self.use_tcp}
 """
 
     def get_confd_dir(self) -> str:
@@ -77,6 +80,7 @@ LogIsQuiet={self.log_is_quiet}
         cfg.log_level = self.log_level
         cfg.log_target = self.log_target
         cfg.log_is_quiet = self.log_is_quiet
+        cfg.use_tcp = self.use_tcp
         return cfg
 
 

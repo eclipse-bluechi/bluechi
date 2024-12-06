@@ -1,5 +1,10 @@
+[Unit]
+Description=BlueChi Controller Socket
+Documentation=man:bluechi-controller(1)
+
 [Socket]
-ListenStream=842
+ListenStream=%t/bluechi/bluechi.sock
+SocketMode=0666
 
 [Install]
-WantedBy=multi-user.target
+WantedBy=sockets.target

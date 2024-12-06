@@ -14,6 +14,7 @@
 #define CFG_LOG_LEVEL "LogLevel"
 #define CFG_LOG_TARGET "LogTarget"
 #define CFG_LOG_IS_QUIET "LogIsQuiet"
+#define CFG_CONTROLLER_USE_TCP "UseTCP"
 #define CFG_CONTROLLER_HOST "ControllerHost"
 #define CFG_CONTROLLER_PORT "ControllerPort"
 #define CFG_CONTROLLER_ADDRESS "ControllerAddress"
