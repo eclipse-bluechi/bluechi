@@ -10,6 +10,8 @@
   Paul Wallrabe, Michael Engel - Eclipse Newsletter - November 2023 <br>
 - [Eclipse BlueChi - A deterministic multi-node service controller for automotive and edge](https://www.youtube.com/watch?v=EMaNJEKEgZ8) <br>
   Michael Engel - DevConf.cz - June 2024 <br>
+- [Eclipse BlueChi - A deterministic multi-node service controller for automotive](https://www.youtube.com/watch?v=p0PCESqUrPM&list=PLXGqib0ZinZFw1NXGzfLxTXF8DfpzkAb5&index=17&pp=iAQB) <br>
+  Michael Engel - Open Community for Automotive (OCA) - October 2024 <br>
 - [Eclipse BlueChi Workshop](https://github.com/eclipse-bluechi/bluechi-demos/tree/main/workshop-devconf-cz-2024) <br>
   Mark Kemel, Michael Engel - DevConf.cz - June 2024 <br>
 - [Executing Container Orchestration with Eclipse BlueChi on the RedHat In-Vehicle Operating System in the AWS Cloud – Part 1](https://aws.amazon.com/blogs/industries/executing-container-orchestration-with-eclipse-bluechi-on-the-redhat-in-vehicle-operating-system-in-the-aws-cloud-part-1/) <br>
