@@ -106,3 +106,22 @@ jobs:
       - fedora-all-ppc64le
       - fedora-all-s390x
       - fedora-all-x86_64
+
+  - job: propose_downstream
+    trigger: release
+    dist_git_branches:
+      - fedora-all
+      - epel-all
+
+  - job: koji_build
+    trigger: commit
+    dist_git_branches:
+      - fedora-all
+      - epel-all
+
+  - job: bodhi_update
+    trigger: commit
+    dist_git_branches:
+      # rawhide updates are created automatically
+      - fedora-branched
+      - epel-all
