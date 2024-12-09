@@ -43,3 +43,12 @@ class BluechiIsOnline:
             0,
         )
         return result == 0
+
+    def system_is_online(self) -> bool:
+        result, output = self.run(
+            "Checking system status.",
+            "system",
+            False,
+            0,
+        )
+        return result == 0
