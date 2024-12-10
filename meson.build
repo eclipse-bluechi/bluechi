@@ -61,6 +61,7 @@ conf.set('_GNU_SOURCE', true)
 
 prefixdir = get_option('prefix')
 
+conf.set_quoted('CONFIG_H_UDS_SOCKET_PATH', get_option('unix_domain_socket_path'))
 conf.set_quoted('CONFIG_H_SYSCONFDIR', join_paths(prefixdir, get_option('sysconfdir')))
 conf.set_quoted('CONFIG_H_DATADIR', join_paths(prefixdir, get_option('datadir')))
 conf.set_quoted('CONFIG_H_BC_VERSION', run_command(

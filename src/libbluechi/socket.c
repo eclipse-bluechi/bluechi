@@ -8,6 +8,7 @@
 #include <netinet/tcp.h>
 #include <stdio.h>
 #include <sys/socket.h>
+#include <sys/un.h>
 #include <unistd.h>
 
 #include "libbluechi/common/common.h"
@@ -41,6 +42,33 @@ int create_tcp_socket(uint16_t port) {
                 return -errsv;
         }
 
+        if ((listen(fd, SOMAXCONN)) != 0) {
+                int errsv = errno;
+                return -errsv;
+        }
+
+        return steal_fd(&fd);
+}
+
+
+int create_uds_socket(const char *path) {
+        struct sockaddr_un servaddr;
+
+        _cleanup_fd_ int fd = socket(AF_UNIX, SOCK_STREAM, 0);
+        if (fd < 0) {
+                int errsv = errno;
+                return -errsv;
+        }
+
+        memset(&servaddr, 0, sizeof(servaddr));
+        servaddr.sun_family = AF_UNIX;
+        strncpy(servaddr.sun_path, path, sizeof(servaddr.sun_path));
+        servaddr.sun_path[sizeof(servaddr.sun_path) - 1] = '\0';
+
+        if (bind(fd, (struct sockaddr *) &servaddr, sizeof(servaddr)) < 0) {
+                int errsv = errno;
+                return -errsv;
+        }
         if ((listen(fd, SOMAXCONN)) != 0) {
                 int errsv = errno;
                 return -errsv;
