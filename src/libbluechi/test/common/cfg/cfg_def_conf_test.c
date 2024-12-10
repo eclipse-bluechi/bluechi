@@ -221,6 +221,15 @@ bool test_cfg_controller_def_conf() {
                         value);
                 result = false;
         }
+        value = cfg_get_value(config, CFG_CONTROLLER_USE_UDS);
+        if (!streq(value, CONTROLLER_DEFAULT_USE_UDS)) {
+                fprintf(stderr,
+                        "Expected config option %s to have default value '%s', but got '%s'\n",
+                        CFG_CONTROLLER_USE_UDS,
+                        CONTROLLER_DEFAULT_USE_UDS,
+                        value);
+                result = false;
+        }
         value = cfg_get_value(config, CFG_CONTROLLER_PORT);
         if (!streq(value, BC_DEFAULT_PORT)) {
                 fprintf(stderr,

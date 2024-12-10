@@ -1,0 +1,3 @@
+summary: Test that bluechi-controller will add only connection handler for Unix Domain
+    Socket and disables TCP handler
+id: 4ebe60af-8eb7-4bb8-b95f-c6810369efb7

@@ -9,6 +9,7 @@
 #include <stdbool.h>
 
 int create_tcp_socket(uint16_t port);
+int create_uds_socket(const char *path);
 int accept_connection_request(int fd);
 
 int fd_check_peercred(int fd);

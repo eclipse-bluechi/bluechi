@@ -3,7 +3,7 @@ Description=BlueChi Controller Socket
 Documentation=man:bluechi-controller(1)
 
 [Socket]
-ListenStream=%t/bluechi/bluechi.sock
+ListenStream=@unix_domain_socket_path@
 SocketMode=0666
 
 [Install]
