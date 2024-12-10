@@ -16,3 +16,6 @@ option('with_man_pages', type : 'boolean', value : true,
 option('with_selinux', type : 'boolean', value : true,
     description : 'Include the build and install of bluechi-selinux')
 
+option('unix_domain_socket_path', type : 'string', 
+    description: 'The path of the Unix Domain Socket for BlueChi', 
+    value: '/run/bluechi/bluechi.sock')

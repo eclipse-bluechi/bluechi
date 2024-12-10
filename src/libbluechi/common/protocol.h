@@ -13,6 +13,8 @@
 
 /* Enable using remote control for BlueChi via TCP */
 #define CONTROLLER_DEFAULT_USE_TCP "true"
+/* Disable using local control for BlueChi via Unix Domain Socket */
+#define CONTROLLER_DEFAULT_USE_UDS "true"
 /* Default TCP connection information */
 #define BC_DEFAULT_PORT "842"
 #define BC_DEFAULT_HOST "127.0.0.1"

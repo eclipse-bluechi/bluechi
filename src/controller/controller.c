@@ -55,6 +55,7 @@ Controller *controller_new(void) {
                 controller->number_of_nodes_online = 0;
                 controller->peer_socket_options = steal_pointer(&socket_opts);
                 controller->node_connection_tcp_socket_source = NULL;
+                controller->node_connection_uds_socket_source = NULL;
                 controller->node_connection_systemd_socket_source = NULL;
                 LIST_HEAD_INIT(controller->nodes);
                 LIST_HEAD_INIT(controller->anonymous_nodes);
@@ -95,9 +96,23 @@ void controller_unref(Controller *controller) {
 
         if (controller->node_connection_tcp_socket_source != NULL) {
                 sd_event_source_unrefp(&controller->node_connection_tcp_socket_source);
+                controller->node_connection_tcp_socket_source = NULL;
+        }
+        if (controller->node_connection_uds_socket_source != NULL) {
+                sd_event_source_unrefp(&controller->node_connection_uds_socket_source);
+                controller->node_connection_uds_socket_source = NULL;
+
+                /* Remove UDS socket for proper cleanup and not cause an address in use error */
+                unlink(CONFIG_H_UDS_SOCKET_PATH);
         }
         if (controller->node_connection_systemd_socket_source != NULL) {
                 sd_event_source_unrefp(&controller->node_connection_systemd_socket_source);
+                controller->node_connection_systemd_socket_source = NULL;
+
+                /* Remove UDS socket for proper cleanup and not cause an address in use error even
+                 * though the systemd socket might have been changed to listen on different socket
+                 */
+                unlink(CONFIG_H_UDS_SOCKET_PATH);
         }
 
         sd_bus_slot_unrefp(&controller->name_owner_changed_slot);
@@ -278,6 +293,12 @@ bool controller_set_use_tcp(Controller *controller, bool use_tcp) {
         return true;
 }
 
+bool controller_set_use_uds(Controller *controller, bool use_uds) {
+        controller->use_uds = use_uds;
+        return true;
+}
+
+
 bool controller_set_port(Controller *controller, const char *port_s) {
         uint16_t port = 0;
 
@@ -342,6 +363,11 @@ bool controller_apply_config(Controller *controller) {
         if (!controller_set_use_tcp(
                             controller, cfg_get_bool_value(controller->config, CFG_CONTROLLER_USE_TCP))) {
                 bc_log_error("Failed to set USE TCP");
+                return false;
+        }
+        if (!controller_set_use_uds(
+                            controller, cfg_get_bool_value(controller->config, CFG_CONTROLLER_USE_UDS))) {
+                bc_log_error("Failed to set USE UDS");
                 return false;
         }
 
@@ -496,7 +522,7 @@ static bool controller_setup_tcp_connection_handler(Controller *controller) {
         if (tcp_fd < 0) {
                 /*
                  * Check if the address is already in use and if the systemd file descriptor already uses it.
-                 * In case both conditions are true, only log an error and proceed as successful since a
+                 * In case both conditions are true, only log a warning and proceed as successful since a
                  * proper TCP socket incl. handler has already been set up.
                  */
                 if (tcp_fd == -EADDRINUSE && controller->node_connection_systemd_socket_source != NULL &&
@@ -526,7 +552,7 @@ static bool controller_setup_tcp_connection_handler(Controller *controller) {
                 bc_log_errorf("Failed to set io fd own for tcp socket: %s", strerror(-r));
                 return false;
         }
-        // sd_event_set_io_fd_own takes care of closing accept_fd
+        // sd_event_set_io_fd_own takes care of closing tcp_fd
         steal_fd(&tcp_fd);
 
         (void) sd_event_source_set_description(event_source, "node-accept-tcp-socket");
@@ -536,6 +562,65 @@ static bool controller_setup_tcp_connection_handler(Controller *controller) {
         return true;
 }
 
+
+static bool controller_setup_uds_connection_handler(Controller *controller) {
+        int r = 0;
+        _cleanup_fd_ int uds_fd = -1;
+        _cleanup_sd_event_source_ sd_event_source *event_source = NULL;
+
+        uds_fd = create_uds_socket(CONFIG_H_UDS_SOCKET_PATH);
+        if (uds_fd < 0) {
+                /*
+                 * Check if the uds path is already in use and if the systemd file descriptor already uses
+                 * it. In case both conditions are true, only log a warning and proceed as successful since a
+                 * proper UDS incl. handler has already been set up.
+                 */
+                if (uds_fd == -EADDRINUSE && controller->node_connection_systemd_socket_source != NULL &&
+                    sd_is_socket_unix(SD_LISTEN_FDS_START, AF_UNIX, 1, CONFIG_H_UDS_SOCKET_PATH, 0) > 0) {
+                        bc_log_warnf("UDS socket for path %s already setup with systemd socket unit",
+                                     CONFIG_H_UDS_SOCKET_PATH);
+                        return true;
+                } else if (uds_fd == -EADDRINUSE) {
+                        /* If address is in use, remove socket file and retry again */
+                        unlink(CONFIG_H_UDS_SOCKET_PATH);
+                        uds_fd = create_uds_socket(CONFIG_H_UDS_SOCKET_PATH);
+                        if (uds_fd < 0) {
+                                bc_log_errorf("Failed to create UDS socket: %s", strerror(-uds_fd));
+                                return false;
+                        }
+                } else {
+                        bc_log_errorf("Failed to create UDS socket: %s", strerror(-uds_fd));
+                        return false;
+                }
+        }
+
+        r = sd_event_add_io(
+                        controller->event,
+                        &event_source,
+                        uds_fd,
+                        EPOLLIN,
+                        controller_accept_node_connection,
+                        controller);
+        if (r < 0) {
+                bc_log_errorf("Failed to add io event for uds socket: %s", strerror(-r));
+                return false;
+        }
+        r = sd_event_source_set_io_fd_own(event_source, true);
+        if (r < 0) {
+                bc_log_errorf("Failed to set io fd own for uds socket: %s", strerror(-r));
+                return false;
+        }
+        // sd_event_set_io_fd_own takes care of closing uds_fd
+        steal_fd(&uds_fd);
+
+        (void) sd_event_source_set_description(event_source, "node-accept-uds-socket");
+        controller->node_connection_uds_socket_source = steal_pointer(&event_source);
+
+        bc_log_infof("Waiting for connection requests on port %s...", CONFIG_H_UDS_SOCKET_PATH);
+        return true;
+}
+
+
 static bool controller_setup_node_connection_handler(Controller *controller) {
         if (!controller_setup_systemd_socket_connection_handler(controller)) {
                 return false;
@@ -543,9 +628,13 @@ static bool controller_setup_node_connection_handler(Controller *controller) {
         if (controller->use_tcp && !controller_setup_tcp_connection_handler(controller)) {
                 return false;
         }
+        if (controller->use_uds && !controller_setup_uds_connection_handler(controller)) {
+                return false;
+        }
 
         if (controller->node_connection_systemd_socket_source == NULL &&
-            controller->node_connection_tcp_socket_source == NULL) {
+            controller->node_connection_tcp_socket_source == NULL &&
+            controller->node_connection_uds_socket_source == NULL) {
                 bc_log_error("No connection request handler configured");
                 return false;
         }

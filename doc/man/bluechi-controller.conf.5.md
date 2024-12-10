@@ -21,7 +21,17 @@ All fields to bootstrap the bluechi controller are contained in the **bluechi-co
 
 If this flag is set to `true`, it enables the connection handler for agents to connect
 remotely via TCP/IP to the controller. If disabled, all other TCP options such as the
-ControllerPort or TCPKeepAliveTime are not used. 
+ControllerPort or TCPKeepAliveTime are not used.
+The TCP handler can run alongside the handler for local connections (Unix Domain Socket)
+as well as the systemd socket activated handler.
+Default: true.
+
+#### **UseUDS** (string)
+
+If this flag is set to `true`, it enables the connection handler for agents to connect
+locally via Unix Domain Socket (UDS) to the controller.
+The UDS handler can run alongside the handler for remote connections (TCP/IP) as well as
+the systemd socket activated handler.
 Default: true.
 
 #### **ControllerPort** (uint16_t)
@@ -124,10 +134,9 @@ LogIsQuiet=false
 
 ## FILES
 
-Distributions provide the __/usr/share/bluechi/config/controller.conf__ file which defines bluechi configuration defaults. Administrators can copy this file to __/etc/bluechi/controller.conf__ and specify their own configuration.
+Distributions provide the **/usr/share/bluechi/config/controller.conf** file which defines bluechi configuration defaults. Administrators can copy this file to **/etc/bluechi/controller.conf** and specify their own configuration.
 
-Administrators can also use a "drop-in" directory __/etc/bluechi/controller.conf.d__ to drop their configuration changes.
-
+Administrators can also use a "drop-in" directory **/etc/bluechi/controller.conf.d** to drop their configuration changes.
 
 ## SEE ALSO
 
