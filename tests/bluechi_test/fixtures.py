@@ -83,6 +83,24 @@ def timeout_test_setup() -> int:
 
 
 @pytest.fixture(scope="session")
+def bc_is_on_wait_timeout() -> int:
+    """Fixture to get the BC_IS_ON_WAIT_TIMEOUT value from environment variable, with a default of 1."""
+    return _safely_parse_int(_get_env_value("BC_IS_ON_WAIT_TIMEOUT", ""), 1)
+
+
+@pytest.fixture(scope="session")
+def bc_is_on_wait_timeout_5_sec() -> int:
+    """Fixture to get the BC_IS_ON_WAIT_TIMEOUT_5_SEC value from environment variable, with a default of 5."""
+    return _safely_parse_int(_get_env_value("BC_IS_ON_WAIT_TIMEOUT_5_SEC", ""), 5)
+
+
+@pytest.fixture(scope="session")
+def bc_is_on_wait_timeout_20_sec() -> int:
+    """Fixture to get the BC_IS_ON_WAIT_TIMEOUT_20_SEC value from environment variable, with a default of 20."""
+    return _safely_parse_int(_get_env_value("BC_IS_ON_WAIT_TIMEOUT_20_SEC", ""), 20)
+
+
+@pytest.fixture(scope="session")
 def timeout_test_run() -> int:
     """Returns the timeout for executing the actual test"""
 
@@ -246,10 +264,12 @@ def bluechi_test(
     machines_ssh_user: str,
     machines_ssh_password: str,
     timeout_test_setup: int,
+    bc_is_on_wait_timeout: int,
+    bc_is_on_wait_timeout_5_sec: int,
+    bc_is_on_wait_timeout_20_sec: int,
     timeout_test_run: int,
     timeout_collecting_test_results: int,
 ) -> BluechiTest:
-
     if is_multihost_run:
         return BluechiSSHTest(
             available_hosts,
