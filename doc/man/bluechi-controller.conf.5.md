@@ -17,6 +17,23 @@ The bluechi-controller configuration file is using the
 
 All fields to bootstrap the bluechi controller are contained in the **bluechi-controller** section. The following keys are understood by `bluechi-controller`.
 
+#### **UseTCP** (string)
+
+If this flag is set to `true`, it enables the connection handler for agents to connect
+remotely via TCP/IP to the controller. If disabled, all other TCP options such as the
+ControllerPort or TCPKeepAliveTime are not used.
+The TCP handler can run alongside the handler for local connections (Unix Domain Socket)
+as well as the systemd socket activated handler.
+Default: true.
+
+#### **UseUDS** (string)
+
+If this flag is set to `true`, it enables the connection handler for agents to connect
+locally via Unix Domain Socket (UDS) to the controller.
+The UDS handler can run alongside the handler for remote connections (TCP/IP) as well as
+the systemd socket activated handler.
+Default: false.
+
 #### **ControllerPort** (uint16_t)
 
 The port the bluechi-controller listens on to establish connections with the `bluechi-agent`. By default port `842` is used.
@@ -24,7 +41,7 @@ The port the bluechi-controller listens on to establish connections with the `bl
 #### **AllowedNodeNames** (string)
 
 A comma separated list of unique bluechi-agent names. It's mandatory to set the option, only nodes with names mentioned
-in the list can connect to `bluechi-controller'. These names are defined in the agent's configuration file under `NodeName`
+in the list can connect to `bluechi-controller`. These names are defined in the agent's configuration file under `NodeName`
 option (see `bluechi-agent.conf(5)`).
 
 #### **HeartbeatInterval** (long)
@@ -117,10 +134,9 @@ LogIsQuiet=false
 
 ## FILES
 
-Distributions provide the __/usr/share/bluechi/config/controller.conf__ file which defines bluechi configuration defaults. Administrators can copy this file to __/etc/bluechi/controller.conf__ and specify their own configuration.
+Distributions provide the **/usr/share/bluechi/config/controller.conf** file which defines bluechi configuration defaults. Administrators can copy this file to **/etc/bluechi/controller.conf** and specify their own configuration.
 
-Administrators can also use a "drop-in" directory __/etc/bluechi/controller.conf.d__ to drop their configuration changes.
-
+Administrators can also use a "drop-in" directory **/etc/bluechi/controller.conf.d** to drop their configuration changes.
 
 ## SEE ALSO
 

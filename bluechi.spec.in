@@ -75,6 +75,7 @@ This package contains the controller service.
 %ghost %{_sysconfdir}/bluechi/controller.conf
 %dir %{_sysconfdir}/bluechi
 %dir %{_sysconfdir}/bluechi/controller.conf.d
+%dir %{_rundir}/bluechi
 %doc README.md
 %doc README.developer.md
 %license LICENSE

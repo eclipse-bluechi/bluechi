@@ -1,0 +1,10 @@
+[Unit]
+Description=BlueChi Controller Socket
+Documentation=man:bluechi-controller(1)
+
+[Socket]
+ListenStream=@unix_domain_socket_path@
+SocketMode=0666
+
+[Install]
+WantedBy=sockets.target
