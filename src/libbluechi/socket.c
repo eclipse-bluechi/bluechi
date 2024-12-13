@@ -209,7 +209,7 @@ int socket_options_set_ip_recverr(SocketOptions *opts, bool recverr) {
         return 0;
 }
 
-static bool is_socket_tcp(int fd) {
+bool fd_is_socket_tcp(int fd) {
         int type = 0;
         socklen_t length = sizeof(int);
 
@@ -220,8 +220,8 @@ static bool is_socket_tcp(int fd) {
 
 int socket_set_options(int fd, SocketOptions *opts) {
         /* Just exit in case of a non-tcp socket. We could connect to a UNIX socket as well. */
-        if (!is_socket_tcp(fd)) {
-                bc_log_debug("Socket options not set. FD is a TCP socket.");
+        if (!fd_is_socket_tcp(fd)) {
+                bc_log_debug("Socket options not set. FD is a not TCP socket.");
                 return 0;
         }
 

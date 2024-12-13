@@ -18,4 +18,4 @@ sd_bus *system_bus_open(sd_event *event);
 sd_bus *systemd_bus_open(sd_event *event);
 sd_bus *user_bus_open(sd_event *event);
 
-int get_peer_address(sd_bus *bus, char **ret_address, uint16_t *ret_port);
+int get_peer_ip_address(sd_bus *bus, char **ret_address, uint16_t *ret_port);
