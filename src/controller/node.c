@@ -3,6 +3,8 @@
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  */
+#include <systemd/sd-bus.h>
+
 #include "libbluechi/bus/bus.h"
 #include "libbluechi/bus/utils.h"
 #include "libbluechi/common/parse-util.h"
@@ -15,7 +17,6 @@
 #include "monitor.h"
 #include "node.h"
 #include "proxy_monitor.h"
-#include <systemd/sd-bus.h>
 
 #define DEBUG_AGENT_MESSAGES 0
 
@@ -662,11 +663,12 @@ bool node_set_agent_bus(Node *node, sd_bus *bus) {
         }
 
         node->agent_bus = sd_bus_ref(bus);
+
         // If getting peer IP fails, only log and proceed as normal.
         _cleanup_free_ char *peer_ip = NULL;
         uint16_t peer_port = 0;
-        r = get_peer_address(node->agent_bus, &peer_ip, &peer_port);
-        if (r < 0) {
+        r = get_peer_ip_address(node->agent_bus, &peer_ip, &peer_port);
+        if (r < 0 && r != -EINVAL) {
                 bc_log_errorf("Failed to get peer IP: %s", strerror(-r));
         } else {
                 node->peer_ip = steal_pointer(&peer_ip);

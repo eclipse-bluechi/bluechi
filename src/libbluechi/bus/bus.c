@@ -295,11 +295,15 @@ sd_bus *user_bus_open(sd_event *event) {
 }
 
 
-int get_peer_address(sd_bus *bus, char **ret_address, uint16_t *ret_port) {
+int get_peer_ip_address(sd_bus *bus, char **ret_address, uint16_t *ret_port) {
         int fd = sd_bus_get_fd(bus);
         if (fd < 0) {
-                bc_log_errorf("Failed to file descriptor from bus: %s", strerror(-fd));
+                bc_log_errorf("Failed to get file descriptor from bus: %s", strerror(-fd));
                 return fd;
+        }
+
+        if (!fd_is_socket_tcp(fd)) {
+                return -EINVAL;
         }
 
         struct sockaddr_storage addr = { 0 };
