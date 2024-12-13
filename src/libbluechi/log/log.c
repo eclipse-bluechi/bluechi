@@ -10,10 +10,13 @@
 
 #include "log.h"
 
-
-static const char * const log_level_strings[] = { "DEBUG", "INFO", "WARN", "ERROR" };
+#define NUM_LOGLEVEL 5
+static const char * const log_level_strings[NUM_LOGLEVEL] = { "DEBUG", "INFO", "WARN", "ERROR", "INVALID" };
 
 const char *log_level_to_string(LogLevel l) {
+        if (l < 0 || l > NUM_LOGLEVEL - 1) {
+                return log_level_strings[LOG_LEVEL_INVALID];
+        }
         return log_level_strings[l];
 }
 
