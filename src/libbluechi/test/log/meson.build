@@ -7,6 +7,7 @@ common_src = [
   'bc_log_init_test',
   'bc_log_to_stderr_full_test',
   'bc_log_to_stderr_test',
+  'log_level_to_string_test',
   'log_target_to_str_test',
   'string_to_log_level_test',
 ]
