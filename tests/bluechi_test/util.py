@@ -3,7 +3,9 @@
 #
 # SPDX-License-Identifier: LGPL-2.1-or-later
 
+import inspect
 import logging
+import os
 import random
 import re
 import signal
@@ -84,3 +86,33 @@ class Timeout:
 
     def __exit__(self, type, value, traceback):
         signal.alarm(0)
+
+
+def get_env_value(env_var: str, default_value: str) -> str:
+    value = os.getenv(env_var)
+    if value is None:
+        return default_value
+    return value
+
+
+def safely_parse_int(input: str, default: int) -> int:
+    if input.isdigit():
+        return int(input)
+    return default
+
+
+def _get_test_env_value(varname: str, test_file: str, default_value: str) -> str:
+    test_name = os.path.basename(os.path.dirname(test_file))
+    envvar = f"TEST_{test_name.upper().replace('-', '_')}_{varname.upper()}"
+    return get_env_value(envvar, default_value)
+
+
+def get_test_env_value(varname: str, default_value: str) -> str:
+    test_file = inspect.stack()[1].filename
+    return _get_test_env_value(varname, test_file, default_value)
+
+
+def get_test_env_value_int(varname: str, default_value: int) -> int:
+    test_file = inspect.stack()[1].filename
+    value = _get_test_env_value(varname, test_file, "")
+    return safely_parse_int(value, default_value)
