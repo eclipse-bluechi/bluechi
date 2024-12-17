@@ -25,6 +25,7 @@ corenet_port(bluechi_port_t)
 type bluechi_agent_port_t;
 corenet_port(bluechi_agent_port_t)
 
+
 ########################################
 #
 # bluechi local policy
@@ -57,7 +58,7 @@ kernel_dgram_send(bluechi_t)
 logging_send_syslog_msg(bluechi_t)
 logging_read_syslog_pid(bluechi_t)
 
-allow haproxy_t bluechi_t:unix_stream_socket connectto;
+unconfined_dbus_chat(bluechi_t)
 
 ########################################
 #
@@ -98,6 +99,26 @@ dbus_system_bus_client(bluechi_agent_t)
 
 init_status(bluechi_agent_t)
 
+
+########################################
+#
+# bluechi policy for unix domain sockets
+#
+type bluechi_var_run_t;
+files_pid_file(bluechi_var_run_t)
+init_sock_file(bluechi_var_run_t)
+mls_trusted_object(bluechi_var_run_t)
+
+manage_sock_files_pattern(bluechi_t, bluechi_var_run_t, bluechi_var_run_t)
+stream_connect_pattern(bluechi_agent_t, bluechi_var_run_t, bluechi_var_run_t, bluechi_t)
+unconfined_server_stream_connectto(bluechi_agent_t)
+
+########################################
+#
+# bluechi policy with haproxy
+#
+allow haproxy_t bluechi_t:unix_stream_socket connectto;
+
 rhcs_stream_connect_haproxy(bluechi_agent_t)
 
 gen_require(`
@@ -109,5 +130,3 @@ stream_connect_pattern(bluechi_agent_t, haproxy_var_lib_t, haproxy_var_lib_t, ha
 
 manage_sock_files_pattern(init_t, haproxy_var_lib_t, haproxy_var_lib_t)
 manage_sock_files_pattern(init_t, haproxy_var_run_t, haproxy_var_run_t)
-
-unconfined_dbus_chat(bluechi_t)

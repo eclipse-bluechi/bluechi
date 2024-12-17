@@ -187,11 +187,15 @@ if [ $1 -eq 1 ]; then
 fi
 %selinux_modules_install -s %{selinuxtype} %{_datadir}/selinux/packages/bluechi.pp.bz2
 restorecon -R %{_bindir}/bluechi* &> /dev/null || :
+restorecon -R %{_rundir}/bluechi/ &> /dev/null || :
+restorecon -R %{_localstatedir}/%{_rundir}/bluechi/ &> /dev/null || :
 
 %postun selinux
 if [ $1 -eq 0 ]; then
    %selinux_modules_uninstall -s %{selinuxtype} bluechi
    restorecon -R %{_bindir}/bluechi* &> /dev/null || :
+   restorecon -R %{_rundir}/bluechi/ &> /dev/null || :
+   restorecon -R %{_localstatedir}/%{_rundir}/bluechi/ &> /dev/null || :
 fi
 
 
