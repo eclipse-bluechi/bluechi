@@ -184,6 +184,20 @@ TIMEOUT_COLLECT_TEST_RESULTS=20
 
 These can be set either in the `environment` section of the tmt plan or using the `-e` option when running tmt, e.g. `-eTIMEOUT_TEST_SETUP=40`.
 
+### Test-specific timeouts
+
+In addition to the mentioned above timeouts, there's a mechanism allowing to set values in specific tests via environment variables, which can be used to adjust test-specific timeouts via the environment. The expected environment variable name would be assembled from the prefix `TEST_`, test name and a provided suffix. These test-specific timeouts can be set in the tmt plan as described [here](#changing-timeouts-for-integration-tests).
+
+#### Example
+
+Given a test named `bluechi-generic-test` (i.e. the test script located in the directory `bluechi-generic-test`), which uses a timeout `WAIT_TIMEOUT`, defining it as follows:
+
+```python
+WAIT_TIMEOUT = get_test_env_value_int("WAIT_TIMEOUT", 1000)
+```
+
+The variable would be assigned `WAIT_TIMEOUT = 1000`, unless environment variable `TEST_BLUECHI_GENERIC_TEST_WAIT_TIMEOUT` is set with an integer value, in which case this value would be passed to `WAIT_TIMEOUT`.
+
 ## Developing integration tests
 
 ### Code Style

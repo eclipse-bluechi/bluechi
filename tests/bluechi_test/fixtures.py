@@ -11,89 +11,76 @@ import pytest
 import yaml
 from bluechi_test.config import BluechiAgentConfig, BluechiControllerConfig
 from bluechi_test.test import BluechiContainerTest, BluechiSSHTest, BluechiTest
-from bluechi_test.util import get_primary_ip
+from bluechi_test.util import get_env_value, get_primary_ip, safely_parse_int
 from podman import PodmanClient
-
-
-def _get_env_value(env_var: str, default_value: str) -> str:
-    value = os.getenv(env_var)
-    if value is None:
-        return default_value
-    return value
 
 
 @pytest.fixture(scope="session")
 def tmt_test_data_dir() -> str:
     """Return directory, where tmt saves data of the relevant test. If the TMT_TEST_DATA env variable is not set, then
     use current directory"""
-    return _get_env_value("TMT_TEST_DATA", os.getcwd())
+    return get_env_value("TMT_TEST_DATA", os.getcwd())
 
 
 @pytest.fixture(scope="function")
 def tmt_test_serial_number() -> str:
     """Return serial number of current test"""
-    return _get_env_value("TMT_TEST_SERIAL_NUMBER", "NA")
+    return get_env_value("TMT_TEST_SERIAL_NUMBER", "NA")
 
 
 @pytest.fixture(scope="session")
 def bluechi_image_name() -> str:
     """Returns the name of bluechi testing container images"""
-    return _get_env_value("BLUECHI_IMAGE_NAME", "bluechi-image")
+    return get_env_value("BLUECHI_IMAGE_NAME", "bluechi-image")
 
 
 @pytest.fixture(scope="session")
 def bluechi_ctrl_host_port() -> str:
     """Returns the port, which bluechi controller service is mapped to on a host"""
 
-    return _get_env_value("BLUECHI_CTRL_HOST_PORT", "8420")
+    return get_env_value("BLUECHI_CTRL_HOST_PORT", "8420")
 
 
 @pytest.fixture(scope="session")
 def bluechi_ctrl_svc_port() -> str:
     """Returns the port, which bluechi controller service is using inside a container"""
 
-    return _get_env_value("BLUECHI_CTRL_SVC_PORT", "8420")
+    return get_env_value("BLUECHI_CTRL_SVC_PORT", "8420")
 
 
 @pytest.fixture(scope="session")
 def machines_ssh_user() -> str:
     """Returns the user for connecting to the available hosts via SSH"""
 
-    return _get_env_value("SSH_USER", "root")
+    return get_env_value("SSH_USER", "root")
 
 
 @pytest.fixture(scope="session")
 def machines_ssh_password() -> str:
     """Returns the password for connecting to the available hosts via SSH"""
 
-    return _get_env_value("SSH_PASSWORD", "")
-
-
-def _safely_parse_int(input: str, default: int) -> int:
-    if input.isdigit():
-        return int(input)
-    return default
+    return get_env_value("SSH_PASSWORD", "")
 
 
 @pytest.fixture(scope="session")
 def timeout_test_setup() -> int:
     """Returns the timeout for setting up the test setup"""
 
-    return _safely_parse_int(_get_env_value("TIMEOUT_TEST_SETUP", ""), 20)
+    return safely_parse_int(get_env_value("TIMEOUT_TEST_SETUP", ""), 20)
 
 
 @pytest.fixture(scope="session")
 def timeout_test_run() -> int:
     """Returns the timeout for executing the actual test"""
 
-    return _safely_parse_int(_get_env_value("TIMEOUT_TEST_RUN", ""), 45)
+    return safely_parse_int(get_env_value("TIMEOUT_TEST_RUN", ""), 45)
 
 
 @pytest.fixture(scope="session")
 def timeout_collecting_test_results() -> int:
     """Returns the timeout for collecting all test results"""
 
-    return _safely_parse_int(_get_env_value("TIMEOUT_COLLECT_TEST_RESULTS", ""), 20)
+    return safely_parse_int(get_env_value("TIMEOUT_COLLECT_TEST_RESULTS", ""), 20)
 
 
 def _read_topology() -> Dict[str, Any]:
@@ -101,7 +88,7 @@ def _read_topology() -> Dict[str, Any]:
     Returns the parsed YAML for the tmt guest topology:
     https://tmt.readthedocs.io/en/stable/spec/plans.html#guest-topology-format
     """
-    tmt_yaml_file = _get_env_value("TMT_TOPOLOGY_YAML", "")
+    tmt_yaml_file = get_env_value("TMT_TOPOLOGY_YAML", "")
     if tmt_yaml_file is None or tmt_yaml_file == "":
         return get_primary_ip()
 
@@ -170,14 +157,14 @@ def is_multihost_run(available_hosts: Dict[str, List[Tuple[str, str]]]) -> bool:
 def run_with_valgrind() -> bool:
     """Returns 1 if bluechi should be run with valgrind for memory management testing"""
 
-    return _get_env_value("WITH_VALGRIND", 0) == "1"
+    return get_env_value("WITH_VALGRIND", 0) == "1"
 
 
 @pytest.fixture(scope="session")
 def run_with_coverage() -> bool:
     """Returns 1 if code coverage should be collected"""
 
-    return _get_env_value("WITH_COVERAGE", 0) == "1"
+    return get_env_value("WITH_COVERAGE", 0) == "1"
 
 
 @pytest.fixture(scope="session")
