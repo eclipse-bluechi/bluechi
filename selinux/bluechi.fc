@@ -4,3 +4,7 @@
 /usr/bin/bluechi-agent	--	gen_context(system_u:object_r:bluechi_agent_exec_t,s0)
 /usr/libexec/bluechi-agent	--	gen_context(system_u:object_r:bluechi_agent_exec_t,s0)
 
+# Since /var/run is canonical in rhel9 and /run in rhel10
+# we apply the context for both directories
+/run/bluechi(/.*)?		gen_context(system_u:object_r:bluechi_var_run_t,s0)
+/var/run/bluechi(/.*)?		gen_context(system_u:object_r:bluechi_var_run_t,s0)
