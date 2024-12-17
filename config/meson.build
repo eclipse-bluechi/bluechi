@@ -26,3 +26,8 @@ install_data(
   'controller.conf.d/README.md',
   install_dir :  join_paths(get_option('sysconfdir') / 'bluechi' / 'controller.conf.d')
 )
+
+install_data(
+  'tmpfile/bluechi.conf',
+  install_dir : join_paths(get_option('prefix'), 'lib', 'tmpfiles.d')
+)
