@@ -75,7 +75,6 @@ This package contains the controller service.
 %ghost %{_sysconfdir}/bluechi/controller.conf
 %dir %{_sysconfdir}/bluechi
 %dir %{_sysconfdir}/bluechi/controller.conf.d
-%dir %{_rundir}/bluechi
 %doc README.md
 %doc README.developer.md
 %license LICENSE
@@ -91,6 +90,11 @@ This package contains the controller service.
 %{_sysconfdir}/bluechi/controller.conf.d/README.md
 %{_unitdir}/bluechi-controller.service
 %{_unitdir}/bluechi-controller.socket
+
+# Create UDS directory on install and setup tmpfile for reboots
+%dir %{_rundir}/bluechi
+%attr(700, root, root) %{_rundir}/bluechi
+%{_tmpfilesdir}/%{name}.conf
 
 
 #####################
