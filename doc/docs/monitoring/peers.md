@@ -1,4 +1,5 @@
 <!-- markdownlint-disable-file MD013 MD014 MD046 -->
+
 # Peer listeners
 
 By default, only the monitor creator receives the events of the subscribed units from BlueChi. Peer listeners are other applications that did not create the monitor itself, but still want to get those messages. They can be added to any previously set up monitor via the BlueChi API.
@@ -9,7 +10,7 @@ The systemd policy of BlueChi defines that only the `root` user (by default) can
 
 This section assumes at least a [single-node setup](../getting_started/single_node.md) and will use the [generated python bindings](../api/client_generation.md#typed-python-client).
 
-First, lets start `bluechi-controller` and `bluechi-agent`:
+First, let's start `bluechi-controller` and `bluechi-agent`:
 
 ```bash
 $ systemctl start bluechi-controller
@@ -23,7 +24,7 @@ $ python create-and-listen.py laptop cow.service
 Monitor path: /org/eclipse/bluechi/monitor/1
 ```
 
-It will print the path of the monitor. This path is required to attach event listener to it. Lets open a new terminal and start the listening script:
+It will print the path of the monitor. This path is required to attach event listener to it. Let's open a new terminal and start the listening script:
 
 ```bash
 $ python only-listen.py /org/eclipse/bluechi/monitor/1
@@ -32,7 +33,7 @@ Using unique name: :1.9327
 
 The first line in the output is the unique bus name of the application. This is the name used to add it as a peer to the previously created monitor.
 
-Before adding it as peer, however, lets check the status and/or do start and stop operations on the unit that is monitored:
+Before adding it as peer, however, let's check the status and/or do start and stop operations on the unit that is monitored:
 
 ```bash
 $ bluechictl status laptop cow.service
@@ -53,7 +54,7 @@ Unit props changed: laptop -- cow.service
 ...
 ```
 
-Contrary, the `only-listen.py` should not have received anything yet. Lets change that by adding its bus name to the monitor as peer:
+Contrary, the `only-listen.py` should not have received anything yet. Let's change that by adding its bus name to the monitor as peer:
 
 ```bash
 $ python add-peer.py /org/eclipse/bluechi/monitor/1 :1.9327

@@ -1,4 +1,5 @@
 <!-- markdownlint-disable-file MD010 MD013 MD014 MD024 MD046 -->
+
 # Setup: Single node
 
 BlueChi's two core components - the controller and the agent - can run alongside each other on the same machine. A single node setup like this is one of the quickest way to get started. This section describes how to achieve that. The diagram below depicts the desired state of the system:
@@ -7,27 +8,26 @@ BlueChi's two core components - the controller and the agent - can run alongside
 
 ## Installation and configuration
 
-First of all, lets install the controller and the agent as well as the CLI tool and the SELinux policy:
+First of all, let's install the controller and the agent as well as the CLI tool and the SELinux policy:
 
 ```bash
-dnf install bluechi bluechi-agent bluechi-ctl bluechi-selinux 
+dnf install bluechi bluechi-agent bluechi-ctl bluechi-selinux
 ```
 
 Once the installation succeeded, `bluechi-controller` and `bluechi-agent` need to be configured. Both components use default settings so that a single node setup requires minimal configuration effort.
 
-For the `bluechi-controller` configuration, the [AllowedNodeNames](../man/bluechi-controller-conf.md#allowednodenames-string) need to be adjusted in order to allow the `bluechi-agent` to register with its node name. By default, the agent will use the **hostname** it is running on.
-BlueChi uses port **842** by default, which is considered a privileged port. To avoid any firewall issues for this demo, lets overwrite this setting and use the port **2020**.
+For the `bluechi-controller` configuration, the [AllowedNodeNames](../man/bluechi-controller-conf.md#allowednodenames-string) need to be adjusted in order to allow the `bluechi-agent` to register with its node name. By default, the `bluechi-controller` will listen on Unix Domain Socket (UDS) `/run/bluechi/bluechi.sock` for local agents and on the TCP port **842** for remote ones. Since this is a single node setup, let's use the Unix Domain Socket as transport mechanism.
 
-Lets create a new configuration for `bluechi-controller` in its `conf.d` directory:
+First, create a new configuration for `bluechi-controller` in its `conf.d` directory:
 
 ```bash
-echo -e "[bluechi-controller]\nControllerPort=2020\nAllowedNodeNames=$(hostname)\n" > /etc/bluechi/controller.conf.d/1.conf
+echo -e "[bluechi-controller]\nAllowedNodeNames=$(hostname)\n" > /etc/bluechi/controller.conf.d/1.conf
 ```
 
-Since the default port has been changed, this setting has to be adjusted for the `bluechi-agent` as well:
+The default connection mechanism of the `bluechi-agent` is TCP/IP. Therefore, its configuration needs to be adjusted as well:
 
 ```bash
-echo -e "[bluechi-agent]\nControllerPort=2020\n" > /etc/bluechi/agent.conf.d/1.conf
+echo -e "[bluechi-agent]\nControllerAddress=unix:path=/run/bluechi/bluechi.sock\n" > /etc/bluechi/agent.conf.d/1.conf
 ```
 
 After running both commands, the following files should have been created:
@@ -36,18 +36,17 @@ After running both commands, the following files should have been created:
 $ cat /etc/bluechi/controller.conf.d/1.conf
 
 [bluechi-controller]
-ControllerPort=2020
 AllowedNodeNames=<hostname>
 
 $ cat /etc/bluechi/agent.conf.d/1.conf
 
 [bluechi-agent]
-ControllerPort=2020
+ControllerAddress=unix:path=/run/bluechi/bluechi.sock
 ```
 
 !!! Note
 
-    For a full list of available configuration options, please refer to [bluechi(5)](../man/bluechi-controller-conf.md) and [bluechi-agent(5)](../man/bluechi-agent-conf.md). 
+    For a full list of available configuration options, please refer to [bluechi(5)](../man/bluechi-controller-conf.md) and [bluechi-agent(5)](../man/bluechi-agent-conf.md).
 
 ## Running BlueChi
 
@@ -60,15 +59,17 @@ systemctl start bluechi-controller bluechi-agent
 Once the services are up and running, the journald logs should show that the agent successfully connected to the controller:
 
 ```bash
-$ journalctl -u bluechi
-
-Sep 14 14:51:58 laptop systemd[1]: Started BlueChi systemd service controller daemon.
-Sep 01 14:51:58 laptop bluechi[3750775]: 2023-09-14 14:51:58,685+0200 INFO        ../src/controller/controller.c:924 controller_start        msg="Starting bluechi 0.7.0"
-Sep 01 14:51:58 laptop bluechi[3750775]: 2023-09-14 14:51:58,928+0200 INFO        ../src/controller/node.c:870 node_method_register    msg="Registered managed node from fd 8 as 'laptop'"
+$ journalctl -u bluechi-controller
+Dec 18 08:03:03 localhost systemd[1]: Started BlueChi Controller systemd service
+Dec 18 08:03:03 localhost bluechi-controller[680]: Starting bluechi-controller 0.10.0-0
+Dec 17 16:13:43 localhost bluechi-controller[2539]: Waiting for connection requests on port 842...
+Dec 17 16:13:43 localhost bluechi-controller[2539]: Waiting for connection requests on socket /run/bluechi/bluechi.sock...
+Dec 18 08:03:03 localhost bluechi-controller[680]: Heartbeat disabled since configured interval '0' is <=0
+Dec 18 08:03:03 localhost bluechi-controller[680]: Registered managed node from fd 10 as 'local'
 ...
 ```
 
-Lets use `bluechictl` to list all units on the machine:
+Let's use `bluechictl` to list all units on the machine:
 
 ```bash
 $ bluechictl list-units

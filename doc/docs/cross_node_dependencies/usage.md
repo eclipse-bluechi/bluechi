@@ -1,4 +1,5 @@
 <!-- markdownlint-disable-file MD010 MD013 MD014 MD024 MD034 MD046 -->
+
 # Using Proxy Services
 
 This section describes different scenarios of cross-node dependencies between services, how to resolve them using BlueChi's proxy service feature and which systemd mechanisms to use for the desired behaviour. As a baseline, the term `source.service` will be used for the systemd service that depends on a remote service, which will be referred to as `target.service`.
@@ -7,17 +8,18 @@ This section describes different scenarios of cross-node dependencies between se
 
 !!! Note
 
-    This section focuses on the systemd and BlueChi mechanisms to define dependencies enforcing certain behaviour. For an introduction to proxy services with an example application, please refer to the `Getting started guide` with the [cross-node dependency example](../getting_started/cross_node_dependencies.md). 
+    This section focuses on the systemd and BlueChi mechanisms to define dependencies enforcing certain behaviour. For an introduction to proxy services with an example application, please refer to the `Getting started guide` with the [cross-node dependency example](../getting_started/cross_node_dependencies.md).
 
 ## Stop source service when starting target service fails
 
 If the `source.service` requires the `target.service` to be in an **active state** and otherwise stops, this can be ensured by using `Requires=`. The failure of `target.service` is simulated by just executing `/bin/false`, returning exit code 1.
 
 === "source.service"
-    ```systemd
-    [Unit]
-    Requires=bluechi-proxy@worker2_target.service
-    After=bluechi-proxy@worker2_target.service
+
+````systemd
+[Unit]
+Requires=bluechi-proxy@worker2_target.service
+After=bluechi-proxy@worker2_target.service
 
     [Service]
     Type=simple
@@ -26,9 +28,9 @@ If the `source.service` requires the `target.service` to be in an **active state
     ```
 
 === "target.service"
-    ```systemd
-    [Unit]
-    Description=Target service
+```systemd
+[Unit]
+Description=Target service
 
     [Service]
     Type=simple
@@ -36,7 +38,7 @@ If the `source.service` requires the `target.service` to be in an **active state
     RemainAfterExit=yes
     ```
 
-Lets try out the example services from above:
+Let's try out the example services from above:
 
 ```bash
 $ bluechictl start main source.service
@@ -51,7 +53,7 @@ UNIT		| LOADED	| ACTIVE	| SUBSTATE	| FREEZERSTATE	| ENABLED	|
 ------------------------------------------------------------------------------------------------
 target.service	| loaded	| failed	| failed	| running	| static	|
 
-```
+````
 
 !!! Note
 
@@ -62,10 +64,11 @@ target.service	| loaded	| failed	| failed	| running	| static	|
 In order to automatically stop the `target.service` when the requiring `source.service` has been stopped, systemd's `StopWhenUnneeded=yes` can be used in the `[Unit]` section of the `target.service` as shown in the snippets below:
 
 === "source.service"
-    ```systemd
-    [Unit]
-    Wants=bluechi-proxy@worker2_target.service
-    After=bluechi-proxy@worker2_target.service
+
+````systemd
+[Unit]
+Wants=bluechi-proxy@worker2_target.service
+After=bluechi-proxy@worker2_target.service
 
     [Service]
     Type=simple
@@ -74,9 +77,9 @@ In order to automatically stop the `target.service` when the requiring `source.s
     ```
 
 === "target.service"
-    ```systemd
-    [Unit]
-    StopWhenUnneeded=yes
+```systemd
+[Unit]
+StopWhenUnneeded=yes
 
     [Service]
     Type=simple
@@ -84,7 +87,7 @@ In order to automatically stop the `target.service` when the requiring `source.s
     RemainAfterExit=yes
     ```
 
-Lets try out the example services from above:
+Let's try out the example services from above:
 
 ```bash
 # start the source service and check status
@@ -112,7 +115,7 @@ $ bluechictl status worker2 target.service
 UNIT			| LOADED	| ACTIVE	| SUBSTATE	| FREEZERSTATE	| ENABLED	|
 ---------------------------------------------------------------------------------
 target.service	| loaded	| inactive	| dead		| running	| static	    |
-```
+````
 
 !!! Note
 
@@ -123,10 +126,11 @@ target.service	| loaded	| inactive	| dead		| running	| static	    |
 If the `target.service` enters a **failed** or **inactive** state at some point in time, the `source.service` is able to restart it by using `Upholds=` as shown in the snippet below.
 
 === "source.service"
-    ```systemd
-    [Unit]
-    Upholds=bluechi-proxy@worker2_target.service
-    After=bluechi-proxy@worker2_target.service
+
+````systemd
+[Unit]
+Upholds=bluechi-proxy@worker2_target.service
+After=bluechi-proxy@worker2_target.service
 
     [Service]
     Type=simple
@@ -135,16 +139,16 @@ If the `target.service` enters a **failed** or **inactive** state at some point 
     ```
 
 === "target.service"
-    ```systemd
-    [Unit]
-    StopWhenUnneeded=yes
+```systemd
+[Unit]
+StopWhenUnneeded=yes
 
     [Service]
     Type=simple
     ExecStart=/bin/sleep 5
     ```
 
-Lets try out the example services from above:
+Let's try out the example services from above:
 
 ```bash
 $ bluechictl start main source.service
@@ -158,7 +162,7 @@ $ bluechictl status worker2 target.service
 UNIT		    | LOADED	| ACTIVE	    | SUBSTATE	| FREEZERSTATE	| ENABLED	|
 -------------------------------------------------------------------------------------
 target.service	| loaded	| active	    | running	| running	    | static	|
-```
+````
 
 !!! Note
 

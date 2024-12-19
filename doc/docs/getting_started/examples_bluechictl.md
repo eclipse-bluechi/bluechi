@@ -1,4 +1,5 @@
 <!-- markdownlint-disable-file MD010 MD013 MD014 MD024 MD046 -->
+
 # Examples on how to use BlueChi
 
 For the examples in this section the a [multi-node setup](./multi_node.md) is assumed to be running and uses [bluechictl](../man/bluechictl.md) to interact with BlueChi. In order to leverage the full potential of BlueChi, e.g. by writing custom applications, please refer to the section describing how to [use BlueChi's D-Bus API](../api/examples.md).
@@ -42,7 +43,7 @@ Subscribing to node '*' and unit '*'
 !!! Note
 
     When a unit subscription with a wildcard `*` exists, BlueChi emits `virtual` events for the unit with name `*` on
-    
+
     - creation of the wildcard subscription
     - node in the the wildcard subscription dis-/connects
 
@@ -55,19 +56,19 @@ In addition to monitoring units, BlueChi's APIs can be used to query and monitor
 ```bash
 $ bluechictl status
 
-NODE                          | STATE     | LAST SEEN                   
+NODE                          | STATE     | LAST SEEN
 =========================================================================
-laptop                        | online    | now                         
-pi                            | online    | now                         
+laptop                        | online    | now
+pi                            | online    | now
 ```
 
 Assuming node `pi` would go offline, the output would immediately change to something like this:
 
 ```bash
-NODE                          | STATE     | LAST SEEN                   
+NODE                          | STATE     | LAST SEEN
 =========================================================================
-laptop                        | online    | now                         
-pi                            | online    | 2023-10-06 08:38:20,000+0200                         
+laptop                        | online    | now
+pi                            | online    | 2023-10-06 08:38:20,000+0200
 ```
 
 It is also possible to show the status of a specific node
@@ -94,9 +95,9 @@ Done
 
 !!! Note
 
-    Starting a systemd unit via BlueChi's D-Bus API queues a job to start that unit in systemd. `bluechictl start` also waits for this job to be completed. This also applies to other operations like **stop**. 
+    Starting a systemd unit via BlueChi's D-Bus API queues a job to start that unit in systemd. `bluechictl start` also waits for this job to be completed. This also applies to other operations like **stop**.
 
-Lets stop the `httpd` service:
+Let's stop the `httpd` service:
 
 ```bash
 $ bluechictl stop pi httpd
