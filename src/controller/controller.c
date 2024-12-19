@@ -616,7 +616,7 @@ static bool controller_setup_uds_connection_handler(Controller *controller) {
         (void) sd_event_source_set_description(event_source, "node-accept-uds-socket");
         controller->node_connection_uds_socket_source = steal_pointer(&event_source);
 
-        bc_log_infof("Waiting for connection requests on port %s...", CONFIG_H_UDS_SOCKET_PATH);
+        bc_log_infof("Waiting for connection requests on socket %s...", CONFIG_H_UDS_SOCKET_PATH);
         return true;
 }
 
