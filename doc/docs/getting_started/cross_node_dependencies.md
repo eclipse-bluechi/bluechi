@@ -1,4 +1,5 @@
 <!-- markdownlint-disable-file MD010 MD013 MD014 MD024 MD046 -->
+
 # Resolving cross-node dependencies
 
 In practice, it is a common scenario that a service running on Node A requires another service to run on Node B. Consider the following example:
@@ -40,7 +41,7 @@ Reload the systemd controller configuration so it can find the newly created ser
 $ systemctl daemon-reload
 ```
 
-Lets verify that the service works as expected. First, start the service via:
+Let's verify that the service works as expected. First, start the service via:
 
 ```bash
 $ systemctl start bluechi-cdn.service
@@ -51,20 +52,20 @@ Then submit a query to it. The response should be an HTML page that contains the
 ```html
 $ curl localhost:9000
 
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
 <html>
-<head>
-<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-<title>Directory listing for /</title>
-</head>
-<body>
-<h1>Directory listing for /</h1>
-<hr>
-<ul>
-<li><a href="bluechi_architecture.jpg">bluechi_architecture.jpg</a></li>
-</ul>
-<hr>
-</body>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Directory listing for /</title>
+  </head>
+  <body>
+    <h1>Directory listing for /</h1>
+    <hr />
+    <ul>
+      <li><a href="bluechi_architecture.jpg">bluechi_architecture.jpg</a></li>
+    </ul>
+    <hr />
+  </body>
 </html>
 ```
 
@@ -126,7 +127,7 @@ if __name__ == "__main__":
         server.handle_request()
 ```
 
-Lets create a new systemd unit to wrap the `service.py`. Copy and paste the following unit definition into `/etc/systemd/system/bluechi-webservice.service`:
+Let's create a new systemd unit to wrap the `service.py`. Copy and paste the following unit definition into `/etc/systemd/system/bluechi-webservice.service`:
 
 ```systemd
 [Unit]
@@ -144,13 +145,15 @@ ExecStart=/usr/bin/python3 /tmp/bluechi-webservice/service.py 9000 192.168.178.5
 Start the service via `systemctl` to verify it works as expected:
 
 ```html
-$ systemctl start bluechi-webservice.service
-$ curl localhost:9000
+$ systemctl start bluechi-webservice.service $ curl localhost:9000
 
 <html>
-    <body>
-        <img src="http://192.168.178.55:9000/bluechi_architecture.jpg" alt="bluechi_architecture" />
-    </body>
+  <body>
+    <img
+      src="http://192.168.178.55:9000/bluechi_architecture.jpg"
+      alt="bluechi_architecture"
+    />
+  </body>
 </html>
 ```
 
@@ -162,7 +165,7 @@ $ systemctl stop bluechi-webservice.service
 
 ## Resolving the dependency via BlueChi
 
-After implementing both applications, lets ensure that starting the webservice will also start the CDN. Add the following lines to `bluechi-webservice.service` in the `[Unit]` section:
+After implementing both applications, let's ensure that starting the webservice will also start the CDN. Add the following lines to `bluechi-webservice.service` in the `[Unit]` section:
 
 ```systemd
 Wants=bluechi-proxy@pi_bluechi-cdn.service

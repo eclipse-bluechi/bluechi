@@ -1,4 +1,5 @@
 <!-- markdownlint-disable-file MD013 -->
+
 # Generating BlueChi clients
 
 BlueChi provides [introspection data](https://dbus.freedesktop.org/doc/dbus-specification.html#introspection-format) for its public API. These XML files are located in the [data directory](https://github.com/eclipse-bluechi/bluechi/tree/main/data) of the project and can be also be used as input to generate clients.
@@ -49,7 +50,7 @@ The `bluechi` python package consists of two subpackages:
 - `api`: auto-generated code based the BlueChi D-BUS API description
 - `ext`: custom written code to simplify common tasks
 
-Functions from the auto-generated `api` subpackage reduce boilerplate code. It also removes the need to explicitly specify the D-Bus name, paths and interfaces and offers abstracted and easy to use functions. For example, lets compare the python code for listing all nodes.
+Functions from the auto-generated `api` subpackage reduce boilerplate code. It also removes the need to explicitly specify the D-Bus name, paths and interfaces and offers abstracted and easy to use functions. For example, let's compare the python code for listing all nodes.
 
 Using the auto-generated bindings, the code would look like this:
 
