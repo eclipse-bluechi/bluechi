@@ -26,10 +26,15 @@ class BluechiIsOnline:
             )
         return result, output
 
-    def agent_is_online(self) -> bool:
+    def agent_is_online(self, wait: int = None) -> bool:
+        cmd = ["agent"]
+
+        if wait:
+            cmd.extend(["--wait", str(wait)])
+
         result, output = self.run(
             "Checking if agent is active.",
-            "agent",
+            " ".join(cmd),
             False,
             0,
         )
