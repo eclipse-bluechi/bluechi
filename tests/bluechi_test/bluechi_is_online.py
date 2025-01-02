@@ -57,3 +57,12 @@ class BluechiIsOnline:
             0,
         )
         return result == 0
+
+    def monitor_node(self, node_name: str) -> Tuple[bool, str]:
+        result, output = self.run(
+            f"Monitoring status of node {node_name}.",
+            f"node {node_name} --monitor",
+            False,
+            0,
+        )
+        return result == 0, output
