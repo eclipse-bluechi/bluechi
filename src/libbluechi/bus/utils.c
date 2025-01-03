@@ -192,49 +192,6 @@ int bus_parse_unit_info(sd_bus_message *message, UnitInfo *u) {
         return r;
 }
 
-int bus_parse_unit_on_node_info(sd_bus_message *message, UnitInfo *u) {
-        int r = 0;
-        char *node = NULL, *id = NULL, *description = NULL, *load_state = NULL;
-        char *active_state = NULL, *sub_state = NULL, *following = NULL, *unit_path = NULL;
-        int job_id = 0;
-        char *job_type = NULL, *job_path = NULL;
-        assert(message);
-        assert(u);
-
-        r = sd_bus_message_read(
-                        message,
-                        NODE_AND_UNIT_INFO_STRUCT_TYPESTRING,
-                        &node,
-                        &id,
-                        &description,
-                        &load_state,
-                        &active_state,
-                        &sub_state,
-                        &following,
-                        &unit_path,
-                        &job_id,
-                        &job_type,
-                        &job_path);
-
-        if (r <= 0) {
-                return r;
-        }
-
-        u->node = strdup(node);
-        u->id = strdup(id);
-        u->description = strdup(description);
-        u->load_state = strdup(load_state);
-        u->active_state = strdup(active_state);
-        u->sub_state = strdup(sub_state);
-        u->following = strdup(following);
-        u->unit_path = strdup(unit_path);
-        u->job_id = job_id;
-        u->job_type = strdup(job_type);
-        u->job_path = strdup(job_path);
-
-        return r;
-}
-
 UnitFileInfo *new_unit_file() {
         _cleanup_unit_file_ UnitFileInfo *unit_file = malloc0(sizeof(UnitFileInfo));
         if (unit_file == NULL) {
@@ -279,28 +236,6 @@ int bus_parse_unit_file_info(sd_bus_message *m, UnitFileInfo *unit_file) {
         }
 
         unit_file->node = NULL;
-        unit_file->unit_path = strdup(unit_path);
-        unit_file->enablement_status = strdup(enablement_status);
-
-        return r;
-}
-
-int bus_parse_unit_file_on_node_info(sd_bus_message *m, UnitFileInfo *unit_file) {
-        int r = 0;
-        char *node = NULL;
-        char *unit_path = NULL;
-        char *enablement_status = NULL;
-
-        assert(m);
-        assert(unit_file);
-
-        r = sd_bus_message_read(
-                        m, NODE_AND_UNIT_FILE_INFO_STRUCT_TYPESTRING, &node, &unit_path, &enablement_status);
-        if (r <= 0) {
-                return r;
-        }
-
-        unit_file->node = strdup(node);
         unit_file->unit_path = strdup(unit_path);
         unit_file->enablement_status = strdup(enablement_status);
 

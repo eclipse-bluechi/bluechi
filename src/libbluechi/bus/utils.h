@@ -43,7 +43,6 @@ UnitInfo *unit_ref(UnitInfo *unit);
 void unit_unref(UnitInfo *unit);
 
 int bus_parse_unit_info(sd_bus_message *message, UnitInfo *u);
-int bus_parse_unit_on_node_info(sd_bus_message *message, UnitInfo *u);
 
 int bus_socket_set_options(sd_bus *bus, SocketOptions *opts);
 
@@ -70,7 +69,6 @@ UnitFileInfo *unit_file_ref(UnitFileInfo *unit_file);
 void unit_file_unref(UnitFileInfo *unit_file);
 
 int bus_parse_unit_file_info(sd_bus_message *m, UnitFileInfo *unit_file);
-int bus_parse_unit_file_on_node_info(sd_bus_message *m, UnitFileInfo *u);
 
 DEFINE_CLEANUP_FUNC(UnitFileInfo, unit_file_unref)
 #define _cleanup_unit_file_ _cleanup_(unit_file_unrefp)

@@ -31,36 +31,19 @@ void unit_list_unref(UnitList *unit_list);
 DEFINE_CLEANUP_FUNC(UnitList, unit_list_unref)
 #define _cleanup_unit_list_ _cleanup_(unit_list_unrefp)
 
-static int
-                fetch_unit_list(sd_bus *api_bus,
-                                const char *node_name,
-                                const char *object_path,
-                                const char *interface,
-                                const char *typestring,
-                                int (*parse_unit_info)(sd_bus_message *, UnitInfo *),
-                                UnitList *unit_list) {
+static int parse_unit_list(sd_bus_message *message, const char *node_name, UnitList *unit_list) {
 
         int r = 0;
-        _cleanup_sd_bus_error_ sd_bus_error error = SD_BUS_ERROR_NULL;
-        _cleanup_sd_bus_message_ sd_bus_message *message = NULL;
-
-        r = sd_bus_call_method(
-                        api_bus, BC_INTERFACE_BASE_NAME, object_path, interface, "ListUnits", &error, &message, "");
+        r = sd_bus_message_enter_container(message, SD_BUS_TYPE_ARRAY, UNIT_INFO_STRUCT_TYPESTRING);
         if (r < 0) {
-                fprintf(stderr, "Failed to issue method call: %s\n", error.message);
-                return r;
-        }
-
-        r = sd_bus_message_enter_container(message, SD_BUS_TYPE_ARRAY, typestring);
-        if (r < 0) {
-                fprintf(stderr, "Failed to read sd-bus message: %s\n", strerror(-r));
+                fprintf(stderr, "Failed to enter sd-bus message container: %s\n", strerror(-r));
                 return r;
         }
 
         for (;;) {
                 _cleanup_unit_ UnitInfo *info = new_unit();
 
-                r = (*parse_unit_info)(message, info);
+                r = bus_parse_unit_info(message, info);
                 if (r < 0) {
                         fprintf(stderr, "Failed to parse unit info: %s\n", strerror(-r));
                         return r;
@@ -68,29 +51,70 @@ static int
                 if (r == 0) {
                         break;
                 }
-                if (node_name != NULL) {
-                        info->node = strdup(node_name);
-                }
+                info->node = strdup(node_name);
 
                 LIST_APPEND(units, unit_list->units, unit_ref(info));
+        }
+
+        r = sd_bus_message_exit_container(message);
+        if (r < 0) {
+                fprintf(stderr, "Failed to exit sd-bus message container: %s\n", strerror(-r));
+                return r;
         }
 
         return r;
 }
 
 static int method_list_units_on_all(sd_bus *api_bus, print_unit_list_fn print, const char *glob_filter) {
+        int r = 0;
         _cleanup_unit_list_ UnitList *unit_list = new_unit_list();
 
-        int r = fetch_unit_list(
+        _cleanup_sd_bus_error_ sd_bus_error error = SD_BUS_ERROR_NULL;
+        _cleanup_sd_bus_message_ sd_bus_message *message = NULL;
+        r = sd_bus_call_method(
                         api_bus,
-                        NULL,
+                        BC_INTERFACE_BASE_NAME,
                         BC_OBJECT_PATH,
                         CONTROLLER_INTERFACE,
-                        NODE_AND_UNIT_INFO_STRUCT_TYPESTRING,
-                        &bus_parse_unit_on_node_info,
-                        unit_list);
+                        "ListUnits",
+                        &error,
+                        &message,
+                        "");
         if (r < 0) {
+                fprintf(stderr, "Failed to issue method call: %s\n", error.message);
                 return r;
+        }
+
+        r = sd_bus_message_enter_container(message, SD_BUS_TYPE_ARRAY, NODE_AND_UNIT_INFO_DICT_TYPESTRING);
+        if (r < 0) {
+                fprintf(stderr, "Failed to read sd-bus message: %s\n", strerror(-r));
+                return r;
+        }
+
+        for (;;) {
+                r = sd_bus_message_enter_container(
+                                message, SD_BUS_TYPE_DICT_ENTRY, NODE_AND_UNIT_INFO_TYPESTRING);
+                if (r < 0) {
+                        fprintf(stderr, "Failed to enter sd-bus message dictionary: %s\n", strerror(-r));
+                        return r;
+                }
+                if (r == 0) {
+                        break;
+                }
+
+                char *node_name = NULL;
+                r = sd_bus_message_read(message, "s", &node_name);
+                if (r < 0) {
+                        fprintf(stderr, "Failed to read node name: %s\n", strerror(-r));
+                        return r;
+                }
+                parse_unit_list(message, node_name, unit_list);
+
+                r = sd_bus_message_exit_container(message);
+                if (r < 0) {
+                        fprintf(stderr, "Failed to exit sd-bus message dictionary: %s\n", strerror(-r));
+                        return r;
+                }
         }
 
         print(unit_list, glob_filter);
@@ -109,14 +133,23 @@ static int method_list_units_on(
                 return r;
         }
 
-        r = fetch_unit_list(
+        _cleanup_sd_bus_error_ sd_bus_error error = SD_BUS_ERROR_NULL;
+        _cleanup_sd_bus_message_ sd_bus_message *message = NULL;
+        r = sd_bus_call_method(
                         api_bus,
-                        node_name,
+                        BC_INTERFACE_BASE_NAME,
                         object_path,
                         NODE_INTERFACE,
-                        UNIT_INFO_STRUCT_TYPESTRING,
-                        &bus_parse_unit_info,
-                        unit_list);
+                        "ListUnits",
+                        &error,
+                        &message,
+                        "");
+        if (r < 0) {
+                fprintf(stderr, "Failed to issue method call: %s\n", error.message);
+                return r;
+        }
+
+        r = parse_unit_list(message, node_name, unit_list);
         if (r < 0) {
                 return r;
         }

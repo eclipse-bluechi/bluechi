@@ -16,8 +16,7 @@
 
     <!--
       ListUnits:
-      @units: A list of all units on each node:
-        - The node name
+      @units: A dictionary for all nodes with the respective name and a list of all units on it:
         - The primary unit name as string
         - The human readable description string
         - The load state (i.e. whether the unit file has been loaded successfully)
@@ -32,19 +31,18 @@
       List all loaded systemd units on all nodes which are online.
     -->
     <method name="ListUnits">
-      <arg name="units" type="a(sssssssouso)" direction="out" />
+      <arg name="units" type="a{sa(ssssssouso)}" direction="out" />
     </method>
 
     <!--
       ListUnitFiles:
-      @unitfiles: A list of all unit files on each node:
-        - The node name
+      @unitfiles: A dictionary for all nodes with the respective name and a list of all unit files on it:
         - The unit file path as string
         - The enabled state (i.e. whether the unit is currently enabled or not)
       List all systemd unit files.
     -->
     <method name="ListUnitFiles">
-      <arg name="unitfiles" type="a(sss)" direction="out" />
+      <arg name="unitfiles" type="a{sa(ss)}" direction="out" />
     </method>
 
     <!--
