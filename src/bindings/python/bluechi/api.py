@@ -325,11 +325,10 @@ class Controller(ApiBase):
         """
         return self.get_proxy().ListNodes()
 
-    def list_unit_files(self) -> List[Tuple[str, str, str]]:
+    def list_unit_files(self) -> Dict[str, List[Tuple[str, str]]]:
         """
           ListUnitFiles:
-        @unitfiles: A list of all unit files on each node:
-          - The node name
+        @unitfiles: A dictionary for all nodes with the respective name and a list of all unit files on it:
           - The unit file path as string
           - The enabled state (i.e. whether the unit is currently enabled or not)
         List all systemd unit files.
@@ -338,11 +337,12 @@ class Controller(ApiBase):
 
     def list_units(
         self,
-    ) -> List[Tuple[str, str, str, str, str, str, str, ObjPath, UInt32, str, ObjPath]]:
+    ) -> Dict[
+        str, List[Tuple[str, str, str, str, str, str, ObjPath, UInt32, str, ObjPath]]
+    ]:
         """
           ListUnits:
-        @units: A list of all units on each node:
-          - The node name
+        @units: A dictionary for all nodes with the respective name and a list of all units on it:
           - The primary unit name as string
           - The human readable description string
           - The load state (i.e. whether the unit file has been loaded successfully)

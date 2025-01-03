@@ -16,17 +16,17 @@ Note that some properties also come with change events, so you can easily track 
 
 #### Methods
 
-  * `ListUnits(out a(sssssssouso) units)`
+  * `ListUnits(out a{sa(ssssssouso)} units)`
 
-    Returns an array with all currently loaded systemd units on all online nodes. This is equivalent to calling
-    `Node.ListUnits()` on all the online nodes and adding the name of the node as the first element of each returned
-    element struct.
+    Returns a dictionary with all online nodes and all currently loaded systemd units on them. This is equivalent to calling
+    `Node.ListUnits()` on all the online nodes and adding the name of the node as the key element of the returned
+    dictionary.
   
-  * `ListUnitFiles(out a(sss) unit_files)`
+  * `ListUnitFiles(out a{sa(ss)} unit_files)`
 
-    Returns an array with all systemd unit files on all online nodes. This is equivalent to calling
-    `Node.ListUnitFiles()` on all the online nodes and adding the name of the node as the first element of each returned
-    element struct.
+    Returns a dictionary with all online nodes and all systemd unit files on them. This is equivalent to calling
+    `Node.ListUnitFiles()` on all the online nodes and adding the name of the node as the key element of the returned
+    dictionary.
 
   * `CreateMonitor(out o monitor)`
 

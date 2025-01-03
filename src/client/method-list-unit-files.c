@@ -31,23 +31,55 @@ void unit_file_list_unref(UnitFileList *unit_file_list);
 DEFINE_CLEANUP_FUNC(UnitFileList, unit_file_list_unref)
 #define _cleanup_unit_file_list_ _cleanup_(unit_file_list_unrefp)
 
-static int fetch_unit_file_list(
-                sd_bus *api_bus,
-                const char *node_name,
-                const char *object_path,
-                const char *interface,
-                const char *typestring,
-                int (*parse_unit_file_info)(sd_bus_message *, UnitFileInfo *),
-                UnitFileList *unit_file_list) {
+
+static int parse_unit_file_list(sd_bus_message *message, const char *node_name, UnitFileList *unit_file_list) {
+
         int r = 0;
+        r = sd_bus_message_enter_container(message, SD_BUS_TYPE_ARRAY, UNIT_FILE_INFO_STRUCT_TYPESTRING);
+        if (r < 0) {
+                fprintf(stderr, "Failed to enter sd-bus message container: %s\n", strerror(-r));
+                return r;
+        }
+
+        for (;;) {
+                _cleanup_unit_file_ UnitFileInfo *info = new_unit_file();
+
+                r = bus_parse_unit_file_info(message, info);
+                if (r < 0) {
+                        fprintf(stderr, "Failed to parse unit info: %s\n", strerror(-r));
+                        return r;
+                }
+                if (r == 0) {
+                        break;
+                }
+                info->node = strdup(node_name);
+                if (info->node == NULL) {
+                        return -ENOMEM;
+                }
+
+                LIST_APPEND(unit_files, unit_file_list->unit_files, unit_file_ref(info));
+        }
+
+        r = sd_bus_message_exit_container(message);
+        if (r < 0) {
+                fprintf(stderr, "Failed to exit sd-bus message container: %s\n", strerror(-r));
+                return r;
+        }
+
+        return r;
+}
+
+static int method_list_unit_files_on_all(sd_bus *api_bus, print_unit_file_list_fn print, const char *glob_filter) {
+        int r = 0;
+        _cleanup_unit_file_list_ UnitFileList *unit_file_list = new_unit_file_list();
+
         _cleanup_sd_bus_error_ sd_bus_error error = SD_BUS_ERROR_NULL;
         _cleanup_sd_bus_message_ sd_bus_message *message = NULL;
-
         r = sd_bus_call_method(
                         api_bus,
                         BC_INTERFACE_BASE_NAME,
-                        object_path,
-                        interface,
+                        BC_OBJECT_PATH,
+                        CONTROLLER_INTERFACE,
                         "ListUnitFiles",
                         &error,
                         &message,
@@ -57,46 +89,36 @@ static int fetch_unit_file_list(
                 return r;
         }
 
-        r = sd_bus_message_enter_container(message, SD_BUS_TYPE_ARRAY, typestring);
+        r = sd_bus_message_enter_container(message, SD_BUS_TYPE_ARRAY, NODE_AND_UNIT_FILE_INFO_DICT_TYPESTRING);
         if (r < 0) {
                 fprintf(stderr, "Failed to read sd-bus message: %s\n", strerror(-r));
                 return r;
         }
 
         for (;;) {
-                _cleanup_unit_file_ UnitFileInfo *info = new_unit_file();
-
-                r = (*parse_unit_file_info)(message, info);
+                r = sd_bus_message_enter_container(
+                                message, SD_BUS_TYPE_DICT_ENTRY, NODE_AND_UNIT_FILE_INFO_TYPESTRING);
                 if (r < 0) {
-                        fprintf(stderr, "Failed to parse unit file info: %s\n", strerror(-r));
+                        fprintf(stderr, "Failed to enter sd-bus message dictionary: %s\n", strerror(-r));
                         return r;
                 }
                 if (r == 0) {
                         break;
                 }
-                if (node_name != NULL) {
-                        info->node = strdup(node_name);
+
+                char *node_name = NULL;
+                r = sd_bus_message_read(message, "s", &node_name);
+                if (r < 0) {
+                        fprintf(stderr, "Failed to read node name: %s\n", strerror(-r));
+                        return r;
                 }
+                parse_unit_file_list(message, node_name, unit_file_list);
 
-                LIST_APPEND(unit_files, unit_file_list->unit_files, unit_file_ref(info));
-        }
-
-        return r;
-}
-
-static int method_list_unit_files_on_all(sd_bus *api_bus, print_unit_file_list_fn print, const char *glob_filter) {
-        _cleanup_unit_file_list_ UnitFileList *unit_file_list = new_unit_file_list();
-
-        int r = fetch_unit_file_list(
-                        api_bus,
-                        NULL,
-                        BC_OBJECT_PATH,
-                        CONTROLLER_INTERFACE,
-                        NODE_AND_UNIT_FILE_INFO_STRUCT_TYPESTRING,
-                        &bus_parse_unit_file_on_node_info,
-                        unit_file_list);
-        if (r < 0) {
-                return r;
+                r = sd_bus_message_exit_container(message);
+                if (r < 0) {
+                        fprintf(stderr, "Failed to exit sd-bus message dictionary: %s\n", strerror(-r));
+                        return r;
+                }
         }
 
         print(unit_file_list, glob_filter);
@@ -115,14 +137,23 @@ static int method_list_unit_files_on(
                 return r;
         }
 
-        r = fetch_unit_file_list(
+        _cleanup_sd_bus_error_ sd_bus_error error = SD_BUS_ERROR_NULL;
+        _cleanup_sd_bus_message_ sd_bus_message *message = NULL;
+        r = sd_bus_call_method(
                         api_bus,
-                        node_name,
+                        BC_INTERFACE_BASE_NAME,
                         object_path,
                         NODE_INTERFACE,
-                        UNIT_FILE_INFO_STRUCT_TYPESTRING,
-                        &bus_parse_unit_file_info,
-                        unit_file_list);
+                        "ListUnitFiles",
+                        &error,
+                        &message,
+                        "");
+        if (r < 0) {
+                fprintf(stderr, "Failed to issue method call: %s\n", error.message);
+                return r;
+        }
+
+        r = parse_unit_file_list(message, node_name, unit_file_list);
         if (r < 0) {
                 return r;
         }

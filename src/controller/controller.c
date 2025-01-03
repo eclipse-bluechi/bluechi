@@ -922,7 +922,7 @@ static int agent_fleet_request_start(
  ************************************************************************/
 
 static int controller_method_list_units_encode_reply(AgentFleetRequest *req, sd_bus_message *reply) {
-        int r = sd_bus_message_open_container(reply, SD_BUS_TYPE_ARRAY, NODE_AND_UNIT_INFO_STRUCT_TYPESTRING);
+        int r = sd_bus_message_open_container(reply, SD_BUS_TYPE_ARRAY, NODE_AND_UNIT_INFO_DICT_TYPESTRING);
         if (r < 0) {
                 return r;
         }
@@ -936,8 +936,22 @@ static int controller_method_list_units_encode_reply(AgentFleetRequest *req, sd_
 
                 const sd_bus_error *err = sd_bus_message_get_error(m);
                 if (err != NULL) {
-                        bc_log_errorf("Failed to list units for node '%s': %s", node_name, err->message);
                         return -sd_bus_message_get_errno(m);
+                }
+
+                r = sd_bus_message_open_container(reply, SD_BUS_TYPE_DICT_ENTRY, NODE_AND_UNIT_INFO_TYPESTRING);
+                if (r < 0) {
+                        return r;
+                }
+
+                r = sd_bus_message_append(reply, "s", node_name);
+                if (r < 0) {
+                        return r;
+                }
+
+                r = sd_bus_message_open_container(reply, SD_BUS_TYPE_ARRAY, UNIT_INFO_STRUCT_TYPESTRING);
+                if (r < 0) {
+                        return r;
                 }
 
                 r = sd_bus_message_enter_container(m, SD_BUS_TYPE_ARRAY, UNIT_INFO_STRUCT_TYPESTRING);
@@ -946,35 +960,20 @@ static int controller_method_list_units_encode_reply(AgentFleetRequest *req, sd_
                 }
 
                 while (sd_bus_message_at_end(m, false) == 0) {
-                        r = sd_bus_message_open_container(
-                                        reply, SD_BUS_TYPE_STRUCT, NODE_AND_UNIT_INFO_TYPESTRING);
-                        if (r < 0) {
-                                return r;
-                        }
-
-                        r = sd_bus_message_append(reply, "s", node_name);
-                        if (r < 0) {
-                                return r;
-                        }
-
-                        r = sd_bus_message_enter_container(m, SD_BUS_TYPE_STRUCT, UNIT_INFO_TYPESTRING);
-                        if (r < 0) {
-                                return r;
-                        }
-
                         r = sd_bus_message_copy(reply, m, true);
                         if (r < 0) {
                                 return r;
                         }
+                }
 
-                        r = sd_bus_message_close_container(reply);
-                        if (r < 0) {
-                                return r;
-                        }
-                        r = sd_bus_message_exit_container(m);
-                        if (r < 0) {
-                                return r;
-                        }
+                r = sd_bus_message_close_container(reply);
+                if (r < 0) {
+                        return r;
+                }
+
+                r = sd_bus_message_close_container(reply);
+                if (r < 0) {
+                        return r;
                 }
 
                 r = sd_bus_message_exit_container(m);
@@ -1003,7 +1002,7 @@ static int controller_method_list_units(sd_bus_message *m, void *userdata, UNUSE
 
 static int controller_method_list_unit_files_encode_reply(AgentFleetRequest *req, sd_bus_message *reply) {
         int r = sd_bus_message_open_container(
-                        reply, SD_BUS_TYPE_ARRAY, NODE_AND_UNIT_FILE_INFO_STRUCT_TYPESTRING);
+                        reply, SD_BUS_TYPE_ARRAY, NODE_AND_UNIT_FILE_INFO_DICT_TYPESTRING);
         if (r < 0) {
                 return r;
         }
@@ -1021,42 +1020,42 @@ static int controller_method_list_unit_files_encode_reply(AgentFleetRequest *req
                         return -sd_bus_message_get_errno(m);
                 }
 
+                r = sd_bus_message_open_container(
+                                reply, SD_BUS_TYPE_DICT_ENTRY, NODE_AND_UNIT_FILE_INFO_TYPESTRING);
+                if (r < 0) {
+                        return r;
+                }
+
+                r = sd_bus_message_append(reply, "s", node_name);
+                if (r < 0) {
+                        return r;
+                }
+
+                r = sd_bus_message_open_container(reply, SD_BUS_TYPE_ARRAY, UNIT_FILE_INFO_STRUCT_TYPESTRING);
+                if (r < 0) {
+                        return r;
+                }
+
                 r = sd_bus_message_enter_container(m, SD_BUS_TYPE_ARRAY, UNIT_FILE_INFO_STRUCT_TYPESTRING);
                 if (r < 0) {
                         return r;
                 }
 
                 while (sd_bus_message_at_end(m, false) == 0) {
-                        r = sd_bus_message_open_container(
-                                        reply, SD_BUS_TYPE_STRUCT, NODE_AND_UNIT_FILE_INFO_TYPESTRING);
-                        if (r < 0) {
-                                return r;
-                        }
-
-                        r = sd_bus_message_append(reply, "s", node_name);
-                        if (r < 0) {
-                                return r;
-                        }
-
-                        r = sd_bus_message_enter_container(m, SD_BUS_TYPE_STRUCT, UNIT_FILE_INFO_TYPESTRING);
-                        if (r < 0) {
-                                return r;
-                        }
-
                         r = sd_bus_message_copy(reply, m, true);
                         if (r < 0) {
                                 return r;
                         }
+                }
 
-                        r = sd_bus_message_close_container(reply);
-                        if (r < 0) {
-                                return r;
-                        }
+                r = sd_bus_message_close_container(reply);
+                if (r < 0) {
+                        return r;
+                }
 
-                        r = sd_bus_message_exit_container(m);
-                        if (r < 0) {
-                                return r;
-                        }
+                r = sd_bus_message_close_container(reply);
+                if (r < 0) {
+                        return r;
                 }
 
                 r = sd_bus_message_exit_container(m);
@@ -1366,10 +1365,10 @@ static int controller_property_get_log_target(
 
 static const sd_bus_vtable controller_vtable[] = {
         SD_BUS_VTABLE_START(0),
-        SD_BUS_METHOD("ListUnits", "", NODE_AND_UNIT_INFO_STRUCT_ARRAY_TYPESTRING, controller_method_list_units, 0),
+        SD_BUS_METHOD("ListUnits", "", NODE_AND_UNIT_INFO_DICT_ARRAY_TYPESTRING, controller_method_list_units, 0),
         SD_BUS_METHOD("ListUnitFiles",
                       "",
-                      NODE_AND_UNIT_FILE_INFO_STRUCT_ARRAY_TYPESTRING,
+                      NODE_AND_UNIT_FILE_INFO_DICT_ARRAY_TYPESTRING,
                       controller_method_list_unit_files,
                       0),
         SD_BUS_METHOD("ListNodes", "", "a(soss)", controller_method_list_nodes, 0),
