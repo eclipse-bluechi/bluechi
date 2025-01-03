@@ -13,7 +13,6 @@ bus = dasbus.connection.SystemMessageBus()
 NodeUnitInfo = namedtuple(
     "NodeUnitInfo",
     [
-        "node",
         "name",
         "description",
         "load_state",
@@ -29,7 +28,8 @@ NodeUnitInfo = namedtuple(
 
 controller = bus.get_proxy("org.eclipse.bluechi", "/org/eclipse/bluechi")
 units = controller.ListUnits()
-for u in units:
-    info = NodeUnitInfo(*u)
-    if info.active_state == "active" and info.name.endswith(".service"):
-        print(f"Node: {info.node}, Unit: {info.name}")
+for node, units in units.items():
+    for u in units:
+        info = NodeUnitInfo(*u)
+        if info.active_state == "active" and info.name.endswith(".service"):
+            print(f"Node: {node}, Unit: {info.name}")
