@@ -62,6 +62,10 @@ static inline bool is_glob(const char *s) {
         return s != NULL && (strchr(s, SYMBOL_GLOB_ALL) != NULL || strchr(s, SYMBOL_GLOB_ONE) != NULL);
 }
 
+static inline bool str_has_prefix(const char *s, const char *prefix) {
+        return strncmp(s, prefix, strlen(prefix)) == 0;
+}
+
 // NOLINTBEGIN(misc-no-recursion)
 static inline bool match_glob(const char *str, const char *glob) {
         if (str == NULL || glob == NULL) {
