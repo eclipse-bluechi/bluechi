@@ -59,6 +59,12 @@ conf = configuration_data()
 # Enable GNU extensions.
 conf.set('_GNU_SOURCE', true)
 
+with_selinux = get_option('with_selinux')
+if with_selinux
+  selinux_dep = dependency('libselinux', required: true)
+  conf.set('CONFIG_H_USE_SELINUX', true)
+endif
+
 prefixdir = get_option('prefix')
 
 conf.set_quoted('CONFIG_H_UDS_SOCKET_PATH', get_option('unix_domain_socket_path'))
@@ -99,7 +105,7 @@ subdir('src/libbluechi')
 subdir('config')
 
 # selinux
-if get_option('with_selinux')
+if with_selinux
   subdir('selinux')
 endif
 

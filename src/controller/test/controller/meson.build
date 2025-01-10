@@ -20,11 +20,7 @@ endforeach
 foreach src : controller_src
   exec_test = executable(src,
     controller_test_src + [src + '.c'],
-    dependencies: [
-        systemd_dep,
-        inih_dep,
-        hashmapc_dep,
-    ],
+    dependencies: controller_deps,
     link_with: [
         bluechi_lib,
     ],

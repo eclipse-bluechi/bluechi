@@ -21,14 +21,20 @@ ctrl_src = [
     'main.c',
 ]
 
-executable(
-  'bluechi-controller',
-  ctrl_src,
-  dependencies: [
+controller_deps = [
     systemd_dep,
     inih_dep,
     hashmapc_dep,
-  ],
+  ]
+
+if with_selinux
+   controller_deps += [ selinux_dep, ]
+endif
+
+executable(
+  'bluechi-controller',
+  ctrl_src,
+  dependencies: controller_deps,
   link_with: [
     bluechi_lib,
   ],
