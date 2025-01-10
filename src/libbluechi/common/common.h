@@ -41,6 +41,21 @@ static inline void freep(void *p) {
         free(*(void **) p);
 }
 
+/* Free null terminated array of pointers (each with free) */
+static inline void freev(void **p) {
+        if (p) {
+                for (size_t i = 0; p[i] != NULL; i++) {
+                        free(p[i]);
+                }
+                free(p);
+        }
+}
+
+static inline void freepv(void *p) {
+        freev(*(void ***) p);
+}
+
+
 // NOLINTBEGIN(bugprone-macro-parentheses)
 #define free_and_null(ptr) \
         free(ptr);         \
@@ -69,6 +84,7 @@ static inline void *malloc0_array(size_t base_size, size_t element_size, size_t 
 
 #define _cleanup_(x) __attribute__((__cleanup__(x)))
 #define _cleanup_free_ _cleanup_(freep)
+#define _cleanup_freev_ _cleanup_(freepv)
 #define _cleanup_fd_ _cleanup_(closep)
 
 // NOLINTBEGIN(bugprone-macro-parentheses)
