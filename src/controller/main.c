@@ -31,7 +31,7 @@ static void usage(char *argv[]) {
                "Available options are:\n"
                "\t-%c %s\t\t Print this help message.\n"
                "\t-%c %s\t\t The port of bluechi to connect to.\n"
-               "\t-%c %s\t A path to a config file used to bootstrap bluechi-agent.\n"
+               "\t-%c %s\t A path to a config file used to bootstrap bluechi-controller.\n"
                "\t-%c %s\t Print current bluechi version.\n",
                argv[0],
                ARG_HELP_SHORT,
