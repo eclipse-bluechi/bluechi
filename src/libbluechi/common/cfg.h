@@ -19,6 +19,8 @@
 #define CFG_CONTROLLER_HOST "ControllerHost"
 #define CFG_CONTROLLER_PORT "ControllerPort"
 #define CFG_CONTROLLER_ADDRESS "ControllerAddress"
+#define CFG_ALLOWED "Allowed"
+#define CFG_REQUIRED_SELINUX_CONTEXT "RequiredSelinuxContext"
 #define CFG_NODE_NAME "NodeName"
 #define CFG_ALLOWED_NODE_NAMES "AllowedNodeNames"
 #define CFG_HEARTBEAT_INTERVAL "HeartbeatInterval"
@@ -39,6 +41,11 @@
  * Configuration section for bluechi controller.
  */
 #define CFG_SECT_BLUECHI "bluechi-controller"
+
+/*
+ * Prefix of per-node configuration section for bluechi controller.
+ */
+#define CFG_SECT_NODE_PREFIX "node "
 
 /*
  * Configuration section for bluechi agent.

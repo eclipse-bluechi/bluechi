@@ -230,6 +230,7 @@ void node_unref(Node *node) {
         free_and_null(node->name);
         free_and_null(node->object_path);
         free_and_null(node->peer_ip);
+        free_and_null(node->required_selinux_context);
         free(node);
 }
 
@@ -240,6 +241,14 @@ void node_shutdown(Node *node) {
         LIST_FOREACH_SAFE(outstanding_requests, req, next_req, node->outstanding_requests) {
                 agent_request_cancel(req);
         }
+}
+
+bool node_set_required_selinux_context(Node *node, const char *selinux_context) {
+        node->required_selinux_context = strdup(selinux_context);
+        if (node->required_selinux_context == NULL) {
+                return false;
+        }
+        return true;
 }
 
 bool node_export(Node *node) {
@@ -919,6 +928,17 @@ static int node_method_register(sd_bus_message *m, void *userdata, UNUSED sd_bus
         Node *named_node = controller_find_node(controller, name);
         if (named_node == NULL) {
                 return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_SERVICE_UNKNOWN, "Unexpected node name");
+        }
+
+        if (named_node->required_selinux_context &&
+            (node->peer_selinux_context == NULL ||
+             !streq(node->peer_selinux_context, named_node->required_selinux_context))) {
+                bc_log_errorf("Node tried to register as '%s' with wrong selinux context '%s', expected '%s'",
+                              name,
+                              node->peer_selinux_context ? node->peer_selinux_context : "(missing)",
+                              named_node->required_selinux_context);
+
+                return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_ACCESS_DENIED, "Node name not allowed");
         }
 
         if (node_has_agent(named_node)) {
