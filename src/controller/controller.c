@@ -397,6 +397,34 @@ bool controller_apply_config(Controller *controller) {
                 }
         }
 
+        _cleanup_freev_ char **sections = cfg_list_sections(controller->config);
+        if (sections == NULL) {
+                bc_log_error("Failed to list config sections");
+                return false;
+        }
+        for (size_t i = 0; sections[i] != NULL; i++) {
+                const char *section = sections[i];
+                if (!str_has_prefix(section, CFG_SECT_NODE_PREFIX)) {
+                        continue;
+                }
+                const char *node_name = section + strlen(CFG_SECT_NODE_PREFIX);
+                Node *node = controller_find_node(controller, node_name);
+                if (node == NULL) {
+                        /* Add it to the list if it is marked allowed */
+                        bool allowed = cfg_s_get_bool_value(controller->config, section, CFG_ALLOWED);
+                        if (!allowed) {
+                                continue;
+                        }
+                        node = controller_add_node(controller, node_name);
+                }
+
+                const char *selinux_context = cfg_s_get_value(
+                                controller->config, section, CFG_REQUIRED_SELINUX_CONTEXT);
+                if (selinux_context && !node_set_required_selinux_context(node, selinux_context)) {
+                        return false;
+                }
+        }
+
         const char *interval_msec = cfg_get_value(controller->config, CFG_HEARTBEAT_INTERVAL);
         if (interval_msec) {
                 if (!controller_set_heartbeat_interval(controller, interval_msec)) {

@@ -52,6 +52,7 @@ struct Node {
         LIST_FIELDS(Node, nodes);
 
         char *name; /* NULL for not yet registered nodes */
+        char *required_selinux_context;
         char *object_path;
         char *peer_ip;
         char *peer_selinux_context;
@@ -80,6 +81,7 @@ bool node_has_agent(Node *node);
 bool node_is_online(Node *node);
 bool node_set_agent_bus(Node *node, sd_bus *bus);
 void node_unset_agent_bus(Node *node);
+bool node_set_required_selinux_context(Node *node, const char *selinux_context);
 
 AgentRequest *node_request_list_units(
                 Node *node, agent_request_response_t cb, void *userdata, free_func_t free_userdata);
