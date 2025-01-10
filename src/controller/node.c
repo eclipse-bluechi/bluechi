@@ -5,6 +5,10 @@
  */
 #include <systemd/sd-bus.h>
 
+#ifdef CONFIG_H_USE_SELINUX
+#        include <selinux/selinux.h>
+#endif
+
 #include "libbluechi/bus/bus.h"
 #include "libbluechi/bus/utils.h"
 #include "libbluechi/common/parse-util.h"
@@ -186,6 +190,7 @@ Node *node_new(Controller *controller, const char *name) {
                 }
         }
         node->peer_ip = NULL;
+        node->peer_selinux_context = NULL;
 
         node->is_shutdown = false;
 
@@ -674,6 +679,17 @@ bool node_set_agent_bus(Node *node, sd_bus *bus) {
                 node->peer_ip = steal_pointer(&peer_ip);
         }
 
+#ifdef CONFIG_H_USE_SELINUX
+        char *peercon = NULL;
+        if (getpeercon(sd_bus_get_fd(bus), &peercon) == 0) {
+                node->peer_selinux_context = parse_selinux_type(peercon);
+                freecon(peercon);
+                if (node->peer_selinux_context == NULL) {
+                        bc_log_errorf("Failed to parse peer selinux type '%s'", peercon);
+                }
+        }
+#endif
+
         if (node->name == NULL) {
                 // We only connect to this on the unnamed nodes so register
                 // can be called. We can't reconnect it during migration.
@@ -869,6 +885,7 @@ void node_unset_agent_bus(Node *node) {
         sd_bus_unrefp(&node->agent_bus);
         node->agent_bus = NULL;
 
+        free_and_null(node->peer_selinux_context);
         free_and_null(node->peer_ip);
 
         if (was_online) {
