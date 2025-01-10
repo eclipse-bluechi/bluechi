@@ -54,6 +54,7 @@ struct Node {
         char *name; /* NULL for not yet registered nodes */
         char *object_path;
         char *peer_ip;
+        char *peer_selinux_context;
 
         LIST_HEAD(AgentRequest, outstanding_requests);
         LIST_HEAD(ProxyMonitor, proxy_monitors);
