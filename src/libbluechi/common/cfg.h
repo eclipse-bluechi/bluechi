@@ -206,6 +206,8 @@ bool cfg_s_get_bool_value(struct config *config, const char *section, const char
  */
 const char *cfg_dump(struct config *config);
 
+char **cfg_list_sections(struct config *config);
+
 /*
  * Populate the default agent configuration from the source code
  */

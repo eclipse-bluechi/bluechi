@@ -20,6 +20,13 @@
 #include "cfg.h"
 #include "common.h"
 
+static inline void hashmap_freep(void *pmap) {
+        struct hashmap *map = *(struct hashmap **) pmap;
+        hashmap_free(map);
+}
+
+#define _cleanup_hashmap_ _cleanup_(hashmap_freep)
+
 /*
  * Structure holding the configuration is just hiding that it uses a hashmap structure internally
  */
@@ -396,6 +403,62 @@ bool cfg_s_get_bool_value(struct config *config, const char *section_name, const
                                 streqi("y", value) || streqi("on", value);
         }
         return result;
+}
+
+static int strp_compare(const void *a, const void *b, UNUSED void *udata) {
+        const char *a_str = *(const char **) a;
+        const char *b_str = *(const char **) b;
+
+        return strcmp(a_str, b_str);
+}
+
+static uint64_t strp_hash(const void *item, uint64_t seed0, uint64_t seed1) {
+        const char *str = *(const char **) item;
+        return hashmap_sip(str, strlen(str), seed0, seed1);
+}
+
+char **cfg_list_sections(struct config *config) {
+        _cleanup_hashmap_ struct hashmap *sections = hashmap_new(
+                        sizeof(char *), 0, 0, 0, strp_hash, strp_compare, NULL, 0);
+        if (sections == NULL) {
+                return NULL;
+        }
+
+        void *item = NULL;
+        size_t i = 0;
+
+        while (hashmap_iter(config->cfg_store, &i, &item)) {
+                struct config_option *opt = item;
+                if (!hashmap_get(sections, &opt->section)) {
+                        hashmap_set(sections, &opt->section);
+                        if (hashmap_oom(sections)) {
+                                return NULL;
+                        }
+                }
+        }
+
+        size_t n_sections = hashmap_count(sections);
+        _cleanup_freev_ char **res = calloc(n_sections + 1, sizeof(char *));
+        if (res == NULL) {
+                return NULL;
+        }
+
+        item = 0;
+        i = 0;
+        size_t n = 0;
+        while (hashmap_iter(sections, &i, &item)) {
+                char **section = item;
+                char *copy = strdup(*section);
+                if (copy == NULL) {
+                        return NULL;
+                }
+
+                res[n++] = copy;
+        }
+
+        qsort_r(res, n, sizeof(char *), strp_compare, NULL);
+
+        return steal_pointer(&res);
 }
 
 const char *cfg_dump(struct config *config) {
