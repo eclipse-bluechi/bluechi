@@ -12,6 +12,7 @@ srpm_build_deps:
   - gcc-c++
   - git
   - jq
+  - libselinux-devel
   - meson
   - systemd-devel
   - rpm-build
