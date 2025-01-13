@@ -358,7 +358,7 @@ int cfg_s_set_value(
         }
         struct config_option *replaced = (struct config_option *) hashmap_set(
                         config->cfg_store,
-                        &(struct config_option){
+                        &(struct config_option) {
                                         .section = section_copy, .name = name_copy, .value = value_copy });
         if (hashmap_oom(config->cfg_store)) {
                 free(section_copy);
@@ -382,8 +382,8 @@ const char *cfg_get_value(struct config *config, const char *option_name) {
 const char *cfg_s_get_value(struct config *config, const char *section_name, const char *option_name) {
         struct config_option *found = (struct config_option *) hashmap_get(
                         config->cfg_store,
-                        &(struct config_option){ .section = (char *) section_name,
-                                                 .name = (char *) option_name });
+                        &(struct config_option) { .section = (char *) section_name,
+                                                  .name = (char *) option_name });
         if (found != NULL) {
                 return found->value;
         }
