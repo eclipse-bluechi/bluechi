@@ -5,6 +5,7 @@
  */
 #pragma once
 
+#include <stdarg.h>
 #include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
@@ -100,3 +101,18 @@ static inline bool ends_with(const char *str, const char *suffix) {
         }
         return strncmp(str + str_length - suffix_length, suffix, suffix_length) == 0;
 }
+
+typedef struct StringBuilder StringBuilder;
+struct StringBuilder {
+        char *str;
+        size_t len; /* Not including terminating zero */
+        size_t capacity;
+};
+
+#define STRING_BUILDER_INIT { NULL, 0, 0 }
+#define STRING_BUILDER_DEFAULT_CAPACITY 1024
+
+bool string_builder_init(StringBuilder *builder, size_t initial_capacity);
+void string_builder_destroy(StringBuilder *builder);
+bool string_builder_append(StringBuilder *builder, const char *str);
+bool string_builder_printf(StringBuilder *builder, const char *format, ...);

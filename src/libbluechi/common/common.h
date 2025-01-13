@@ -86,6 +86,7 @@ static inline void *malloc0_array(size_t base_size, size_t element_size, size_t 
 #define _cleanup_free_ _cleanup_(freep)
 #define _cleanup_freev_ _cleanup_(freepv)
 #define _cleanup_fd_ _cleanup_(closep)
+#define _cleanup_string_builder_ _cleanup_(string_builder_destroy)
 
 // NOLINTBEGIN(bugprone-macro-parentheses)
 #define DEFINE_CLEANUP_FUNC(_type, _freefunc)         \

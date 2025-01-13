@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: LGPL-2.1-or-later
 
 string_util_src = [
+  'string_builder_test',
   'match_glob_test',
   'ends_with_test',
 ]

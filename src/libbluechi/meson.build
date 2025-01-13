@@ -24,6 +24,7 @@ libbluechi_src = [
     'common/parse-util.c',
     'common/parse-util.h',
     'common/protocol.c',
+    'common/string-util.c',
     'common/time-util.c',
     'common/time-util.h',
     'log/log.c',
