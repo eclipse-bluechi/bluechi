@@ -466,22 +466,45 @@ const char *cfg_dump(struct config *config) {
                 return NULL;
         }
 
-        int r = 0;
-        char *cfg_info = "";
-        void *item = NULL;
-        size_t i = 0;
-        while (hashmap_iter(config->cfg_store, &i, &item)) {
-                struct config_option *opt = item;
-                char *tmp = cfg_info;
-                r = asprintf(&cfg_info, "%s%s=%s\n", cfg_info, opt->name, opt->value);
-                if (!streq(tmp, "")) {
-                        free(tmp);
+        _cleanup_freev_ char **sections = cfg_list_sections(config);
+        if (sections == NULL) {
+                return NULL;
+        }
+
+        _cleanup_string_builder_ StringBuilder builder = STRING_BUILDER_INIT;
+        if (!string_builder_init(&builder, 0)) {
+                return NULL;
+        }
+
+        for (size_t s = 0; sections != NULL && sections[s] != NULL; s++) {
+                const char *section = sections[s];
+
+                if (s != 0) {
+                        string_builder_append(&builder, "\n");
                 }
-                if (r < 0) {
+
+                if (!string_builder_printf(&builder, "[%s]\n", section)) {
+                        string_builder_destroy(&builder);
                         return NULL;
                 }
+
+                void *item = NULL;
+                size_t i = 0;
+                while (hashmap_iter(config->cfg_store, &i, &item)) {
+                        struct config_option *opt = item;
+
+                        if (!streq(opt->section, section)) {
+                                continue;
+                        }
+
+                        if (!string_builder_printf(
+                                            &builder, "%s=%s\n", opt->name, opt->value ? opt->value : "")) {
+                                string_builder_destroy(&builder);
+                                return NULL;
+                        }
+                }
         }
-        return cfg_info;
+        return steal_pointer(&builder.str);
 }
 
 static int cfg_def_conf(struct config *config) {
