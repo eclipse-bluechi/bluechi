@@ -23,6 +23,7 @@ BuildRequires:	gcc
 # Meson needs to detect C++, because part of inih library (which we don't use) provides C++ functionality
 BuildRequires:	gcc-c++
 BuildRequires:	meson
+BuildRequires:	libselinux-devel
 BuildRequires:	systemd-devel
 BuildRequires:	systemd-rpm-macros
 BuildRequires:	golang-github-cpuguy83-md2man
