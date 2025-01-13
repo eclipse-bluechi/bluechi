@@ -27,7 +27,10 @@ Checks: >
     -readability-else-after-return,
     -misc-include-cleaner,
     -bugprone-multi-level-implicit-pointer-conversion,
-    -cppcoreguidelines-macro-to-enum
+    -cppcoreguidelines-macro-to-enum,
+    -cert-int09-c,
+    -readability-enum-initial-value,
+    -readability-math-missing-parentheses
 
 CheckOptions:
     - key: readability-function-cognitive-complexity.Threshold
