@@ -20,6 +20,7 @@ RUN dnf install -y dnf-plugin-config-manager && \
         gzip \
         jq \
         lcov \
+        libselinux-devel \
         make \
         meson \
         python3-html2text \
