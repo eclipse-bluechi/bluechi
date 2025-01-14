@@ -66,3 +66,12 @@ class BluechiIsOnline:
             0,
         )
         return result == 0, output
+
+    def monitor_agent(self) -> Tuple[bool, str]:
+        result, output = self.run(
+            "Monitoring status of the agent.",
+            "agent --monitor",
+            False,
+            0,
+        )
+        return result == 0, output
