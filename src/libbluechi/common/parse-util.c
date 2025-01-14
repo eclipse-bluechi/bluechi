@@ -61,3 +61,34 @@ bool parse_linux_signal(const char *in, uint32_t *ret) {
         *ret = (uint32_t) l;
         return true;
 }
+
+char *parse_selinux_type(const char *context) {
+        /* Format is user:role:type:level */
+
+        /* Skip user */
+        char *s = strchr(context, ':');
+        if (s == NULL) {
+                return NULL;
+        }
+        s++;
+        if (*s == 0) {
+                return NULL;
+        }
+
+        /* Skip role */
+        s = strchr(s, ':');
+        if (s == NULL) {
+                return NULL;
+        }
+        s++;
+        if (*s == 0) {
+                return NULL;
+        }
+
+        char *end = strchr(s, ':');
+        if (end == NULL) {
+                return NULL;
+        }
+
+        return strndup(s, end - s);
+}

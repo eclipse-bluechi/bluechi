@@ -85,6 +85,22 @@ bool test_parse_linux_signal(const char *input, bool expected_return, uint32_t e
         return true;
 }
 
+bool test_parse_selinux_type(const char *input, const char *expected_return) {
+        _cleanup_free_ char *msg = NULL;
+        _cleanup_free_ char *res = parse_selinux_type(input);
+        if ((expected_return == NULL && res != NULL) ||
+            (expected_return != NULL && (res == NULL || !streq(expected_return, res)))) {
+                fprintf(stderr,
+                        "FAILED: %s\n\tInput: '%s'\n\tExpected: %s\n\tGot: %s\n",
+                        __FUNCTION_NAME__,
+                        input,
+                        expected_return,
+                        res);
+                return false;
+        }
+
+        return true;
+}
 
 int main() {
         bool result = true;
@@ -118,6 +134,12 @@ int main() {
         result = result && test_parse_linux_signal("32", false, 0);
         result = result && test_parse_linux_signal("-2", false, 0);
         result = result && test_parse_linux_signal("65.536", false, 0);
+
+        result = result &&
+                        test_parse_selinux_type(
+                                        "unconfined_u:unconfined_r:unconfined_t:s0-s0:c0.c1023",
+                                        "unconfined_t");
+        result = result && test_parse_selinux_type("unconfined_u:unconfined_r", NULL);
 
         if (!result) {
                 return EXIT_FAILURE;
