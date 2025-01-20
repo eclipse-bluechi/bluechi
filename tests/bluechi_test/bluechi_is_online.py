@@ -80,3 +80,12 @@ class BluechiIsOnline:
             0,
         )
         return result == 0, output
+
+    def monitor_system(self) -> Tuple[bool, str]:
+        result, output = self.run(
+            "Monitoring status of the system.",
+            "system --monitor",
+            False,
+            0,
+        )
+        return result == 0, output
