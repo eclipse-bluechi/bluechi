@@ -40,10 +40,15 @@ class BluechiIsOnline:
         )
         return result == 0
 
-    def node_is_online(self, node_name: str) -> bool:
+    def node_is_online(self, node_name: str, wait: int = None) -> bool:
+        cmd = ["node", node_name]
+
+        if wait:
+            cmd.extend(["--wait", str(wait)])
+
         result, output = self.run(
             "Checking controller status.",
-            f"node {node_name}",
+            " ".join(cmd),
             False,
             0,
         )
