@@ -4,6 +4,8 @@ RUN mkdir -p /tmp/bluechi-rpms
 
 COPY ./bluechi-rpms /tmp/bluechi-rpms
 
+RUN rpm -qa | grep selinux
+
 RUN dnf install --repo bluechi-rpms \
         --repofrompath bluechi-rpms,file:///tmp/bluechi-rpms/ \
         --nogpgcheck \
