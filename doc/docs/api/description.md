@@ -150,6 +150,14 @@ Object path: `/org/eclipse/bluechi/node/$name`
     The job returned is an object path for an object implementing `org.eclipse.bluechi.Job`, and which be monitored for
     the progress of the job, or used to cancel the job. To track the result of the job, follow the `JobRemoved` signal
     on the Controller.
+  
+  * `StartTransientUnit(in  s name, in  s mode, in  a(sv) properties, in  a(sa(sv)) aux, out o job)`
+
+    `StartTransientUnit()` may be used to create and start a transient unit, which will be released as soon as it is not
+    running or referenced anymore or the system is rebooted. name is the unit name including suffix, and must be unique.
+    `mode` is the same as in `StartUnit()`, properties contains properties of the unit, specified like in SetUnitProperties().
+    `aux` is currently unused and should be passed as empty array. See the New Control Group Interfaces for more information
+    how to make use of this functionality for resource control purposes.
 
   * `StopUnit(in s name, in s mode, out o job)`
 

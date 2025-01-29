@@ -1783,6 +1783,7 @@ static const sd_bus_vtable internal_agent_vtable[] = {
         SD_BUS_METHOD("GetUnitProperty", "sss", "v", agent_method_get_unit_property, 0),
         SD_BUS_METHOD("SetUnitProperties", "sba(sv)", "", agent_method_set_unit_properties, 0),
         SD_BUS_METHOD("StartUnit", "ssu", "", agent_method_start_unit, 0),
+        SD_BUS_METHOD("StartTransientUnit", "ssa(sv)a(sa(sv))", "o", agent_method_passthrough_to_systemd, 0),
         SD_BUS_METHOD("StopUnit", "ssu", "", agent_method_stop_unit, 0),
         SD_BUS_METHOD("FreezeUnit", "s", "", agent_method_freeze_unit, 0),
         SD_BUS_METHOD("ThawUnit", "s", "", agent_method_thaw_unit, 0),

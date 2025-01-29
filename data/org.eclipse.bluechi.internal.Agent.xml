@@ -11,6 +11,13 @@
       <arg name="mode" type="s" direction="in" />
       <arg name="jobid" type="u" direction="in" />
     </method>
+    <method name="StartTransientUnit">
+      <arg name="name" type="s" direction="in" />
+      <arg name="mode" type="s" direction="in" />
+      <arg name="props" type="a(sv)" direction="in" />
+      <arg name="aux" type="a(sa(sv))" direction="in" />
+      <arg name="job" type="o" direction="out" />
+    </method>
     <method name="StopUnit">
       <arg name="name" type="s" direction="in" />
       <arg name="mode" type="s" direction="in" />
