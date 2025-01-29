@@ -34,6 +34,25 @@
     </method>
 
     <!--
+      StartTransientUnit:
+      @name: The name of the transient unit to start, incl. suffix such as .service
+      @mode: The mode used to start the unit
+      @props: List of key-value pairs of the systemd unit, e.g. ExecStart=/bin/true
+      @aux: Currently unused in systemd. Pass an empty list to it.
+      @job: The path for the job associated with the start operation
+
+      StartTransientUnit may be used to create and start a transient unit, which will be released as soon as it is not running or referenced anymore or the
+    system is rebooted.
+    -->
+    <method name="StartTransientUnit">
+      <arg name="name" type="s" direction="in" />
+      <arg name="mode" type="s" direction="in" />
+      <arg name="props" type="a(sv)" direction="in" />
+      <arg name="aux" type="a(sa(sv))" direction="in" />
+      <arg name="job" type="o" direction="out" />
+    </method>
+
+    <!--
       StopUnit:
       @name: The name of the unit to stop
       @mode: The mode used to stop the unit

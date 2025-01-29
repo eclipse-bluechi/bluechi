@@ -69,6 +69,7 @@ static const sd_bus_vtable node_vtable[] = {
         SD_BUS_METHOD("ListUnitFiles", "", UNIT_FILE_INFO_STRUCT_ARRAY_TYPESTRING, node_method_list_unit_files, 0),
         SD_BUS_METHOD("GetUnitFileState", "s", "s", node_method_passthrough_to_agent, 0),
         SD_BUS_METHOD("StartUnit", "ss", "o", node_method_start_unit, 0),
+        SD_BUS_METHOD("StartTransientUnit", "ssa(sv)a(sa(sv))", "o", node_method_passthrough_to_agent, 0),
         SD_BUS_METHOD("StopUnit", "ss", "o", node_method_stop_unit, 0),
         SD_BUS_METHOD("FreezeUnit", "s", "", node_method_passthrough_to_agent, 0),
         SD_BUS_METHOD("ThawUnit", "s", "", node_method_passthrough_to_agent, 0),

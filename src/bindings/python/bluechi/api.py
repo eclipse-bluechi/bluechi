@@ -1095,6 +1095,31 @@ class Node(ApiBase):
             keyvalues,
         )
 
+    def start_transient_unit(
+        self,
+        name: str,
+        mode: str,
+        props: List[Tuple[str, Variant]],
+        aux: List[Tuple[str, List[Tuple[str, Variant]]]],
+    ) -> ObjPath:
+        """
+            StartTransientUnit:
+          @name: The name of the transient unit to start, incl. suffix such as .service
+          @mode: The mode used to start the unit
+          @props: List of key-value pairs of the systemd unit, e.g. ExecStart=/bin/true
+          @aux: Currently unused in systemd. Pass an empty list to it.
+          @job: The path for the job associated with the start operation
+
+          StartTransientUnit may be used to create and start a transient unit, which will be released as soon as it is not running or referenced anymore or the
+        system is rebooted.
+        """
+        return self.get_proxy().StartTransientUnit(
+            name,
+            mode,
+            props,
+            aux,
+        )
+
     def start_unit(self, name: str, mode: str) -> ObjPath:
         """
             StartUnit:
