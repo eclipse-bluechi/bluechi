@@ -315,10 +315,20 @@ int assemble_object_path_string(const char *prefix, const char *name, char **res
         return asprintf(res, "%s/%s", prefix, escaped);
 }
 
+// Disabling -Wunterminated-string-initialization temporarily.
+// hexchar uses the table array only for mapping an integer to
+// a hexadecimal char, no need for it to be NULL terminated.
+#if __GNUC__ >= 15
+#        pragma GCC diagnostic push
+#        pragma GCC diagnostic ignored "-Wunterminated-string-initialization"
+#endif
 static char hexchar(int x) {
         static const char table[16] = "0123456789abcdef";
         return table[(unsigned int) x % sizeof(table)];
 }
+#if __GNUC__ >= 15
+#        pragma GCC diagnostic pop
+#endif
 
 char *bus_path_escape(const char *s) {
 
