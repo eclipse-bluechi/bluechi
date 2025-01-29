@@ -200,11 +200,14 @@ def bluechi_image_id(
     image = next(
         iter(
             podman_client.images.list(
-                filters="reference=*{image_name}".format(image_name=bluechi_image_name)
+                filters={
+                    "reference=*{image_name}".format(image_name=bluechi_image_name)
+                },
             )
         ),
         None,
     )
+
     assert image, f"Image '{bluechi_image_name}' was not found"
     return image.id
 
