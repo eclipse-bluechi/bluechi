@@ -12,7 +12,7 @@ def readme():
 
 setup(
     name="bluechi",
-    version="0.9.1",
+    version="0.9.2",
     description="Python bindings for BlueChi's D-Bus API",
     long_description=readme(),
     long_description_content_type="text/markdown",
