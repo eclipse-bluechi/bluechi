@@ -54,10 +54,15 @@ class BluechiIsOnline:
         )
         return result == 0
 
-    def system_is_online(self) -> bool:
+    def system_is_online(self, wait: int = None) -> bool:
+        cmd = ["system"]
+
+        if wait:
+            cmd.extend(["--wait", str(wait)])
+
         result, output = self.run(
             "Checking system status.",
-            "system",
+            " ".join(cmd),
             False,
             0,
         )

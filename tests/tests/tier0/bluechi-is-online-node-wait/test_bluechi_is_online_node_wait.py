@@ -103,7 +103,7 @@ def exec(ctrl: BluechiControllerMachine, nodes: Dict[str, BluechiAgentMachine]):
         ), "bluechi-is-online didn't finish before wait timeout"
 
 
-def test_bluechi_is_online_agent_wait(
+def test_bluechi_is_online_node_wait(
     bluechi_test: BluechiTest,
     bluechi_node_default_config: BluechiAgentConfig,
     bluechi_ctrl_default_config: BluechiControllerConfig,
