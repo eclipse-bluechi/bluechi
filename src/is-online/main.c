@@ -22,9 +22,9 @@ int method_version(UNUSED Command *command, UNUSED void *userdata) {
 const Method methods[] = {
         { "help",    0, 0, OPT_NONE,                                         method_help,             usage },
         { "version", 0, 0, OPT_NONE,                                         method_version,          usage },
-        { "agent",   0, 2, OPT_MONITOR | OPT_WAIT | OPT_SWITCH_CTRL_TIMEOUT, method_is_online_agent,  usage },
-        { "node",    1, 3, OPT_MONITOR | OPT_WAIT,                           method_is_online_node,   usage },
-        { "system",  0, 2, OPT_MONITOR | OPT_WAIT,                           method_is_online_system, usage },
+        { "agent",   0, 0, OPT_MONITOR | OPT_WAIT | OPT_SWITCH_CTRL_TIMEOUT, method_is_online_agent,  usage },
+        { "node",    1, 1, OPT_MONITOR | OPT_WAIT,                           method_is_online_node,   usage },
+        { "system",  0, 0, OPT_MONITOR | OPT_WAIT,                           method_is_online_system, usage },
         { NULL,      0, 0, 0,                                                NULL,                    NULL  }
 };
 
