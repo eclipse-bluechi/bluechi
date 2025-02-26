@@ -4,6 +4,7 @@ issue_repository: https://github.com/eclipse-bluechi/bluechi
 specfile_path: bluechi.spec
 upstream_package_name: bluechi
 downstream_package_name: bluechi
+upstream_tag_template: v{version}
 
 update_release: false
 
