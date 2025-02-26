@@ -349,6 +349,23 @@ build-scripts/generate-unit-tests-code-coverage.sh %{_vpath_builddir} %{buildroo
 
 
 %changelog
+* Wed Feb 26 2025 Michael Engel <mengel@redhat.com> - 0.10.0-1
+- Breaking change: ListUnits and ListUnitFiles return a dictionary with node name as key
+- Added new API: StartTransientUnit
+- Enabled per node configuration in bluechi-controller
+- Enabled setting a required SELinux context for nodes connecting via Unix Domain Socket
+- Added Allowed and RequiredSelinuxContext as per-node configuration option
+- Added libselinux-devel as a dependency
+- Added support for running TCP/IP and Unix Domain Sockets (via socket activation) in parallel
+- Added Unix Domain Socket support without systemd sock activation
+- Updated SELinux policy to work with Unix Domain Sockets
+- Fixed bluechi-is-online system and agent to not accept arguments
+- Fixed unterminated string initialization for hexchar function
+- Fixed overrunning log_level_to_string for invalid log levels
+- Updated the python bindings for BlueChi's D-Bus API
+- Added C and C++ examples using BlueChi's D-Bus API
+- Removed Vendor and Packager from RPM spec
+
 * Tue Nov 12 2024 Michael Engel <mengel@redhat.com> - 0.9.0-1
 - BlueChi's SELinux policy has been refined and changed from permissive to enforced
 - New package: bluechi-is-online
