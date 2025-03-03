@@ -171,8 +171,6 @@ Requires(post):	policycoreutils
 Obsoletes:	hirte-selinux < 0.6.0
 Provides:	hirte-selinux = %{version}-%{release}
 
-%global selinuxtype targeted
-
 %description selinux
 SELinux policy associated with the bluechi and bluechi-agent daemons
 
@@ -186,14 +184,14 @@ SELinux policy associated with the bluechi and bluechi-agent daemons
 if [ $1 -eq 1 ]; then
    semodule -N -X 200 -r hirte 2>/dev/null || true
 fi
-%selinux_modules_install -s %{selinuxtype} %{_datadir}/selinux/packages/bluechi.pp.bz2
+%selinux_modules_install -s ${SELINUXTYPE} %{_datadir}/selinux/packages/bluechi.pp.bz2
 restorecon -R %{_bindir}/bluechi* &> /dev/null || :
 restorecon -R %{_rundir}/bluechi/ &> /dev/null || :
 restorecon -R %{_localstatedir}/%{_rundir}/bluechi/ &> /dev/null || :
 
 %postun selinux
 if [ $1 -eq 0 ]; then
-   %selinux_modules_uninstall -s %{selinuxtype} bluechi
+   %selinux_modules_uninstall -s ${SELINUXTYPE} bluechi
    restorecon -R %{_bindir}/bluechi* &> /dev/null || :
    restorecon -R %{_rundir}/bluechi/ &> /dev/null || :
    restorecon -R %{_localstatedir}/%{_rundir}/bluechi/ &> /dev/null || :
