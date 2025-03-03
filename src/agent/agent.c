@@ -32,6 +32,8 @@
 #define DEBUG_SYSTEMD_MESSAGES 0
 #define DEBUG_SYSTEMD_MESSAGES_CONTENT 0
 
+#define CONNECTION_RETRY_COUNT_UNTIL_QUIET 10
+
 typedef struct AgentUnitInfoKey {
         char *object_path;
 } AgentUnitInfoKey;
@@ -194,6 +196,13 @@ static int agent_heartbeat_timer_callback(sd_event_source *event_source, UNUSED 
                 }
         } else if (agent->connection_state == AGENT_CONNECTION_STATE_RETRY) {
                 agent->connection_retry_count++;
+
+                /* Disable logging to not spam logs in retry loop */
+                if (agent->connection_retry_count == CONNECTION_RETRY_COUNT_UNTIL_QUIET) {
+                        bc_log_infof("Quieting down logs after connection retry failed %dx...",
+                                     agent->connection_retry_count);
+                        bc_log_set_quiet(true);
+                }
                 bc_log_infof("Trying to connect to controller (try %d)", agent->connection_retry_count);
                 if (!agent_reconnect(agent)) {
                         bc_log_debugf("Connection retry %d failed", agent->connection_retry_count);
@@ -2773,7 +2782,6 @@ static bool agent_process_register_callback(sd_bus_message *m, Agent *agent) {
         }
 
         /* re-emit ProxyNew signals */
-
         ProxyService *proxy = NULL;
         ProxyService *next_proxy = NULL;
         LIST_FOREACH_SAFE(proxy_services, proxy, next_proxy, agent->proxy_services) {
@@ -2785,6 +2793,9 @@ static bool agent_process_register_callback(sd_bus_message *m, Agent *agent) {
                                       proxy->node_name);
                 }
         }
+
+        /* Restore is_quiet setting if it has been disabled during reconnecting */
+        bc_log_set_quiet(cfg_get_bool_value(agent->config, CFG_LOG_IS_QUIET));
 
         return true;
 }
