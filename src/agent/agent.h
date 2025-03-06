@@ -73,6 +73,7 @@ struct Agent {
         uint64_t controller_last_seen_monotonic;
         uint64_t disconnect_timestamp;
         uint64_t disconnect_timestamp_monotonic;
+        uint64_t connection_retry_count_until_quiet;
 
         SocketOptions *peer_socket_options;
 

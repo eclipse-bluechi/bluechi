@@ -30,6 +30,7 @@
 #define CFG_TCP_KEEPALIVE_TIME "TCPKeepAliveTime"
 #define CFG_TCP_KEEPALIVE_INTERVAL "TCPKeepAliveInterval"
 #define CFG_TCP_KEEPALIVE_COUNT "TCPKeepAliveCount"
+#define CFG_CONNECTION_RETRY_COUNT_UNTIL_QUIET "ConnectionRetryCountUntilQuiet"
 
 /*
  * Global section - this is used, when configuration options are specified in the configuration file

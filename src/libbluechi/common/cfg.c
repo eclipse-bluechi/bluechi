@@ -577,6 +577,13 @@ int cfg_agent_def_conf(struct config *config) {
                 return result;
         }
 
+        if ((result = cfg_set_value(
+                             config,
+                             CFG_CONNECTION_RETRY_COUNT_UNTIL_QUIET,
+                             AGENT_DEFAULT_CONNECTION_RETRY_COUNT_UNTIL_QUIET)) != 0) {
+                return result;
+        }
+
         return 0;
 }
 
