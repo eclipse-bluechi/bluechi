@@ -97,6 +97,13 @@ The number of keepalive packets without ACK from the controller till the connect
 dropped. When `TCPKeepAliveCount` is set to 0, the system default will be used.
 Default: 6.
 
+#### **ConnectionRetryCountUntilQuiet** (long)
+
+The number of connection retries until the logs of bluechi-agent are silenced in order to not
+perpetually produce logs. bluechi-agent will still keep trying to reconnect. After a successful
+connection, the original setting of **LogIsQuiet** will be restored.
+Default: 10.
+
 
 ## Example
 
