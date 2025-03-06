@@ -117,16 +117,17 @@ unconfined_server_stream_connectto(bluechi_agent_t)
 #
 # bluechi policy with haproxy
 #
-allow haproxy_t bluechi_t:unix_stream_socket connectto;
+optional_policy(`
+	require {
+			type haproxy_t, haproxy_var_lib_t;
+			type haproxy_var_run_t;
+			type init_t;
+	}
+	allow haproxy_t bluechi_t:unix_stream_socket connectto;
 
-rhcs_stream_connect_haproxy(bluechi_agent_t)
-
-gen_require(`
-       type haproxy_t, haproxy_var_lib_t;
-       type haproxy_var_run_t;
-       type init_t;
+	rhcs_stream_connect_haproxy(bluechi_agent_t)
+	
+	stream_connect_pattern(bluechi_agent_t, haproxy_var_lib_t, haproxy_var_lib_t, haproxy_t)
+	manage_sock_files_pattern(init_t, haproxy_var_lib_t, haproxy_var_lib_t)
+	manage_sock_files_pattern(init_t, haproxy_var_run_t, haproxy_var_run_t)
 ')
-stream_connect_pattern(bluechi_agent_t, haproxy_var_lib_t, haproxy_var_lib_t, haproxy_t)
-
-manage_sock_files_pattern(init_t, haproxy_var_lib_t, haproxy_var_lib_t)
-manage_sock_files_pattern(init_t, haproxy_var_run_t, haproxy_var_run_t)
