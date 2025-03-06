@@ -32,7 +32,6 @@
 #define DEBUG_SYSTEMD_MESSAGES 0
 #define DEBUG_SYSTEMD_MESSAGES_CONTENT 0
 
-#define CONNECTION_RETRY_COUNT_UNTIL_QUIET 10
 
 typedef struct AgentUnitInfoKey {
         char *object_path;
@@ -198,7 +197,7 @@ static int agent_heartbeat_timer_callback(sd_event_source *event_source, UNUSED 
                 agent->connection_retry_count++;
 
                 /* Disable logging to not spam logs in retry loop */
-                if (agent->connection_retry_count == CONNECTION_RETRY_COUNT_UNTIL_QUIET) {
+                if (agent->connection_retry_count == agent->connection_retry_count_until_quiet) {
                         bc_log_infof("Quieting down logs after connection retry failed %dx...",
                                      agent->connection_retry_count);
                         bc_log_set_quiet(true);
@@ -473,6 +472,7 @@ Agent *agent_new(void) {
         agent->metrics_enabled = false;
         agent->disconnect_timestamp = 0;
         agent->disconnect_timestamp_monotonic = 0;
+        agent->connection_retry_count_until_quiet = 0;
         LIST_HEAD_INIT(agent->outstanding_requests);
         LIST_HEAD_INIT(agent->tracked_jobs);
         LIST_HEAD_INIT(agent->proxy_services);
@@ -630,6 +630,17 @@ void agent_set_systemd_user(Agent *agent, bool systemd_user) {
         agent->systemd_user = systemd_user;
 }
 
+bool agent_set_connection_retry_count_until_quiet(Agent *agent, const char *retry_count_s) {
+        long retry_count = 0;
+
+        if (!parse_long(retry_count_s, &retry_count)) {
+                bc_log_errorf("Invalid retry count until quiet format '%s'", retry_count_s);
+                return false;
+        }
+        agent->connection_retry_count_until_quiet = retry_count;
+        return true;
+}
+
 bool agent_parse_config(Agent *agent, const char *configfile) {
         int result = 0;
 
@@ -699,6 +710,13 @@ bool agent_apply_config(Agent *agent) {
         value = cfg_get_value(agent->config, CFG_CONTROLLER_HEARTBEAT_THRESHOLD);
         if (value) {
                 if (!agent_set_controller_heartbeat_threshold(agent, value)) {
+                        return false;
+                }
+        }
+
+        value = cfg_get_value(agent->config, CFG_CONNECTION_RETRY_COUNT_UNTIL_QUIET);
+        if (value) {
+                if (!agent_set_connection_retry_count_until_quiet(agent, value)) {
                         return false;
                 }
         }
@@ -2737,6 +2755,9 @@ static bool agent_process_register_callback(sd_bus_message *m, Agent *agent) {
                 return false;
         }
 
+        /* Restore is_quiet setting if it has been disabled during reconnecting */
+        bc_log_set_quiet(cfg_get_bool_value(agent->config, CFG_LOG_IS_QUIET));
+
         bc_log_infof("Connected to controller as '%s'", agent->name);
 
         agent->connection_state = AGENT_CONNECTION_STATE_CONNECTED;
@@ -2793,9 +2814,6 @@ static bool agent_process_register_callback(sd_bus_message *m, Agent *agent) {
                                       proxy->node_name);
                 }
         }
-
-        /* Restore is_quiet setting if it has been disabled during reconnecting */
-        bc_log_set_quiet(cfg_get_bool_value(agent->config, CFG_LOG_IS_QUIET));
 
         return true;
 }
