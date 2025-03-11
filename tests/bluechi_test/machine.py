@@ -322,7 +322,7 @@ class BluechiControllerMachine(BluechiAgentMachine):
                  ctrl_config: BluechiControllerConfig,
                  agent_config: BluechiAgentConfig = BluechiAgentConfig("agent.conf"),
                  local_uds_agent: bool = True
-     ) -> None:
+                 ) -> None:
         super().__init__(name, client, agent_config)
         self.enable_local_agent = local_uds_agent
 
