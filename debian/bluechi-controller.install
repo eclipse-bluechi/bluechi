@@ -8,3 +8,4 @@ usr/share/dbus-1/interfaces/org.eclipse.bluechi.Job.xml
 usr/share/dbus-1/interfaces/org.eclipse.bluechi.Monitor.xml
 usr/share/dbus-1/interfaces/org.eclipse.bluechi.Node.xml
 usr/share/dbus-1/system.d/org.eclipse.bluechi.conf
+usr/lib/tmpfiles.d/bluechi.conf
