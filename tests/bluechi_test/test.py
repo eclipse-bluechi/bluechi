@@ -275,6 +275,12 @@ class BluechiContainerTest(BluechiTest):
                 "bluechi-controller.service", "active"
             )
 
+            if ctrl_container.enable_local_agent:
+                ctrl_container.systemctl.start_unit("bluechi-agent")
+                ctrl_container.wait_for_unit_state_to_be(
+                    "bluechi-agent.service", "active"
+                )
+
             for cfg in self.bluechi_node_configs:
                 LOGGER.debug(
                     f"Starting container bluechi-node '{cfg.node_name}' with config:\n{cfg.serialize()}"
@@ -398,6 +404,11 @@ class BluechiSSHTest(BluechiTest):
             ctrl_machine.wait_for_unit_state_to_be(
                 "bluechi-controller.service", "active"
             )
+            if ctrl_machine.enable_local_agent:
+                ctrl_machine.systemctl.start_unit("bluechi-agent")
+                ctrl_machine.wait_for_unit_state_to_be(
+                    "bluechi-agent.service", "active"
+                )
 
             i = 0
             for cfg in self.bluechi_node_configs:
