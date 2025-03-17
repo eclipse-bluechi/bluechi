@@ -47,6 +47,7 @@ class BluechiTest:
 
         self.bluechi_controller_config: BluechiControllerConfig = None
         self.bluechi_node_configs: List[BluechiAgentConfig] = []
+        self.bluechi_local_agent_config: BluechiAgentConfig = None
 
         self._test_init_time = datetime.datetime.now()
 
@@ -55,6 +56,9 @@ class BluechiTest:
 
     def add_bluechi_agent_config(self, cfg: BluechiAgentConfig):
         self.bluechi_node_configs.append(cfg)
+
+    def set_bluechi_local_agent_config(self, cfg: BluechiAgentConfig):
+        self.bluechi_local_agent_config = cfg
 
     def assemble_controller_machine_name(self, cfg: BluechiControllerConfig):
         return f"{cfg.name}-{self.tmt_test_serial_number}"
@@ -267,6 +271,7 @@ class BluechiContainerTest(BluechiTest):
                 name,
                 ContainerClient(self.podman_client, self.bluechi_image_id, name, ports),
                 self.bluechi_controller_config,
+                self.bluechi_local_agent_config,
             )
             if self.run_with_valgrind:
                 ctrl_container.enable_valgrind()
@@ -275,7 +280,11 @@ class BluechiContainerTest(BluechiTest):
                 "bluechi-controller.service", "active"
             )
 
-            if ctrl_container.enable_local_agent:
+            if self.bluechi_local_agent_config is not None:
+                LOGGER.debug(
+                    f"Starting local agent '{self.bluechi_local_agent_config.node_name}'with config:\
+                    \n{self.bluechi_local_agent_config.serialize()}"
+                )
                 ctrl_container.systemctl.start_unit("bluechi-agent")
                 ctrl_container.wait_for_unit_state_to_be(
                     "bluechi-agent.service", "active"
@@ -397,6 +406,7 @@ class BluechiSSHTest(BluechiTest):
                 name,
                 SSHClient(host, user=self.ssh_user, password=self.ssh_password),
                 self.bluechi_controller_config,
+                self.bluechi_local_agent_config,
             )
             if self.run_with_valgrind:
                 ctrl_machine.enable_valgrind()
@@ -405,6 +415,16 @@ class BluechiSSHTest(BluechiTest):
                 "bluechi-controller.service", "active"
             )
             if ctrl_machine.enable_local_agent:
+                ctrl_machine.systemctl.start_unit("bluechi-agent")
+                ctrl_machine.wait_for_unit_state_to_be(
+                    "bluechi-agent.service", "active"
+                )
+
+            if self.bluechi_local_agent_config is not None:
+                LOGGER.debug(
+                    f"Starting local agent '{self.bluechi_local_agent_config.node_name}'with config:\
+                    \n{self.bluechi_local_agent_config.serialize()}"
+                )
                 ctrl_machine.systemctl.start_unit("bluechi-agent")
                 ctrl_machine.wait_for_unit_state_to_be(
                     "bluechi-agent.service", "active"

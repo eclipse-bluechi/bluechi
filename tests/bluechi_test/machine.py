@@ -312,33 +312,32 @@ class BluechiAgentMachine(BluechiMachine):
         self.copy_machine_lib()
 
 
-class BluechiControllerMachine(BluechiAgentMachine):
-
-    agent_uds_address = "unix:path=/run/bluechi/bluechi.sock"
-    agent_uds_name = "node-local"
-
-    def __init__(self, name: str,
-                 client: Client,
-                 ctrl_config: BluechiControllerConfig,
-                 agent_config: BluechiAgentConfig = BluechiAgentConfig("agent.conf"),
-                 local_uds_agent: bool = True
-                 ) -> None:
-        super().__init__(name, client, agent_config)
-        self.enable_local_agent = local_uds_agent
+class BluechiControllerMachine(BluechiMachine):
+    def __init__(
+        self,
+        name: str,
+        client: Client,
+        ctrl_config: BluechiControllerConfig,
+        agent_config: BluechiAgentConfig = None,
+    ) -> None:
+        super().__init__(name, client)
 
         self.bluechictl = BluechiCtl(client)
 
         self.config = ctrl_config
 
-        self.config_agent = agent_config.deep_copy()
-        self.config_agent.controller_address = BluechiControllerMachine.agent_uds_address
-        self.config_agent.node_name = BluechiControllerMachine.agent_uds_name
+        self.config_agent = agent_config
 
+        # add confd file to container
         self.create_file(
             self.config.get_confd_dir(), self.config.file_name, self.config.serialize()
         )
-        self.create_file(
-            self.config_agent.get_confd_dir(), self.config_agent.file_name, self.config_agent.serialize()
-        )
+
+        if self.config_agent is not None:
+            self.create_file(
+                self.config_agent.get_confd_dir(),
+                self.config_agent.file_name,
+                self.config_agent.serialize(),
+            )
 
         self.copy_machine_lib()
