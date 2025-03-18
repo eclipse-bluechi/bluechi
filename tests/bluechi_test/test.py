@@ -414,11 +414,6 @@ class BluechiSSHTest(BluechiTest):
             ctrl_machine.wait_for_unit_state_to_be(
                 "bluechi-controller.service", "active"
             )
-            if ctrl_machine.enable_local_agent:
-                ctrl_machine.systemctl.start_unit("bluechi-agent")
-                ctrl_machine.wait_for_unit_state_to_be(
-                    "bluechi-agent.service", "active"
-                )
 
             if self.bluechi_local_agent_config is not None:
                 LOGGER.debug(
