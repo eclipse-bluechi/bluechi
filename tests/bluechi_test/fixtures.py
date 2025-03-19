@@ -187,9 +187,7 @@ def bluechi_image_id(
     image = next(
         iter(
             podman_client.images.list(
-                filters={
-                    "reference": "*{image_name}".format(image_name=bluechi_image_name)
-                },
+                name="*{image_name}".format(image_name=bluechi_image_name)
             )
         ),
         None,
