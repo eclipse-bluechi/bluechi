@@ -2,11 +2,11 @@
 
 # Examples on how to use BlueChi
 
-For the examples in this section the a [multi-node setup](./multi_node.md) is assumed to be running and uses [bluechictl](../man/bluechictl.md) to interact with BlueChi. In order to leverage the full potential of BlueChi, e.g. by writing custom applications, please refer to the section describing how to [use BlueChi's D-Bus API](../api/examples.md).
+For the examples in this section, assume a [multi-node setup](./multi_node.md) that uses [bluechictl](../man/bluechictl.md) to interact with BlueChi is running. To leverage the full potential of BlueChi, e.g. by writing custom applications, please refer to the section describing how to [use BlueChi's D-Bus API](../api/examples.md).
 
 ## Getting information of units
 
-The `bluechictl list-units` command can be used to get a list of all units and their states on either all or the specified node. It also provides a filter option for the unit name:
+The `bluechictl list-units` command can be used to get a list of all units and their states on either all nodes or the specified node. It also provides a filter option for the unit name:
 
 ```bash
 $ bluechictl list-units --filter=bluechi*
