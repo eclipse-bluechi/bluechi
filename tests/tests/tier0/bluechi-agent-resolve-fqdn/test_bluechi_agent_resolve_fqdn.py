@@ -46,4 +46,8 @@ def test_agent_resolve_fqdn(
 
     bluechi_test.set_bluechi_controller_config(bluechi_ctrl_default_config)
 
+    # Disable default local agent on controller node using UDS,
+    # because we test local agent with TCP connection
+    bluechi_test.set_bluechi_local_agent_config(None)
+
     bluechi_test.run(verify_resolving_fqdn)

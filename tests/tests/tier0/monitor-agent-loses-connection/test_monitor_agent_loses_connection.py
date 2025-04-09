@@ -49,6 +49,7 @@ def exec(ctrl: BluechiControllerMachine, nodes: Dict[str, BluechiAgentMachine]):
 def test_monitor_agent_loses_connection(
     bluechi_test: BluechiTest, bluechi_ctrl_default_config: BluechiControllerConfig
 ):
+    bluechi_test.set_bluechi_local_agent_config(None)
 
     bluechi_ctrl_default_config.allowed_node_names = [node_foo_name]
 

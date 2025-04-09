@@ -7,12 +7,13 @@ import logging
 from typing import Dict
 
 from bluechi_test.config import BluechiAgentConfig, BluechiControllerConfig
+from bluechi_test.constants import NODE_CTRL_NAME
 from bluechi_test.machine import BluechiAgentMachine, BluechiControllerMachine
 from bluechi_test.test import BluechiTest
 from bluechi_test.util import Timeout
 
 LOGGER = logging.getLogger(__name__)
-NODE_LOCAL = "node-local"
+NODE_LOCAL = NODE_CTRL_NAME
 NODE_REMOTE = "node-remote"
 
 

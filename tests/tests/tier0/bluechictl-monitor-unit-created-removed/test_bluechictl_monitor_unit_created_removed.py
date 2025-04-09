@@ -30,7 +30,7 @@ def test_bluechictl_monitor_unit_created_removed(
     bluechi_ctrl_default_config: BluechiControllerConfig,
     bluechi_node_default_config: BluechiAgentConfig,
 ):
-
+    bluechi_test.set_bluechi_local_agent_config(None)
     bluechi_node_default_config.node_name = node_name_foo
     bluechi_ctrl_default_config.allowed_node_names = [
         bluechi_node_default_config.node_name

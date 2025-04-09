@@ -63,6 +63,9 @@ def test_agent_invalid_configuration(
     bluechi_node_default_config: BluechiAgentConfig,
     bluechi_ctrl_default_config: BluechiControllerConfig,
 ):
+    # Disable default local agent on controller node using UDS,
+    # because we test local agent with TCP connection
+    bluechi_test.set_bluechi_local_agent_config(None)
 
     node_foo_cfg = bluechi_node_default_config.deep_copy()
     node_foo_cfg.node_name = NODE_FOO
