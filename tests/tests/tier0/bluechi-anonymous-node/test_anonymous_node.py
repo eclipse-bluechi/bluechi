@@ -33,6 +33,7 @@ def test_anonymous_node(
     bluechi_ctrl_default_config: BluechiControllerConfig,
     bluechi_node_default_config: BluechiAgentConfig,
 ):
+    bluechi_test.set_bluechi_local_agent_config(None)
 
     node_foo_config = bluechi_node_default_config.deep_copy()
     node_foo_config.node_name = node_foo_name

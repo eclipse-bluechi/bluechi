@@ -13,13 +13,11 @@ from bluechi_test.test import BluechiTest
 
 LOGGER = logging.getLogger(__name__)
 
-NODE_FOO = "node-foo"
 NODE_BAR = "node-bar"
 
 
-def exec(_: BluechiControllerMachine, nodes: Dict[str, BluechiAgentMachine]):
+def exec(ctrl: BluechiControllerMachine, nodes: Dict[str, BluechiAgentMachine]):
 
-    node_foo = nodes[NODE_FOO]
     node_bar = nodes[NODE_BAR]
 
     tgt_svc = SimpleRemainingService(name="target.service")
@@ -37,16 +35,16 @@ def exec(_: BluechiControllerMachine, nodes: Dict[str, BluechiAgentMachine]):
     req_svc.set_option(Section.Service, Option.ExecStart, "/bin/true")
     req_svc.set_option(Section.Service, Option.RemainAfterExit, "yes")
 
-    node_foo.install_systemd_service(req_svc)
+    ctrl.install_systemd_service(req_svc)
 
-    result, output = node_foo.systemctl.start_unit(req_svc.name, check_result=False)
+    result, output = ctrl.systemctl.start_unit(req_svc.name, check_result=False)
 
     # Depending how fast the failure of target.service gets propagated, the
     # job of the requesting service ends up being canceled.
     # To account for this race condition, we check both cases.
     if result != 0:
         assert f"Job for {req_svc.name} canceled" in str(output)
-    assert node_foo.wait_for_unit_state_to_be(req_svc.name, "inactive")
+    assert ctrl.wait_for_unit_state_to_be(req_svc.name, "inactive")
     assert node_bar.wait_for_unit_state_to_be(tgt_svc.name, "failed")
 
 
@@ -55,16 +53,12 @@ def test_proxy_service_propagate_target_service_failure(
     bluechi_node_default_config: BluechiAgentConfig,
     bluechi_ctrl_default_config: BluechiControllerConfig,
 ):
-    node_foo_cfg = bluechi_node_default_config.deep_copy()
-    node_foo_cfg.node_name = NODE_FOO
-
     node_bar_cfg = bluechi_node_default_config.deep_copy()
     node_bar_cfg.node_name = NODE_BAR
 
-    bluechi_test.add_bluechi_agent_config(node_foo_cfg)
     bluechi_test.add_bluechi_agent_config(node_bar_cfg)
 
-    bluechi_ctrl_default_config.allowed_node_names = [NODE_FOO, NODE_BAR]
+    bluechi_ctrl_default_config.allowed_node_names = [NODE_BAR]
     bluechi_test.set_bluechi_controller_config(bluechi_ctrl_default_config)
 
     bluechi_test.run(exec)

@@ -17,12 +17,14 @@ LOGGER = logging.getLogger(__name__)
 
 node_one = "node-1"
 node_two = "node-2"
-node_three = "node-3"
-nodes = [node_one, node_two, node_three]
+nodes = [node_one, node_two]
 
 
-def stop_all_agents(nodes: Dict[str, BluechiControllerMachine]):
+def stop_all_agents(
+    ctrl: BluechiControllerMachine, nodes: Dict[str, BluechiControllerMachine]
+):
     LOGGER.debug("Stopping all agents...")
+    ctrl.systemctl.stop_unit("bluechi-agent")
     for node_name, node in nodes.items():
         result, output = node.systemctl.stop_unit("bluechi-agent")
         if result != 0:
@@ -31,8 +33,11 @@ def stop_all_agents(nodes: Dict[str, BluechiControllerMachine]):
             )
 
 
-def start_all_agents(nodes: Dict[str, BluechiControllerMachine]):
+def start_all_agents(
+    ctrl: BluechiControllerMachine, nodes: Dict[str, BluechiControllerMachine]
+):
     LOGGER.debug("Starting all agents...")
+    ctrl.systemctl.start_unit("bluechi-agent")
     for node_name, node in nodes.items():
         result, output = node.systemctl.start_unit("bluechi-agent")
         if result != 0:
@@ -91,11 +96,11 @@ def exec(ctrl: BluechiControllerMachine, nodes: Dict[str, BluechiAgentMachine]):
     # wait a bit so monitor is set up
     time.sleep(2)
 
-    stop_all_agents(nodes)
+    stop_all_agents(ctrl, nodes)
 
     check_events(ctrl, ["degraded", "down"])
 
-    start_all_agents(nodes)
+    start_all_agents(ctrl, nodes)
 
     check_events(ctrl, ["degraded", "down", "degraded", "up"])
 
@@ -110,14 +115,11 @@ def test_monitor_system_status(
     node_one_config.node_name = node_one
     node_two_config = bluechi_node_default_config.deep_copy()
     node_two_config.node_name = node_two
-    node_three_config = bluechi_node_default_config.deep_copy()
-    node_three_config.node_name = node_three
 
     bluechi_ctrl_default_config.allowed_node_names = nodes
 
     bluechi_test.set_bluechi_controller_config(bluechi_ctrl_default_config)
     bluechi_test.add_bluechi_agent_config(node_one_config)
     bluechi_test.add_bluechi_agent_config(node_two_config)
-    bluechi_test.add_bluechi_agent_config(node_three_config)
 
     bluechi_test.run(exec)

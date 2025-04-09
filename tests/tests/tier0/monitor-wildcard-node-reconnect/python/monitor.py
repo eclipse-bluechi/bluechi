@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: LGPL-2.1-or-later
 
+import os
 import unittest
 
 from dasbus.error import DBusError
@@ -10,10 +11,12 @@ from dasbus.loop import EventLoop
 
 from bluechi.api import Controller, Monitor, Node
 
+NODE_CTRL_NAME = os.getenv("NODE_CTRL_NAME", "node-ctrl")
+
 
 class TestMonitorWildcardNodeReconnect(unittest.TestCase):
     def setUp(self) -> None:
-        self.expected_nodes_unit_new = ["node-foo", "node-bar", "node-baz"]
+        self.expected_nodes_unit_new = ["node-foo", NODE_CTRL_NAME, "node-baz"]
         self.expected_nodes_unit_removed = ["node-foo"]
 
         self.loop = EventLoop()

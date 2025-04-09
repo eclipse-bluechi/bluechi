@@ -14,6 +14,7 @@ from typing import Callable, Dict, List, Tuple
 from bluechi_test.client import ContainerClient, SSHClient
 from bluechi_test.command import Command
 from bluechi_test.config import BluechiAgentConfig, BluechiControllerConfig
+from bluechi_test.constants import NODE_CTRL_NAME
 from bluechi_test.machine import (
     BluechiAgentMachine,
     BluechiControllerMachine,
@@ -50,6 +51,14 @@ class BluechiTest:
         self.bluechi_local_agent_config: BluechiAgentConfig = None
 
         self._test_init_time = datetime.datetime.now()
+
+        self.set_bluechi_local_agent_config(
+            BluechiAgentConfig(
+                file_name="agent.conf",
+                node_name=NODE_CTRL_NAME,
+                controller_address="unix:path=/run/bluechi/bluechi.sock",
+            ).deep_copy()
+        )
 
     def set_bluechi_controller_config(self, cfg: BluechiControllerConfig):
         self.bluechi_controller_config = cfg
@@ -253,6 +262,9 @@ class BluechiContainerTest(BluechiTest):
         if self.bluechi_controller_config is None:
             raise Exception("Bluechi Controller configuration not set")
 
+        if self.bluechi_local_agent_config is not None:
+            self.bluechi_controller_config.allowed_node_names.append(NODE_CTRL_NAME)
+
         success = True
         ctrl_container: BluechiControllerMachine = None
         node_container: Dict[str, BluechiAgentMachine] = dict()
@@ -385,6 +397,9 @@ class BluechiSSHTest(BluechiTest):
             raise Exception("Bluechi Controller configuration not set")
         if len(self.available_hosts) < 1:
             raise Exception("No available hosts!")
+
+        if self.bluechi_local_agent_config is not None:
+            self.bluechi_controller_config.allowed_node_names.append(NODE_CTRL_NAME)
 
         success = True
         ctrl_machine: BluechiControllerMachine = None

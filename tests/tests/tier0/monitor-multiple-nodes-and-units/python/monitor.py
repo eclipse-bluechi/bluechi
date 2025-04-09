@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: LGPL-2.1-or-later
 
+import os
 import unittest
 
 from dasbus.loop import EventLoop
@@ -10,7 +11,7 @@ from dasbus.loop import EventLoop
 from bluechi.api import Controller, Monitor, Node, Structure
 
 node_name_foo = "node-foo"
-node_name_bar = "node-bar"
+node_name_bar = os.getenv("NODE_CTRL_NAME", "node-ctrl")
 
 service_simple = "simple.service"
 service_also_simple = "also-simple.service"

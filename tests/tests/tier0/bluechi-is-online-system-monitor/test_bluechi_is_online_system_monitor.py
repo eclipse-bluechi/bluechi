@@ -7,6 +7,7 @@ import threading
 from typing import Dict
 
 from bluechi_test.config import BluechiAgentConfig, BluechiControllerConfig
+from bluechi_test.constants import NODE_CTRL_NAME
 from bluechi_test.machine import BluechiAgentMachine, BluechiControllerMachine
 from bluechi_test.test import BluechiTest
 from bluechi_test.util import Timeout, get_test_env_value_int
@@ -14,7 +15,6 @@ from bluechi_test.util import Timeout, get_test_env_value_int
 LOGGER = logging.getLogger(__name__)
 
 AGENT_ONE = "agent-one"
-AGENT_TWO = "agent-two"
 SLEEP_DURATION = get_test_env_value_int("SLEEP_DURATION", 2)
 
 
@@ -76,10 +76,10 @@ def exec(ctrl: BluechiControllerMachine, nodes: Dict[str, BluechiAgentMachine]):
     assert nodes[AGENT_ONE].wait_for_unit_state_to_be("bluechi-agent", "active")
 
     # Test 3: Agent-two offline
-    LOGGER.debug("Stopping agent-two.")
-    nodes[AGENT_TWO].systemctl.stop_unit("bluechi-agent")
+    LOGGER.debug(f"Stopping {NODE_CTRL_NAME}.")
+    ctrl.systemctl.stop_unit("bluechi-agent")
 
-    assert nodes[AGENT_TWO].wait_for_unit_state_to_be("bluechi-agent", "inactive")
+    assert ctrl.wait_for_unit_state_to_be("bluechi-agent", "inactive")
 
     monitor_result_test_three = MonitorResult()
     monitor_thread = threading.Thread(
@@ -94,16 +94,16 @@ def exec(ctrl: BluechiControllerMachine, nodes: Dict[str, BluechiAgentMachine]):
     ), "Monitor command should produce output when agent-two is offline."
 
     # Bring agent-two back online
-    LOGGER.debug("Starting agent-two.")
-    nodes[AGENT_TWO].systemctl.start_unit("bluechi-agent")
+    LOGGER.debug(f"Starting {NODE_CTRL_NAME}.")
+    ctrl.systemctl.start_unit("bluechi-agent")
 
     # Test 4: Both agents offline
     LOGGER.debug("Stopping both agents.")
     nodes[AGENT_ONE].systemctl.stop_unit("bluechi-agent")
-    nodes[AGENT_TWO].systemctl.stop_unit("bluechi-agent")
+    ctrl.systemctl.stop_unit("bluechi-agent")
 
     assert nodes[AGENT_ONE].wait_for_unit_state_to_be("bluechi-agent", "inactive")
-    assert nodes[AGENT_TWO].wait_for_unit_state_to_be("bluechi-agent", "inactive")
+    assert ctrl.wait_for_unit_state_to_be("bluechi-agent", "inactive")
 
     monitor_result_test_four = MonitorResult()
     monitor_thread = threading.Thread(
@@ -120,7 +120,7 @@ def exec(ctrl: BluechiControllerMachine, nodes: Dict[str, BluechiAgentMachine]):
     # Bring both agents back online
     LOGGER.debug("Starting both agents.")
     nodes[AGENT_ONE].systemctl.start_unit("bluechi-agent")
-    nodes[AGENT_TWO].systemctl.start_unit("bluechi-agent")
+    ctrl.systemctl.start_unit("bluechi-agent")
 
     # Test 5: Controller offline
     LOGGER.debug("Stopping the controller.")
@@ -147,13 +147,9 @@ def test_bluechi_is_online_system_monitor(
     agent_one_cfg = bluechi_node_default_config.deep_copy()
     agent_one_cfg.node_name = AGENT_ONE
 
-    agent_two_cfg = bluechi_node_default_config.deep_copy()
-    agent_two_cfg.node_name = AGENT_TWO
-
-    bluechi_ctrl_default_config.allowed_node_names = [AGENT_ONE, AGENT_TWO]
+    bluechi_ctrl_default_config.allowed_node_names = [AGENT_ONE]
 
     bluechi_test.set_bluechi_controller_config(bluechi_ctrl_default_config)
     bluechi_test.add_bluechi_agent_config(agent_one_cfg)
-    bluechi_test.add_bluechi_agent_config(agent_two_cfg)
 
     bluechi_test.run(exec)
