@@ -58,7 +58,7 @@ int getaddrinfo_mock(
         if (current_test_case.use_ipv4) {
                 struct sockaddr_in *addr = (struct sockaddr_in *) offset;
                 (*pai)->ai_family = AF_INET;
-                if (!inet_pton(AF_INET, current_test_case.expected_resolved_addresses, addr)) {
+                if (!inet_pton(AF_INET, current_test_case.expected_resolved_addresses, &addr->sin_addr)) {
                         fprintf(stderr, "sockaddr_in AF_INET failed");
                         exit(1);
                 }
@@ -72,8 +72,7 @@ int getaddrinfo_mock(
                 }
 
                 (*pai)->ai_family = AF_INET6;
-                inet_pton(AF_INET6, current_test_case.expected_resolved_addresses, &addr);
-                if (!inet_pton(AF_INET6, current_test_case.expected_resolved_addresses, &addr)) {
+                if (!inet_pton(AF_INET6, current_test_case.expected_resolved_addresses, &addr->sin6_addr)) {
                         fprintf(stderr, "inet_pton AF_INET6 failed");
                         exit(1);
                 }
