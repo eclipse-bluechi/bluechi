@@ -58,7 +58,7 @@ def exec(ctrl: BluechiControllerMachine, nodes: Dict[str, BluechiAgentMachine]):
     )
 
 
-def test_agent_invalid_configuration(
+def test_bluechi_agent_connect_via_controller_address(
     bluechi_test: BluechiTest,
     bluechi_node_default_config: BluechiAgentConfig,
     bluechi_ctrl_default_config: BluechiControllerConfig,
