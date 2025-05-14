@@ -693,10 +693,10 @@ bool node_set_agent_bus(Node *node, sd_bus *bus) {
         char *peercon = NULL;
         if (getpeercon(sd_bus_get_fd(bus), &peercon) == 0) {
                 node->peer_selinux_context = parse_selinux_type(peercon);
-                freecon(peercon);
                 if (node->peer_selinux_context == NULL) {
                         bc_log_errorf("Failed to parse peer selinux type '%s'", peercon);
                 }
+                freecon(peercon);
         }
 #endif
 
