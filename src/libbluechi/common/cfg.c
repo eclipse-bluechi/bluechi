@@ -484,7 +484,6 @@ const char *cfg_dump(struct config *config) {
                 }
 
                 if (!string_builder_printf(&builder, "[%s]\n", section)) {
-                        string_builder_destroy(&builder);
                         return NULL;
                 }
 
@@ -499,7 +498,6 @@ const char *cfg_dump(struct config *config) {
 
                         if (!string_builder_printf(
                                             &builder, "%s=%s\n", opt->name, opt->value ? opt->value : "")) {
-                                string_builder_destroy(&builder);
                                 return NULL;
                         }
                 }
