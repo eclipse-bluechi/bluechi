@@ -18,9 +18,7 @@ LOGGER = logging.getLogger(__name__)
 
 def exec(ctrl: BluechiControllerMachine, nodes: Dict[str, BluechiAgentMachine]):
     path_to_info_files = os.environ["TMT_TREE"].split("/tree")[0] + "/execute/data/"
-    path_to_tests_results = (
-        os.environ["TMT_TREE"].split("/tree")[0] + "/report/default-0"
-    )
+    path_to_tests_results = os.environ["TMT_TREE"].split("/tree")[0] + "/data"
     merge_file_name = "merged.info"
     merge_dir = "/tmp"
     report_dir_name = "/report"

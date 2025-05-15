@@ -72,7 +72,7 @@ jobs:
 
       - name: Install unpackaged python libraries from PyPi
         run: |
-          pip install "tmt[provision]==1.46.0" "tmt[report-junit]==1.46.0" podman pytest pyyaml paramiko
+          pip install "tmt[provision]>=1.48.0" "tmt[report-junit]>=1.48.0" podman pytest pyyaml paramiko
 
       - name: Checkout sources
         uses: actions/checkout@v4
@@ -120,8 +120,8 @@ jobs:
       - name: Extract coverage results
         if: always()
         run: |
-          MERGE_FILE="/var/tmp/tmt/run-001/plans/container/report/default-0/merged.info"
-          COVERAGE_DIR="/var/tmp/tmt/run-001/plans/container/report/default-0/report/"
+          MERGE_FILE="/var/tmp/tmt/run-001/plans/container/data/merged.info"
+          COVERAGE_DIR="/var/tmp/tmt/run-001/plans/container/data/report/"
           if [ -d "$COVERAGE_DIR" ]; then
             cp -r $COVERAGE_DIR /var/tmp
             cp $MERGE_FILE /var/tmp
