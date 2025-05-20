@@ -383,7 +383,7 @@ bool controller_apply_config(Controller *controller) {
         if (expected_nodes) {
                 char *saveptr = NULL;
 
-                /* copy string of expected nodes since */
+                /* copy string of expected nodes since strtok_r manipulates the string it operates on*/
                 _cleanup_free_ char *expected_nodes_cpy = NULL;
                 copy_str(&expected_nodes_cpy, expected_nodes);
 
@@ -422,6 +422,25 @@ bool controller_apply_config(Controller *controller) {
                                 controller->config, section, CFG_REQUIRED_SELINUX_CONTEXT);
                 if (selinux_context && !node_set_required_selinux_context(node, selinux_context)) {
                         return false;
+                }
+
+                const char *proxy_enabled_nodes = cfg_s_get_value(
+                                controller->config, section, CFG_ALLOW_DEPENDENCIES_ON);
+                if (proxy_enabled_nodes) {
+                        char *saveptr = NULL;
+
+                        /* copy string of expected nodes since strtok_r manipulates the string it operates on*/
+                        _cleanup_free_ char *proxy_enabled_nodes_cpy = NULL;
+                        copy_str(&proxy_enabled_nodes_cpy, proxy_enabled_nodes);
+
+                        char *name = strtok_r(proxy_enabled_nodes_cpy, ",", &saveptr);
+                        while (name != NULL) {
+                                if (node_add_allowed_proxy_target(node, name) < 0) {
+                                        return false;
+                                }
+
+                                name = strtok_r(NULL, ",", &saveptr);
+                        }
                 }
         }
 

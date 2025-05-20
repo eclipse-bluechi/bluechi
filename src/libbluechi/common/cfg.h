@@ -21,6 +21,7 @@
 #define CFG_CONTROLLER_ADDRESS "ControllerAddress"
 #define CFG_ALLOWED "Allowed"
 #define CFG_REQUIRED_SELINUX_CONTEXT "RequiredSelinuxContext"
+#define CFG_ALLOW_DEPENDENCIES_ON "AllowDependenciesOn"
 #define CFG_NODE_NAME "NodeName"
 #define CFG_ALLOWED_NODE_NAMES "AllowedNodeNames"
 #define CFG_HEARTBEAT_INTERVAL "HeartbeatInterval"
