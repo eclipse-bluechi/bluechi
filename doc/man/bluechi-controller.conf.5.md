@@ -125,6 +125,14 @@ bluechi_agent_t or haproxy_t.
 Note: this option only works when the agent connects using unix domain
 sockets.
 
+### **AllowDependenciesOn** (string)
+
+A comma separated list of bluechi-agent names on which the configured
+node can request services to be started with the `bluechi-proxy@.service`. 
+By default, this list is empty and thus all proxies are denied.
+
+The names are defined in the agent's configuration file under `NodeName` option (see `bluechi-agent.conf(5)`).
+
 ## Example
 
 A basic example of a configuration file for `bluechi`:
@@ -136,10 +144,17 @@ AllowedNodeNames=agent-007,agent-123
 LogLevel=DEBUG
 LogTarget=journald
 LogIsQuiet=false
+```
+
+Example with specific configuration for node `agent-009`:
+```
+[bluechi-controller]
+AllowedNodeNames=agent-007,agent-123
 
 [node agent-009]
 Allowed=true
 RequiredSelinuxContext=haproxy_t
+AllowDependenciesOn=agent-007
 ```
 
 Example using a value that is continued on multiple lines:

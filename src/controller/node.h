@@ -60,6 +60,7 @@ struct Node {
         LIST_HEAD(AgentRequest, outstanding_requests);
         LIST_HEAD(ProxyMonitor, proxy_monitors);
         LIST_HEAD(ProxyDependency, proxy_dependencies);
+        LIST_HEAD(ProxyTarget, allowed_proxy_targets);
 
         struct hashmap *unit_subscriptions;
         uint64_t last_seen;
@@ -82,6 +83,7 @@ bool node_is_online(Node *node);
 bool node_set_agent_bus(Node *node, sd_bus *bus);
 void node_unset_agent_bus(Node *node);
 bool node_set_required_selinux_context(Node *node, const char *selinux_context);
+int node_add_allowed_proxy_target(Node *node, const char *target_name);
 
 AgentRequest *node_request_list_units(
                 Node *node, agent_request_response_t cb, void *userdata, free_func_t free_userdata);

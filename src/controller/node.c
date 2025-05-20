@@ -110,6 +110,16 @@ static void proxy_dependency_free(struct ProxyDependency *dep) {
         free_and_null(dep);
 }
 
+struct ProxyTarget {
+        char *target_name;
+        LIST_FIELDS(ProxyTarget, allowed_targets);
+};
+
+static void proxy_target_free(struct ProxyTarget *target) {
+        free_and_null(target->target_name);
+        free_and_null(target);
+}
+
 typedef struct UnitSubscription UnitSubscription;
 
 struct UnitSubscription {
@@ -161,6 +171,7 @@ Node *node_new(Controller *controller, const char *name) {
         LIST_HEAD_INIT(node->outstanding_requests);
         LIST_HEAD_INIT(node->proxy_monitors);
         LIST_HEAD_INIT(node->proxy_dependencies);
+        LIST_HEAD_INIT(node->allowed_proxy_targets);
 
         node->unit_subscriptions = hashmap_new(
                         sizeof(UnitSubscriptions),
@@ -222,6 +233,11 @@ void node_unref(Node *node) {
                 proxy_dependency_free(dep);
         }
 
+        ProxyTarget *target = NULL;
+        ProxyTarget *next_target = NULL;
+        LIST_FOREACH_SAFE(allowed_targets, target, next_target, node->allowed_proxy_targets) {
+                proxy_target_free(target);
+        }
 
         node_unset_agent_bus(node);
         sd_bus_slot_unrefp(&node->export_slot);
@@ -250,6 +266,36 @@ bool node_set_required_selinux_context(Node *node, const char *selinux_context) 
                 return false;
         }
         return true;
+}
+
+int node_add_allowed_proxy_target(Node *node, const char *target_name) {
+        ProxyTarget *target = NULL;
+
+        _cleanup_free_ char *target_name_copy = strdup(target_name);
+        if (target_name_copy == NULL) {
+                return -ENOMEM;
+        }
+
+        target = malloc0(sizeof(ProxyTarget));
+        if (target == NULL) {
+                return -ENOMEM;
+        }
+
+        target->target_name = steal_pointer(&target_name_copy);
+        LIST_APPEND(allowed_targets, node->allowed_proxy_targets, target);
+
+        return 0;
+}
+
+static ProxyTarget *node_find_allowed_proxy_target(Node *node, const char *name) {
+        ProxyTarget *curr = NULL;
+        ProxyTarget *next = NULL;
+        LIST_FOREACH_SAFE(allowed_targets, curr, next, node->allowed_proxy_targets) {
+                if (streq(curr->target_name, name)) {
+                        return curr;
+                }
+        }
+        return NULL;
 }
 
 bool node_export(Node *node) {
@@ -589,6 +635,7 @@ static int node_on_match_proxy_new(sd_bus_message *m, void *userdata, UNUSED sd_
                 bc_log_errorf("Invalid arguments in ProxyNew signal: %s", strerror(-r));
                 return r;
         }
+
         bc_log_infof("Node '%s' registered new proxy for unit '%s' on node '%s'",
                      node->name,
                      unit_name,
@@ -605,6 +652,13 @@ static int node_on_match_proxy_new(sd_bus_message *m, void *userdata, UNUSED sd_
         if (target_node == NULL) {
                 bc_log_error("Proxy requested for non-existing node");
                 proxy_monitor_send_error(monitor, "No such node");
+                return 0;
+        }
+
+        ProxyTarget *target = node_find_allowed_proxy_target(node, target_node_name);
+        if (target == NULL) {
+                bc_log_errorf("Proxy request denied for %s->%s", node->name, target_node_name);
+                proxy_monitor_send_error(monitor, "Proxy on node not allowed");
                 return 0;
         }
 

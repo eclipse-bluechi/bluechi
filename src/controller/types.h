@@ -15,3 +15,4 @@ typedef struct Subscription Subscription;
 typedef struct SubscribedUnit SubscribedUnit;
 typedef struct MonitorPeer MonitorPeer;
 typedef struct ProxyDependency ProxyDependency;
+typedef struct ProxyTarget ProxyTarget;
