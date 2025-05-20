@@ -5,7 +5,11 @@
 
 from typing import Dict
 
-from bluechi_test.config import BluechiAgentConfig, BluechiControllerConfig
+from bluechi_test.config import (
+    BluechiAgentConfig,
+    BluechiControllerConfig,
+    BluechiControllerPerNodeConfig,
+)
 from bluechi_test.constants import NODE_CTRL_NAME
 from bluechi_test.machine import BluechiAgentMachine, BluechiControllerMachine
 from bluechi_test.service import Option, Section, SimpleRemainingService
@@ -62,6 +66,9 @@ def test_proxy_service_start(
     node_bar_cfg.node_name = node_bar_name
 
     bluechi_ctrl_default_config.allowed_node_names = [node_bar_name]
+    bluechi_ctrl_default_config.per_node_config.append(
+        BluechiControllerPerNodeConfig(node_foo_name, proxy_to=[node_bar_name]),
+    )
 
     bluechi_test.set_bluechi_controller_config(bluechi_ctrl_default_config)
     bluechi_test.add_bluechi_agent_config(node_bar_cfg)

@@ -5,11 +5,7 @@
 
 from typing import Dict
 
-from bluechi_test.config import (
-    BluechiAgentConfig,
-    BluechiControllerConfig,
-    BluechiControllerPerNodeConfig,
-)
+from bluechi_test.config import BluechiAgentConfig, BluechiControllerConfig
 from bluechi_test.constants import NODE_CTRL_NAME
 from bluechi_test.machine import BluechiAgentMachine, BluechiControllerMachine
 from bluechi_test.service import Option, Section, SimpleRemainingService
@@ -49,22 +45,14 @@ def exec(ctrl: BluechiControllerMachine, nodes: Dict[str, BluechiAgentMachine]):
 
     ctrl.bluechictl.start_unit(node_foo_name, requesting_service.name)
 
-    # Verify proxy start
+    # Verify proxy start, failed proxy service and not started requested service
     assert ctrl.wait_for_unit_state_to_be(requesting_service.name, "active")
-    assert ctrl.wait_for_unit_state_to_be(bluechi_proxy_service, "active")
-    assert bar.wait_for_unit_state_to_be(simple_service.name, "active")
-    assert bar.wait_for_unit_state_to_be(bluechi_dep_service, "active")
-
-    ctrl.bluechictl.stop_unit(node_foo_name, requesting_service.name)
-
-    # Verify proxy stop
-    assert ctrl.wait_for_unit_state_to_be(requesting_service.name, "inactive")
-    assert ctrl.wait_for_unit_state_to_be(bluechi_proxy_service, "inactive")
-    assert bar.wait_for_unit_state_to_be(simple_service.name, "active")
+    assert ctrl.wait_for_unit_state_to_be(bluechi_proxy_service, "failed")
+    assert bar.wait_for_unit_state_to_be(simple_service.name, "inactive")
     assert bar.wait_for_unit_state_to_be(bluechi_dep_service, "inactive")
 
 
-def test_proxy_service_stop_requesting(
+def test_proxy_service_denied_by_default(
     bluechi_test: BluechiTest,
     bluechi_ctrl_default_config: BluechiControllerConfig,
     bluechi_node_default_config: BluechiAgentConfig,
@@ -76,10 +64,6 @@ def test_proxy_service_stop_requesting(
     bluechi_ctrl_default_config.allowed_node_names = [node_bar_name]
 
     bluechi_test.set_bluechi_controller_config(bluechi_ctrl_default_config)
-    bluechi_ctrl_default_config.per_node_config.append(
-        BluechiControllerPerNodeConfig(node_foo_name, proxy_to=[node_bar_name]),
-    )
-
     bluechi_test.add_bluechi_agent_config(node_bar_cfg)
 
     bluechi_test.run(exec)
