@@ -22,6 +22,30 @@ class BluechiConfig:
         raise Exception("Not implemented")
 
 
+class BluechiControllerPerNodeConfig:
+
+    def __init__(
+        self,
+        node_name: str,
+        allowed: bool = True,
+        required_selinux_context: str = "",
+        proxy_to: List[str] = [],
+    ):
+        self.node_name = node_name
+        self.allowed = allowed
+        self.required_selinux_context = required_selinux_context
+        self.proxy_to = proxy_to
+
+    def serialize(self) -> str:
+        proxy_to = ",\n ".join(self.proxy_to)
+
+        return f"""[node {self.node_name}]
+Allowed={self.allowed}
+RequiredSelinuxContext={self.required_selinux_context}
+AllowDependenciesOn={proxy_to}
+"""
+
+
 class BluechiControllerConfig(BluechiConfig):
 
     confd_dir = "/etc/bluechi/controller.conf.d"
@@ -39,6 +63,7 @@ class BluechiControllerConfig(BluechiConfig):
         log_is_quiet: bool = False,
         use_tcp: bool = True,
         use_uds: bool = True,
+        per_node_config: List[BluechiControllerPerNodeConfig] = [],
     ) -> None:
         super().__init__(file_name)
 
@@ -52,11 +77,15 @@ class BluechiControllerConfig(BluechiConfig):
         self.log_is_quiet = log_is_quiet
         self.use_tcp = use_tcp
         self.use_uds = use_uds
+        self.per_node_config = per_node_config
 
     def serialize(self) -> str:
         # use one line for each node name so the max line length
         # supported by bluechi is never exceeded
         allowed_node_names = ",\n ".join(self.allowed_node_names)
+        per_node_configs = "\n".join(
+            per_node_config.serialize() for per_node_config in self.per_node_config
+        )
 
         return f"""[bluechi-controller]
 ControllerPort={self.port}
@@ -68,6 +97,7 @@ LogTarget={self.log_target}
 LogIsQuiet={self.log_is_quiet}
 UseTCP={self.use_tcp}
 UseUDS={self.use_uds}
+{per_node_configs}
 """
 
     def get_confd_dir(self) -> str:

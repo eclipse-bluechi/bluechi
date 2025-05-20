@@ -6,7 +6,12 @@
 import logging
 from typing import Dict
 
-from bluechi_test.config import BluechiAgentConfig, BluechiControllerConfig
+from bluechi_test.config import (
+    BluechiAgentConfig,
+    BluechiControllerConfig,
+    BluechiControllerPerNodeConfig,
+)
+from bluechi_test.constants import NODE_CTRL_NAME
 from bluechi_test.machine import BluechiAgentMachine, BluechiControllerMachine
 from bluechi_test.service import Option, Section, SimpleRemainingService
 from bluechi_test.test import BluechiTest
@@ -59,6 +64,10 @@ def test_proxy_service_propagate_target_service_failure(
     bluechi_test.add_bluechi_agent_config(node_bar_cfg)
 
     bluechi_ctrl_default_config.allowed_node_names = [NODE_BAR]
+    bluechi_ctrl_default_config.per_node_config.append(
+        BluechiControllerPerNodeConfig(NODE_CTRL_NAME, proxy_to=[NODE_BAR]),
+    )
+
     bluechi_test.set_bluechi_controller_config(bluechi_ctrl_default_config)
 
     bluechi_test.run(exec)
