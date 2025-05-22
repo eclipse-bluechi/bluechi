@@ -1,4 +1,4 @@
-<!-- markdownlint-disable-file MD013-->
+<!-- markdownlint-disable-file MD013 MD046 -->
 
 # BlueChi's SELinux policy
 
@@ -134,3 +134,21 @@ rm tmp/httpd-allow.mod.fc tmp/httpd-allow.mod
 # install compiled policy package
 semodule -i httpd-allow.pp
 ```
+
+## Require SELinux context of agents
+
+The node-specific section of [bluechi-controller(5)](../man/bluechi-controller-conf.md) provides the `RequiredSelinuxContext=` option, which enables to pin the SELinux label of the application connecting as `bluechi-agent`. For example:
+
+```ini
+# bluechi-agent connecting directly via Unix Domain Socket
+[node agent-001]
+RequiredSelinuxContext=bluechi_agent_exec_t
+
+# bluechi-agent connecting over HAProxy
+[node agent-002]
+RequiredSelinuxContext=haproxy_t
+```
+
+!!! Note
+
+    This only works using Unix Domain Sockets as a connection method.
