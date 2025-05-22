@@ -14,6 +14,17 @@ The following sections will provide a simplistic implementation of this example.
 
     A detailed explanation of how Proxy Services are implemented in BlueChi based on systemd can be found [here](../cross_node_dependencies/index.md).
 
+## Prerequisite: Enabling proxy services
+
+By default, requesting a service on another node is disabled. In the node-specific part of the [bluechi-controller(5)](../man/bluechi-controller-conf.md) configuration the `AllowDependenciesOn=` option can be used to enable the respective node to request services on the specified nodes.
+
+Lets enable the node `laptop` to start services on node `pi` by dropping a new configuration file into the `/etc/bluechi/controller.conf.d` directory on the `laptop` host:
+
+```ini
+[node laptop]
+AllowDependenciesOn=pi
+```
+
 ## Setting up the CDN
 
 On the raspberry pi, first create a temporary directory and add an example image to it:
