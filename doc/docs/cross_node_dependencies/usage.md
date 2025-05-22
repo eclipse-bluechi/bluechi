@@ -15,11 +15,10 @@ This section describes different scenarios of cross-node dependencies between se
 If the `source.service` requires the `target.service` to be in an **active state** and otherwise stops, this can be ensured by using `Requires=`. The failure of `target.service` is simulated by just executing `/bin/false`, returning exit code 1.
 
 === "source.service"
-
-````systemd
-[Unit]
-Requires=bluechi-proxy@worker2_target.service
-After=bluechi-proxy@worker2_target.service
+    ```systemd
+    [Unit]
+    Requires=bluechi-proxy@worker2_target.service
+    After=bluechi-proxy@worker2_target.service
 
     [Service]
     Type=simple
@@ -28,9 +27,9 @@ After=bluechi-proxy@worker2_target.service
     ```
 
 === "target.service"
-```systemd
-[Unit]
-Description=Target service
+    ```systemd
+    [Unit]
+    Description=Target service
 
     [Service]
     Type=simple
@@ -53,7 +52,7 @@ UNIT		| LOADED	| ACTIVE	| SUBSTATE	| FREEZERSTATE	| ENABLED	|
 ------------------------------------------------------------------------------------------------
 target.service	| loaded	| failed	| failed	| running	| static	|
 
-````
+```
 
 !!! Note
 
@@ -65,10 +64,10 @@ In order to automatically stop the `target.service` when the requiring `source.s
 
 === "source.service"
 
-````systemd
-[Unit]
-Wants=bluechi-proxy@worker2_target.service
-After=bluechi-proxy@worker2_target.service
+    ```systemd
+    [Unit]
+    Wants=bluechi-proxy@worker2_target.service
+    After=bluechi-proxy@worker2_target.service
 
     [Service]
     Type=simple
@@ -77,9 +76,10 @@ After=bluechi-proxy@worker2_target.service
     ```
 
 === "target.service"
-```systemd
-[Unit]
-StopWhenUnneeded=yes
+
+    ```systemd
+    [Unit]
+    StopWhenUnneeded=yes
 
     [Service]
     Type=simple
@@ -115,7 +115,7 @@ $ bluechictl status worker2 target.service
 UNIT			| LOADED	| ACTIVE	| SUBSTATE	| FREEZERSTATE	| ENABLED	|
 ---------------------------------------------------------------------------------
 target.service	| loaded	| inactive	| dead		| running	| static	    |
-````
+```
 
 !!! Note
 
@@ -127,10 +127,10 @@ If the `target.service` enters a **failed** or **inactive** state at some point 
 
 === "source.service"
 
-````systemd
-[Unit]
-Upholds=bluechi-proxy@worker2_target.service
-After=bluechi-proxy@worker2_target.service
+    ```systemd
+    [Unit]
+    Upholds=bluechi-proxy@worker2_target.service
+    After=bluechi-proxy@worker2_target.service
 
     [Service]
     Type=simple
@@ -139,9 +139,10 @@ After=bluechi-proxy@worker2_target.service
     ```
 
 === "target.service"
-```systemd
-[Unit]
-StopWhenUnneeded=yes
+
+    ```systemd
+    [Unit]
+    StopWhenUnneeded=yes
 
     [Service]
     Type=simple
@@ -162,7 +163,7 @@ $ bluechictl status worker2 target.service
 UNIT		    | LOADED	| ACTIVE	    | SUBSTATE	| FREEZERSTATE	| ENABLED	|
 -------------------------------------------------------------------------------------
 target.service	| loaded	| active	    | running	| running	    | static	|
-````
+```
 
 !!! Note
 

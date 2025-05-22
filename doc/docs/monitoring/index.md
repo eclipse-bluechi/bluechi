@@ -11,7 +11,7 @@ In a distributed environment it is essential to be able to access the state of a
 
 In general, the `bluechi-agent` listens for unit-specific signals emitted by `systemd` on a managed node. If such a signal is received and a monitor with a subscription matching the unit is present, the agent will forward that message to the `bluechi-controller`. In turn, the controller is assembling an appropriate message and sends it to the creator of the monitor as well as to all monitoring peers. The peer concept is explained in more detail in the section [Peers listeners](./peers.md).
 
-The Getting Started guide contains a few examples on how `bluechictl` can be used to [monitor units and nodes](../getting_started/examples_bluechictl.md#monitoring-of-units-and-nodes). If you would like to implement your custom application, e.g. for automatic state transitions of a system, please have a look at the [API example for monitoring units](../api/examples.md#monitor-unit-changes).
+The Getting Started guide contains a few examples on how `bluechictl` can be used to monitor [units](../getting_started/examples_bluechictl.md#monitoring-of-units) and [nodes](../getting_started/examples_bluechictl.md#monitoring-of-nodes). If you would like to implement your custom application, e.g. for automatic state transitions of a system, please have a look at the [API example for monitoring units](../api/examples.md#monitor-unit-changes).
 
 ## Real vs virtual events
 
