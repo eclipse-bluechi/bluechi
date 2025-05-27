@@ -353,6 +353,15 @@ build-scripts/generate-unit-tests-code-coverage.sh %{_vpath_builddir} %{buildroo
 
 
 %changelog
+* Tue May 27 2025 Michael Engel <mengel@redhat.com> - 1.0.0-1
+- Added new AllowDependenciesOn per-node configuration option to white list inter-node dependencies
+- Added new ConnectionRetryCountUntilQuiet configuration option
+- Stop logging of bluechi-agent after 10 failed connect retries
+- Install bluechi-selinux to active selinux-policy
+- Make haproxy in selinux policy optional
+- Fixed double-free calls
+- Fix get_address_test.c:getaddrinfo_mock function
+
 * Wed Feb 26 2025 Michael Engel <mengel@redhat.com> - 0.10.0-1
 - Breaking change: ListUnits and ListUnitFiles return a dictionary with node name as key
 - Added new API: StartTransientUnit
