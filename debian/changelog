@@ -1,3 +1,10 @@
+bluechi (1.0.0-1) stable; urgency=low
+
+  * Upgrading to BlueChi v1.0.0.
+
+ -- Michael Engel <mengel@redhat.com>  Tue, 27 May 2025 14:05:29 +0200
+
+
 bluechi (0.10.0-1) stable; urgency=low
 
   * Upgrading to BlueChi v0.10.0.
