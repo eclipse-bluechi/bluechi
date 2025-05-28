@@ -85,10 +85,10 @@ add_project_arguments('-include', 'config.h', language : 'c')
 
 # (External) subprojects used by bluechi
 inih = subproject('inih', default_options: [
-  'default_library=static',           # include it as static library
-  '-Dinih:distro_install=false',      # disable distro install so other options are used
-  '-Dinih:max_line_length=520',       # set maximum line length so that ~500 characters can be used as value
-  '-Dinih:stop_on_first_error=true',  # abort after first error when parsing file
+  'default_library=static',     # include it as static library
+  'distro_install=false',       # disable distro install so other options are used
+  'max_line_length=520',        # set maximum line length so that ~500 characters can be used as value
+  'stop_on_first_error=true',   # abort after first error when parsing file
 ])
 inih_dep = inih.get_variable('inih_dep')
 
