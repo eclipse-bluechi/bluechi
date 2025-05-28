@@ -353,6 +353,9 @@ build-scripts/generate-unit-tests-code-coverage.sh %{_vpath_builddir} %{buildroo
 
 
 %changelog
+* Wed May 28 2025 Michael Engel <mengel@redhat.com> - 1.0.1-1
+- Fixed parameters for subproject inih to support meson 1.8
+
 * Tue May 27 2025 Michael Engel <mengel@redhat.com> - 1.0.0-1
 - Added new AllowDependenciesOn per-node configuration option to white list inter-node dependencies
 - Added new ConnectionRetryCountUntilQuiet configuration option
