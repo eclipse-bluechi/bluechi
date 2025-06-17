@@ -1,0 +1,41 @@
+[build-system]
+requires = ["wheel", "setuptools"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["."]
+
+[tool.setuptools.package-data]
+bluechi = ["*.py"]
+
+
+[project]
+name="bluechi"
+version="@VERSION@"
+description="Python bindings for BlueChi's D-Bus API"
+readme="README.md"
+authors=[
+    { name = "BlueChi developers", email = "bluechi-dev@eclipse.org" },
+]
+license={ file = "LGPL-2.1-or-later" }
+classifiers=[
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+]
+keywords=['bluechi', 'python', 'D-Bus', 'systemd']
+requires-python='>=3.9'
+dependencies=["dasbus"]
+
+[project.urls]
+Homepage = "https://github.com/eclipse-bluechi/bluechi/"
+Documentation = "https://bluechi.readthedocs.io/en/latest/"
+Repository = "https://github.com/eclipse-bluechi/bluechi/"
+Issues = "https://github.com/eclipse-bluechi/bluechi/issues"
+
+[tool.flake8]
+max-line-length = 120
+exclude = ["venv", ".venv"]
+ignore = ["F401"]
+
+[tool.mypy]
+python_version = 3.9

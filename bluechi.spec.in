@@ -269,6 +269,7 @@ Summary:	Python bindings for BlueChi
 BuildArch:	noarch
 BuildRequires:	python3-devel
 BuildRequires:	python3-setuptools
+BuildRequires:	python3-wheel
 Requires:	python3-dasbus
 
 Obsoletes:	python3-hirte < 0.6.0
@@ -280,10 +281,7 @@ It contains typed python code that is auto-generated from BlueChi's
 API description and manually written code to simplify recurring tasks.
 
 %files -n python3-bluechi
-%license LICENSE
-%doc README.md
-%{python3_sitelib}/bluechi-*.egg-info/
-%{python3_sitelib}/bluechi/
+%{python3_sitelib}
 %endif
 
 
@@ -311,6 +309,11 @@ will be used during integration tests when creating code coverage report.
 %prep
 %autosetup -S git_am
 
+%if %{with_python}
+ln -s src/bindings/python/pyproject.toml pyproject.toml
+%generate_buildrequires
+%pyproject_buildrequires
+%endif
 
 %build
 %meson -Dapi_bus=system %{?coverage_flags}
@@ -318,7 +321,7 @@ will be used during integration tests when creating code coverage report.
 
 %if %{with_python}
 pushd src/bindings/python
-%py3_build
+%pyproject_wheel
 popd
 %endif
 
@@ -338,7 +341,7 @@ mkdir -p %{buildroot}/%{_localstatedir}/tmp/bluechi-coverage/
 
 %if %{with_python}
 pushd src/bindings/python
-%py3_install
+%pyproject_install
 popd
 %endif
 
