@@ -160,7 +160,7 @@ jobs:
           python3 -m ensurepip --default-pip
           python3 -m pip install -r requirements.txt
           python3 -m pip install -r src/bindings/generator/requirements.txt
-          pip install wheel
+          python3 -m pip install -r src/bindings/python/requirements-packager.txt
           dnf install -y python3-gobject
 
       - name: Generate and build python bindings

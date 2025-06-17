@@ -72,9 +72,9 @@ jobs:
         run: |
           dnf install python3-gobject -y
           python3 -m ensurepip --default-pip
-          python3 -m pip install --upgrade pip setuptools wheel build
           python3 -m pip install -r requirements.txt
           python3 -m pip install -r src/bindings/generator/requirements.txt
+          python3 -m pip install -r src/bindings/python/requirements-packager.txt
 
       - name: Generate python bindings
         run: |

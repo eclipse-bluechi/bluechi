@@ -32,6 +32,8 @@ RUN dnf install -y dnf-plugin-config-manager && \
         systemd-devel \
         tar \
         valgrind \
+        pyproject-rpm-macros \
+        python3-tomli \
     -y && \
     dnf -y clean all
 
