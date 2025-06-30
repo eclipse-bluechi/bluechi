@@ -10,6 +10,13 @@ on:
         options:
         - build-base
         - integration-test-base
+      csversion:
+        description:
+        required: true
+        type: choice
+        options:
+        - stream9
+        - stream10
 
 jobs:
   build_container:
@@ -23,12 +30,13 @@ jobs:
 
       - name: Build manifest
         run: |
-          ./build-scripts/build-push-containers.sh ${{ inputs.image }}
+          ./build-scripts/build-push-containers.sh ${{ inputs.image }} ${{ inputs.csversion }}
 
       - name: Push manifest o quay.io
         uses: redhat-actions/push-to-registry@v2
         with:
           image: ${{ inputs.image }}
+          tags: ${{ inputs.csversion }}
           registry: quay.io/bluechi
           username: bluechi+bluechi_bot
           password: ${{ secrets.QUAY_BOT_API_TOKEN }}

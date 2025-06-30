@@ -1,6 +1,12 @@
-FROM quay.io/centos/centos:stream9
+ARG centos_stream_version
 
+FROM quay.io/centos/centos:$centos_stream_version
+
+# CRB is required for lcovs perl dependencies
+# EPEL is required for lcov python3-dasbus, etc.
 RUN dnf upgrade --refresh --nodocs -y && \
+    dnf install -y dnf-plugin-config-manager && \
+    dnf config-manager -y --set-enabled crb && \
     dnf install --nodocs epel-release -y && \
     dnf install --nodocs \
             lcov \

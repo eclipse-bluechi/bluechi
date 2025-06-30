@@ -7,7 +7,7 @@ jobs:
   sbom:
     runs-on: ubuntu-latest
     container:
-      image: quay.io/bluechi/build-base:latest
+      image: quay.io/bluechi/build-base:stream10
     env:
       ARTIFACTS_DIR: /tmp/bluechi-artifacts
 
