@@ -11,7 +11,7 @@ jobs:
     name: Create GitHub release for BlueChi
     runs-on: ubuntu-latest
     container:
-      image: quay.io/bluechi/build-base:latest
+      image: quay.io/bluechi/build-base:stream10
 
     steps:
       - name: Checkout sources
@@ -60,7 +60,7 @@ jobs:
     name: Publish bluechi on PyPi
     runs-on: ubuntu-latest
     container:
-      image: quay.io/bluechi/build-base:latest
+      image: quay.io/bluechi/build-base:stream10
 
     steps:
       - name: Checkout sources

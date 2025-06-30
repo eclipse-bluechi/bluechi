@@ -231,7 +231,7 @@ and run tests for BlueChi also in the [build-base](./containers/build-base):
 cd bluechi
 
 # run build-base container and mount bluechi directory
-podman run -it -v ./:/var/bluechi quay.io/bluechi/build-base:latest
+podman run -it -v ./:/var/bluechi quay.io/bluechi/build-base:stream10
 
 # configure meson to enable code analysis and build the project
 meson setup builddir

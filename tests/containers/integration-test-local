@@ -1,4 +1,4 @@
-FROM quay.io/bluechi/integration-test-base:latest
+FROM quay.io/bluechi/integration-test-base:stream10
 
 RUN mkdir -p /tmp/bluechi-rpms
 
