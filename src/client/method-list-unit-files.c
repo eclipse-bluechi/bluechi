@@ -72,6 +72,10 @@ static int parse_unit_file_list(sd_bus_message *message, const char *node_name, 
 static int method_list_unit_files_on_all(sd_bus *api_bus, print_unit_file_list_fn print, const char *glob_filter) {
         int r = 0;
         _cleanup_unit_file_list_ UnitFileList *unit_file_list = new_unit_file_list();
+        if (unit_file_list == NULL) {
+                fprintf(stderr, "Failed to create unit file list, OOM");
+                return -ENOMEM;
+        }
 
         _cleanup_sd_bus_error_ sd_bus_error error = SD_BUS_ERROR_NULL;
         _cleanup_sd_bus_message_ sd_bus_message *message = NULL;

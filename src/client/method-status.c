@@ -461,10 +461,22 @@ static Node *
                 node = NULL;
                 return NULL;
         }
-        node->connection->name = strdup(node_name);
-        node->connection->node_path = strdup(node_path);
-        node->connection->state = strdup(node_state);
-        node->connection->ip = strdup(ip);
+
+        _cleanup_free_ char *name_dup = strdup(node_name);
+        _cleanup_free_ char *node_path_dup = strdup(node_path);
+        _cleanup_free_ char *state_dup = strdup(node_state);
+        _cleanup_free_ char *ip_dup = strdup(ip);
+        if (name_dup == NULL || node_path_dup == NULL || state_dup == NULL || ip_dup == NULL) {
+                free(node->connection);
+                node->connection = NULL;
+                free(node);
+                node = NULL;
+                return NULL;
+        }
+        node->connection->name = steal_pointer(&name_dup);
+        node->connection->node_path = steal_pointer(&node_path_dup);
+        node->connection->state = steal_pointer(&state_dup);
+        node->connection->ip = steal_pointer(&ip_dup);
         node->connection->last_seen = last_seen_timestamp;
         node->api_bus = api_bus;
         node->nodes = head;
