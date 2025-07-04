@@ -65,12 +65,12 @@ def exec(ctrl: BluechiControllerMachine, nodes: Dict[str, BluechiAgentMachine]):
 
     # Check if node connected successfully
     time.sleep(1)
-    LOGGER.debug("Veryfying node connection")
+    LOGGER.debug("Verifying node connection")
     result, _ = ctrl.run_python(os.path.join("python", "is_node_connected.py"))
     assert result == 0
 
     # Verify the heartbeat is shorter than configured in agent.conf
-    LOGGER.debug("Veryfying expected heartbeat interval")
+    LOGGER.debug("Verifying expected heartbeat interval")
     result, _ = ctrl.run_python(os.path.join("python", "verify_heartbeat.py"))
     assert result == 0
 
@@ -100,7 +100,7 @@ def exec(ctrl: BluechiControllerMachine, nodes: Dict[str, BluechiAgentMachine]):
 
     # Check if node connected successfully
     time.sleep(1)
-    LOGGER.debug("Veryfying node connection")
+    LOGGER.debug("Verifying node connection")
     result, _ = ctrl.run_python(os.path.join("python", "is_node_connected.py"))
     assert result == 0
 
