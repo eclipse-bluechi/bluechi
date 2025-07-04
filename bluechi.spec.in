@@ -34,7 +34,7 @@ BuildRequires: sed
 %endif
 
 %description
-BlueChi is a systemd service controller for multi-nodes environements with a
+BlueChi is a systemd service controller for multi-nodes environments with a
 predefined number of nodes and with a focus on highly regulated environment
 such as those requiring functional safety (for example in cars).
 
@@ -58,7 +58,7 @@ Obsoletes:	bluechi < 0.7.0
 Provides:	bluechi = %{version}-%{release}
 
 %description controller
-BlueChi is a systemd service controller for multi-nodes environements with a
+BlueChi is a systemd service controller for multi-nodes environments with a
 predefined number of nodes and with a focus on highly regulated environment
 such as those requiring functional safety (for example in cars).
 This package contains the controller service.
@@ -115,7 +115,7 @@ Obsoletes:	hirte-agent < 0.6.0
 Provides:	hirte-agent = %{version}-%{release}
 
 %description agent
-BlueChi is a systemd service controller for multi-nodes environements with a
+BlueChi is a systemd service controller for multi-nodes environments with a
 predefined number of nodes and with a focus on highly regulated environment
 such as those requiring functional safety (for example in cars).
 This package contains the node agent.
@@ -220,7 +220,7 @@ Obsoletes:	hirte-ctl < 0.6.0
 Provides:	hirte-ctl = %{version}-%{release}
 
 %description ctl
-BlueChi is a systemd service controller for multi-nodes environements with a
+BlueChi is a systemd service controller for multi-nodes environments with a
 predefined number of nodes and with a focus on highly regulated environment
 such as those requiring functional safety (for example in cars).
 This package contains the service controller command line tool.
@@ -246,7 +246,7 @@ Requires:	bluechi-coverage = %{version}-%{release}
 %endif
 
 %description is-online
-BlueChi is a systemd service controller for multi-nodes environements with a
+BlueChi is a systemd service controller for multi-nodes environments with a
 predefined number of nodes and with a focus on highly regulated environment
 such as those requiring functional safety (for example in cars).
 This package contains a command line tool for checking and monitoring the

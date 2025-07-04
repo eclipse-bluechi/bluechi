@@ -72,7 +72,7 @@ bool string_builder_append(StringBuilder *builder, const char *str) {
 bool string_builder_printf(StringBuilder *builder, const char *format, ...) {
         va_list ap;
 
-        /* Compute reqiured size */
+        /* Compute required size */
         va_start(ap, format);
         int n = vsnprintf(builder->str, 0, format, ap);
         va_end(ap);

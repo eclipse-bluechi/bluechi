@@ -130,7 +130,7 @@ All traffic is forwarded to bluechi-controller via its Unix socket.
 
 ```haproxy
 #---------------------------------------------------------------------
-# main frontend which proxys to the backends
+# main frontend which proxies to the backends
 #---------------------------------------------------------------------
 frontend bluechi-controller
     mode tcp
@@ -161,7 +161,7 @@ All traffic is forwarded to the remote machine while enforcing mTLS.
 
 ```haproxy
 #----------------------------------------------------------------
-# main frontend which proxys to the backends
+# main frontend which proxies to the backends
 #----------------------------------------------------------------
 frontend bluechi-agent
     mode tcp
