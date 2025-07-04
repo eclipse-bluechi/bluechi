@@ -68,6 +68,10 @@ static int parse_unit_list(sd_bus_message *message, const char *node_name, UnitL
 static int method_list_units_on_all(sd_bus *api_bus, print_unit_list_fn print, const char *glob_filter) {
         int r = 0;
         _cleanup_unit_list_ UnitList *unit_list = new_unit_list();
+        if (unit_list == NULL) {
+                fprintf(stderr, "Failed to create unit list, OOM");
+                return -ENOMEM;
+        }
 
         _cleanup_sd_bus_error_ sd_bus_error error = SD_BUS_ERROR_NULL;
         _cleanup_sd_bus_message_ sd_bus_message *message = NULL;
