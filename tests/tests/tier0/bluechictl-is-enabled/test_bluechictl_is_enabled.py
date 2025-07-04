@@ -21,6 +21,7 @@ def check_execs(
     ctrl: BluechiControllerMachine,
     node: BluechiAgentMachine,
     unit_name: str,
+    unit_exists: bool = True,
     check_output: bool = True,
 ):
     bc_res, bc_out = ctrl.bluechictl.is_enabled(
@@ -28,7 +29,14 @@ def check_execs(
     )
     sc_res, sc_out = node.systemctl.is_enabled(unit_name=unit_name)
 
-    assert bc_res == sc_res
+    # For non-existent units systemctl returns 4 since 253 (see https://lwn.net/Articles/923545/)
+    # bluechictl returns the error code of the sd_bus_call_method call, so the ret codes differ
+    if unit_exists:
+        assert bc_res == sc_res
+    else:
+        assert bc_res == 1
+        assert sc_res == 4
+
     if check_output:
         assert bc_out == sc_out
 
@@ -53,7 +61,11 @@ def exec(ctrl: BluechiControllerMachine, nodes: Dict[str, BluechiAgentMachine]):
 
     # Error message from bluechictl is not completely the same as from systemctl for non-existent service
     check_execs(
-        ctrl=ctrl, node=node_foo, unit_name="non-existent.service", check_output=False
+        ctrl=ctrl,
+        node=node_foo,
+        unit_name="non-existent.service",
+        unit_exists=False,
+        check_output=False,
     )
 
 
