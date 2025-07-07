@@ -33,6 +33,8 @@ def exec(ctrl: BluechiControllerMachine, nodes: Dict[str, BluechiAgentMachine]):
     root = pathlib.Path(path_to_info_files)
     lcov_list = list()
     lcov_list.append("lcov")
+    lcov_list.append("--ignore-errors")
+    lcov_list.append("gcov,empty")
     for file_path in root.glob("**/*.info"):
         LOGGER.debug(f"Found info file '{str(file_path)}'")
         content = read_file(file_path)

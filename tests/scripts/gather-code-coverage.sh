@@ -20,4 +20,4 @@ for file in ${GCDA_DIR}/*.gcda ; do
 done
 
 # Generate info file
-geninfo ${GCDA_DIR} -b ${GCDA_DIR}/src -o ${INFO_FILE}
+geninfo --ignore-errors gcov,empty ${GCDA_DIR} -b ${GCDA_DIR}/src -o ${INFO_FILE}
