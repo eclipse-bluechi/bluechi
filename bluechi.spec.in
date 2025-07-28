@@ -356,6 +356,10 @@ build-scripts/generate-unit-tests-code-coverage.sh %{_vpath_builddir} %{buildroo
 
 
 %changelog
+* Mon Jul 28 2025 Michael Engel <mengel@redhat.com> - 1.1.0-1
+- Fixed potential NULL dereferences in bluechictl
+- Switch from setup.py to pyproject.toml
+
 * Wed May 28 2025 Michael Engel <mengel@redhat.com> - 1.0.1-1
 - Fixed parameters for subproject inih to support meson 1.8
 
