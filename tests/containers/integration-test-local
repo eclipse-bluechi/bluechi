@@ -8,6 +8,7 @@ RUN dnf install --repo bluechi-rpms \
         --repofrompath bluechi-rpms,file:///tmp/bluechi-rpms/ \
         --nogpgcheck \
         --nodocs \
+        --skip-broken \
         bluechi-controller \
         bluechi-controller-debuginfo \
         bluechi-agent \
