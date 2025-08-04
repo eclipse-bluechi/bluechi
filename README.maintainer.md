@@ -1,3 +1,4 @@
+<!-- markdownlint-disable-file MD029 -->
 # Eclipse BlueChi&trade;
 
 ## Creating a new release
@@ -76,3 +77,43 @@ can be started manually (by project collaborators) for the recent tag created. I
 and will build as well as analyze BlueChi's runtime dependencies declared in the RPM packages recursively. The
 generated SBOMs are being attached to the Action run.
 The .zip containing the SBOMs can be downloaded and attached to the assets of the respective BlueChi release.
+
+## Creating a PyPi release for BlueChi bindings
+
+The release of the BlueChi API bindings to PyPi is part of the [release pipeline](./.github/workflows/publish.yml).
+However, if the job for creating the PyPi release fails, this can also be done manually.
+
+1. Checkout the created tag
+
+```bash
+git checkout v1.1.0
+```
+
+2. Generate the bindings and verify there are **no changes**
+
+```bash
+$ ./build-scripts/generate-bindings.sh python
+...
+$ git diff
+<no diff>
+```
+
+3. Build the python wheel
+
+```bash
+# Prerequisite: Install necessary python packages
+$ pip install -r src/bindings/python/requirements-packager.txt
+...
+# Build the python package
+$ ./build-scripts/build-bindings.sh python
+```
+
+4. Upload the python package via [twine](https://pypi.org/project/twine/)
+
+```bash
+# Optional: Upload to test pypi first to verify everything works as expected
+$ twine upload -r testpypi src/bindings/python/dist/*
+...
+$ twine upload -r pypi src/bindings/python/dist/*
+...
+```
