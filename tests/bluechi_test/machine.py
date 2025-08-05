@@ -16,7 +16,7 @@ from bluechi_test.client import Client
 from bluechi_test.config import BluechiAgentConfig, BluechiControllerConfig
 from bluechi_test.service import Service
 from bluechi_test.systemctl import SystemCtl
-from bluechi_test.util import get_random_name, read_file
+from bluechi_test.util import get_env_value, get_random_name, read_file
 
 LOGGER = logging.getLogger(__name__)
 
@@ -276,8 +276,10 @@ class BluechiMachine:
         coverage_file = f"{BluechiMachine.gcda_file_location}/coverage-{self.name}.info"
 
         LOGGER.info(f"Generating info file '{coverage_file}' started")
+        bluechi_version = get_env_value("BLUECHI_VERSION", "unknown")
+
         result, output = self.client.exec_run(
-            f"/usr/share/bluechi-coverage/bin/gather-code-coverage.sh {coverage_file}"
+            f"/usr/share/bluechi-coverage/bin/gather-code-coverage.sh {coverage_file} {bluechi_version}"
         )
         if result != 0:
             LOGGER.error(f"Failed to gather code coverage: {output}")

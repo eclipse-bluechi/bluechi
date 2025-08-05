@@ -7,6 +7,8 @@
 
 # First parameter is the name of the generated info file
 INFO_FILE=${1:-coverage.info}
+BLUECHI_VERSION=${2:-unknown}
+BLUECHI_BUILD_DIR="/github/home/rpmbuild/BUILD/bluechi-${BLUECHI_VERSION}"
 
 source $(dirname "$(readlink -f "$0")")/setup-src-dir-for-coverage.sh
 
@@ -20,4 +22,8 @@ for file in ${GCDA_DIR}/*.gcda ; do
 done
 
 # Generate info file
-geninfo --ignore-errors gcov,empty ${GCDA_DIR} -b ${GCDA_DIR}/src -o ${INFO_FILE}
+# Use literal paths to avoid variable expansion issues
+geninfo ${GCDA_DIR} \
+  --substitute "s|${BLUECHI_BUILD_DIR}/|/var/tmp/bluechi-coverage/|g" \
+  --ignore-errors source \
+  --output-file ${INFO_FILE}
