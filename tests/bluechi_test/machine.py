@@ -16,7 +16,7 @@ from bluechi_test.client import Client
 from bluechi_test.config import BluechiAgentConfig, BluechiControllerConfig
 from bluechi_test.service import Service
 from bluechi_test.systemctl import SystemCtl
-from bluechi_test.util import get_env_value, get_random_name, read_file
+from bluechi_test.util import get_random_name, read_file
 
 LOGGER = logging.getLogger(__name__)
 
@@ -276,10 +276,18 @@ class BluechiMachine:
         coverage_file = f"{BluechiMachine.gcda_file_location}/coverage-{self.name}.info"
 
         LOGGER.info(f"Generating info file '{coverage_file}' started")
-        bluechi_version = get_env_value("BLUECHI_VERSION", "unknown")
+
+        # Check if src directory exists, if not run copy-src-files.sh
+        result, output = self.client.exec_run("test -d /var/tmp/bluechi-coverage/src")
+        if result != 0:
+            LOGGER.info("src directory doesn't exist, running copy-src-files.sh")
+            result, output = self.client.exec_run(
+                "/usr/share/bluechi-coverage/bin/setup-src-dir-for-coverage.sh"
+            )
+            LOGGER.info(f"copy-src-files.sh result: {result}, output: {output}")
 
         result, output = self.client.exec_run(
-            f"/usr/share/bluechi-coverage/bin/gather-code-coverage.sh {coverage_file} {bluechi_version}"
+            f"/usr/share/bluechi-coverage/bin/gather-code-coverage.sh {coverage_file}"
         )
         if result != 0:
             LOGGER.error(f"Failed to gather code coverage: {output}")
