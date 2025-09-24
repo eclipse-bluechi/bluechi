@@ -23,8 +23,10 @@ function setup_worker_ssh(){
     dnf install openssh-server passwd -y
 
     # root access is needed in order to access BlueChi's API
-    echo "PasswordAuthentication yes" >> /etc/ssh/sshd_config
-    echo "PermitRootLogin yes" >> /etc/ssh/sshd_config
+    local sshd_cfg="/etc/ssh/sshd_config.d/99-bluechi-tests.conf"
+    echo "# BlueChi tests uses password authentication" > "$sshd_cfg"
+    echo "PasswordAuthentication yes" >> "$sshd_cfg"
+    echo "PermitRootLogin yes" >> "$sshd_cfg"
 
     systemctl restart sshd
 
