@@ -17,12 +17,24 @@
 #include "socket.h"
 
 int create_tcp_socket(uint16_t port) {
-        struct sockaddr_in6 servaddr;
+        struct sockaddr_storage servaddr = { 0 };
+        socklen_t addrlen = 0;
+        bool use_ipv6 = true;
 
         _cleanup_fd_ int fd = socket(AF_INET6, SOCK_STREAM | SOCK_CLOEXEC | SOCK_NONBLOCK, 0);
+
         if (fd < 0) {
-                int errsv = errno;
-                return -errsv;
+                /* If IPv6 is not supported (e.g., disabled via ipv6.disable=1),
+                 * fall back to IPv4 */
+                if (errno == EAFNOSUPPORT) {
+                        bc_log_debug("IPv6 disabled, falling back to IPv4-only");
+                        fd = socket(AF_INET, SOCK_STREAM | SOCK_CLOEXEC | SOCK_NONBLOCK, 0);
+                        use_ipv6 = false;
+                }
+                if (fd < 0) {
+                        int errsv = errno;
+                        return -errsv;
+                }
         }
 
         int yes = 1;
@@ -31,13 +43,23 @@ int create_tcp_socket(uint16_t port) {
                 return -errsv;
         }
 
-        servaddr.sin6_family = AF_INET6;
-        servaddr.sin6_addr = in6addr_any;
-        servaddr.sin6_port = htons(port);
-        servaddr.sin6_flowinfo = 0;
-        servaddr.sin6_scope_id = 0;
+        if (use_ipv6) {
+                struct sockaddr_in6 *addr6 = (struct sockaddr_in6 *) &servaddr;
+                addr6->sin6_family = AF_INET6;
+                addr6->sin6_addr = in6addr_any;
+                addr6->sin6_port = htons(port);
+                addr6->sin6_flowinfo = 0;
+                addr6->sin6_scope_id = 0;
+                addrlen = sizeof(*addr6);
+        } else {
+                struct sockaddr_in *addr4 = (struct sockaddr_in *) &servaddr;
+                addr4->sin_family = AF_INET;
+                addr4->sin_addr.s_addr = INADDR_ANY;
+                addr4->sin_port = htons(port);
+                addrlen = sizeof(*addr4);
+        }
 
-        if (bind(fd, &servaddr, sizeof(servaddr)) < 0) {
+        if (bind(fd, (struct sockaddr *) &servaddr, addrlen) < 0) {
                 int errsv = errno;
                 return -errsv;
         }
