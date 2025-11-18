@@ -356,6 +356,12 @@ build-scripts/generate-unit-tests-code-coverage.sh %{_vpath_builddir} %{buildroo
 
 
 %changelog
+* Tue Nov 18 2025 Mark Kemel <mkemel@redhat.com> - 1.2.0-1
+- Fixed network connectivity in environments with IPv6 disabled by adding IPv4 fallback
+- Improved SSH daemon configuration management using /etc/ssh/sshd_config.d
+- Improved code coverage handling and simplified version detection in build scripts
+- Added PyPI release documentation to maintainer README
+
 * Mon Jul 28 2025 Michael Engel <mengel@redhat.com> - 1.1.0-1
 - Fixed potential NULL dereferences in bluechictl
 - Switch from setup.py to pyproject.toml
