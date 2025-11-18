@@ -1,3 +1,9 @@
+bluechi (1.2.0-1) stable; urgency=low
+
+  * Upgrading to BlueChi v1.2.0.
+
+ -- Mark Kemel <mkemel@redhat.com>  Tue, 18 Nov 2025 14:30:00 +0200
+
 bluechi (1.1.0-1) stable; urgency=low
 
   * Upgrading to BlueChi v1.1.0.
