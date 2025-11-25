@@ -52,7 +52,7 @@ int parse_node_unit_opt(const char *opt_node_unit, char **ret_node_name, char **
                 return -EINVAL;
         }
 
-        char *split = strchr(opt_node_unit, '_');
+        const char *split = strchr(opt_node_unit, '_');
         if (split == NULL || split == opt_node_unit) {
                 fprintf(stderr, "No underscore in unit name '%s'\n", opt_node_unit);
                 return -EINVAL;
