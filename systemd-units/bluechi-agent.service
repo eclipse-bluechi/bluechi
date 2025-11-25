@@ -10,7 +10,12 @@ After=network.target
 [Service]
 Type=simple
 ExecStart=/usr/libexec/bluechi-agent
-Restart=on-failure
+
+# Only restart bluechi-agent on events such as unexpected signals. The signals 
+# SIGTERM and SIGINT are already handled internally by bluechi-agent.
+# For an overview of exit causes triggering a restart see here:
+# https://www.freedesktop.org/software/systemd/man/latest/systemd.service.html#Restart=
+Restart=on-abnormal
 
 [Install]
 WantedBy=multi-user.target
