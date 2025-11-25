@@ -66,7 +66,7 @@ char *parse_selinux_type(const char *context) {
         /* Format is user:role:type:level */
 
         /* Skip user */
-        char *s = strchr(context, ':');
+        const char *s = strchr(context, ':');
         if (s == NULL) {
                 return NULL;
         }
@@ -85,7 +85,7 @@ char *parse_selinux_type(const char *context) {
                 return NULL;
         }
 
-        char *end = strchr(s, ':');
+        const char *end = strchr(s, ':');
         if (end == NULL) {
                 return NULL;
         }
