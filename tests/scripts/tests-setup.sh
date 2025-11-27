@@ -6,7 +6,8 @@
 
 set -x
 
-COPR_REPO="@centos-automotive-sig/bluechi-snapshot"
+# Use PACKIT_COPR_PROJECT if set (for Packit CI), otherwise use default
+COPR_REPO="${PACKIT_COPR_PROJECT:-@centos-automotive-sig/bluechi-snapshot}"
 
 function install_worker_deps(){
     dnf install \
@@ -56,20 +57,31 @@ function setup_worker(){
             -y
     fi
 
-    dnf install -y dnf-plugin-config-manager
-    dnf copr enable -y @centos-automotive-sig/bluechi-snapshot
+    # Enable COPR repository if requested (default: yes)
+    if [ "${ENABLE_COPR:-yes}" == "yes" ]; then
+        dnf install -y dnf-plugin-config-manager
+        dnf copr enable -y "$COPR_REPO"
+    fi
+
+    # Build version suffix if BLUECHI_VERSION is specified
+    # e.g. BLUECHI_VERSION="1.2.0"
+    VERSION_SUFFIX=""
+    if [ -n "$BLUECHI_VERSION" ]; then
+        VERSION_SUFFIX="-${BLUECHI_VERSION}"
+    fi
+
     dnf install \
         --nogpgcheck \
         --nodocs \
-        bluechi-controller \
-        bluechi-controller-debuginfo \
-        bluechi-agent \
-        bluechi-agent-debuginfo \
-        bluechi-ctl \
-        bluechi-is-online \
-        bluechi-ctl-debuginfo \
-        bluechi-selinux \
-        python3-bluechi \
+        bluechi-controller${VERSION_SUFFIX} \
+        bluechi-controller-debuginfo${VERSION_SUFFIX} \
+        bluechi-agent${VERSION_SUFFIX} \
+        bluechi-agent-debuginfo${VERSION_SUFFIX} \
+        bluechi-ctl${VERSION_SUFFIX} \
+        bluechi-is-online${VERSION_SUFFIX} \
+        bluechi-ctl-debuginfo${VERSION_SUFFIX} \
+        bluechi-selinux${VERSION_SUFFIX} \
+        python3-bluechi${VERSION_SUFFIX} \
         -y
     dnf -y clean all
 
@@ -98,17 +110,20 @@ function setup_container_test(){
         install_worker_deps
     fi
 
-    BUILD_ARG=""
+    BUILD_ARGS=""
 
-    # By default we want to use bluechi-snapshot repo, but when building from packit testing farm we need to pass custom
-    # copr repo to the container (packit uses temporary COPR repos for unmerged PRs)
-    if [ "$PACKIT_COPR_PROJECT" != "" ]; then
-        COPR_REPO="$PACKIT_COPR_PROJECT"
+    # Pass COPR repository to container if COPR is enabled (default: yes)
+    if [ "${ENABLE_COPR:-yes}" == "yes" ]; then
+        BUILD_ARGS="--build-arg copr_repo=$COPR_REPO"
     fi
-    BUILD_ARG="--build-arg copr_repo=$COPR_REPO"
+
+    # Pass BlueChi version to container if specified
+    if [ -n "$BLUECHI_VERSION" ]; then
+        BUILD_ARGS="$BUILD_ARGS --build-arg bluechi_version=$BLUECHI_VERSION"
+    fi
 
     podman build \
-        ${BUILD_ARG} \
+        ${BUILD_ARGS} \
         -f ./containers/$CONTAINER_USED \
         -t $BLUECHI_IMAGE_NAME \
         .
