@@ -21,6 +21,8 @@ environment:
     LOG_LEVEL: DEBUG
     WITH_COVERAGE: 0
     WITH_VALGRIND: 0
+    # Set specific BlueChi version if needed
+    # BLUECHI_VERSION: 1.2.0
 discover:
     how: fmf
     filter: tag:multihost

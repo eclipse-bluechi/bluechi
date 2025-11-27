@@ -1,6 +1,7 @@
 FROM quay.io/bluechi/integration-test-base:stream10
 
-ARG copr_repo
+ARG copr_repo="@centos-automotive-sig/bluechi-snapshot"
+ARG bluechi_version=""
 
 RUN dnf install -y dnf-plugin-config-manager
 
@@ -9,15 +10,15 @@ RUN dnf copr enable -y $copr_repo
 RUN dnf install \
         --nogpgcheck \
         --nodocs \
-        bluechi-controller \
-        bluechi-controller-debuginfo \
-        bluechi-agent \
-        bluechi-agent-debuginfo \
-        bluechi-ctl \
-        bluechi-is-online \
-        bluechi-ctl-debuginfo \
-        bluechi-selinux \
-        python3-bluechi \
+        bluechi-controller${bluechi_version:+-${bluechi_version}} \
+        bluechi-controller-debuginfo${bluechi_version:+-${bluechi_version}} \
+        bluechi-agent${bluechi_version:+-${bluechi_version}} \
+        bluechi-agent-debuginfo${bluechi_version:+-${bluechi_version}} \
+        bluechi-ctl${bluechi_version:+-${bluechi_version}} \
+        bluechi-is-online${bluechi_version:+-${bluechi_version}} \
+        bluechi-ctl-debuginfo${bluechi_version:+-${bluechi_version}} \
+        bluechi-selinux${bluechi_version:+-${bluechi_version}} \
+        python3-bluechi${bluechi_version:+-${bluechi_version}} \
         -y
 
 RUN dnf -y clean all
