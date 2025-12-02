@@ -9,7 +9,7 @@ import os
 import re
 import time
 import traceback
-from typing import Callable, Dict, List, Tuple
+from typing import Callable, Dict, List, Tuple, Optional
 
 from bluechi_test.client import ContainerClient, SSHClient
 from bluechi_test.command import Command
@@ -169,6 +169,35 @@ class BluechiTest:
             [BluechiControllerMachine, Dict[str, BluechiAgentMachine]], None
         ],
     ):
+        def collect_logs() -> Optional[Exception]:
+            test_result = None
+
+            try:
+                with Timeout(
+                    self.timeout_collecting_test_results,
+                    "Timeout collecting test artifacts",
+                ):
+                    try:
+                        self.gather_logs(ctrl_container, node_container)
+                    except Exception as e:
+                        LOGGER.error(f"Failed to collect logs: {e}")
+                    if self.run_with_valgrind:
+                        try:
+                            self.check_valgrind_logs()
+                        except Exception as e:
+                            LOGGER.error(f"Failed to collect valgrind logs: {e}")
+                    if self.run_with_coverage:
+                        try:
+                            self.gather_coverage(ctrl_container, node_container)
+                        except Exception as e:
+                            LOGGER.error(f"Failed to collect coverage: {e}")
+            except Exception as ex:
+                test_result = ex
+                LOGGER.error(f"Failed to collect logs: {ex}")
+                traceback.print_exc()
+
+            return test_result
+
         LOGGER.info("Test execution started")
 
         successful = False
@@ -181,6 +210,7 @@ class BluechiTest:
             LOGGER.error(f"Failed to setup bluechi test: {ex}")
 
         if not successful:
+            collect_logs()
             self.teardown(ctrl_container, node_container)
             traceback.print_exc()
             raise Exception("Failed to setup bluechi test")
@@ -201,21 +231,8 @@ class BluechiTest:
             LOGGER.error(f"Failed to shutdown BlueChi components: {ex}")
             traceback.print_exc()
 
-        try:
-            with Timeout(
-                self.timeout_collecting_test_results,
-                "Timeout collecting test artifacts",
-            ):
-                self.gather_logs(ctrl_container, node_container)
-                if self.run_with_valgrind:
-                    self.check_valgrind_logs()
-                if self.run_with_coverage:
-                    self.gather_coverage(ctrl_container, node_container)
-        except Exception as ex:
-            test_result = ex
-            LOGGER.error(f"Failed to collect logs: {ex}")
-            traceback.print_exc()
-
+        collect_logs_result = collect_logs()
+        test_result = collect_logs_result if collect_logs_result else test_result
         self.teardown(ctrl_container, node_container)
 
         LOGGER.info("Test execution finished")
