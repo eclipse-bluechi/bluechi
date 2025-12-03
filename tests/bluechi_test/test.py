@@ -9,7 +9,7 @@ import os
 import re
 import time
 import traceback
-from typing import Callable, Dict, List, Tuple, Optional
+from typing import Callable, Dict, List, Optional, Tuple
 
 from bluechi_test.client import ContainerClient, SSHClient
 from bluechi_test.command import Command
