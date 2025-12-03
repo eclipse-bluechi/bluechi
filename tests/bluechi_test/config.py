@@ -8,10 +8,6 @@ from typing import List
 
 class BluechiConfig:
 
-    # use a smaller max line length than possible
-    # to prevent any accidental faults
-    MAX_LINE_LENGTH = 400
-
     def __init__(self, file_name: str) -> None:
         self.file_name = file_name
 
