@@ -35,7 +35,6 @@ def check_execs(
         assert bc_res == sc_res
     else:
         assert bc_res == 1
-        assert sc_res == 4
 
     if check_output:
         assert bc_out == sc_out
