@@ -18,7 +18,7 @@ bool test_is_ipv6(const char *in, bool expected) {
         }
         fprintf(stdout,
                 "FAILED: is_ipv6('%s') - Expected %s, but got %s\n",
-                in,
+                in ? in : "(null)",
                 bool_to_str(expected),
                 bool_to_str(result));
         return false;

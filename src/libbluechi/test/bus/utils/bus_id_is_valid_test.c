@@ -15,7 +15,7 @@ bool test_bus_id_is_valid(const char *name, bool expected_is_valid) {
         if (got_is_valid != expected_is_valid) {
                 fprintf(stderr,
                         "FAILED: expected bus name '%s' to be %s, but got %s\n",
-                        name,
+                        name ? name : "(null)",
                         bool_to_str(expected_is_valid),
                         bool_to_str(got_is_valid));
                 return false;
