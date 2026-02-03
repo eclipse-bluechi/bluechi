@@ -356,6 +356,9 @@ build-scripts/generate-unit-tests-code-coverage.sh %{_vpath_builddir} %{buildroo
 
 
 %changelog
+* Tue Feb 03 2026 Michael Engel <mengel@redhat.com> - 1.2.2-1
+- Fixed printing NULL in unit tests
+
 * Tue Nov 26 2025 Michael Engel <mengel@redhat.com> - 1.2.1-1
 - Changed the restart behavior of systemd services to on-abnormal
 - Fixed discarded strchr const modifier in initialization
