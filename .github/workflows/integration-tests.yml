@@ -160,6 +160,7 @@ jobs:
 
       - name: Report to Coveralls
         if: steps.prepare-coveralls-report.outcome == 'success'
+        continue-on-error: true
         uses: coverallsapp/github-action@v2.3.0
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
