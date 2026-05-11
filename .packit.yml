@@ -38,7 +38,6 @@ jobs:
       - epel-9-x86_64
       - epel-10-x86_64
       - fedora-rawhide-aarch64
-      - fedora-rawhide-i386
       - fedora-rawhide-ppc64le
       - fedora-rawhide-s390x
       - fedora-rawhide-x86_64
@@ -105,7 +104,6 @@ jobs:
       - epel-10-s390x
       - epel-10-x86_64
       - fedora-all-aarch64
-      - fedora-all-i386
       - fedora-all-ppc64le
       - fedora-all-s390x
       - fedora-all-x86_64
