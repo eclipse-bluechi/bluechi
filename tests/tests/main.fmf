@@ -12,4 +12,3 @@ require:
   - type: file
     pattern:
       - /
-  - pytest
