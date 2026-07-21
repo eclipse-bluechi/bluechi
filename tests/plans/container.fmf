@@ -19,7 +19,7 @@ prepare:
         - python3-pytest
         - python3-paramiko
         - python3-podman
-        - python3-pyyaml
+        - python3-yaml
     - name: Prepare containers setup
       how: shell
       script: |
