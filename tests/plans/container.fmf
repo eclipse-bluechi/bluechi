@@ -16,7 +16,7 @@ environment:
 prepare:
     - how: install
       package:
-        - pytest
+        - python3-pytest
     - name: Prepare containers setup
       how: shell
       script: |
