@@ -14,7 +14,7 @@ environment:
     WITH_COVERAGE: 0
     WITH_VALGRIND: 0
 require:
-    pytest
+    - pytest
 prepare:
     - name: Prepare containers setup
       how: shell
