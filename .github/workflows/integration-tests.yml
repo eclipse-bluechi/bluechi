@@ -104,7 +104,7 @@ jobs:
         run: |
           systemctl --user status
           ls -la /run/user
-          ls -la /run/user/1000
+          ls -la /run/user/1001
 
           cd tests
           BLUECHI_VERSION=$(../build-scripts/version.sh)
@@ -114,7 +114,8 @@ jobs:
             -eWITH_COVERAGE=1 \
             -eLOG_LEVEL=DEBUG \
             -eBLUECHI_VERSION=${BLUECHI_VERSION} \
-            -eDBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/1000/bus \
+            -eDBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/1001/bus \
+            -eXDG_RUNTIME_DIR=/run/user/1001 \
             plan --name container
 
       - name: Show tmt log output in case of failure
