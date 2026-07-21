@@ -248,8 +248,9 @@ class BluechiMachine:
         )
         try:
             os.remove(target_file_path)
-        finally:
-            return result, output
+        except Exception:
+            pass
+        return result, output
 
     def gather_valgrind_logs(self, data_dir: str) -> None:
         try:
