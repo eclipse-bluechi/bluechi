@@ -13,8 +13,6 @@ environment:
     LOG_LEVEL: INFO
     WITH_COVERAGE: 0
     WITH_VALGRIND: 0
-require:
-    - pytest
 prepare:
     - name: Prepare containers setup
       how: shell
