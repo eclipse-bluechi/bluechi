@@ -78,5 +78,9 @@ def test_create_coverag_report(
     if os.getenv("WITH_COVERAGE") == "1":
         LOGGER.info("Code coverage report generation started")
         bluechi_test.set_bluechi_controller_config(bluechi_ctrl_default_config)
+
+        # Collecting test coverage from 100+ containers takes time - lets increase the timeout
+        bluechi_test.timeout_test_run = 90
+
         bluechi_test.run(exec)
         LOGGER.info("Code coverage report generation finished")
