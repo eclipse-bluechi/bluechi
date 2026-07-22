@@ -72,7 +72,7 @@ jobs:
 
       - name: Install unpackaged python libraries from PyPi
         run: |
-          pip install "tmt[provision]>=1.48.0" "tmt[report-junit]>=1.48.0" podman pytest pyyaml paramiko
+          pip install "tmt[provision]>=1.48.0" "tmt[report-junit]>=1.48.0"
 
       - name: Checkout sources
         uses: actions/checkout@v4
@@ -102,6 +102,8 @@ jobs:
       - name: Run integration tests
         id: run-tests
         run: |
+          user_id=$(id -u)
+
           cd tests
           BLUECHI_VERSION=$(../build-scripts/version.sh)
           tmt --feeling-safe \
@@ -110,6 +112,8 @@ jobs:
             -eWITH_COVERAGE=1 \
             -eLOG_LEVEL=DEBUG \
             -eBLUECHI_VERSION=${BLUECHI_VERSION} \
+            -eDBUS_SESSION_BUS_ADDRESS=unix:path="/run/user/${user_id}/bus" \
+            -eXDG_RUNTIME_DIR="/run/user/${user_id}" \
             plan --name container
 
       - name: Show tmt log output in case of failure

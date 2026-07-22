@@ -14,6 +14,12 @@ environment:
     WITH_COVERAGE: 0
     WITH_VALGRIND: 0
 prepare:
+    - how: install
+      package:
+        - python3-paramiko
+        - python3-podman
+        - python3-pytest
+        - python3-yaml
     - name: Prepare containers setup
       how: shell
       script: |
