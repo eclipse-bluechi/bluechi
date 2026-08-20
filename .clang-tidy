@@ -30,7 +30,8 @@ Checks: >
     -cppcoreguidelines-macro-to-enum,
     -cert-int09-c,
     -readability-enum-initial-value,
-    -readability-math-missing-parentheses
+    -readability-math-missing-parentheses,
+    -portability-avoid-pragma-once
 
 CheckOptions:
     - key: readability-function-cognitive-complexity.Threshold

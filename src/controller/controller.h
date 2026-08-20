@@ -14,6 +14,12 @@
 
 #include "types.h"
 
+typedef struct EventSource EventSource;
+struct EventSource {
+        LIST_FIELDS(EventSource, sources);
+        sd_event_source *event_source;
+};
+
 struct Controller {
         int ref_count;
 
@@ -27,7 +33,7 @@ struct Controller {
         sd_event *event;
         sd_event_source *node_connection_tcp_socket_source;
         sd_event_source *node_connection_uds_socket_source;
-        sd_event_source *node_connection_systemd_socket_source;
+        LIST_HEAD(EventSource, node_connection_systemd_socket_sources);
 
         sd_bus *api_bus;
         sd_bus_slot *controller_slot;
