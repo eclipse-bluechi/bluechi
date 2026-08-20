@@ -53,6 +53,7 @@ class ContainerClient(Client):
             image=image_id,
             detach=True,
             ports=ports,
+            network_mode="host",
         )
         self.container.wait(condition="running")
 
