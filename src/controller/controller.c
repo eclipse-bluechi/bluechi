@@ -56,12 +56,12 @@ Controller *controller_new(void) {
                 controller->peer_socket_options = steal_pointer(&socket_opts);
                 controller->node_connection_tcp_socket_source = NULL;
                 controller->node_connection_uds_socket_source = NULL;
-                controller->node_connection_systemd_socket_source = NULL;
                 LIST_HEAD_INIT(controller->nodes);
                 LIST_HEAD_INIT(controller->anonymous_nodes);
                 LIST_HEAD_INIT(controller->jobs);
                 LIST_HEAD_INIT(controller->monitors);
                 LIST_HEAD_INIT(controller->all_subscriptions);
+                LIST_HEAD_INIT(controller->node_connection_systemd_socket_sources);
         }
 
         return controller;
@@ -105,15 +105,22 @@ void controller_unref(Controller *controller) {
                 /* Remove UDS socket for proper cleanup and not cause an address in use error */
                 unlink(CONFIG_H_UDS_SOCKET_PATH);
         }
-        if (controller->node_connection_systemd_socket_source != NULL) {
-                sd_event_source_unrefp(&controller->node_connection_systemd_socket_source);
-                controller->node_connection_systemd_socket_source = NULL;
 
-                /* Remove UDS socket for proper cleanup and not cause an address in use error even
+        if (!LIST_IS_EMPTY(controller->node_connection_systemd_socket_sources)) {
+                /* At least one systemd node connection source has been found.
+                 * Remove UDS socket for proper cleanup and not cause an address in use error even
                  * though the systemd socket might have been changed to listen on different socket
                  */
                 unlink(CONFIG_H_UDS_SOCKET_PATH);
         }
+        EventSource *curr = NULL;
+        EventSource *next = NULL;
+        LIST_FOREACH_SAFE(sources, curr, next, controller->node_connection_systemd_socket_sources) {
+                LIST_REMOVE(sources, controller->node_connection_systemd_socket_sources, curr);
+                sd_event_source_unrefp(&curr->event_source);
+                free_and_null(curr);
+        }
+        assert(LIST_IS_EMPTY(controller->node_connection_systemd_socket_sources));
 
         sd_bus_slot_unrefp(&controller->name_owner_changed_slot);
         sd_bus_slot_unrefp(&controller->filter_slot);
@@ -523,38 +530,43 @@ static int controller_accept_node_connection(
 }
 
 static bool controller_setup_systemd_socket_connection_handler(Controller *controller) {
-        int r = 0;
-        _cleanup_sd_event_source_ sd_event_source *event_source = NULL;
-
         int n = sd_listen_fds(0);
         if (n < 1) {
                 bc_log_debug("No socket unit file descriptor has been passed");
                 return true;
         }
-        if (n > 1) {
-                bc_log_errorf("Received too many file descriptors from socket unit - %d", n);
-                return false;
-        }
 
-        r = sd_event_add_io(
-                        controller->event,
-                        &event_source,
-                        SD_LISTEN_FDS_START,
-                        EPOLLIN,
-                        controller_accept_node_connection,
-                        controller);
-        if (r < 0) {
-                bc_log_errorf("Failed to add io event source for systemd socket unit: %s", strerror(-r));
-                return false;
-        }
-        r = sd_event_source_set_io_fd_own(event_source, true);
-        if (r < 0) {
-                bc_log_errorf("Failed to set io fd own for systemd socket unit: %s", strerror(-r));
-                return false;
-        }
+        for (int i = 0; i < n; i++) {
+                int r = 0;
+                _cleanup_sd_event_source_ sd_event_source *event_source = NULL;
 
-        (void) sd_event_source_set_description(event_source, "node-accept-systemd-socket");
-        controller->node_connection_systemd_socket_source = steal_pointer(&event_source);
+                r = sd_event_add_io(
+                                controller->event,
+                                &event_source,
+                                SD_LISTEN_FDS_START + i,
+                                EPOLLIN,
+                                controller_accept_node_connection,
+                                controller);
+                if (r < 0) {
+                        bc_log_errorf("Failed to add io event source for systemd socket unit: %s",
+                                      strerror(-r));
+                        return false;
+                }
+                r = sd_event_source_set_io_fd_own(event_source, true);
+                if (r < 0) {
+                        bc_log_errorf("Failed to set io fd own for systemd socket unit: %s", strerror(-r));
+                        return false;
+                }
+                (void) sd_event_source_set_description(event_source, "node-accept-systemd-socket");
+
+                EventSource *source = malloc0(sizeof(EventSource));
+                if (source == NULL) {
+                        bc_log_error("Failed create event source for systemd socket, OOM");
+                        return false;
+                }
+                source->event_source = steal_pointer(&event_source);
+                LIST_APPEND(sources, controller->node_connection_systemd_socket_sources, source);
+        }
 
         bc_log_info("Waiting for connection requests on configured socket unit...");
         return true;
@@ -572,7 +584,8 @@ static bool controller_setup_tcp_connection_handler(Controller *controller) {
                  * In case both conditions are true, only log a warning and proceed as successful since a
                  * proper TCP socket incl. handler has already been set up.
                  */
-                if (tcp_fd == -EADDRINUSE && controller->node_connection_systemd_socket_source != NULL &&
+                if (tcp_fd == -EADDRINUSE &&
+                    !LIST_IS_EMPTY(controller->node_connection_systemd_socket_sources) &&
                     sd_is_socket_inet(SD_LISTEN_FDS_START, AF_UNSPEC, SOCK_STREAM, 1, controller->port) > 0) {
                         bc_log_warnf("TCP socket for port %d already setup with systemd socket unit",
                                      controller->port);
@@ -622,7 +635,8 @@ static bool controller_setup_uds_connection_handler(Controller *controller) {
                  * it. In case both conditions are true, only log a warning and proceed as successful since a
                  * proper UDS incl. handler has already been set up.
                  */
-                if (uds_fd == -EADDRINUSE && controller->node_connection_systemd_socket_source != NULL &&
+                if (uds_fd == -EADDRINUSE &&
+                    !LIST_IS_EMPTY(controller->node_connection_systemd_socket_sources) &&
                     sd_is_socket_unix(SD_LISTEN_FDS_START, AF_UNIX, 1, CONFIG_H_UDS_SOCKET_PATH, 0) > 0) {
                         bc_log_warnf("UDS socket for path %s already setup with systemd socket unit",
                                      CONFIG_H_UDS_SOCKET_PATH);
@@ -679,7 +693,7 @@ static bool controller_setup_node_connection_handler(Controller *controller) {
                 return false;
         }
 
-        if (controller->node_connection_systemd_socket_source == NULL &&
+        if (LIST_IS_EMPTY(controller->node_connection_systemd_socket_sources) &&
             controller->node_connection_tcp_socket_source == NULL &&
             controller->node_connection_uds_socket_source == NULL) {
                 bc_log_error("No connection request handler configured");
