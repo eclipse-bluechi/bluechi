@@ -37,8 +37,6 @@ jobs:
     targets:
       - epel-10-x86_64
       - fedora-rawhide-aarch64
-      - fedora-rawhide-ppc64le
-      - fedora-rawhide-s390x
       - fedora-rawhide-x86_64
 
   - &tests
@@ -87,16 +85,10 @@ jobs:
         message: "BlueChi build failed for merged commit {commit_sha}. Please check logs {logs_url}, packit dashboard {packit_dashboard_url} and external service dashboard {external_dashboard_url}"
     targets:
       - centos-stream-10-aarch64
-      - centos-stream-10-ppc64le
-      - centos-stream-10-s390x
       - centos-stream-10-x86_64
       - epel-10-aarch64
-      - epel-10-ppc64le
-      - epel-10-s390x
       - epel-10-x86_64
       - fedora-all-aarch64
-      - fedora-all-ppc64le
-      - fedora-all-s390x
       - fedora-all-x86_64
 
   - job: propose_downstream
