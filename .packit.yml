@@ -101,11 +101,11 @@ jobs:
     trigger: commit
     dist_git_branches:
       - fedora-all
-      - epel-all
+      - epel-10
 
   - job: bodhi_update
     trigger: commit
     dist_git_branches:
       # rawhide updates are created automatically
       - fedora-branched
-      - epel-all
+      - epel-10
