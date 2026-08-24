@@ -132,6 +132,9 @@ function setup_container_test(){
         exit 123
     fi
 
+    # Following variables are required to run systemctl in non-login shells inside tmt scripts
+    export XDG_RUNTIME_DIR="/run/user/$(id -u)"
+    export DBUS_SESSION_BUS_ADDRESS="unix:path=${XDG_RUNTIME_DIR}/bus"
     if [ "$(systemctl --user is-active podman.socket)" != "active" ]; then
         echo "Integration tests requires access to podman using user socket"
         systemctl --user enable podman.socket
