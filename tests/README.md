@@ -24,7 +24,6 @@ Then install the required packages:
 
 ```shell
 dnf install \
-    black \
     createrepo_c \
     podman \
     python3-isort \
@@ -36,6 +35,19 @@ dnf install \
     tmt \
     tmt+report-junit \
     -y
+```
+
+When setting up Fedora, please install black formatter using:
+
+```shell
+dnf install -y black
+```
+
+To install black formatter on CentOS Stream 10, please use following installation steps:
+
+```shell
+dnf install -y python3-pip
+pip install black
 ```
 
 ### Installing packages using pip (other operating systems)
@@ -61,24 +73,6 @@ deactivate
 ```
 
 ## Podman configuration
-
-### Fix issue with pasta network provider
-
-On Fedora 40 and newer podman 5 is installed and it uses new networking provider called pasta, but unfortunately it has some issue which prevents network connection between containers (more info in [Connectivity problem with Podman containers](https://discussion.fedoraproject.org/t/connectivity-problem-with-podman-containers/125664/32)).
-To bypass this issue it's required to switch to previous networking provider called slirp4netns using following steps:
-
-1. Install slirp4netns provider
-
-   ```shell
-   dnf install -y slirp4netns
-   ```
-
-2. Configure podman to use slirp4netns provider when executed under your username by creating `~/.config/containers/containers.conf` with following content:
-
-   ```ini
-   [Network]
-   default_rootless_network_cmd = "slirp4netns"
-   ```
 
 ### Configure podman socket access for users
 
